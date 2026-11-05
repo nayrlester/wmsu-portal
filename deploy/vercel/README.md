@@ -4,6 +4,8 @@ Host **all Vite SPAs** on Vercel. **Do not** deploy `apps/base-api` or `apps/wor
 
 **Import guide:** [`IMPORT.md`](IMPORT.md) (Root Directory `apps/<app>`, not repo root `./`).
 
+**All apps in one Vercel Services project?** URLs and env: [`MULTI-SERVICE-URLS-AND-ENV.md`](MULTI-SERVICE-URLS-AND-ENV.md).
+
 ## One Vercel project per app (recommended)
 
 Import the same GitHub repo **10 times** (or use Vercel monorepo “Add project” per folder). Each project:

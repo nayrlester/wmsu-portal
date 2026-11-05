@@ -524,6 +524,7 @@ export async function createAnnouncement(payload: {
   audience?: { roles?: string[] }
   deliverEmail?: boolean
   deliverSms?: boolean
+  deliverPortal?: boolean
 }) {
   const { data } = await apiClient.post('/announcements', payload)
   return (data as { data: UsisAnnouncement }).data

@@ -998,7 +998,7 @@ function RegistrarRegistrationInner() {
       </CardHeader>
       <CardContent className="space-y-4">
         {policies.data ? (
-          <Alert tone="info">
+          <Alert variant="info">
             Configured approval steps: {steps.join(' → ')}
             {registrarStepEnabled ? '' : ' (registrar step off — approve button optional)'}
           </Alert>
@@ -1036,7 +1036,7 @@ function RegistrarRegistrationInner() {
             </p>
           </div>
         ) : enrollmentId && enrollmentQuery.isError ? (
-          <Alert tone="danger">Could not load enrollment for this ID.</Alert>
+          <Alert variant="danger">Could not load enrollment for this ID.</Alert>
         ) : null}
       </CardContent>
     </Card>

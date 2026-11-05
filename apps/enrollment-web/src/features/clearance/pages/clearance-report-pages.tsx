@@ -158,7 +158,9 @@ export function ClearanceVerifyPage() {
           <Alert variant={data.checksumMatches ? 'success' : 'warning'} title="Document integrity">
             {data.checksumMatches ? 'Checksum matches stored snapshot.' : 'Checksum mismatch — treat as invalid.'}
           </Alert>
-          <p className="text-xs text-[var(--color-muted-foreground)]">Issued {new Date(data.issuedAt).toLocaleString()}</p>
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            Issued {data.issuedAt ? new Date(data.issuedAt).toLocaleString() : '—'}
+          </p>
         </CardContent>
       </Card>
     </div>
