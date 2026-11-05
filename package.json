@@ -6,8 +6,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm run --parallel dev:api dev:platform-web dev:clients",
-    "dev:api": "pnpm run --parallel dev:identity dev:platform-services",
+    "dev": "node scripts/dev-preflight.mjs && node scripts/dev-parallel.mjs dev:identity dev:platform-services dev:platform-web dev:clients",
+    "dev:api": "node scripts/dev-preflight.mjs && node scripts/dev-parallel.mjs dev:identity dev:platform-services",
+    "dev:stop": "node scripts/dev-stop-ports.mjs",
     "dev:identity": "npm run dev:api --prefix ../wmsu-api",
     "dev:platform-services": "pnpm run --parallel --filter @wmsu/base-api --filter @wmsu/worker dev",
     "dev:platform-web": "pnpm run --parallel --filter @wmsu/web-portal --filter @wmsu/admin-web dev",

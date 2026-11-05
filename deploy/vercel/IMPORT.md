@@ -22,7 +22,7 @@ On the multi-service detection screen, use **Import single project** on **`web-p
 
 The repo root [`vercel.json`](../../vercel.json) lists **only the 10 Vite apps** in a `services` block. It intentionally **excludes** `base-api` and `worker`.
 
-Use that file only if you adopt Vercel **Services** mode for the whole monorepo. You still need **separate public URLs** per campus app — in practice, **one project per `apps/*-web` folder** is simpler than one multi-service project.
+**Production domain:** root `vercel.json` includes a catch-all rewrite to the **`web-portal`** service so `https://<project>.vercel.app/` serves the launcher. Redeploy after pulling that change. Module apps (USIS, UFMS, …) still need **separate Vercel projects** or path + Vite `base` work — see [MULTI-SERVICE-URLS-AND-ENV.md](MULTI-SERVICE-URLS-AND-ENV.md).
 
 ## If Vercel still shows Container services
 

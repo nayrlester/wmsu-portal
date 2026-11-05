@@ -13,18 +13,9 @@ That is **one hostname** for the whole deployment.
 
 ### Which app opens on which URL?
 
-Services are **internal until a rewrite exposes them**. The repo root [`vercel.json`](../../vercel.json) lists services but **does not define `rewrites` yet**, so you may only see one public app (or unexpected routing).
+Services are **internal until a rewrite exposes them**. Root [`vercel.json`](../../vercel.json) routes **`/(.*)` → `web-portal`**, so the project production domain (e.g. `https://wmsu-portal.vercel.app/`) serves the unified launcher. **Redeploy** after changing `vercel.json`.
 
-Check the latest deployment:
-
-1. **Deployments** → click the latest **Production** deployment
-2. Open the **Services** (or **Resources**) section if shown — it lists each service and any **path prefix** / route
-
-| If you see… | Meaning |
-|-------------|---------|
-| Only one service “public” | Others need **rewrites** or **separate projects** |
-| Path prefixes (e.g. `/`, `/enrollment`) | App URL = `https://<production-domain><prefix>/` |
-| No paths configured | Prefer **one Vercel project per app** ([IMPORT.md](IMPORT.md)) |
+Other campus SPAs in the same project are built but not on `/` unless you add path rewrites and matching Vite `base` — **one Vercel project per `apps/*-web`** remains easiest ([IMPORT.md](IMPORT.md)).
 
 **Preview URLs:** each git branch deploy gets `https://<project>-<hash>.vercel.app` (same routing rules as production for that deploy).
 

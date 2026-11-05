@@ -71,5 +71,11 @@
       "buildCommand": "cd ../.. && pnpm --filter @wmsu/document-web build",
       "outputDirectory": "dist"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": { "service": "web-portal" }
+    }
+  ]
 }
