@@ -3,10 +3,15 @@ import { attachAxiosHttpNotifications, parseAxiosErrorMessage } from '@wmsu/ui'
 import { useAuthStore } from '@/stores/auth-store'
 import type { ApiResponse } from '@/types/auth'
 
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || ''
+const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || ''
+const API_BASE = !RAW_API_URL
+  ? '/api/v1'
+  : /\/api\/v1(\/|$)/.test(RAW_API_URL)
+    ? RAW_API_URL.replace(/\/api\/v1.*/, '/api/v1')
+    : `${RAW_API_URL}/api/v1`
 
 export const apiClient = axios.create({
-  baseURL: API_URL ? `${API_URL}/api/v1` : '/api/v1',
+  baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
