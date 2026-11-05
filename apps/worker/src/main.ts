@@ -1,18 +1,7 @@
-import { config as loadDotenv } from 'dotenv'
-import { resolve, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { Worker } from 'bullmq'
 import { Redis } from 'ioredis'
 import pg from 'pg'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-loadDotenv({ path: resolve(__dirname, '../../../.env') })
-loadDotenv({ path: resolve(__dirname, '../.env') })
-
-const redisUrl = process.env.REDIS_URL ?? 'redis://127.0.0.1:6380'
-const queueName = process.env.QUEUE_NAME ?? 'wmsu-cis-jobs'
-const databaseUrl =
-  process.env.DATABASE_URL ?? 'postgresql://wmsu:wmsu_dev_change_me@127.0.0.1:5433/wmsu_cis'
+import { databaseUrl, queueName, redisUrl } from './env.js'
 
 const connection = new Redis(redisUrl, {
   maxRetriesPerRequest: null,

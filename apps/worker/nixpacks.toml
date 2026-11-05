@@ -1,0 +1,11 @@
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
+[phases.install]
+cmds = ["cd ../.. && corepack enable && pnpm install --frozen-lockfile --filter @wmsu/worker..."]
+
+[phases.build]
+cmds = ["cd ../.. && pnpm --filter @wmsu/config build && pnpm --filter @wmsu/worker build"]
+
+[start]
+cmd = "node dist/main.js"

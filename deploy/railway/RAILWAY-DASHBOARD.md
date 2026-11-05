@@ -65,9 +65,17 @@ Do **not** set `PORT`.
 
 ## cis-worker — required settings
 
-- Dockerfile: `Dockerfile.worker.railway`
-- Config: `deploy/railway/worker.toml`
-- Variables: `DATABASE_URL`, `REDIS_URL`, `QUEUE_NAME=wmsu-cis-jobs`
+- Dockerfile: `Dockerfile` (Root **`apps/worker`**) or repo-root `Dockerfile.worker.railway`
+- Config: `apps/worker/railway.toml`
+- **Variables (required on this service):**
+  - `NODE_ENV=production`
+  - `DATABASE_URL=${{Postgres.DATABASE_URL}}` — same Postgres plugin as Base API
+  - `REDIS_URL=${{Redis.REDIS_URL}}` — same Redis plugin as Base API
+  - `QUEUE_NAME=wmsu-cis-jobs`
+
+If `DATABASE_URL` / `REDIS_URL` are missing, the worker exits with a clear error instead of connecting to `127.0.0.1:5433`.
+
+Add a **Postgres** plugin to the project if only Redis is present (worker and Base API both need Postgres).
 
 ## Before you click “Deploy” (32 changes)
 
