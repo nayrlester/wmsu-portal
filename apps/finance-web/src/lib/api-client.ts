@@ -3,8 +3,8 @@ import { attachAxiosHttpNotifications, parseAxiosErrorMessage } from '@wmsu/ui'
 import { useAuthStore } from '@/stores/auth-store'
 import { clearQueryCache } from '@/lib/query-client'
 
-const PROD_API_URL = 'https://inventory-pro-api.arzaitsolutions.site/api/v1'
-const PROD_IDENTITY_URL = 'https://identity-service-api.arzaitsolutions.site'
+const PROD_API_URL = 'https://wmsubase-api-production.up.railway.app/api/v1/finance'
+const PROD_IDENTITY_URL = 'https://wmsu-api-production.up.railway.app'
 
 function isProdWebHost(hostname: string): boolean {
   return (

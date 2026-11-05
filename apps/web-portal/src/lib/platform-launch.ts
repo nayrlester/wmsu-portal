@@ -25,8 +25,10 @@ function isPortalHostedLaunch(launchUrl: string) {
 }
 
 export function resolvePlatformLaunchUrl(platform: AuthPlatform): string | null {
-  const override = PLATFORM_LAUNCH_OVERRIDES[platform.code]
-  if (override) return override
+  if (import.meta.env.DEV) {
+    const override = PLATFORM_LAUNCH_OVERRIDES[platform.code]
+    if (override) return override
+  }
   return platform.launchUrl
 }
 

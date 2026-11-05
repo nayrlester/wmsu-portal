@@ -26,6 +26,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r --filter './apps/*' --filter './packages/*' test",
     "db:migrate": "pnpm --filter @wmsu/base-api db:migrate",
+    "db:migrate:railway": "node scripts/db-migrate-railway.mjs",
+    "db:push:railway": "node scripts/db-push-local-to-railway.mjs",
     "db:seed": "pnpm --filter @wmsu/base-api db:seed",
     "db:rollback": "pnpm --filter @wmsu/base-api db:rollback",
     "db:schemas": "psql \"$DATABASE_URL\" -f infrastructure/database/01_schemas.sql",

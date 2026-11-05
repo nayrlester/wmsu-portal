@@ -3,17 +3,29 @@ import { attachAxiosHttpNotifications, parseAxiosErrorMessage } from '@wmsu/ui'
 import { useAuthStore } from '@/stores/auth-store'
 import { clearQueryCache } from '@/lib/query-client'
 
+const PROD_BASE_API = 'https://wmsubase-api-production.up.railway.app'
+const PROD_IDENTITY_URL = 'https://wmsu-api-production.up.railway.app'
+
+function isProdWebHost(hostname: string): boolean {
+  return hostname.endsWith('.vercel.app') || hostname.endsWith('arzaitsolutions.site')
+}
+
 function resolveApiBase(): string {
-  const configured = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
-  if (configured) return configured
-  return '/api/v1/enrollment'
+  const configured = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '/api/v1/enrollment'
+  if (typeof window === 'undefined') return configured
+  if (!configured.startsWith('/') || !isProdWebHost(window.location.hostname)) return configured
+  return `${PROD_BASE_API}/api/v1/enrollment`
 }
 
 function resolveIdentityUrl(): string {
-  return (
+  const configured = (
     (import.meta.env.VITE_PLATFORM_IDENTITY_URL as string | undefined)?.trim() ||
     'http://127.0.0.1:3411'
   ).replace(/\/$/, '')
+  if (typeof window === 'undefined') return configured
+  if (!isProdWebHost(window.location.hostname)) return configured
+  if (/localhost|127\.0\.0\.1/i.test(configured)) return PROD_IDENTITY_URL
+  return configured
 }
 
 const API_BASE = resolveApiBase()

@@ -83,3 +83,47 @@ Base API `preDeployCommand` runs `node ace.js migration:run --force` on each dep
 Identity: `preDeployCommand` in `wmsu-api/railway.toml`.
 
 Run seeds manually on staging only (`pnpm run db:seed`, Identity `npm run db:seed`).
+
+### Run migrations from your laptop (Railway Postgres)
+
+`postgres.railway.internal` in service variables **only works inside Railway**. From your PC, use one of:
+
+**A — Railway CLI (recommended)**
+
+```bash
+railway login
+cd WMSU/wmsu-platform
+railway link
+railway run --service cis-base-api node ace migration:run --force
+```
+
+(Run from repo root; CLI injects the service’s `DATABASE_URL`.)
+
+**B — Public TCP URL**
+
+Railway → Postgres plugin → **Connect** → copy the **public** URL (`*.proxy.rlwy.net`), then:
+
+```bash
+cd WMSU/wmsu-platform
+set RAILWAY_PUBLIC_DATABASE_URL=postgresql://...@....proxy.rlwy.net:PORT/railway
+pnpm run db:migrate:railway
+```
+
+(PowerShell: `$env:RAILWAY_PUBLIC_DATABASE_URL="..."`. Do not commit this URL.)
+
+**C — Redeploy `cis-base-api`** — migrations run automatically via `preDeployCommand`.
+
+### Copy local Docker data → Railway Postgres
+
+Local CIS data lives in Docker (`wmsu_cis` on port **5433**). Railway service variables use `postgres.railway.internal` — that is **not** reachable from your laptop.
+
+1. Keep **`apps/base-api/.env`** on **local** Docker (`DB_HOST=127.0.0.1`, `DB_PORT=5433`).
+2. Railway dashboard → Postgres → **Connect** → copy **public** URL.
+3. From repo root (Git Bash):
+
+```bash
+export RAILWAY_PUBLIC_DATABASE_URL='postgresql://postgres:PASS@HOST.proxy.rlwy.net:PORT/railway'
+pnpm run db:push:railway
+```
+
+This runs Railway Lucid migrations, `pg_dump`s local `wmsu_cis`, and `pg_restore`s into Railway (**replaces** existing CIS rows). Identity users/platforms are in **`wmsu-api`** Postgres — sync that database separately if needed.

@@ -4,6 +4,8 @@ import env from '#start/env'
 
 const searchPath = 'common,enrollment,finance,records,library,documents,inventory,audit,public,extensions'
 
+const useSsl = env.get('DB_SSL') === true
+
 const dbConfig = defineConfig({
   connection: 'postgres',
   connections: {
@@ -15,6 +17,7 @@ const dbConfig = defineConfig({
         user: env.get('DB_USER'),
         password: env.get('DB_PASSWORD'),
         database: env.get('DB_DATABASE'),
+        ...(useSsl ? { ssl: { rejectUnauthorized: false } } : {}),
       },
       searchPath: searchPath.split(','),
       pool: {
