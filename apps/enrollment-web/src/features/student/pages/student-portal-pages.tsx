@@ -64,7 +64,6 @@ import {
   searchAlternateSections,
   applyClassCodesLine,
   encodeBlockGroup,
-  fetchEnrollment,
   fetchMyScheduleNotifications,
   markScheduleNotificationRead,
   issueQueueTicket,

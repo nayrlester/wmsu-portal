@@ -88,7 +88,6 @@ import {
   recordMedicalAssessment,
   releasePsychResult,
   releaseShiftingResult,
-  resolveStudentForUser,
   scheduleShiftingExam,
   submitOrgApplication,
   submitStudentIdRequest,

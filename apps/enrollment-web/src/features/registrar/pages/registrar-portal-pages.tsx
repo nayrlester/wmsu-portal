@@ -2239,20 +2239,22 @@ function AcademicStructureEditor({
   )
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (target.kind === 'year') {
-        return updateAcademicYear(target.row.id, {
+        await updateAcademicYear(target.row.id, {
           code: code.trim(),
           name: name.trim(),
           isActive,
           ...(startDate ? { startDate } : {}),
           ...(endDate ? { endDate } : {}),
         })
+        return
       }
       if (target.kind === 'program') {
-        return updateProgram(target.row.id, { code: code.trim(), name: name.trim() })
+        await updateProgram(target.row.id, { code: code.trim(), name: name.trim() })
+        return
       }
-      return patchSection(target.row.id, {
+      await patchSection(target.row.id, {
         code: code.trim(),
         name: name.trim(),
         yearLevel: Number(yearLevel),
@@ -3974,11 +3976,12 @@ function CurriculumCatalogEditor({
     target.kind === 'subject' ? String(target.row.laboratoryHours ?? 0) : '0'
   )
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (target.kind === 'curriculum') {
-        return updateCurriculum(target.row.id, { code: code.trim(), name: name.trim() })
+        await updateCurriculum(target.row.id, { code: code.trim(), name: name.trim() })
+        return
       }
-      return updateSubjectCatalog(target.row.id, {
+      await updateSubjectCatalog(target.row.id, {
         subjectCode: code.trim(),
         title: name.trim(),
         units: Number(units) || 0,
