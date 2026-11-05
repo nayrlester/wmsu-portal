@@ -1,0 +1,5 @@
+apps/base-api
+apps/worker
+**/Dockerfile*
+**/railway.toml
+**/nixpacks.toml

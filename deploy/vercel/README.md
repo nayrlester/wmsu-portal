@@ -1,8 +1,10 @@
 # Vercel — WMSU CIS frontends
 
-Host **all Vite SPAs** on Vercel. APIs stay on Railway ([`../railway/README.md`](../railway/README.md)).
+Host **all Vite SPAs** on Vercel. **Do not** deploy `apps/base-api` or `apps/worker` here — those stay on Railway.
 
-## One Vercel project per app
+**Import guide:** [`IMPORT.md`](IMPORT.md) (Root Directory `apps/<app>`, not repo root `./`).
+
+## One Vercel project per app (recommended)
 
 Import the same GitHub repo **10 times** (or use Vercel monorepo “Add project” per folder). Each project:
 

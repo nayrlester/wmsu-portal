@@ -1,0 +1,75 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "web-portal": {
+      "root": "apps/web-portal",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/web-portal build",
+      "outputDirectory": "dist"
+    },
+    "admin-web": {
+      "root": "apps/admin-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/admin-web build",
+      "outputDirectory": "dist"
+    },
+    "enrollment-web": {
+      "root": "apps/enrollment-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/enrollment-web build",
+      "outputDirectory": "dist"
+    },
+    "records-web": {
+      "root": "apps/records-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/records-web build",
+      "outputDirectory": "dist"
+    },
+    "finance-web": {
+      "root": "apps/finance-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/finance-web build",
+      "outputDirectory": "dist"
+    },
+    "library-web": {
+      "root": "apps/library-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/library-web build",
+      "outputDirectory": "dist"
+    },
+    "library-opac-web": {
+      "root": "apps/library-opac-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/library-opac-web build",
+      "outputDirectory": "dist"
+    },
+    "library-kiosk-web": {
+      "root": "apps/library-kiosk-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/library-kiosk-web build",
+      "outputDirectory": "dist"
+    },
+    "inventory-web": {
+      "root": "apps/inventory-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/inventory-web build",
+      "outputDirectory": "dist"
+    },
+    "document-web": {
+      "root": "apps/document-web",
+      "framework": "vite",
+      "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @wmsu/document-web build",
+      "outputDirectory": "dist"
+    }
+  }
+}
