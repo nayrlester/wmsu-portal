@@ -6,7 +6,6 @@ import { login, fetchMe, verifyMfa } from '@/lib/auth-api'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth-store'
 import { WmsuLogo } from '@/components/brand/wmsu-logo'
-import { LAUNCHER_INTRO } from '@/lib/campus-platforms'
 
 function formatPortalLoginError(apiMsg: string, email: string) {
   const systemAccount = /kiosk-service@internal\.library$/i.test(email.trim())
