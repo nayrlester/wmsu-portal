@@ -1,0 +1,271 @@
+@import 'tailwindcss';
+
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+@theme {
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+
+  --color-wmsu-red: #c41e3a;
+  --color-wmsu-red-hover: #a01830;
+  --color-wmsu-red-soft: #fdecef;
+  --color-wmsu-navy: #2f2a6b;
+
+  --color-sidebar: #2f2a6b;
+  --color-sidebar-foreground: #f7f7ff;
+  --color-sidebar-accent: #c41e3a;
+  --color-sidebar-muted: #3d3780;
+  --color-canvas: #e6e9ff;
+  --color-surface: #ffffff;
+  --color-primary: #c41e3a;
+  --color-primary-hover: #a01830;
+  --color-primary-foreground: #ffffff;
+  --color-primary-soft: #fdecef;
+  --color-ink: #12122a;
+  --color-muted: #f3f4ff;
+  --color-muted-foreground: #6b6f8c;
+  --color-border: #dde1f5;
+  --color-card: #ffffff;
+  --color-destructive: #dc2626;
+  --color-success: #15803d;
+  --color-success-soft: #dcfce7;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef3c7;
+  --color-info: #1d4ed8;
+  --color-info-soft: #dbeafe;
+  --color-ring: #c41e3a;
+  --color-text-primary: #12122a;
+  --color-text-secondary: #6b6f8c;
+  --color-accent: #c41e3a;
+
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-pill: 9999px;
+
+  --shadow-soft: 0 18px 40px -28px rgb(196 30 58 / 0.22);
+  --shadow-card: 0 18px 40px -28px rgb(47 42 107 / 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+.font-display {
+  font-family: var(--font-display);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5cae8;
+  border-radius: 999px;
+}
+
+.ui-card,
+.uims-card {
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  border: none;
+}
+
+.login-wave {
+  background-image: radial-gradient(circle at 20% 20%, rgb(255 255 255 / 0.12), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgb(255 255 255 / 0.1), transparent 35%),
+    repeating-linear-gradient(
+      -18deg,
+      transparent,
+      transparent 18px,
+      rgb(255 255 255 / 0.04) 18px,
+      rgb(255 255 255 / 0.04) 36px
+    );
+}
+
+.wmsu-login-hero {
+  background-color: var(--color-primary);
+}
+
+.wmsu-login-blob-top {
+  background: color-mix(in srgb, var(--color-primary) 28%, #e6e9ff);
+}
+
+.wmsu-login-blob-bottom {
+  background: rgb(255 255 255 / 0.7);
+}
+
+.wmsu-login-card-shadow {
+  box-shadow: 0 30px 80px -40px rgb(196 30 58 / 0.35);
+}
+
+.wmsu-btn-gradient {
+  background: linear-gradient(
+    to right,
+    var(--color-primary),
+    color-mix(in srgb, var(--color-primary) 78%, #ffffff)
+  );
+}
+
+.wmsu-btn-gradient:hover {
+  background: linear-gradient(
+    to right,
+    var(--color-primary-hover),
+    var(--color-primary)
+  );
+}
+
+.wmsu-auth-inner-panel {
+  background: color-mix(in srgb, var(--color-primary) 88%, #2f2a6b);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s ease-out both;
+}
+
+.animate-fade-up-delay-1 {
+  animation-delay: 0.05s;
+}
+
+.animate-fade-up-delay-2 {
+  animation-delay: 0.1s;
+}
+
+.animate-fade-up-delay-3 {
+  animation-delay: 0.15s;
+}
+
+@layer components {
+  .uims-sidebar,
+  .mosaic-sidebar {
+    background: var(--color-sidebar);
+    color: var(--color-sidebar-foreground);
+  }
+
+  .uims-nav-item,
+  .mosaic-nav-item {
+    display: flex;
+    min-height: 2.25rem;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(255 255 255 / 0.7);
+    transition: background-color 150ms, color 150ms;
+  }
+
+  .uims-nav-item:hover,
+  .mosaic-nav-item:hover {
+    background: rgb(255 255 255 / 0.08);
+    color: #fff;
+  }
+
+  .uims-nav-active,
+  .mosaic-nav-active {
+    background: rgb(255 255 255 / 0.14);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .uims-group-label,
+  .mosaic-group-label {
+    margin-bottom: 0.25rem;
+    padding: 0 0.75rem;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.4);
+  }
+
+  .uims-header,
+  .mosaic-header {
+    background: transparent;
+    border-bottom: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-up-delay-1,
+  .animate-fade-up-delay-2,
+  .animate-fade-up-delay-3 {
+    animation: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.uims-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 1rem;
+  z-index: 100;
+  border-radius: 9999px;
+  background: #fff;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.uims-skip-link:focus {
+  left: 1rem;
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  outline-offset: 2px;
+}
+
+@media print {
+  .uims-sidebar,
+  .uims-header,
+  aside,
+  header,
+  [data-print-hide] {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+}

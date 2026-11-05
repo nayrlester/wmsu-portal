@@ -1,0 +1,71 @@
+import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import { DateTime } from 'luxon'
+import { t } from '#modules/finance/helpers/db_schema'
+import Organization from '#modules/finance/models/organization'
+import FiscalPeriod from '#modules/finance/models/fiscal_period'
+import FinancialPlanLine from '#modules/finance/models/financial_plan_line'
+
+export default class FinancialPlan extends BaseModel {
+  static table = t('financial_plans')
+
+  @column({ isPrimary: true })
+  declare id: string
+
+  @column()
+  declare organizationId: string
+
+  @column()
+  declare planType: string
+
+  @column()
+  declare fiscalPeriodId: string | null
+
+  @column()
+  declare fiscalYear: string
+
+  @column()
+  declare title: string
+
+  @column()
+  declare description: string | null
+
+  @column()
+  declare status: string
+
+  @column.dateTime()
+  declare submittedAt: DateTime | null
+
+  @column.dateTime()
+  declare reviewedAt: DateTime | null
+
+  @column()
+  declare submittedBy: string | null
+
+  @column()
+  declare reviewedBy: string | null
+
+  @column()
+  declare rejectionReason: string | null
+
+  @column()
+  declare createdBy: string | null
+
+  @column()
+  declare updatedBy: string | null
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+
+  @belongsTo(() => Organization)
+  declare organization: BelongsTo<typeof Organization>
+
+  @belongsTo(() => FiscalPeriod)
+  declare fiscalPeriod: BelongsTo<typeof FiscalPeriod>
+
+  @hasMany(() => FinancialPlanLine, { foreignKey: 'planId' })
+  declare lines: HasMany<typeof FinancialPlanLine>
+}

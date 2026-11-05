@@ -1,0 +1,26 @@
+export const UFMS_PERMISSIONS = [
+  { code: 'finance.read', name: 'View finance reference data', module: 'finance' },
+  { code: 'finance.write', name: 'Manage finance reference data', module: 'finance' },
+  { code: 'budget.read', name: 'View budget plans, allocations, and monitoring', module: 'budget' },
+  { code: 'budget.write', name: 'Create and edit draft budget records', module: 'budget' },
+  { code: 'budget.submit', name: 'Submit budget plans and documents for review', module: 'budget' },
+  { code: 'budget.approve', name: 'Approve or reject budget plans and documents', module: 'budget' },
+  { code: 'accounting.read', name: 'View journals, ledger, tax, and bank reconciliation', module: 'accounting' },
+  { code: 'accounting.write', name: 'Create and edit draft accounting records', module: 'accounting' },
+  { code: 'accounting.post', name: 'Post journals and complete reconciliations', module: 'accounting' },
+  { code: 'accounting.close_period', name: 'Close or reopen fiscal periods', module: 'accounting' },
+  { code: 'cashier.read', name: 'View cashiering records', module: 'cashier' },
+  { code: 'cashier.write', name: 'Record cashiering transactions', module: 'cashier' },
+  { code: 'pos.read', name: 'View POS catalog, sales, and reports', module: 'pos' },
+  { code: 'pos.write', name: 'Manage POS catalog, terminals, and draft sales', module: 'pos' },
+  { code: 'pos.sell', name: 'Complete POS sales and record payments', module: 'pos' },
+  { code: 'pos.void', name: 'Void completed POS sales', module: 'pos' },
+  { code: 'pos.close_day', name: 'Close POS end-of-day sessions', module: 'pos' },
+  { code: 'procurement.read', name: 'View procurement records', module: 'procurement' },
+  { code: 'procurement.write', name: 'Create and edit draft procurement records', module: 'procurement' },
+  { code: 'procurement.approve', name: 'Approve or reject PRs and purchase orders; record awards', module: 'procurement' },
+  { code: 'procurement.accept', name: 'Issue IAR and queue UIMS acceptance events', module: 'procurement' },
+  { code: 'audit.read', name: 'View audit logs', module: 'audit' },
+] as const
+
+export type UfmsPermissionCode = (typeof UFMS_PERMISSIONS)[number]['code']

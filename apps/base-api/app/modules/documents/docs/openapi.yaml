@@ -1,0 +1,1636 @@
+openapi: 3.0.3
+info:
+  title: DocsPro API
+  description: DocsPro API for Document Tracking & Workflow Automation Platform
+  version: 1.0.0
+  contact:
+    name: DocsPro Support
+    email: support@arzaitsolutions.site
+
+servers:
+  - url: https://docs-pro-api.arzaitsolutions.site/api/v1
+    description: Development
+
+tags:
+  - name: Authentication
+  - name: MFA
+  - name: Sessions
+  - name: RBAC
+  - name: Documents
+  - name: Document Files
+  - name: Intelligence
+  - name: Workflows
+  - name: Tenants
+  - name: Organization
+  - name: Billing
+  - name: Admin
+  - name: Notifications
+  - name: Public Tracking
+  - name: E-Sign
+  - name: Records
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthTokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          example: 900
+        tokenType:
+          type: string
+          example: Bearer
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        fullName:
+          type: string
+        tenantId:
+          type: string
+          format: uuid
+        isSuperAdmin:
+          type: boolean
+        emailVerified:
+          type: boolean
+        mfaEnabled:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+    DocumentFile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+        originalName:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+        checksum:
+          type: string
+        virusScanned:
+          type: boolean
+        virusClean:
+          type: boolean
+          nullable: true
+        extractedMetadata:
+          type: object
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    DocumentVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+        label:
+          type: string
+          example: v1
+        changeNotes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentFile'
+
+    SignedDownloadUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        expiresIn:
+          type: integer
+          example: 900
+
+paths:
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new tenant and owner account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, passwordConfirmation, fullName, organizationName]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+                passwordConfirmation:
+                  type: string
+                fullName:
+                  type: string
+                organizationName:
+                  type: string
+      responses:
+        '201':
+          description: Registered successfully
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                mfaCode:
+                  type: string
+                  description: Required when MFA is enabled
+      responses:
+        '200':
+          description: Login successful or MFA required
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      tokens:
+                        $ref: '#/components/schemas/AuthTokens'
+                  - type: object
+                    properties:
+                      mfaRequired:
+                        type: boolean
+                      mfaChallengeToken:
+                        type: string
+
+  /auth/mfa/challenge:
+    post:
+      tags: [Authentication]
+      summary: Complete MFA login challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mfaChallengeToken, mfaCode]
+              properties:
+                mfaChallengeToken:
+                  type: string
+                mfaCode:
+                  type: string
+      responses:
+        '200':
+          description: MFA verified
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: New tokens issued
+
+  /auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: Request password reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Reset email sent if account exists
+
+  /auth/reset-password:
+    post:
+      tags: [Authentication]
+      summary: Reset password with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password, passwordConfirmation]
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                passwordConfirmation:
+                  type: string
+      responses:
+        '200':
+          description: Password reset
+
+  /auth/verify-email:
+    get:
+      tags: [Authentication]
+      summary: Verify email address
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email verified
+
+  /auth/oauth/{provider}/redirect:
+    get:
+      tags: [Authentication]
+      summary: Get OAuth authorization URL
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, microsoft]
+      responses:
+        '200':
+          description: Authorization URL
+
+  /auth/oauth/{provider}/callback:
+    get:
+      tags: [Authentication]
+      summary: OAuth callback handler
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OAuth login successful
+
+  /account/profile:
+    get:
+      tags: [Authentication]
+      security: [{ bearerAuth: [] }]
+      summary: Get authenticated user profile
+      responses:
+        '200':
+          description: User profile with roles
+
+  /account/logout:
+    post:
+      tags: [Authentication]
+      security: [{ bearerAuth: [] }]
+      summary: Logout and revoke tokens
+      responses:
+        '200':
+          description: Logged out
+
+  /account/sessions:
+    get:
+      tags: [Sessions]
+      security: [{ bearerAuth: [] }]
+      summary: List active sessions
+      responses:
+        '200':
+          description: Active sessions
+
+  /account/mfa/setup:
+    post:
+      tags: [MFA]
+      security: [{ bearerAuth: [] }]
+      summary: Initialize MFA setup
+      responses:
+        '200':
+          description: QR code and secret
+
+  /account/mfa/enable:
+    post:
+      tags: [MFA]
+      security: [{ bearerAuth: [] }]
+      summary: Enable MFA after verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+      responses:
+        '200':
+          description: MFA enabled
+
+  /account/permissions:
+    get:
+      tags: [RBAC]
+      security: [{ bearerAuth: [] }]
+      summary: List all permissions grouped by module
+      responses:
+        '200':
+          description: Permission catalog
+
+  /account/permissions/me:
+    get:
+      tags: [RBAC]
+      security: [{ bearerAuth: [] }]
+      summary: Get current user permissions
+      responses:
+        '200':
+          description: User permission slugs
+
+  /account/roles:
+    get:
+      tags: [RBAC]
+      security: [{ bearerAuth: [] }]
+      summary: List tenant roles
+      responses:
+        '200':
+          description: Roles with permissions
+
+  /account/documents:
+    get:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      summary: List documents
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Paginated documents
+
+    post:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      summary: Create document
+      responses:
+        '201':
+          description: Document created
+
+  /account/documents/search:
+    get:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      summary: Search documents (full-text)
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Search results
+
+  /account/documents/{id}:
+    get:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      summary: Get document by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Document detail
+
+    put:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      summary: Update document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated document
+
+    delete:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      summary: Soft-delete draft document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Document deleted
+
+  /account/documents/{id}/submit:
+    post:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      summary: Submit document for processing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Document submitted
+
+  /account/documents/{id}/archive:
+    post:
+      tags: [Documents]
+      security: [{ bearerAuth: [] }]
+      summary: Archive document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Document archived
+
+  /account/documents/{documentId}/versions:
+    get:
+      tags: [Document Files]
+      security: [{ bearerAuth: [] }]
+      summary: List document versions with attached files
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Version list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentVersion'
+
+    post:
+      tags: [Document Files]
+      security: [{ bearerAuth: [] }]
+      summary: Create new document version (v2, v3…)
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                changeNotes:
+                  type: string
+      responses:
+        '201':
+          description: Version created
+
+  /account/documents/{documentId}/files:
+    get:
+      tags: [Document Files]
+      security: [{ bearerAuth: [] }]
+      summary: List document files
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: versionId
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: File list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentFile'
+
+  /account/documents/{documentId}/versions/{versionId}/files:
+    post:
+      tags: [Document Files]
+      security: [{ bearerAuth: [] }]
+      summary: Upload file to a document version
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: versionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                metadata:
+                  type: string
+                  description: Optional JSON metadata string
+      responses:
+        '201':
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentFile'
+        '422':
+          description: Invalid file type or document state
+
+  /account/documents/{documentId}/files/{fileId}/download:
+    get:
+      tags: [Document Files]
+      security: [{ bearerAuth: [] }]
+      summary: Get signed download URL
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fileId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Signed URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedDownloadUrl'
+
+  /account/documents/{documentId}/files/{fileId}:
+    delete:
+      tags: [Document Files]
+      security: [{ bearerAuth: [] }]
+      summary: Soft-delete file
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: fileId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: File deleted
+
+  /account/documents/{documentId}/intelligence:
+    get:
+      tags: [Intelligence]
+      security: [{ bearerAuth: [] }]
+      summary: Get document AI/OCR results
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Classification, summary, metadata, and job history
+
+  /account/documents/{documentId}/intelligence/analyze:
+    post:
+      tags: [Intelligence]
+      security: [{ bearerAuth: [] }]
+      summary: Enqueue OCR/AI analysis for a file
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fileId]
+              properties:
+                fileId:
+                  type: string
+                  format: uuid
+                tasks:
+                  type: array
+                  items:
+                    type: string
+                    enum: [ocr, classify, extract_metadata, routing_suggestion, summarize]
+      responses:
+        '202':
+          description: Analysis job accepted
+
+  /account/documents/{documentId}/intelligence/jobs/{jobId}:
+    get:
+      tags: [Intelligence]
+      security: [{ bearerAuth: [] }]
+      summary: Get intelligence job status and result
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Job details
+
+  /account/workflows:
+    get:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: List workflows
+      responses:
+        '200':
+          description: Paginated workflows
+    post:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Create draft workflow
+      responses:
+        '201':
+          description: Workflow created
+
+  /account/workflows/{id}:
+    get:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Get workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Workflow detail
+    put:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Update draft workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated workflow
+    delete:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Delete draft workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Workflow deleted
+
+  /account/workflows/{id}/publish:
+    post:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Publish workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Workflow published
+
+  /account/documents/{documentId}/timeline:
+    get:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Routing timeline history
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Chronological routing entries
+
+  /account/documents/{documentId}/activity:
+    get:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Unified document activity feed
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: limit
+          in: query
+          schema: { type: integer, maximum: 200 }
+      responses:
+        '200':
+          description: Merged routing, approval, and audit activity
+
+  /account/documents/{documentId}/workflow:
+    get:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Get active workflow instance state
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Workflow runtime state
+
+  /account/documents/{documentId}/approvals:
+    get:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: List document approvals
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Approval history
+    post:
+      tags: [Workflows]
+      security: [{ bearerAuth: [] }]
+      summary: Approve, reject, or return document at current step
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Action processed
+
+  /admin/tenants:
+    get:
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      summary: List organizations (super admin)
+      responses:
+        '200':
+          description: Paginated tenants
+    post:
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      summary: Create organization
+      responses:
+        '201':
+          description: Organization created
+
+  /admin/tenants/{id}/suspend:
+    post:
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      summary: Suspend organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Organization suspended
+
+  /account/organization:
+    get:
+      tags: [Organization]
+      security: [{ bearerAuth: [] }]
+      summary: Get current organization
+      responses:
+        '200':
+          description: Organization profile with settings and branding
+
+  /account/settings:
+    put:
+      tags: [Organization]
+      security: [{ bearerAuth: [] }]
+      summary: Update organization settings
+      responses:
+        '200':
+          description: Updated settings
+
+  /account/branding:
+    put:
+      tags: [Organization]
+      security: [{ bearerAuth: [] }]
+      summary: Update branding theme
+      responses:
+        '200':
+          description: Updated branding
+
+  /account/branding/logo:
+    post:
+      tags: [Organization]
+      security: [{ bearerAuth: [] }]
+      summary: Upload organization logo
+      responses:
+        '200':
+          description: Logo uploaded
+
+  /account/domains:
+    post:
+      tags: [Organization]
+      security: [{ bearerAuth: [] }]
+      summary: Add custom domain
+      responses:
+        '201':
+          description: Domain pending verification
+
+  /account/subscription/usage:
+    get:
+      tags: [Organization]
+      security: [{ bearerAuth: [] }]
+      summary: Subscription usage vs plan limits
+      responses:
+        '200':
+          description: Usage and limits
+
+  /account/billing/plans:
+    get:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      summary: List active subscription plans
+      responses:
+        '200':
+          description: Plan catalog
+
+  /account/billing/checkout:
+    post:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      summary: Create PCI-safe hosted checkout session
+      responses:
+        '200':
+          description: Checkout session URL (no card data touches CDTS)
+
+  /account/billing/upgrade:
+    post:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      summary: Upgrade subscription plan
+      responses:
+        '200':
+          description: Updated subscription
+
+  /account/billing/downgrade:
+    post:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      summary: Downgrade subscription plan
+      responses:
+        '200':
+          description: Downgrade scheduled or applied
+
+  /account/billing/cancel:
+    post:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      summary: Cancel subscription
+      responses:
+        '200':
+          description: Cancellation scheduled or applied
+
+  /account/billing/coupons/validate:
+    post:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      summary: Validate coupon code
+      responses:
+        '200':
+          description: Coupon details
+
+  /account/billing/invoices:
+    get:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      summary: List tenant invoices
+      responses:
+        '200':
+          description: Paginated invoices
+
+  /account/billing/usage:
+    get:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      summary: Usage report with historical snapshots
+      responses:
+        '200':
+          description: Usage metrics and limits
+
+  /webhooks/billing/stripe:
+    post:
+      tags: [Billing]
+      summary: Stripe webhook (signature verified)
+      responses:
+        '200':
+          description: Event processed
+
+  /webhooks/billing/paymongo:
+    post:
+      tags: [Billing]
+      summary: PayMongo webhook (signature verified)
+      responses:
+        '200':
+          description: Event processed
+
+  /admin/analytics/overview:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Platform KPIs (MRR, ARR, churn, tenants, storage)
+      responses:
+        '200':
+          description: Overview metrics
+
+  /admin/analytics/revenue:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Monthly revenue and revenue by plan
+      responses:
+        '200':
+          description: Revenue analytics
+
+  /admin/analytics/tenants:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Per-tenant usage breakdown
+      responses:
+        '200':
+          description: Tenant usage rows
+
+  /admin/billing/overview:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Platform billing overview
+      responses:
+        '200':
+          description: Billing summary
+
+  /admin/plans:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: List subscription plans
+      responses:
+        '200':
+          description: Plan list
+    post:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Create subscription plan
+      responses:
+        '201':
+          description: Plan created
+
+  /account/notifications:
+    get:
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      summary: List in-app notifications
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated notifications
+
+  /account/notifications/unread-count:
+    get:
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      summary: Unread notification count
+      responses:
+        '200':
+          description: Unread count
+
+  /account/notifications/read-all:
+    post:
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      summary: Mark all notifications as read
+      responses:
+        '200':
+          description: All marked read
+
+  /account/notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      summary: Mark a notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notification marked read
+        '404':
+          description: Notification not found
+
+  /account/push-tokens:
+    post:
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      summary: Register Firebase push token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  minLength: 20
+                platform:
+                  type: string
+                  example: web
+      responses:
+        '201':
+          description: Token registered
+    delete:
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      summary: Remove push token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Token removed
+
+  /public/branding:
+    get:
+      tags: [Organization]
+      summary: Public branding by verified domain
+      parameters:
+        - name: domain
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Public branding config
+
+  /track/{trackingNumber}:
+    get:
+      tags: [Public Tracking]
+      summary: Public document tracking view
+      description: |
+        Returns status, timeline, current department, and last updated.
+        Does not expose files, user PII, remarks, or internal metadata.
+      parameters:
+        - name: trackingNumber
+          in: path
+          required: true
+          schema:
+            type: string
+            example: DTS-2026-0000001
+      responses:
+        '200':
+          description: Public tracking information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trackingNumber:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: string
+                  currentDepartment:
+                    type: object
+                    nullable: true
+                    properties:
+                      name:
+                        type: string
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                  submittedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  timeline:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        action:
+                          type: string
+                        label:
+                          type: string
+                        department:
+                          type: object
+                          nullable: true
+                          properties:
+                            name:
+                              type: string
+                        occurredAt:
+                          type: string
+                          format: date-time
+        '404':
+          description: Tracking number not found
+
+  /webhooks/pandadoc:
+    post:
+      tags: [E-Sign]
+      summary: PandaDoc webhook receiver
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed
+        '401':
+          description: Invalid authorization
+
+  /account/documents/{id}/esign:
+    get:
+      tags: [E-Sign]
+      summary: Get latest e-sign envelope for a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Envelope or null
+    post:
+      tags: [E-Sign]
+      summary: Send document file for PandaDoc signature
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipients]
+              properties:
+                fileId:
+                  type: string
+                  format: uuid
+                recipients:
+                  type: array
+                  items:
+                    type: object
+                    required: [email]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+                      role:
+                        type: string
+      responses:
+        '201':
+          description: Envelope created and sent
+
+  /account/documents/{id}/esign/start:
+    post:
+      tags: [E-Sign]
+      summary: Create draft envelope and editing session for place-fields
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fileId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Envelope + editorToken for Embedded Sending
+
+  /account/documents/{id}/esign/place-session:
+    post:
+      tags: [E-Sign]
+      summary: Re-open place-fields editor for an unsent envelope
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: editorToken for Embedded Sending
+
+  /account/documents/{id}/esign/finalize:
+    post:
+      tags: [E-Sign]
+      summary: After fields placed — silent-send and create signing session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Envelope sent + sessionId for embed signing
+
+  /account/documents/{id}/esign/session:
+    post:
+      tags: [E-Sign]
+      summary: Create embedded signing session for current user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session ID for embed
+
+  /account/documents/{id}/esign/sync:
+    post:
+      tags: [E-Sign]
+      summary: Poll provider and pull signed PDF when complete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Envelope + synced flag
+
+  /account/retention-schedules:
+    get:
+      tags: [Records]
+      summary: List retention schedules (seeds NAP defaults)
+      responses:
+        '200':
+          description: Schedules list
+    post:
+      tags: [Records]
+      summary: Create retention schedule
+      responses:
+        '201':
+          description: Created
+
+  /account/records/summary:
+    get:
+      tags: [Records]
+      summary: Retention / lifecycle summary counts
+      responses:
+        '200':
+          description: Summary metrics
+
+  /account/records/inventory:
+    get:
+      tags: [Records]
+      summary: Records inventory listing (JSON or CSV via format=csv)
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+        - name: napCategory
+          in: query
+          schema:
+            type: string
+        - name: lifecycleStatus
+          in: query
+          schema:
+            type: string
+        - name: dueForArchive
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Inventory rows or CSV download
+
+  /account/record-requests:
+    get:
+      tags: [Records]
+      summary: List record requests (own requests, or all for release desk)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: mine
+          in: query
+          schema:
+            type: boolean
+        - name: overdue
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Paginated record requests
+    post:
+      tags: [Records]
+      summary: Create a records request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [purpose, accessMode, documentIds]
+              properties:
+                purpose:
+                  type: string
+                accessMode:
+                  type: string
+                  enum: [view_only, download, physical_checkout]
+                documentIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                requestingOfficeId:
+                  type: string
+                  format: uuid
+                neededBy:
+                  type: string
+                  format: date-time
+                dueAt:
+                  type: string
+                  format: date-time
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Created request with RR-YYYY-####### number
+
+  /account/record-requests/{id}:
+    get:
+      tags: [Records]
+      summary: Get record request detail + release log
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Request detail
+
+  /account/record-requests/{id}/approve:
+    post:
+      tags: [Records]
+      summary: Approve a pending records request (release desk)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Approved
+
+  /account/record-requests/{id}/deny:
+    post:
+      tags: [Records]
+      summary: Deny a pending records request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Denied
+
+  /account/record-requests/{id}/release:
+    post:
+      tags: [Records]
+      summary: Checkout / release requested records
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Released / checked out
+
+  /account/record-requests/{id}/return:
+    post:
+      tags: [Records]
+      summary: Mark checked-out records as returned
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Returned
+
+  /account/record-requests/{id}/cancel:
+    post:
+      tags: [Records]
+      summary: Cancel a pending or approved (unreleased) request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Cancelled

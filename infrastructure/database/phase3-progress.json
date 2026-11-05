@@ -1,0 +1,153 @@
+{
+  "phase": "phase3c-search-path-cutover",
+  "targetDatabase": "wmsu_cis",
+  "completedModules": [
+    {
+      "module": "enrollment",
+      "targetSchema": "enrollment",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_enr",
+      "tableCount": 114,
+      "restoredAt": "2026-11-04T01:28:16.592Z",
+      "satelliteUntouched": true,
+      "notes": "USiS schema dump/rewrite/restore into wmsu_cis.enrollment; satellite wmsu_enr left intact"
+    },
+    {
+      "module": "finance",
+      "targetSchema": "finance",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_fin",
+      "tableCount": 82,
+      "restoredAt": "2026-11-04T01:30:38.546Z",
+      "satelliteUntouched": true
+    },
+    {
+      "module": "records",
+      "targetSchema": "records",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_tor",
+      "tableCount": 60,
+      "restoredAt": "2026-11-04T01:32:28.987Z",
+      "satelliteUntouched": true
+    },
+    {
+      "module": "inventory",
+      "targetSchema": "inventory",
+      "sourceDatabase": "postgres",
+      "sourceSchema": "wmsu_inv",
+      "tableCount": 36,
+      "restoredAt": "2026-11-04T01:37:43.592Z",
+      "satelliteUntouched": true,
+      "method": "migrations-absorb",
+      "dataCopied": false,
+      "notes": "Remote Supabase dump failed (tenant not found); structure absorbed via wmsu-inventory Lucid migrations into wmsu_cis.inventory"
+    },
+    {
+      "module": "library",
+      "targetSchema": "library",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "public",
+      "tableCount": 55,
+      "restoredAt": "2026-11-04T01:44:12.821Z",
+      "satelliteUntouched": true,
+      "notes": "librastack.public → wmsu_cis.library via SOURCE_PG* overrides (satellite .env Supabase tenant dead); satellite public left intact"
+    },
+    {
+      "module": "documents",
+      "targetSchema": "documents",
+      "sourceDatabase": "cdts",
+      "sourceSchema": "public",
+      "tableCount": 66,
+      "restoredAt": "2026-11-04T01:48:18.278Z",
+      "satelliteUntouched": true,
+      "notes": "cdts.public → wmsu_cis.documents via SOURCE_PG* (:5435); blobs remain in object storage; satellite untouched"
+    },
+    {
+      "module": "common",
+      "targetSchema": "common",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_identity",
+      "tableCount": 12,
+      "restoredAt": "2026-11-04T01:51:13.972Z",
+      "satelliteUntouched": true,
+      "notes": "librastack.wmsu_identity → wmsu_cis.common; restore scripts ignore apps/base-api DB_DATABASE (prefer POSTGRES_DB/CIS_*); satellite untouched"
+    }
+  ],
+  "pendingModules": [],
+  "phase3bStatus": "module-restore-complete",
+  "phase3cStatus": "search-path-cutover-complete",
+  "next": "TOR acceptance on CIS façades; re-dump inventory rows; Phase 4 satellite DB decommission",
+  "cutoverModules": [
+    {
+      "module": "common",
+      "targetSchema": "common",
+      "targetDatabase": "wmsu_cis",
+      "tableCount": 12,
+      "cutoverAt": "2026-11-04T01:55:17.018Z",
+      "envPath": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-api\\apps\\api\\.env",
+      "searchPath": "common,public,extensions",
+      "rollbackEnv": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-api\\apps\\api\\.env.pre-cis"
+    },
+    {
+      "module": "enrollment",
+      "targetSchema": "enrollment",
+      "targetDatabase": "wmsu_cis",
+      "tableCount": 114,
+      "cutoverAt": "2026-11-04T01:59:37.481Z",
+      "envPath": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-enrollment\\apps\\api\\.env",
+      "searchPath": "enrollment,common,public,extensions",
+      "rollbackEnv": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-enrollment\\apps\\api\\.env.pre-cis"
+    },
+    {
+      "module": "finance",
+      "targetSchema": "finance",
+      "targetDatabase": "wmsu_cis",
+      "tableCount": 82,
+      "cutoverAt": "2026-11-04T02:02:48.720Z",
+      "envPath": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-finance\\apps\\api\\.env",
+      "searchPath": "finance,common,public,extensions",
+      "rollbackEnv": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-finance\\apps\\api\\.env.pre-cis"
+    },
+    {
+      "module": "records",
+      "targetSchema": "records",
+      "targetDatabase": "wmsu_cis",
+      "tableCount": 60,
+      "cutoverAt": "2026-11-04T02:02:49.049Z",
+      "envPath": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-records\\apps\\api\\.env",
+      "searchPath": "records,common,public,extensions",
+      "rollbackEnv": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-records\\apps\\api\\.env.pre-cis"
+    },
+    {
+      "module": "library",
+      "targetSchema": "library",
+      "targetDatabase": "wmsu_cis",
+      "tableCount": 55,
+      "cutoverAt": "2026-11-04T02:02:49.310Z",
+      "envPath": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-library\\apps\\api\\.env",
+      "searchPath": "library,common,public,extensions",
+      "rollbackEnv": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-library\\apps\\api\\.env.pre-cis"
+    },
+    {
+      "module": "documents",
+      "targetSchema": "documents",
+      "targetDatabase": "wmsu_cis",
+      "tableCount": 66,
+      "cutoverAt": "2026-11-04T02:02:49.571Z",
+      "envPath": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-document\\api\\.env",
+      "searchPath": "documents,common,public,extensions",
+      "rollbackEnv": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-document\\api\\.env.pre-cis"
+    },
+    {
+      "module": "inventory",
+      "targetSchema": "inventory",
+      "targetDatabase": "wmsu_cis",
+      "tableCount": 36,
+      "cutoverAt": "2026-11-04T02:02:49.847Z",
+      "envPath": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-inventory\\apps\\api\\.env",
+      "searchPath": "inventory,common,public,extensions",
+      "rollbackEnv": "D:\\PROJECTS\\PROJECTS_SIR_LITO\\WMSU\\wmsu-inventory\\apps\\api\\.env.pre-cis"
+    }
+  ],
+  "cutoverPendingModules": []
+}

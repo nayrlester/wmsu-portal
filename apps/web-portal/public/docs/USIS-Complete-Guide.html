@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>USiS Complete User Guide</title>
+  <style>
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.55; color: #1a1a1a; max-width: 210mm; margin: 0 auto; padding: 12mm; }
+  h1 { font-size: 22pt; color: #2f2a6b; border-bottom: 2px solid #635bff; padding-bottom: 6px; }
+  h2 { font-size: 16pt; color: #3d3780; margin-top: 22px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d0f0; padding: 8px 10px; text-align: left; }
+  th { background: #eef0ff; }
+  code { background: #f4f6ff; padding: 2px 5px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<h1>USiS — University Student Information System</h1>
+<p><strong>Enrollment module (WMSU CIS)</strong></p>
+<table>
+<tr><th>Document version</th><td>2.0 — November 2026</td></tr>
+<tr><th>Local web URL</th><td><code>http://127.0.0.1:5180</code></td></tr>
+<tr><th>API prefix</th><td><code>/api/v1/enrollment</code> on Base API (<code>http://127.0.0.1:3500</code>)</td></tr>
+</table>
+
+<h2>1. How you get in</h2>
+<ol>
+<li>Sign in at <strong>WMSU Portal</strong> (Unified Access) with your Identity account.</li>
+<li>Open the <strong>Enrollment (USiS)</strong> tile — you must have the <code>enrollment</code> platform assigned.</li>
+<li>SSO sends you to USiS; your <strong>Identity role</strong> decides which portal you see (student vs registrar vs faculty).</li>
+</ol>
+
+<h2>2. Roles and what you see</h2>
+<p>Platform access (<code>enrollment.access</code>) only lets you open USiS. Fine-grained menus come from Identity roles mapped to permission packs:</p>
+<table>
+<tr><th>Identity role</th><th>USiS experience</th></tr>
+<tr><td><code>student</code></td><td>Student portal only — profile, enrollment, grades, payments, COR, etc. No registrar or faculty menus.</td></tr>
+<tr><td><code>registrar</code></td><td>Registrar portal — applicants, students, enrollments, academic setup, grades administration.</td></tr>
+<tr><td><code>adviser</code></td><td>Faculty/advising — advising and limited grade/student reads, not full registrar.</td></tr>
+<tr><td><code>cashier</code></td><td>Payments, assessments, clearance reads — not full registrar catalog.</td></tr>
+<tr><td><code>employee</code></td><td>Launch only unless another role is assigned — no registrar by default.</td></tr>
+<tr><td><code>identity_admin</code></td><td>Full USiS permissions when enrollment platform is granted.</td></tr>
+</table>
+<p>Portal Admin shows a short note under each role when editing users. Ask an Identity administrator to change roles or platforms.</p>
+
+<h2>3. Student portal</h2>
+<ul>
+<li>Home path: <code>/student</code> after SSO when the student role is present.</li>
+<li>Self-service: admission status, subject selection, schedule, assessment, payment status, grades, academic history.</li>
+<li>If you see “No student profile linked,” your Identity account is not yet linked to a student record — contact the Registrar.</li>
+</ul>
+
+<h2>4. Registrar and offices</h2>
+<ul>
+<li>Registrar staff land on <code>/registrar</code> with applicants, student records, enrollments, and academic configuration.</li>
+<li>Administrative office routes (Admissions, OSA, Guidance, Health, Scholarship) require the matching permission pack — not every staff user sees every office.</li>
+</ul>
+
+<h2>5. Demo accounts (non-production)</h2>
+<table>
+<tr><th>Email</th><th>Role</th><th>Typical USiS landing</th></tr>
+<tr><td><code>student@identity.local</code></td><td>student</td><td>Student portal</td></tr>
+<tr><td><code>employee@identity.local</code></td><td>employee (+ others if assigned)</td><td>Depends on roles — assign <code>registrar</code> in Portal Admin for registrar UI</td></tr>
+<tr><td><code>admin@identity.local</code></td><td>identity_admin</td><td>Full access</td></tr>
+</table>
+<p>Password: value of <code>DEMO_SEED_PASSWORD</code> from Identity seed (demo default often <code>ChangeMe123!</code>).</p>
+
+<h2>6. Troubleshooting</h2>
+<table>
+<tr><th>Symptom</th><th>What to check</th></tr>
+<tr><td>USiS tile missing</td><td><code>enrollment</code> platform not assigned in Portal Admin</td></tr>
+<tr><td>Registrar menus as a student</td><td>User should have <code>student</code> role only; remove registrar/staff roles</td></tr>
+<tr><td>403 on registrar APIs</td><td>Role pack does not include that permission — expected for students</td></tr>
+<tr><td>SSO error</td><td>Sign out of Portal, sign in again; confirm Base API and Identity API are running</td></tr>
+</table>
+
+<h2>6. Reports &amp; dashboards</h2>
+<ul>
+<li>Registrar: <code>/registrar</code> home and <code>/reports/dashboard</code> API for role-aware cards.</li>
+<li>Student: dashboard under <code>/student</code> — enrollment status, grades, payments (no registrar list APIs).</li>
+<li><code>GET /api/v1/enrollment/reports/dashboard</code> — requires registrar or report permissions from Identity pack.</li>
+</ul>
+
+<h2>Related</h2>
+<p><a href="./Identity-Complete-Guide.html">Identity user guide</a> · <a href="./USIS-API-Specs-Manual.html">USiS API specs</a> · Portal <a href="/support">Support center</a></p>
+</body>
+</html>

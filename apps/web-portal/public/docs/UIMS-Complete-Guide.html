@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UIMS Complete User Guide</title>
+  <style>
+  @page { margin: 22mm 18mm; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 12mm;
+  }
+  h1 { font-size: 22pt; color: #0f3d5c; border-bottom: 2px solid #0f3d5c; padding-bottom: 6px; margin-top: 28px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 16pt; color: #145374; margin-top: 22px; }
+  h3 { font-size: 13pt; color: #1a5f7a; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d6e0; padding: 8px 10px; text-align: left; }
+  th { background: #e8f1f6; font-weight: 600; }
+  img { max-width: 100%; height: auto; border: 1px solid #dde4ea; border-radius: 4px; margin: 12px 0; }
+  code { background: #f4f6f8; padding: 2px 5px; border-radius: 3px; font-size: 0.92em; }
+  pre { background: #f4f6f8; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 9pt; }
+  blockquote { border-left: 4px solid #0f3d5c; margin: 12px 0; padding: 8px 16px; background: #f7fafc; color: #334; }
+  a { color: #0f6ba8; }
+  hr { border: none; border-top: 1px solid #dde4ea; margin: 24px 0; }
+</style>
+</head>
+<body>
+<h1>UIMS Complete User Guide</h1>
+<p><strong>University Inventory Management System</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>UIMS</td>
+</tr>
+<tr>
+<td><strong>Document version</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Published</strong></td>
+<td>August 2026</td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>Supply Office staff, property custodians, supply clerks, administrators, campus IT, trainers</td>
+</tr>
+</tbody></table>
+<p>This single reference combines the user manual, quick start, administrator guide, Field PWA procedures, SSO launch guide, FAQ, troubleshooting, glossary, best practices, and task articles.</p>
+<h2>Guide Contents</h2>
+<ol>
+<li>User Manual (staff)</li>
+<li>Quick Start Guide</li>
+<li>Administrator Guide</li>
+<li>Field PWA Guide</li>
+<li>SSO &amp; Platform Access Guide</li>
+<li>Training Outline</li>
+<li>Frequently Asked Questions</li>
+<li>Troubleshooting</li>
+<li>Glossary</li>
+<li>Best Practices</li>
+<li>Task: Create an item</li>
+<li>Task: Receive stock</li>
+<li>Task: Assign an asset</li>
+<li>Task: Create ICS / PAR</li>
+<li>Task: Run a physical count</li>
+<li>Task: Run depreciation</li>
+<li>Task: Export a report</li>
+<li>Task: Manage users</li>
+<li>Task: Launch via SSO</li>
+</ol>
+<hr>
+<h1>Part 1 — User Manual</h1>
+<p><strong>University Inventory Management System</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>UIMS</td>
+</tr>
+<tr>
+<td><strong>Document version</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Product release</strong></td>
+<td>August 2026</td>
+</tr>
+<tr>
+<td><strong>Organization (example)</strong></td>
+<td>University (<code>UNI</code>)</td>
+</tr>
+<tr>
+<td><strong>Prepared by</strong></td>
+<td>Implementation &amp; Documentation Team</td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>End users, Supply Office, property custodians, administrators</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#chapter-1--introduction">Introduction</a></li>
+<li><a href="#chapter-2--accessing-the-system">Accessing the System</a></li>
+<li><a href="#chapter-3--navigating-the-platform">Navigating the Platform</a></li>
+<li><a href="#chapter-4--dashboard-overview">Dashboard Overview</a></li>
+<li><a href="#chapter-5--organization">Organization</a></li>
+<li><a href="#chapter-6--items--categories">Items &amp; Categories</a></li>
+<li><a href="#chapter-7--warehouses--bins">Warehouses &amp; Bins</a></li>
+<li><a href="#chapter-8--stock-movements">Stock Movements</a></li>
+<li><a href="#chapter-9--suppliers--requisitions">Suppliers &amp; Requisitions</a></li>
+<li><a href="#chapter-10--assets-ppe-register">Assets (PPE Register)</a></li>
+<li><a href="#chapter-11--coa-forms">COA Forms</a></li>
+<li><a href="#chapter-12--physical-count--field-pwa">Physical Count &amp; Field PWA</a></li>
+<li><a href="#chapter-13--gam-depreciation">GAM Depreciation</a></li>
+<li><a href="#chapter-14--reports--analytics">Reports &amp; Analytics</a></li>
+<li><a href="#chapter-15--users--roles">Users &amp; Roles</a></li>
+<li><a href="#chapter-16--audit-logs">Audit Logs</a></li>
+<li><a href="#chapter-17--troubleshooting-staff">Troubleshooting (Staff)</a></li>
+<li><a href="#chapter-18--faq-staff">FAQ (Staff)</a></li>
+<li><a href="#chapter-19--best-practices-staff">Best Practices (Staff)</a></li>
+</ol>
+<hr>
+<h1>Chapter 1 — Introduction</h1>
+<h2>Purpose of the System</h2>
+<p>UIMS is a university-focused <strong>inventory and property accountability</strong> platform for Philippine government institutions. It is a <strong>standalone sibling</strong> of Identity Service, HRIS Payroll, ULMIS (Library), and UDMS — <strong>not embedded in HRIS</strong>, though it shares the same PostgreSQL database under an isolated <code>uims</code> schema.</p>
+<p>Institutions use UIMS to:</p>
+<ul>
+<li>Maintain a <strong>master catalog</strong> of consumables, supplies, and semi-expendable items with categories, barcodes, and CSV import</li>
+<li>Operate <strong>warehouses and bins</strong> with real-time stock balances and an immutable movement ledger</li>
+<li>Run <strong>stock movements</strong>: beginning balance, receive, issue, transfer, adjust, return, disposal, reserve, and release</li>
+<li>Manage <strong>suppliers</strong> and office <strong>requisitions</strong> (draft → submit → approve/reject → fulfill)</li>
+<li>Register and track <strong>Property, Plant &amp; Equipment (PPE)</strong> assets with assignment, maintenance, retirement, and QR labels</li>
+<li>Produce <strong>Commission on Audit (COA)</strong> forms: ICS, PAR, RPCPPE, IIRUP, and WMR</li>
+<li>Conduct <strong>physical counts</strong> with a mobile <strong>Field PWA</strong> for barcode scanning</li>
+<li>Calculate <strong>Government Accounting Manual (GAM)</strong> straight-line depreciation on PPE</li>
+<li>Export <strong>mandated reports</strong> (CSV and print/PDF) and review <strong>audit logs</strong> for compliance</li>
+</ul>
+<h2>Key Benefits</h2>
+<table>
+<thead>
+<tr>
+<th>Benefit</th>
+<th>Business value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>COA-aligned workflows</td>
+<td>ICS, PAR, RPCPPE, IIRUP, WMR with approval audit trail</td>
+</tr>
+<tr>
+<td>Dual auth</td>
+<td>Local JWT plus Enterprise Identity SSO (<code>AUTH_MODE=dual</code>)</td>
+</tr>
+<tr>
+<td>Stock traceability</td>
+<td>Every movement posts to ledger; balances always derivable</td>
+</tr>
+<tr>
+<td>Role-based access</td>
+<td>Six seeded roles from read-only viewer to full administrator</td>
+</tr>
+<tr>
+<td>Field mobility</td>
+<td>UIMS Field PWA for warehouse walks and physical counts</td>
+</tr>
+<tr>
+<td>HRIS integration</td>
+<td>Internal custodianship API feeds HRIS employee property records</td>
+</tr>
+<tr>
+<td>Idempotent stock writes</td>
+<td><code>Idempotency-Key</code> header prevents duplicate postings on retry</td>
+</tr>
+<tr>
+<td>Shared infrastructure</td>
+<td>Same Postgres host as HRIS; isolated <code>uims</code> schema and migration table</td>
+</tr>
+</tbody></table>
+<h2>System Overview</h2>
+<pre><code class="language-mermaid">flowchart LR
+  subgraph Clients
+    W[UIMS Web :5200]
+    F[UIMS Field PWA]
+  end
+  subgraph Platform
+    ID[Identity Service :3401]
+  end
+  subgraph Backend
+    API[UIMS API :3334]
+    DB[(PostgreSQL schema uims)]
+  end
+  subgraph Siblings
+    HRIS[HRIS Payroll]
+    ULMIS[ULMIS Library]
+    UDMS[UDMS]
+  end
+  W --&gt; API
+  F --&gt; API
+  W -. SSO launch .-&gt; ID
+  ID -. JWT / callback .-&gt; W
+  API --&gt; DB
+  API --&gt; ID
+  HRIS -. custodianships M2M .-&gt; API
+  API -. read-only .-&gt; HRIS
+</code></pre>
+<p><strong>Health probe:</strong> <code>GET http://127.0.0.1:3334/health</code> → <code>{ &quot;status&quot;: &quot;ok&quot;, &quot;service&quot;: &quot;uims&quot; }</code></p>
+<p><strong>API contract:</strong> Swagger at <code>http://127.0.0.1:3334/api/v1/docs</code></p>
+<hr>
+<h1>Chapter 2 — Accessing the System</h1>
+<h2>Local URLs (development)</h2>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Staff web</td>
+<td><code>http://localhost:5200</code></td>
+</tr>
+<tr>
+<td>API</td>
+<td><code>http://127.0.0.1:3334</code></td>
+</tr>
+<tr>
+<td>Swagger / OpenAPI</td>
+<td><code>http://127.0.0.1:3334/api/v1/docs</code></td>
+</tr>
+<tr>
+<td>SSO callback (Identity launch)</td>
+<td><code>http://localhost:5200/sso/callback</code></td>
+</tr>
+<tr>
+<td>Identity Service (reference)</td>
+<td><code>http://127.0.0.1:3401</code></td>
+</tr>
+</tbody></table>
+<h2>Local login</h2>
+<ol>
+<li>Open the staff web URL (<code>http://localhost:5200</code>).</li>
+<li>Enter your <strong>email</strong> and <strong>password</strong>.</li>
+<li>After successful authentication, you are redirected to the <strong>Dashboard</strong>.</li>
+</ol>
+<p><strong>Seeded administrator (non-production only):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Email</td>
+<td><code>admin@uims.local</code></td>
+</tr>
+<tr>
+<td>Password</td>
+<td><code>password123</code></td>
+</tr>
+<tr>
+<td>Role</td>
+<td>Administrator (all permissions)</td>
+</tr>
+</tbody></table>
+<p>Change this password before any production or shared-environment use.</p>
+<h2>Enterprise SSO (Identity launch)</h2>
+<p>When <code>AUTH_MODE</code> is <code>dual</code> or <code>platform</code>:</p>
+<ol>
+<li>Sign in to the <strong>University Platform Access</strong> portal (Identity Service).</li>
+<li>Launch the <strong>UIMS</strong> application (platform code: <code>uims</code>).</li>
+<li>Identity redirects to <code>/sso/callback</code> with tokens in the URL hash (<code>#access_token=…&amp;refresh_token=…</code>).</li>
+<li>UIMS validates the platform JWT via JWKS, links or provisions the local user, and redirects to <code>/dashboard</code>.</li>
+</ol>
+<p>If SSO fails and <code>AUTH_MODE=dual</code>, use <strong>local login</strong> as a fallback. In <code>platform</code> mode, Identity is required.</p>
+<h2>Session tips</h2>
+<ul>
+<li>If API calls fail with <strong>401 Unauthorized</strong>, sign out and sign in again — the access token may have expired. Use refresh or re-login.</li>
+<li>Confirm the API is running on port <strong>3334</strong> and that <code>VITE_API_URL</code> includes <code>/api/v1</code>.</li>
+<li>Never share <code>SERVICE_API_KEY</code> or paste it into browser clients — it is for server-to-server (HRIS) calls only.</li>
+<li>On shared tablets used for Field Mode, <strong>sign out</strong> at the end of each shift.</li>
+</ul>
+<hr>
+<h1>Chapter 3 — Navigating the Platform</h1>
+<p>The sidebar groups modules as follows (labels from the current web build):</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Menu item</th>
+<th>Route</th>
+<th>Primary use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Main</strong></td>
+<td>Dashboard</td>
+<td><code>/dashboard</code></td>
+<td>KPIs, alerts, recent movements</td>
+</tr>
+<tr>
+<td><strong>Inventory</strong></td>
+<td>Items</td>
+<td><code>/items</code></td>
+<td>Master catalog, categories, CSV import</td>
+</tr>
+<tr>
+<td></td>
+<td>Warehouses</td>
+<td><code>/warehouses</code></td>
+<td>Storage locations and bins</td>
+</tr>
+<tr>
+<td></td>
+<td>Stock</td>
+<td><code>/stock</code></td>
+<td>Movements, balances, ledger</td>
+</tr>
+<tr>
+<td></td>
+<td>Suppliers</td>
+<td><code>/suppliers</code></td>
+<td>Supplier master data</td>
+</tr>
+<tr>
+<td></td>
+<td>Requisitions</td>
+<td><code>/requisitions</code></td>
+<td>Office supply requests</td>
+</tr>
+<tr>
+<td></td>
+<td>Physical Count</td>
+<td><code>/counts</code></td>
+<td>Count sessions, reconcile, close</td>
+</tr>
+<tr>
+<td></td>
+<td>Field Mode</td>
+<td><code>/field</code></td>
+<td>Mobile scan queue and sync</td>
+</tr>
+<tr>
+<td><strong>Property</strong></td>
+<td>Assets</td>
+<td><code>/assets</code></td>
+<td>PPE register and lifecycle</td>
+</tr>
+<tr>
+<td></td>
+<td>COA Forms</td>
+<td><code>/coa</code></td>
+<td>ICS, PAR, RPCPPE, IIRUP, WMR</td>
+</tr>
+<tr>
+<td></td>
+<td>Depreciation</td>
+<td><code>/depreciation</code></td>
+<td>GAM profiles and period runs</td>
+</tr>
+<tr>
+<td><strong>Reports</strong></td>
+<td>Reports</td>
+<td><code>/reports</code></td>
+<td>CSV export and print/PDF</td>
+</tr>
+<tr>
+<td><strong>Settings</strong></td>
+<td>Organization</td>
+<td><code>/organization</code></td>
+<td>Org profile and departments</td>
+</tr>
+<tr>
+<td></td>
+<td>Users</td>
+<td><code>/users</code></td>
+<td>Staff accounts</td>
+</tr>
+<tr>
+<td></td>
+<td>Roles</td>
+<td><code>/roles</code></td>
+<td>Role and permission management</td>
+</tr>
+</tbody></table>
+<p><strong>Not in the web UI (API only):</strong></p>
+<ul>
+<li><strong>Audit logs</strong> — <code>GET /api/v1/audit-logs</code> (requires <code>audit.read</code>; use Swagger or an admin tool until a UI page is added)</li>
+<li><strong>Campus and office CRUD</strong> — full org hierarchy is available via API; the web Organization page currently focuses on org details and departments</li>
+</ul>
+<p>Menu visibility follows your assigned <strong>roles and permissions</strong>. If a module is missing, ask an administrator to review your role assignment.</p>
+<hr>
+<h1>Chapter 4 — Dashboard Overview</h1>
+<p>The dashboard requires <code>reports.read</code> and aggregates inventory health at a glance.</p>
+<h2>KPI stat cards</h2>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Total Items</strong></td>
+<td>Count of active items in the master catalog</td>
+</tr>
+<tr>
+<td><strong>Warehouses</strong></td>
+<td>Number of registered warehouse locations</td>
+</tr>
+<tr>
+<td><strong>Assets</strong></td>
+<td>Total PPE records in the asset register</td>
+</tr>
+<tr>
+<td><strong>Stock Value</strong></td>
+<td>Placeholder in current build — may show <code>0</code> until valuation is wired to the summary API</td>
+</tr>
+</tbody></table>
+<h2>Alert panels</h2>
+<table>
+<thead>
+<tr>
+<th>Panel</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Recent Stock Movements</strong></td>
+<td>Last 10 transactions from the stock ledger</td>
+</tr>
+<tr>
+<td><strong>Low Stock Alerts</strong></td>
+<td>Items where on-hand quantity is at or below <strong>minimum stock</strong> (top 10)</td>
+</tr>
+<tr>
+<td><strong>Near-Expiry (30 days)</strong></td>
+<td>Stock lots with <code>expires_at</code> within the next 30 days (top 10)</td>
+</tr>
+</tbody></table>
+<h2>Usage tips</h2>
+<ul>
+<li>Review <strong>Low Stock</strong> and <strong>Near-Expiry</strong> daily if you manage receiving and issuing.</li>
+<li>Click through to <strong>Stock</strong> or <strong>Items</strong> from dashboard links where available to act on alerts.</li>
+<li>The API summary also returns category breakdowns and asset counts by status — future dashboard widgets may expose these.</li>
+</ul>
+<hr>
+<h1>Chapter 5 — Organization</h1>
+<h2>Hierarchy</h2>
+<p>UIMS models the university structure in four levels:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Example (seeded)</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Organization</strong></td>
+<td>University (<code>UNI</code>)</td>
+<td>Top-level tenant; name, slug, address, contacts</td>
+</tr>
+<tr>
+<td><strong>Campus</strong></td>
+<td>Main Campus (<code>MAIN</code>)</td>
+<td>Physical campus; warehouses link here</td>
+</tr>
+<tr>
+<td><strong>Office</strong></td>
+<td>Supply Office, Registrar, etc.</td>
+<td>Custodianship and requisition context</td>
+</tr>
+<tr>
+<td><strong>Department</strong></td>
+<td>IT Department, Accounting, etc.</td>
+<td>Optional link to an office; department head</td>
+</tr>
+</tbody></table>
+<p>Set up organization structure <strong>before</strong> warehouses, custodianships, and office requisitions — downstream records reference campuses and offices.</p>
+<h2>Web UI (Organization page)</h2>
+<p>Under <strong>Settings → Organization</strong> you can:</p>
+<ul>
+<li>View and edit <strong>organization details</strong> (name, slug, address, contact email/phone)</li>
+<li>Manage the <strong>departments</strong> table (code, name, department head)</li>
+</ul>
+<h2>API-only org management</h2>
+<p>Campuses and offices are fully manageable via API (<code>/org/campuses</code>, <code>/org/offices</code>) even when no dedicated web screens exist. Administrators or integrators can seed these during implementation. Warehouses created in the UI reference campus IDs from the seeded data.</p>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View org structure</td>
+<td><code>org.read</code></td>
+</tr>
+<tr>
+<td>Edit org, campuses, offices, departments</td>
+<td><code>org.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 6 — Items &amp; Categories</h1>
+<h2>Master catalog</h2>
+<p><strong>Items</strong> represent consumables, supplies, semi-expendables, and catalogued stock SKUs. Each item typically includes:</p>
+<ul>
+<li><strong>SKU</strong> (unique stock-keeping unit code)</li>
+<li><strong>Name</strong> and optional description</li>
+<li><strong>Unit of measure (UOM)</strong></li>
+<li><strong>Barcode</strong> for scanning</li>
+<li><strong>Category</strong> assignment</li>
+<li><strong>Brand, model, manufacturer</strong></li>
+<li><strong>Fund source</strong> (for government accounting)</li>
+<li><strong>Minimum stock</strong>, <strong>reorder point</strong>, <strong>safety stock</strong> thresholds</li>
+<li><strong>Expiry tracking</strong> flag where applicable</li>
+</ul>
+<p>Default valuation method for new items: <strong>weighted average</strong>.</p>
+<h2>Categories</h2>
+<p>Organize items into categories for reporting and browsing. Create categories before bulk item loads when possible.</p>
+<h2>Create an item (UI)</h2>
+<ol>
+<li>Open <strong>Inventory → Items</strong>.</li>
+<li>Click <strong>Add Item</strong> (or equivalent).</li>
+<li>Fill required fields: SKU, name, UOM.</li>
+<li>Set reorder thresholds if you want low-stock dashboard alerts.</li>
+<li>Save.</li>
+</ol>
+<h2>CSV import</h2>
+<p><strong>Items → Import CSV</strong> uploads a spreadsheet to <code>POST /api/v1/items/import</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Constraint</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Max rows per upload</td>
+<td><strong>2,000</strong></td>
+</tr>
+<tr>
+<td>Required columns</td>
+<td><code>sku</code>, <code>name</code></td>
+</tr>
+<tr>
+<td>Permission</td>
+<td><code>items.write</code></td>
+</tr>
+</tbody></table>
+<p><strong>Sample header row:</strong></p>
+<pre><code>sku,name,uom,barcode,fundSource,brand,model,manufacturer,minStock,reorderPoint,description
+</code></pre>
+<p><strong>Supported columns</strong> (case-flexible): <code>sku</code>, <code>name</code>, <code>uom</code>/<code>unit</code>, <code>barcode</code>, <code>fundSource</code>, <code>brand</code>, <code>model</code>, <code>manufacturer</code>, <code>description</code>, <code>minStock</code>, <code>reorderPoint</code>/<code>reorderLevel</code>, <code>safetyStock</code>.</p>
+<p><strong>Behavior:</strong></p>
+<ul>
+<li>Existing SKU → <strong>update</strong> in place</li>
+<li>New SKU → <strong>create</strong></li>
+<li>Response includes <code>{ created, updated, errors[] }</code> — review errors before assuming full success</li>
+</ul>
+<p>Run imports first in a <strong>staging</strong> environment when loading large catalogs.</p>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View items and categories</td>
+<td><code>items.read</code></td>
+</tr>
+<tr>
+<td>Create, edit, import, delete</td>
+<td><code>items.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 7 — Warehouses &amp; Bins</h1>
+<h2>Warehouses</h2>
+<p>A <strong>warehouse</strong> is a primary storage location tied to a <strong>campus</strong>. The seeded demo includes:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Name</th>
+<th>Campus</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>MAIN-WH</code></td>
+<td>Main Supply Warehouse</td>
+<td>Main Campus</td>
+</tr>
+</tbody></table>
+<p>Warehouse records support location types (e.g. central warehouse, satellite store) as configured during setup.</p>
+<h2>Bins</h2>
+<p><strong>Bins</strong> refine put-away and pick locations inside a warehouse (aisle / rack / shelf). Seeded bins for <code>MAIN-WH</code>:</p>
+<ul>
+<li><code>A-01-01</code>, <code>A-01-02</code>, <code>B-01-01</code></li>
+</ul>
+<p>When receiving or transferring stock, specify warehouse and optionally bin so balances roll up correctly.</p>
+<h2>Create a warehouse</h2>
+<ol>
+<li><strong>Inventory → Warehouses → Add</strong>.</li>
+<li>Enter code, name, campus, and location details.</li>
+<li>Add <strong>bins</strong> from the warehouse detail or bin management section.</li>
+<li>Save.</li>
+</ol>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View warehouses and bins</td>
+<td><code>warehouses.read</code></td>
+</tr>
+<tr>
+<td>Create and edit</td>
+<td><code>warehouses.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 8 — Stock Movements</h1>
+<p>Stock is the operational heart of UIMS. Every quantity change posts a <strong>transaction</strong> to the <strong>ledger</strong> and updates <strong>balances</strong> (on-hand, reserved, available) per item/warehouse/bin.</p>
+<h2>Movement types</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Direction</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>beginning</strong></td>
+<td>Inbound</td>
+<td>Opening balance at go-live or new warehouse</td>
+</tr>
+<tr>
+<td><strong>receive</strong></td>
+<td>Inbound</td>
+<td>Goods receipt from supplier or donation</td>
+</tr>
+<tr>
+<td><strong>issue</strong></td>
+<td>Outbound</td>
+<td>Issue to office, project, or requisition fulfillment</td>
+</tr>
+<tr>
+<td><strong>transfer</strong></td>
+<td>Out + In</td>
+<td>Move stock between warehouses/bins</td>
+</tr>
+<tr>
+<td><strong>adjust</strong></td>
+<td>+/-</td>
+<td>Cycle-count variance, correction</td>
+</tr>
+<tr>
+<td><strong>return</strong></td>
+<td>Inbound</td>
+<td>Return unused stock to warehouse</td>
+</tr>
+<tr>
+<td><strong>disposal</strong></td>
+<td>Outbound</td>
+<td>Write-off, expiry destruction, waste</td>
+</tr>
+<tr>
+<td><strong>reserve</strong></td>
+<td>Hold</td>
+<td>Reserve quantity against an approved requisition</td>
+</tr>
+<tr>
+<td><strong>release</strong></td>
+<td>Release hold</td>
+<td>Cancel or reduce a reservation</td>
+</tr>
+</tbody></table>
+<h2>Web UI (Stock page)</h2>
+<p>The <strong>Movements</strong> tab exposes these forms:</p>
+<table>
+<thead>
+<tr>
+<th>UI label</th>
+<th>API type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Receipt (IN)</td>
+<td><code>receive</code></td>
+</tr>
+<tr>
+<td>Issue (OUT)</td>
+<td><code>issue</code></td>
+</tr>
+<tr>
+<td>Adjustment</td>
+<td><code>adjust</code></td>
+</tr>
+<tr>
+<td>Return</td>
+<td><code>return</code></td>
+</tr>
+<tr>
+<td>Disposal</td>
+<td><code>disposal</code></td>
+</tr>
+<tr>
+<td>Reserve</td>
+<td><code>reserve</code></td>
+</tr>
+<tr>
+<td>Release</td>
+<td><code>release</code></td>
+</tr>
+</tbody></table>
+<p><strong>API-only in current web build:</strong> <code>beginning</code> (opening balance) and <code>transfer</code>. Use Swagger or an integration client until UI forms are added.</p>
+<h2>Balances and ledger</h2>
+<table>
+<thead>
+<tr>
+<th>View</th>
+<th>Route / tab</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Balances</strong></td>
+<td>Stock → Balances</td>
+<td>On-hand, reserved, available per item/warehouse/bin</td>
+</tr>
+<tr>
+<td><strong>Transactions</strong></td>
+<td>Stock → Movements history</td>
+<td>Chronological movement list</td>
+</tr>
+<tr>
+<td><strong>Item ledger</strong></td>
+<td>Stock → Ledger (by item)</td>
+<td>Full audit trail for one SKU</td>
+</tr>
+</tbody></table>
+<p>Always verify <strong>balances</strong> after posting — especially after bulk receive or physical count reconciliation.</p>
+<h2>Idempotency-Key (integrations)</h2>
+<p>All stock <strong>write</strong> POST endpoints accept an optional HTTP header:</p>
+<pre><code>Idempotency-Key: &lt;unique-client-generated-uuid&gt;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Purpose</td>
+<td>Prevent duplicate postings when a client retries after timeout</td>
+</tr>
+<tr>
+<td>TTL</td>
+<td>24 hours (in-memory per API process; use Redis in multi-replica production)</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>Stock writes only (beginning, receive, issue, transfer, adjust, return, disposal, reserve, release)</td>
+</tr>
+<tr>
+<td>Behavior</td>
+<td>Same key + same org + same endpoint → returns cached response</td>
+</tr>
+</tbody></table>
+<p>The standard web UI does <strong>not</strong> send this header. Integrators and custom scripts should generate a fresh UUID per logical operation.</p>
+<h2>Linked workflows</h2>
+<ul>
+<li><strong>Requisition fulfill</strong> auto-posts <strong>issue</strong> movements for approved line quantities.</li>
+<li><strong>Physical count reconcile</strong> auto-posts <strong>adjust</strong> movements for variances.</li>
+</ul>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View balances, ledger, transactions</td>
+<td><code>stock.read</code></td>
+</tr>
+<tr>
+<td>Post movements</td>
+<td><code>stock.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 9 — Suppliers &amp; Requisitions</h1>
+<h2>Suppliers</h2>
+<p><strong>Suppliers</strong> master data supports procurement traceability. The seeded demo includes <code>SUP-001</code> — General Office Supplies Co.</p>
+<p>Manage under <strong>Inventory → Suppliers</strong>: code, name, contact details, and status.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View</td>
+<td><code>suppliers.read</code></td>
+</tr>
+<tr>
+<td>Create / edit</td>
+<td><code>suppliers.write</code></td>
+</tr>
+</tbody></table>
+<h2>Requisitions workflow</h2>
+<p>Office staff request supplies through a controlled workflow:</p>
+<pre><code class="language-mermaid">stateDiagram-v2
+  [*] --&gt; draft
+  draft --&gt; submitted: Submit
+  submitted --&gt; approved: Approve
+  submitted --&gt; rejected: Reject
+  approved --&gt; fulfilled: Fulfill (issue stock)
+  rejected --&gt; [*]
+  fulfilled --&gt; [*]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+<th>Available actions</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>draft</strong></td>
+<td>Created, editable</td>
+<td>Edit lines → <strong>Submit</strong></td>
+</tr>
+<tr>
+<td><strong>submitted</strong></td>
+<td>Awaiting approver</td>
+<td><strong>Approve</strong> or <strong>Reject</strong></td>
+</tr>
+<tr>
+<td><strong>approved</strong></td>
+<td>Quantities approved</td>
+<td><strong>Fulfill</strong> (requires warehouse + issue qty per line)</td>
+</tr>
+<tr>
+<td><strong>rejected</strong></td>
+<td>Denied</td>
+<td>Terminal</td>
+</tr>
+<tr>
+<td><strong>fulfilled</strong></td>
+<td>Stock issued</td>
+<td>Terminal</td>
+</tr>
+</tbody></table>
+<p><strong>Document number format:</strong> <code>REQ-{YYYYMM}-{SEQ}</code> (e.g. <code>REQ-202608-0001</code>).</p>
+<h3>Create a requisition</h3>
+<ol>
+<li><strong>Inventory → Requisitions → New</strong>.</li>
+<li>Select requesting <strong>office</strong> and add line items (item, requested quantity).</li>
+<li>Save as <strong>draft</strong>.</li>
+<li><strong>Submit</strong> when ready for approval.</li>
+</ol>
+<h3>Approve or reject</h3>
+<p>Approvers (typically Supply Officer) review submitted requisitions, set <strong>approved quantities</strong> per line, and approve or reject with reason.</p>
+<h3>Fulfill</h3>
+<p>On an <strong>approved</strong> requisition:</p>
+<ol>
+<li>Select the issuing <strong>warehouse</strong>.</li>
+<li>Enter issue quantities (≤ approved qty).</li>
+<li><strong>Fulfill</strong> — system posts stock <strong>issue</strong> movements and sets <code>fulfilledAt</code>.</li>
+</ol>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View requisitions</td>
+<td><code>requisitions.read</code></td>
+</tr>
+<tr>
+<td>Create, submit, approve, fulfill</td>
+<td><code>requisitions.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 10 — Assets (PPE Register)</h1>
+<p>The <strong>Assets</strong> module tracks Property, Plant &amp; Equipment (PPE) distinct from consumable stock.</p>
+<h2>Asset types (<code>assetType</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>UI label</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>equipment</code></td>
+<td>Equipment (default)</td>
+</tr>
+<tr>
+<td><code>furniture</code></td>
+<td>Furniture &amp; Fixtures</td>
+</tr>
+<tr>
+<td><code>vehicle</code></td>
+<td>Motor Vehicle</td>
+</tr>
+<tr>
+<td><code>it_hardware</code></td>
+<td>IT / Computer Equipment</td>
+</tr>
+<tr>
+<td><code>building</code></td>
+<td>Building &amp; Structures</td>
+</tr>
+<tr>
+<td><code>other</code></td>
+<td>Other</td>
+</tr>
+</tbody></table>
+<h2>Asset status and lifecycle</h2>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>available</code></td>
+<td>In stock, unassigned</td>
+</tr>
+<tr>
+<td><code>assigned</code></td>
+<td>Assigned to a custodian</td>
+</tr>
+<tr>
+<td><code>in_maintenance</code></td>
+<td>Under maintenance</td>
+</tr>
+<tr>
+<td><code>retired</code></td>
+<td>Retired from service</td>
+</tr>
+<tr>
+<td><code>disposed</code></td>
+<td>Disposed (enum supported)</td>
+</tr>
+</tbody></table>
+<p><strong>Lifecycle stages:</strong> <code>active</code> → <code>retired</code> → <code>disposed</code></p>
+<h2>Lifecycle actions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Register</strong></td>
+<td>Create asset with property number, type, cost, location</td>
+</tr>
+<tr>
+<td><strong>Assign</strong></td>
+<td>Set custodian (employee/office); status → <code>assigned</code></td>
+</tr>
+<tr>
+<td><strong>Return</strong></td>
+<td>Close assignment; status → <code>available</code></td>
+</tr>
+<tr>
+<td><strong>Schedule maintenance</strong></td>
+<td>Record preventive/corrective maintenance (<code>scheduled</code>)</td>
+</tr>
+<tr>
+<td><strong>Complete maintenance</strong></td>
+<td>Mark maintenance record <code>completed</code>; restore operational status</td>
+</tr>
+<tr>
+<td><strong>Retire</strong></td>
+<td>Status → <code>retired</code>, stage → <code>retired</code></td>
+</tr>
+<tr>
+<td><strong>Generate QR</strong></td>
+<td>Store JSON QR payload on asset for label printing</td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>Soft delete (administrative)</td>
+</tr>
+</tbody></table>
+<h2>Register an asset</h2>
+<ol>
+<li><strong>Property → Assets → Add</strong>.</li>
+<li>Enter property number, description, asset type, acquisition cost, and in-service date.</li>
+<li>Save — status is <strong>available</strong>.</li>
+</ol>
+<h2>Assign to custodian</h2>
+<ol>
+<li>Open the asset → <strong>Assign</strong>.</li>
+<li>Select custodian (employee or office per form).</li>
+<li>Confirm — feeds COA PAR/ICS and HRIS custodianship sync.</li>
+</ol>
+<h2>QR labels</h2>
+<p>Use <strong>Generate QR</strong> on an asset detail screen. Print the label and affix to the physical item for Field Mode and physical count scanning.</p>
+<h2>HRIS custodianship</h2>
+<p>Assigned assets are exposed to HRIS via <code>GET /api/v1/internal/custodianships</code> (M2M, <code>X-Service-Api-Key</code>). Do not configure this key in browser clients.</p>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View assets</td>
+<td><code>assets.read</code></td>
+</tr>
+<tr>
+<td>Register, assign, maintain, retire</td>
+<td><code>assets.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 11 — COA Forms</h1>
+<p>UIMS supports <strong>Commission on Audit</strong>–aligned property documents for government universities.</p>
+<h2>Form types</h2>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Full name</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ICS</strong></td>
+<td>Inventory Custodian Slip</td>
+<td>Semi-expendable property issued to custodian</td>
+</tr>
+<tr>
+<td><strong>PAR</strong></td>
+<td>Property Acknowledgement Receipt</td>
+<td>PPE assigned to accountable officer</td>
+</tr>
+<tr>
+<td><strong>RPCPPE</strong></td>
+<td>Report on the Physical Count of PPE</td>
+<td>Annual/semi-annual PPE count results</td>
+</tr>
+<tr>
+<td><strong>IIRUP</strong></td>
+<td>Inventory and Inspection Report of Unserviceable Property</td>
+<td>Unserviceable items for disposal</td>
+</tr>
+<tr>
+<td><strong>WMR</strong></td>
+<td>Waste Material Report</td>
+<td>Waste/scrap disposal documentation</td>
+</tr>
+</tbody></table>
+<p><strong>Auto document numbers:</strong> <code>{FORM_TYPE}-{YEAR}-{SEQ}</code> (e.g. <code>PAR-2026-0001</code>).</p>
+<h2>Status workflow</h2>
+<pre><code class="language-mermaid">stateDiagram-v2
+  [*] --&gt; draft
+  draft --&gt; pending: Submit for approval
+  pending --&gt; approved: Approve
+  pending --&gt; void: Void
+  draft --&gt; approved: Direct approve (current UI)
+  approved --&gt; [*]
+  void --&gt; [*]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>draft</strong></td>
+<td>Editable; lines and header can be changed</td>
+</tr>
+<tr>
+<td><strong>pending</strong></td>
+<td>Submitted awaiting approver (enum supported)</td>
+</tr>
+<tr>
+<td><strong>approved</strong></td>
+<td>Final; property ledger entries created for asset-linked forms</td>
+</tr>
+<tr>
+<td><strong>void</strong></td>
+<td>Cancelled (enum supported)</td>
+</tr>
+</tbody></table>
+<p><strong>Current UI flow:</strong> create in <strong>draft</strong> → <strong>Approve</strong> → <strong>approved</strong>. Pending and void transitions may be expanded in future builds — plan approvals accordingly.</p>
+<h2>Create a COA form</h2>
+<ol>
+<li><strong>Property → COA Forms → New</strong>.</li>
+<li>Select form type (ICS, PAR, RPCPPE, IIRUP, WMR).</li>
+<li>Add lines — link assets or items as required by form type.</li>
+<li>Save as <strong>draft</strong>.</li>
+<li><strong>Approve</strong> when reviewed — approval is <strong>audited</strong> (<code>coa_create</code>, <code>coa_approve</code>).</li>
+</ol>
+<h2>Export</h2>
+<p>From a form detail, use <strong>Export</strong> (<code>GET /coa/:id/export</code>) to download CSV for printing or attachment to physical binders.</p>
+<h2>RPCPPE and physical counts</h2>
+<p>When closing a <strong>property</strong> physical count session, reference the session when preparing <strong>RPCPPE</strong> so counted quantities align with COA submission.</p>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View COA forms</td>
+<td><code>coa.read</code></td>
+</tr>
+<tr>
+<td>Create, edit (draft), approve</td>
+<td><code>coa.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 12 — Physical Count &amp; Field PWA</h1>
+<h2>Physical count sessions</h2>
+<p>Physical inventory verifies system quantities against what is on the shelf or in the field.</p>
+<h3>Count types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>stock</strong></td>
+<td>Consumable / warehouse stock (default)</td>
+</tr>
+<tr>
+<td><strong>property</strong></td>
+<td>PPE assets for RPCPPE support</td>
+</tr>
+</tbody></table>
+<h3>Session statuses</h3>
+<pre><code class="language-mermaid">stateDiagram-v2
+  [*] --&gt; open
+  open --&gt; counting: Start scanning
+  counting --&gt; reconciling: Reconcile
+  reconciling --&gt; reconciled: Variances posted
+  reconciled --&gt; closed: Close session
+  closed --&gt; [*]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>open</strong></td>
+<td>Session created; accepts scan lines</td>
+</tr>
+<tr>
+<td><strong>counting</strong></td>
+<td>Active field scanning in progress</td>
+</tr>
+<tr>
+<td><strong>reconciling</strong></td>
+<td>Variance adjustments being posted</td>
+</tr>
+<tr>
+<td><strong>reconciled</strong></td>
+<td>Adjustments complete</td>
+</tr>
+<tr>
+<td><strong>closed</strong></td>
+<td>Session finalized; <code>closedAt</code> set</td>
+</tr>
+</tbody></table>
+<p><strong>Session number format:</strong> <code>PC-{YYYYMM}-{SEQ}</code></p>
+<h3>Desktop workflow</h3>
+<ol>
+<li><strong>Inventory → Physical Count → New</strong> — select warehouse, count type, and scope.</li>
+<li>Copy the <strong>Count ID</strong> (UUID) for Field Mode.</li>
+<li>After field scanning completes, open the session → <strong>Reconcile</strong> (posts stock <strong>adjust</strong> for variances).</li>
+<li><strong>Close</strong> the session when variances are reviewed.</li>
+</ol>
+<p>Only <strong>open</strong> sessions accept new scan lines.</p>
+<h2>UIMS Field PWA</h2>
+<p><strong>Field Mode</strong> (<code>/field</code>) is a installable progressive web app for tablets and phones.</p>
+<h3>Install</h3>
+<ol>
+<li>Open <code>http://localhost:5200/field</code> on the device browser.</li>
+<li>Use <strong>Add to Home Screen</strong> (manifest name: <strong>UIMS Field</strong>).</li>
+<li>Confirm API connectivity via <code>/health</code> on campus Wi‑Fi before large count events.</li>
+</ol>
+<h3>Field features</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Count ID</td>
+<td>Links scans to a physical count session</td>
+</tr>
+<tr>
+<td>Camera barcode scan</td>
+<td>QR, Code128, EAN, UPC via <code>BarcodeDetector</code></td>
+</tr>
+<tr>
+<td>Manual entry</td>
+<td>Barcode + quantity when camera unavailable</td>
+</tr>
+<tr>
+<td>Geolocation</td>
+<td>GPS coordinates recorded per scan line</td>
+</tr>
+<tr>
+<td>Photo evidence</td>
+<td>Optional attachment (large photos may queue locally)</td>
+</tr>
+<tr>
+<td>Offline queue</td>
+<td>Scans stored in localStorage when offline</td>
+</tr>
+<tr>
+<td>Sync</td>
+<td>Posts queued lines to <code>POST /counts/:id/scan</code></td>
+</tr>
+</tbody></table>
+<p><strong>Deep link:</strong> <code>/field?countId={uuid}</code> pre-fills the Count ID.</p>
+<h3>Field workflow checklist</h3>
+<ol>
+<li>Create count on desktop → copy Count ID.</li>
+<li>Open Field Mode on tablet → enter or deep-link Count ID.</li>
+<li>Scan items/assets; queue builds if offline.</li>
+<li><strong>Sync</strong> when back online.</li>
+<li>Return to desktop → <strong>Reconcile</strong> → <strong>Close</strong>.</li>
+</ol>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View count sessions</td>
+<td><code>counts.read</code></td>
+</tr>
+<tr>
+<td>Create, scan, reconcile, close</td>
+<td><code>counts.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 13 — GAM Depreciation</h1>
+<p>UIMS implements <strong>Government Accounting Manual (GAM)</strong>–style <strong>straight-line</strong> depreciation on PPE.</p>
+<h2>Depreciation profile</h2>
+<p>Before running depreciation, create a <strong>profile</strong> per asset:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Asset ID</td>
+<td>UUID of the PPE record</td>
+</tr>
+<tr>
+<td>Method</td>
+<td><code>straight_line</code> (only method currently)</td>
+</tr>
+<tr>
+<td>Useful life</td>
+<td>Months</td>
+</tr>
+<tr>
+<td>Residual rate</td>
+<td>Percentage of acquisition cost</td>
+</tr>
+<tr>
+<td>Acquisition cost</td>
+<td>Capitalized amount</td>
+</tr>
+<tr>
+<td>In-service date</td>
+<td>Depreciation start anchor</td>
+</tr>
+</tbody></table>
+<p><strong>Property → Depreciation → Profiles → Add Profile</strong></p>
+<h2>Run depreciation</h2>
+<ol>
+<li>Open <strong>Run Depreciation</strong>.</li>
+<li>Select <strong>period year</strong> and <strong>month</strong>.</li>
+<li>Optionally limit to a single asset (blank = all active profiles).</li>
+<li>Execute — creates <code>asset_depreciation_entries</code> and property ledger credits.</li>
+</ol>
+<p>Runs are <strong>idempotent per asset/period</strong> — duplicate runs for the same month are skipped.</p>
+<p>When book value reaches residual value, the profile is <strong>deactivated</strong>.</p>
+<h2>Views</h2>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Profile</strong></td>
+<td>Per-asset depreciation setup</td>
+</tr>
+<tr>
+<td><strong>Lapsing Schedule</strong></td>
+<td>Future period charges</td>
+</tr>
+<tr>
+<td><strong>Property Ledger</strong></td>
+<td>Posted depreciation entries</td>
+</tr>
+</tbody></table>
+<p>Review entries before exporting to finance.</p>
+<h2>Permissions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>View profiles and entries</td>
+<td><code>depreciation.read</code></td>
+</tr>
+<tr>
+<td>Create profiles, run periods</td>
+<td><code>depreciation.write</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 14 — Reports &amp; Analytics</h1>
+<p>Open <strong>Reports</strong> for on-demand exports. Viewing requires <code>reports.read</code>; downloading requires <code>reports.export</code> (exports are audit-logged).</p>
+<h2>Available reports</h2>
+<table>
+<thead>
+<tr>
+<th>Report ID</th>
+<th>Title</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>stock-inventory</code></td>
+<td>Stock Inventory</td>
+<td>Current balances by warehouse and item</td>
+</tr>
+<tr>
+<td><code>property-ledger</code></td>
+<td>Property Ledger</td>
+<td>PPE register, cost, custodians</td>
+</tr>
+<tr>
+<td><code>consumption</code></td>
+<td>Consumption</td>
+<td>Issued/consumed supplies over period</td>
+</tr>
+<tr>
+<td><code>depreciation</code></td>
+<td>Depreciation</td>
+<td>Depreciation expense and book values</td>
+</tr>
+</tbody></table>
+<h2>Export formats</h2>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>CSV</strong></td>
+<td><strong>Download CSV</strong> — direct API download</td>
+</tr>
+<tr>
+<td><strong>Print / PDF</strong></td>
+<td>Browser print dialog from CSV preview (landscape A4)</td>
+</tr>
+</tbody></table>
+<p>Apply date or warehouse filters when the report UI prompts for them.</p>
+<p>Archive exports per university records schedule and COA retention policy.</p>
+<hr>
+<h1>Chapter 15 — Users &amp; Roles</h1>
+<h2>Users</h2>
+<p>Administrators manage accounts under <strong>Settings → Users</strong>:</p>
+<ul>
+<li>Create users with email, name, and password (local auth)</li>
+<li>Assign one or more <strong>roles</strong></li>
+<li>Deactivate accounts when staff leave</li>
+</ul>
+<p>Prefer <strong>SSO</strong> (<code>AUTH_MODE=dual</code>) over shared local passwords in production.</p>
+<h2>Seeded roles</h2>
+<table>
+<thead>
+<tr>
+<th>Role slug</th>
+<th>Display name</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>admin</code></td>
+<td><strong>Administrator</strong></td>
+<td>All 27 permissions</td>
+</tr>
+<tr>
+<td><code>supply_officer</code></td>
+<td><strong>Supply Officer</strong></td>
+<td>Stock, warehouses, assets, COA, counts, depreciation, reports, audit — no users/roles/org-write</td>
+</tr>
+<tr>
+<td><code>property_custodian</code></td>
+<td><strong>Property Custodian</strong></td>
+<td>Assets, COA, counts, depreciation read, reports read/export</td>
+</tr>
+<tr>
+<td><code>supply_clerk</code></td>
+<td><strong>Supply Clerk</strong></td>
+<td>Stock read/write, requisitions, counts, items/warehouses read</td>
+</tr>
+<tr>
+<td><code>staff</code></td>
+<td><strong>Staff</strong></td>
+<td>All <code>*.read</code> permissions</td>
+</tr>
+<tr>
+<td><code>viewer</code></td>
+<td><strong>Staff / Viewer</strong></td>
+<td><code>org.read</code>, <code>items.read</code>, <code>assets.read</code>, <code>reports.read</code></td>
+</tr>
+</tbody></table>
+<h2>Permission codes (27)</h2>
+<p>Permissions use <code>resource.action</code> format:</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Codes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Organization</td>
+<td><code>org.read</code>, <code>org.write</code></td>
+</tr>
+<tr>
+<td>Users</td>
+<td><code>users.read</code>, <code>users.write</code></td>
+</tr>
+<tr>
+<td>Roles</td>
+<td><code>roles.read</code>, <code>roles.write</code></td>
+</tr>
+<tr>
+<td>Items</td>
+<td><code>items.read</code>, <code>items.write</code></td>
+</tr>
+<tr>
+<td>Warehouses</td>
+<td><code>warehouses.read</code>, <code>warehouses.write</code></td>
+</tr>
+<tr>
+<td>Stock</td>
+<td><code>stock.read</code>, <code>stock.write</code></td>
+</tr>
+<tr>
+<td>Assets</td>
+<td><code>assets.read</code>, <code>assets.write</code></td>
+</tr>
+<tr>
+<td>Suppliers</td>
+<td><code>suppliers.read</code>, <code>suppliers.write</code></td>
+</tr>
+<tr>
+<td>Requisitions</td>
+<td><code>requisitions.read</code>, <code>requisitions.write</code></td>
+</tr>
+<tr>
+<td>COA</td>
+<td><code>coa.read</code>, <code>coa.write</code></td>
+</tr>
+<tr>
+<td>Physical count</td>
+<td><code>counts.read</code>, <code>counts.write</code></td>
+</tr>
+<tr>
+<td>Depreciation</td>
+<td><code>depreciation.read</code>, <code>depreciation.write</code></td>
+</tr>
+<tr>
+<td>Reports</td>
+<td><code>reports.read</code>, <code>reports.export</code></td>
+</tr>
+<tr>
+<td>Audit</td>
+<td><code>audit.read</code></td>
+</tr>
+</tbody></table>
+<p><strong>Effective permissions</strong> merge local RBAC with Identity platform JWT claims when SSO is enabled.</p>
+<h2>Roles page</h2>
+<p><strong>Settings → Roles</strong> lists roles and attached permissions. Only administrators (<code>roles.write</code>) should modify role-permission mappings.</p>
+<hr>
+<h1>Chapter 16 — Audit Logs</h1>
+<p>UIMS maintains an <strong>append-only audit log</strong> for sensitive actions: stock writes, COA approvals, depreciation runs, user changes, report exports, and more.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Permission</td>
+<td><code>audit.read</code></td>
+</tr>
+<tr>
+<td>API</td>
+<td><code>GET /api/v1/audit-logs</code></td>
+</tr>
+<tr>
+<td>Web UI</td>
+<td>Not yet available — use Swagger or admin tooling</td>
+</tr>
+</tbody></table>
+<p>Review audit logs:</p>
+<ul>
+<li>After bulk role changes or user deactivations</li>
+<li>After COA approvals and voids</li>
+<li>After depreciation period runs</li>
+<li>During compliance and COA field audits</li>
+</ul>
+<p>Retention follows institutional policy and RA 10173 (Data Privacy Act) guidelines documented in the administrator guide.</p>
+<hr>
+<h1>Chapter 17 — Troubleshooting (Staff)</h1>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cannot login (local)</td>
+<td>Wrong password / API down</td>
+<td>Verify API health; reset via seeder in non-prod only</td>
+</tr>
+<tr>
+<td>SSO redirect fails</td>
+<td>Identity down / wrong callback URL</td>
+<td>Confirm <code>http://localhost:5200/sso/callback</code> registered in Identity; re-launch from portal</td>
+</tr>
+<tr>
+<td>“No SSO tokens received”</td>
+<td>Opened callback without hash tokens</td>
+<td>Launch UIMS from Identity portal, not bookmark</td>
+</tr>
+<tr>
+<td>Blank dashboard</td>
+<td>Missing <code>reports.read</code></td>
+<td>Ask admin to assign appropriate role</td>
+</tr>
+<tr>
+<td>CORS errors in browser</td>
+<td>Origin not allowed</td>
+<td>Add web URL to API <code>CORS_ORIGIN</code> (no trailing slash)</td>
+</tr>
+<tr>
+<td>Stock post fails</td>
+<td>Insufficient qty / wrong warehouse</td>
+<td>Check balances tab; verify bin</td>
+</tr>
+<tr>
+<td>Import fails</td>
+<td>Bad CSV / missing sku or name</td>
+<td>Fix rows; max 2000 per file</td>
+</tr>
+<tr>
+<td>Field sync fails</td>
+<td>Count session not open / offline</td>
+<td>Confirm session status; sync on Wi‑Fi</td>
+</tr>
+<tr>
+<td>Report download 403</td>
+<td>Missing <code>reports.export</code></td>
+<td>Request Supply Officer or admin role</td>
+</tr>
+<tr>
+<td>Duplicate stock movement</td>
+<td>Client retry without idempotency</td>
+<td>Integrators: send <code>Idempotency-Key</code> header</td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 18 — FAQ (Staff)</h1>
+<p><strong>Q: Is UIMS part of HRIS?</strong><br>A: No. UIMS is a standalone sibling system. It shares the Postgres <strong>host</strong> with HRIS but uses an isolated <code>uims</code> <strong>schema</strong>.</p>
+<p><strong>Q: What is the default admin login?</strong><br>A: Non-production only: <code>admin@uims.local</code> / <code>password123</code>. Change immediately in production.</p>
+<p><strong>Q: Can I use SSO and local login together?</strong><br>A: Yes, when <code>AUTH_MODE=dual</code>. Use Identity launch for SSO; local form remains as fallback.</p>
+<p><strong>Q: Where are beginning balance and transfer movements?</strong><br>A: Supported by API; web forms may be added later. Use Swagger at <code>/api/v1/docs</code> if needed.</p>
+<p><strong>Q: Why is Stock Value zero on the dashboard?</strong><br>A: The summary KPI is not yet computed from balances — use Reports → Stock Inventory for value detail.</p>
+<p><strong>Q: How do I manage campuses and offices?</strong><br>A: Via API today; web Organization page shows departments. Ask your administrator or integrator.</p>
+<p><strong>Q: What currency is used?</strong><br>A: Philippine pesos (₱) for costs, depreciation, and reports unless configured otherwise at deployment.</p>
+<p><strong>Q: Can HRIS see my assigned assets?</strong><br>A: Yes — assigned assets sync via internal custodianship API when HRIS is configured with the service key.</p>
+<hr>
+<h1>Chapter 19 — Best Practices (Staff)</h1>
+<ul>
+<li>Set <strong>minimum stock</strong> and <strong>reorder points</strong> on items you manage — dashboard alerts depend on them.</li>
+<li>Always <strong>reconcile physical counts</strong> before closing; unresolved variances affect COA RPCPPE accuracy.</li>
+<li>Run <strong>depreciation</strong> only after profiles are verified with finance.</li>
+<li>Prefer <strong>barcode/QR scan</strong> over manual entry in Field Mode and stock receiving.</li>
+<li>Use <strong>requisitions</strong> for controlled issuing rather than ad-hoc issues when policy requires approval.</li>
+<li>Generate <strong>PAR/ICS</strong> promptly when assigning PPE to custodians.</li>
+<li>Export reports on a <strong>fixed calendar</strong> (monthly stock, annual property ledger) — do not rely only on dashboard widgets.</li>
+<li>Keep <strong>administrator</strong> accounts few; use Supply Officer, Property Custodian, or Supply Clerk for daily work.</li>
+<li><strong>Sign out</strong> on shared field tablets after each shift.</li>
+<li>Never commit <code>.env</code> files or <code>SERVICE_API_KEY</code> to source control.</li>
+</ul>
+<hr>
+<h1>Part 2 — Quick Start Guide</h1>
+<h2>15-minute setup (local)</h2>
+<ol>
+<li>Ensure HRIS Postgres is running (<code>127.0.0.1:15432</code>, database <code>hris_payroll</code>).</li>
+<li>Copy <code>api/.env.example</code> → <code>api/.env</code>; set <code>DB_SCHEMA=uims</code>.</li>
+<li>Run migrations and seed:<pre><code class="language-bash">cd UIMS
+npm install
+npm run db:migrate
+npm run db:seed
+</code></pre>
+</li>
+<li>Start API: <code>npm run dev:api</code> (port <strong>3334</strong>).</li>
+<li>Start web: <code>npm run dev:web</code> (port <strong>5200</strong>).</li>
+<li>Login: <code>admin@uims.local</code> / <code>password123</code>.</li>
+<li>Verify dashboard loads with seeded org, warehouse, and supplier.</li>
+<li>Optional: receive sample stock on <strong>Stock → Receipt (IN)</strong>.</li>
+<li>Optional: register one asset and assign to a custodian.</li>
+<li>Optional: configure Identity and launch via SSO (<code>AUTH_MODE=dual</code>).</li>
+</ol>
+<h2>Daily Supply Office checklist</h2>
+<ol>
+<li>Sign in to UIMS web (or SSO).</li>
+<li>Review dashboard <strong>Low Stock</strong> and <strong>Near-Expiry</strong> panels.</li>
+<li>Process pending <strong>requisitions</strong> (approve / fulfill).</li>
+<li>Post <strong>receipts</strong> for deliveries received overnight.</li>
+<li>Glance at <strong>recent stock movements</strong> for anomalies.</li>
+<li>Follow up on open <strong>physical count</strong> sessions.</li>
+</ol>
+<hr>
+<h1>Part 3 — Administrator Guide</h1>
+<h2>Bootstrap &amp; seeders</h2>
+<p>The main seeder creates:</p>
+<ul>
+<li>Organization <strong>University</strong> (<code>UNI</code>) and campus <strong>Main Campus</strong> (<code>MAIN</code>)</li>
+<li>Admin user <code>admin@uims.local</code> with Administrator role</li>
+<li>Supplier <code>SUP-001</code>, warehouse <code>MAIN-WH</code> with bins <code>A-01-01</code>, <code>A-01-02</code>, <code>B-01-01</code></li>
+<li>All roles and 27 permissions</li>
+</ul>
+<p>Re-run seed only in non-production or when following a documented reset procedure.</p>
+<h2>Environment essentials</h2>
+<table>
+<thead>
+<tr>
+<th>Variable area</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PORT</code></td>
+<td><code>3334</code> (local); Railway injects in cloud</td>
+</tr>
+<tr>
+<td><code>DB_*</code></td>
+<td>Copy from HRIS; keep <code>DB_SCHEMA=uims</code></td>
+</tr>
+<tr>
+<td><code>APP_KEY</code></td>
+<td>Generate: <code>cd api &amp;&amp; node ace generate:key</code></td>
+</tr>
+<tr>
+<td><code>AUTH_MODE</code></td>
+<td><code>local</code>, <code>dual</code>, or <code>platform</code></td>
+</tr>
+<tr>
+<td><code>PLATFORM_*</code></td>
+<td>Identity JWKS, issuer, audience for SSO</td>
+</tr>
+<tr>
+<td><code>CORS_ORIGIN</code></td>
+<td>Include exact web origin(s), no trailing slash</td>
+</tr>
+<tr>
+<td><code>VITE_API_URL</code></td>
+<td>Build-time; must include <code>/api/v1</code></td>
+</tr>
+<tr>
+<td><code>SERVICE_API_KEY</code></td>
+<td>HRIS M2M only — never expose to browser</td>
+</tr>
+</tbody></table>
+<p>See <code>api/.env.example</code> and <code>deploy/env/</code> for production templates.</p>
+<h2>SSO configuration</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Example (local)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AUTH_MODE</code></td>
+<td><code>dual</code></td>
+</tr>
+<tr>
+<td><code>PLATFORM_IDENTITY_URL</code></td>
+<td><code>http://127.0.0.1:3401</code></td>
+</tr>
+<tr>
+<td><code>PLATFORM_JWKS_URL</code></td>
+<td><code>http://127.0.0.1:3401/.well-known/jwks.json</code></td>
+</tr>
+<tr>
+<td><code>PLATFORM_JWT_ISSUER</code></td>
+<td><code>http://localhost:3401</code></td>
+</tr>
+<tr>
+<td><code>PLATFORM_JWT_AUDIENCE</code></td>
+<td><code>enterprise</code></td>
+</tr>
+<tr>
+<td><code>PLATFORM_AUTO_PROVISION</code></td>
+<td><code>false</code> (enable with care)</td>
+</tr>
+<tr>
+<td><code>PLATFORM_DEFAULT_ORG_CODE</code></td>
+<td><code>UNI</code></td>
+</tr>
+</tbody></table>
+<p>Register launch URL in Identity: <code>http://localhost:5200/sso/callback</code> (adjust for production domain).</p>
+<h2>Security checklist</h2>
+<ul>
+<li>Change default admin password after first login.</li>
+<li>Store secrets in env / secret manager only.</li>
+<li>Restrict <code>users.write</code>, <code>roles.write</code>, and <code>org.write</code> to trusted administrators.</li>
+<li>Review audit logs periodically.</li>
+<li>Enable HTTPS/TLS in production for web and API.</li>
+<li>Rotate <code>SERVICE_API_KEY</code> and DB credentials on schedule.</li>
+</ul>
+<h2>Backups &amp; disaster recovery</h2>
+<table>
+<thead>
+<tr>
+<th>Cadence</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Daily</strong></td>
+<td>Incremental DB backup; verify job success</td>
+</tr>
+<tr>
+<td><strong>Weekly</strong></td>
+<td>Full logical dump (<code>pg_dump</code>) of <code>uims</code> schema/database</td>
+</tr>
+<tr>
+<td><strong>Offsite</strong></td>
+<td>Copy dumps to second region or cold storage</td>
+</tr>
+<tr>
+<td><strong>Quarterly</strong></td>
+<td>Restore drill to staging; document RTO/RPO</td>
+</tr>
+</tbody></table>
+<p>Also back up object storage for document uploads and secure <code>APP_KEY</code> recovery procedures.</p>
+<h2>Data privacy (RA 10173)</h2>
+<ul>
+<li>Treat user profiles, custodianship assignments, and audit trails as personal/organizational data.</li>
+<li>Limit access via RBAC; do not export PII beyond authorized reports.</li>
+<li>Prefer SSO over shared passwords.</li>
+<li>Document processing purpose (inventory &amp; property accountability) in the university privacy notice.</li>
+</ul>
+<hr>
+<h1>Part 4 — Field PWA Guide</h1>
+<h2>Audience</h2>
+<p>Warehouse staff, property custodians, and count teams using tablets or phones during physical inventory.</p>
+<h2>Install UIMS Field</h2>
+<ol>
+<li>Navigate to <code>/field</code> on the device.</li>
+<li><strong>Add to Home Screen</strong> when prompted (standalone app: <strong>UIMS Field</strong>).</li>
+<li>Confirm <code>GET /health</code> succeeds on campus network.</li>
+</ol>
+<h2>Connect to a count session</h2>
+<ol>
+<li>Administrator or Supply Officer creates a count on <strong>Physical Count</strong> page.</li>
+<li>Copy the <strong>Count ID</strong> (UUID).</li>
+<li>On the tablet, open Field Mode → paste Count ID (or use <code>/field?countId={uuid}</code>).</li>
+</ol>
+<h2>Scanning</h2>
+<ol>
+<li>Tap <strong>Scan</strong> to use the device camera (barcode/QR).</li>
+<li>Or enter barcode manually with quantity.</li>
+<li>GPS and optional photo attach to each line.</li>
+<li>If offline, scans queue locally — <strong>Sync</strong> when connectivity returns.</li>
+</ol>
+<h2>After the walk</h2>
+<ol>
+<li>Return to desktop <strong>Physical Count</strong> session.</li>
+<li>Review scan lines and variances.</li>
+<li><strong>Reconcile</strong> → <strong>Close</strong>.</li>
+</ol>
+<h2>Common field mistakes</h2>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Wrong Count ID</td>
+<td>Scans rejected or attached to wrong session</td>
+</tr>
+<tr>
+<td>Session already closed</td>
+<td>Sync fails — reopen only via admin procedure</td>
+</tr>
+<tr>
+<td>Skipped sync before leaving site</td>
+<td>Lines remain in local queue</td>
+</tr>
+<tr>
+<td>Shared device left signed in</td>
+<td>Next user inherits session — always sign out</td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Part 5 — SSO &amp; Platform Access Guide</h1>
+<h2>Audience</h2>
+<p>Campus IT, Identity administrators, and users launching UIMS from the enterprise portal.</p>
+<h2>Platform registration</h2>
+<ol>
+<li>Register UIMS in Identity with platform code <strong><code>uims</code></strong>.</li>
+<li>Set callback URL to <code>{WEB_ORIGIN}/sso/callback</code>.</li>
+<li>Configure API <code>PLATFORM_*</code> variables to match Identity issuer and JWKS.</li>
+</ol>
+<h2>User launch flow</h2>
+<ol>
+<li>User signs in to <strong>University Platform Access</strong>.</li>
+<li>Clicks <strong>UIMS</strong> tile.</li>
+<li>Identity redirects to <code>/sso/callback#access_token=…&amp;refresh_token=…</code>.</li>
+<li>UIMS stores tokens, calls <code>/auth/me</code>, maps platform permissions, redirects to dashboard.</li>
+</ol>
+<h2>Auto-provision</h2>
+<p>When <code>PLATFORM_AUTO_PROVISION=true</code>, first SSO login creates a local user linked to the platform identity. Default org code comes from <code>PLATFORM_DEFAULT_ORG_CODE</code>. Use with explicit role assignment policy.</p>
+<h2>Troubleshooting SSO</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Blank callback page</td>
+<td>Re-launch from Identity; tokens must be in URL hash</td>
+</tr>
+<tr>
+<td>401 on <code>/auth/me</code></td>
+<td>Check JWKS URL, issuer, audience</td>
+</tr>
+<tr>
+<td>User has no permissions</td>
+<td>Assign UIMS roles locally or map platform claims</td>
+</tr>
+<tr>
+<td>SSO works but local login disabled</td>
+<td>Expected when <code>AUTH_MODE=platform</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Part 6 — Training Outline</h1>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Duration</th>
+<th>Outcomes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Login, SSO &amp; navigation</td>
+<td>25 min</td>
+<td>Reach all primary menus</td>
+</tr>
+<tr>
+<td>Items &amp; CSV import</td>
+<td>40 min</td>
+<td>Create item; run small CSV import</td>
+</tr>
+<tr>
+<td>Warehouses &amp; stock</td>
+<td>60 min</td>
+<td>Receive, issue, verify balances</td>
+</tr>
+<tr>
+<td>Requisitions</td>
+<td>45 min</td>
+<td>Draft → submit → approve → fulfill</td>
+</tr>
+<tr>
+<td>Assets &amp; COA</td>
+<td>60 min</td>
+<td>Register asset; create PAR; approve</td>
+</tr>
+<tr>
+<td>Physical count &amp; Field PWA</td>
+<td>50 min</td>
+<td>Open session; scan on tablet; reconcile</td>
+</tr>
+<tr>
+<td>Depreciation</td>
+<td>30 min</td>
+<td>Create profile; run one period</td>
+</tr>
+<tr>
+<td>Reports &amp; audit</td>
+<td>25 min</td>
+<td>Export stock inventory CSV</td>
+</tr>
+<tr>
+<td>Users &amp; roles</td>
+<td>20 min</td>
+<td>Create clerk account with least privilege</td>
+</tr>
+</tbody></table>
+<p>Include a hands-on exercise: receive stock, issue via requisition, assign one asset, and export a report.</p>
+<hr>
+<h1>Part 7 — Frequently Asked Questions</h1>
+<p><strong>What apps make up UIMS?</strong><br>UIMS Web (React/Vite SPA) and UIMS Field PWA, both backed by one AdonisJS API.</p>
+<p><strong>Is UIMS multi-tenant?</strong><br>Organization-scoped; demo org code is <code>UNI</code>.</p>
+<p><strong>Does UIMS use the CDTS database?</strong><br>No. It uses the <strong>same Postgres as HRIS_PAYROLL</strong> with schema <code>uims</code>.</p>
+<p><strong>Do we need Identity for local dev?</strong><br>No. Local login works with default seed. Enable SSO when Identity is available.</p>
+<p><strong>Where is the API contract?</strong><br>Swagger at <code>http://127.0.0.1:3334/api/v1/docs</code> and architecture doc at <code>docs/ARCHITECTURE.md</code>.</p>
+<p><strong>Can supply clerks approve COA forms?</strong><br>Only if granted <code>coa.write</code>. Default Supply Clerk role does not include COA write.</p>
+<p><strong>Is Redis required?</strong><br>Recommended for multi-replica idempotency and rate limits; single-node dev uses in-memory stores.</p>
+<hr>
+<h1>Part 8 — Troubleshooting</h1>
+<h2>Staff web</h2>
+<ul>
+<li>Blank data → empty seed or missing permissions.</li>
+<li>Permission denied → role lacks code; ask admin.</li>
+<li>CSV import partial success → read <code>errors[]</code> in response toast or network tab.</li>
+</ul>
+<h2>Field PWA</h2>
+<ul>
+<li>Cannot sync → count session not <strong>open</strong>; verify Count ID.</li>
+<li>Camera scan unavailable → use manual entry; browser may lack <code>BarcodeDetector</code>.</li>
+<li>Offline badge persists → check Wi‑Fi; tap Sync.</li>
+</ul>
+<h2>API / database</h2>
+<ul>
+<li>Migration errors → confirm <code>DB_SCHEMA=uims</code> and HRIS DB is reachable.</li>
+<li>Wrong schema data → never point UIMS at HRIS <code>public</code> schema without <code>DB_SCHEMA=uims</code>.</li>
+</ul>
+<h2>SSO</h2>
+<ul>
+<li>Tokens missing → launch from Identity, not direct <code>/sso/callback</code> bookmark.</li>
+<li>CORS on Identity → include UIMS web origin in Identity allowed clients.</li>
+</ul>
+<hr>
+<h1>Part 9 — Glossary</h1>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>UIMS</strong></td>
+<td>University Inventory Management System</td>
+</tr>
+<tr>
+<td><strong>PPE</strong></td>
+<td>Property, Plant &amp; Equipment — capital assets tracked in the asset register</td>
+</tr>
+<tr>
+<td><strong>SKU</strong></td>
+<td>Stock-keeping unit — unique item catalog code</td>
+</tr>
+<tr>
+<td><strong>COA</strong></td>
+<td>Commission on Audit — Philippine government audit body</td>
+</tr>
+<tr>
+<td><strong>ICS</strong></td>
+<td>Inventory Custodian Slip — semi-expendable issuance form</td>
+</tr>
+<tr>
+<td><strong>PAR</strong></td>
+<td>Property Acknowledgement Receipt — PPE custodian accountability form</td>
+</tr>
+<tr>
+<td><strong>RPCPPE</strong></td>
+<td>Report on the Physical Count of Property, Plant &amp; Equipment</td>
+</tr>
+<tr>
+<td><strong>IIRUP</strong></td>
+<td>Inventory and Inspection Report of Unserviceable Property</td>
+</tr>
+<tr>
+<td><strong>WMR</strong></td>
+<td>Waste Material Report</td>
+</tr>
+<tr>
+<td><strong>GAM</strong></td>
+<td>Government Accounting Manual — depreciation rules reference</td>
+</tr>
+<tr>
+<td><strong>Bin</strong></td>
+<td>Sub-location within a warehouse (aisle/rack/shelf)</td>
+</tr>
+<tr>
+<td><strong>Ledger</strong></td>
+<td>Immutable record of stock transactions</td>
+</tr>
+<tr>
+<td><strong>Requisition</strong></td>
+<td>Formal office request for supplies</td>
+</tr>
+<tr>
+<td><strong>Custodian</strong></td>
+<td>Accountable person for assigned property</td>
+</tr>
+<tr>
+<td><strong>Field PWA</strong></td>
+<td>Installable mobile web app for count scanning</td>
+</tr>
+<tr>
+<td><strong>Idempotency-Key</strong></td>
+<td>HTTP header preventing duplicate stock API posts</td>
+</tr>
+<tr>
+<td><strong>JWKS</strong></td>
+<td>JSON Web Key Set — public keys for validating Identity JWTs</td>
+</tr>
+<tr>
+<td><strong>RBAC</strong></td>
+<td>Role-based access control</td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Part 10 — Best Practices</h1>
+<ol>
+<li>Configure org structure (campuses, offices, departments) before go-live inventory loading.</li>
+<li>Load master items via CSV in batches ≤ 2000 rows; validate SKUs first.</li>
+<li>Post <strong>beginning balances</strong> before operational receive/issue when migrating legacy data.</li>
+<li>Enforce requisition approval for all office issues per campus policy.</li>
+<li>Tie PAR approval to asset assignment the same day custodian takes possession.</li>
+<li>Close physical count sessions within the count period; do not leave sessions open indefinitely.</li>
+<li>Run depreciation monthly after finance cutoff; reconcile with property ledger report.</li>
+<li>Export and archive reports per COA and institutional records schedule.</li>
+<li>Use SSO in production; disable or rotate local passwords for non-break-glass accounts.</li>
+<li>Test Field PWA install and sync on the actual warehouse Wi‑Fi before annual inventory.</li>
+</ol>
+<hr>
+<h1>Part 11 — Task: Create an Item</h1>
+<ol>
+<li><strong>Inventory → Items → Add</strong>.</li>
+<li>Enter <strong>SKU</strong>, <strong>name</strong>, <strong>UOM</strong>, and optional barcode, brand, model.</li>
+<li>Set <strong>minimum stock</strong> and <strong>reorder point</strong> for dashboard alerts.</li>
+<li>Assign a <strong>category</strong>.</li>
+<li>Save.</li>
+<li>Optional: receive initial quantity under <strong>Stock → Receipt (IN)</strong>.</li>
+</ol>
+<p><strong>Bulk alternative:</strong> prepare CSV → <strong>Import CSV</strong> → review created/updated counts and errors.</p>
+<hr>
+<h1>Part 12 — Task: Receive Stock</h1>
+<ol>
+<li>Confirm the item exists in <strong>Items</strong> and the target <strong>warehouse</strong> (and bin if used).</li>
+<li><strong>Inventory → Stock → Movements → Receipt (IN)</strong>.</li>
+<li>Select item, warehouse, bin, quantity, and reference (PO number, delivery receipt).</li>
+<li>Post.</li>
+<li>Open <strong>Balances</strong> tab — verify on-hand increased.</li>
+<li>Check <strong>Recent Stock Movements</strong> on dashboard.</li>
+</ol>
+<p>For integrations, send <code>Idempotency-Key: {uuid}</code> on the API <code>POST /stock/receive</code> request.</p>
+<hr>
+<h1>Part 13 — Task: Assign an Asset</h1>
+<ol>
+<li><strong>Property → Assets</strong> — register asset if not yet created (property number, type, cost, in-service date).</li>
+<li>Open asset detail → <strong>Assign</strong>.</li>
+<li>Select <strong>custodian</strong> (employee or office).</li>
+<li>Confirm — status becomes <strong>assigned</strong>.</li>
+<li><strong>Generate QR</strong> and print label for the physical item.</li>
+<li>Create <strong>PAR</strong> (or ICS for semi-expendable) under <strong>COA Forms</strong> → link asset → <strong>Approve</strong>.</li>
+</ol>
+<hr>
+<h1>Part 14 — Task: Create ICS / PAR</h1>
+<ol>
+<li><strong>Property → COA Forms → New</strong>.</li>
+<li>Select type <strong>ICS</strong> (semi-expendable) or <strong>PAR</strong> (PPE).</li>
+<li>Fill header: custodian, office, date, remarks.</li>
+<li>Add lines — link registered <strong>assets</strong> or items as required.</li>
+<li>Save as <strong>draft</strong>; review with custodian.</li>
+<li><strong>Approve</strong> — document number assigned (e.g. <code>PAR-2026-0001</code>); approval audited.</li>
+<li><strong>Export CSV</strong> for printing and filing.</li>
+</ol>
+<hr>
+<h1>Part 15 — Task: Run a Physical Count</h1>
+<ol>
+<li><strong>Inventory → Physical Count → New</strong> — warehouse, type (<code>stock</code> or <code>property</code>).</li>
+<li>Note <strong>Count ID</strong>; share with field team.</li>
+<li>On tablet: <strong>Field Mode</strong> → enter Count ID → scan items/assets → <strong>Sync</strong>.</li>
+<li>Desktop: open session → review lines and variances.</li>
+<li><strong>Reconcile</strong> — system posts adjust movements for variances.</li>
+<li><strong>Close</strong> session.</li>
+<li>For PPE: prepare <strong>RPCPPE</strong> COA form referencing the closed count.</li>
+</ol>
+<hr>
+<h1>Part 16 — Task: Run Depreciation</h1>
+<ol>
+<li>Ensure each asset has a <strong>depreciation profile</strong> (useful life, residual rate, in-service date).</li>
+<li><strong>Property → Depreciation → Run Depreciation</strong>.</li>
+<li>Select <strong>year</strong> and <strong>month</strong> for the period.</li>
+<li>Run for all assets or one asset.</li>
+<li>Review entries on <strong>Property Ledger</strong> tab.</li>
+<li>Export <strong>Depreciation</strong> report for finance (<code>reports.export</code>).</li>
+</ol>
+<p>Do not re-run the same period expecting duplicate entries — runs are idempotent per asset/month.</p>
+<hr>
+<h1>Part 17 — Task: Export a Report</h1>
+<ol>
+<li><strong>Reports</strong> → choose report (Stock Inventory, Property Ledger, Consumption, or Depreciation).</li>
+<li>Apply filters (dates, warehouse) if shown.</li>
+<li><strong>Download CSV</strong> for spreadsheet analysis.</li>
+<li>Or <strong>Print / PDF</strong> for signed hardcopy.</li>
+<li>Archive per records policy.</li>
+</ol>
+<p>Requires <code>reports.read</code> to view and <code>reports.export</code> to download.</p>
+<hr>
+<h1>Part 18 — Task: Manage Users</h1>
+<ol>
+<li><strong>Settings → Users → Create</strong>.</li>
+<li>Enter email, full name, temporary password (or rely on SSO auto-provision).</li>
+<li>Assign role: e.g. <strong>Supply Clerk</strong> for receiving desk, <strong>Property Custodian</strong> for department assets.</li>
+<li>User signs in and verifies menu access matches duties.</li>
+<li>To revoke access: deactivate user or remove elevated roles.</li>
+<li>Never share the seeded <code>admin@uims.local</code> password across operators.</li>
+</ol>
+<hr>
+<h1>Part 19 — Task: Launch via SSO</h1>
+<ol>
+<li>Campus IT registers UIMS in Identity (<code>uims</code>, callback <code>/sso/callback</code>).</li>
+<li>API <code>.env</code> sets <code>AUTH_MODE=dual</code> and all <code>PLATFORM_*</code> variables.</li>
+<li>User opens <strong>University Platform Access</strong> portal.</li>
+<li>Clicks <strong>UIMS</strong>.</li>
+<li>Lands on dashboard — confirm name and role under profile / users.</li>
+<li>If permissions missing, administrator assigns UIMS role to the linked local user.</li>
+</ol>
+<p>Fallback: on login page, use local email/password when <code>AUTH_MODE=dual</code>.</p>
+<hr>
+<h2>Related documents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Architecture</td>
+<td><a href="./ARCHITECTURE.md">ARCHITECTURE.md</a></td>
+</tr>
+<tr>
+<td>Production readiness</td>
+<td><a href="./PRODUCTION-READINESS.md">PRODUCTION-READINESS.md</a></td>
+</tr>
+<tr>
+<td>Capacity &amp; security</td>
+<td><a href="./CAPACITY-AND-SECURITY.md">CAPACITY-AND-SECURITY.md</a></td>
+</tr>
+<tr>
+<td>Short operational stub</td>
+<td><a href="./UIMS-USER-MANUAL.md">UIMS-USER-MANUAL.md</a></td>
+</tr>
+<tr>
+<td>Root README</td>
+<td><a href="../README.md">../README.md</a></td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

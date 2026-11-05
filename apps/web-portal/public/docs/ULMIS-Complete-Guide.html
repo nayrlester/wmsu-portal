@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ULMIS Complete User Guide</title>
+  <style>
+  @page { margin: 22mm 18mm; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 12mm;
+  }
+  h1 { font-size: 22pt; color: #0f3d5c; border-bottom: 2px solid #0f3d5c; padding-bottom: 6px; margin-top: 28px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 16pt; color: #145374; margin-top: 22px; }
+  h3 { font-size: 13pt; color: #1a5f7a; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d6e0; padding: 8px 10px; text-align: left; }
+  th { background: #e8f1f6; font-weight: 600; }
+  img { max-width: 100%; height: auto; border: 1px solid #dde4ea; border-radius: 4px; margin: 12px 0; }
+  code { background: #f4f6f8; padding: 2px 5px; border-radius: 3px; font-size: 0.92em; }
+  pre { background: #f4f6f8; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 9pt; }
+  blockquote { border-left: 4px solid #0f3d5c; margin: 12px 0; padding: 8px 16px; background: #f7fafc; color: #334; }
+  a { color: #0f6ba8; }
+  hr { border: none; border-top: 1px solid #dde4ea; margin: 24px 0; }
+</style>
+</head>
+<body>
+<h1>ULMIS Complete User Guide</h1>
+<p><strong>University Library Management Information System</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>ULMIS (LibraStack)</td>
+</tr>
+<tr>
+<td><strong>Document version</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Published</strong></td>
+<td>August 2026</td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>Librarians, desk staff, administrators, trainers, campus IT</td>
+</tr>
+</tbody></table>
+<p>This single reference combines the user manual, quick start, administrator guide, kiosk/OPAC procedures, FAQ, troubleshooting, glossary, and task articles.</p>
+<h2>Guide Contents</h2>
+<ol>
+<li>User Manual (staff)</li>
+<li>Quick Start Guide</li>
+<li>Administrator Guide</li>
+<li>Public OPAC Guide</li>
+<li>Kiosk Self-Service Guide</li>
+<li>Member Portal Guide</li>
+<li>Training Outline</li>
+<li>Frequently Asked Questions</li>
+<li>Troubleshooting</li>
+<li>Glossary</li>
+<li>Best Practices</li>
+<li>Task: Catalog a title</li>
+<li>Task: Check out and return</li>
+<li>Task: Import catalog</li>
+<li>Task: Register a kiosk</li>
+<li>Task: Export reports</li>
+<li>Task: Manage users</li>
+</ol>
+<hr>
+<h1>Part 1 — User Manual</h1>
+<p><strong>University Library Management Information System</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>ULMIS</td>
+</tr>
+<tr>
+<td><strong>Document version</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Product release</strong></td>
+<td>August 2026</td>
+</tr>
+<tr>
+<td><strong>Organization (example)</strong></td>
+<td>University Library (<code>ulmis</code>)</td>
+</tr>
+<tr>
+<td><strong>CIS web (staff)</strong></td>
+<td><code>http://127.0.0.1:5183</code></td>
+</tr>
+<tr>
+<td><strong>CIS API</strong></td>
+<td><code>http://127.0.0.1:3500/api/v1/library</code></td>
+</tr>
+<tr>
+<td><strong>Prepared by</strong></td>
+<td>Implementation &amp; Documentation Team</td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>End users, desk staff, librarians, administrators</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#chapter-1--introduction">Introduction</a></li>
+<li><a href="#chapter-2--accessing-the-system">Accessing the System</a></li>
+<li><a href="#chapter-3--navigating-the-platform">Navigating the Platform</a></li>
+<li><a href="#chapter-4--dashboard-overview">Dashboard Overview</a></li>
+<li><a href="#chapter-5--catalog--inventory">Catalog &amp; Inventory</a></li>
+<li><a href="#chapter-6--members">Members</a></li>
+<li><a href="#chapter-7--circulation">Circulation</a></li>
+<li><a href="#chapter-8--reservations--fines">Reservations &amp; Fines</a></li>
+<li><a href="#chapter-9--digital-repository">Digital Repository</a></li>
+<li><a href="#chapter-10--reports--analytics">Reports &amp; Analytics</a></li>
+<li><a href="#chapter-11--attendance">Attendance</a></li>
+<li><a href="#chapter-12--settings--users">Settings &amp; Users</a></li>
+<li><a href="#chapter-13--roles--permissions">Roles &amp; Permissions</a></li>
+<li><a href="#chapter-14--troubleshooting-staff">Troubleshooting</a></li>
+<li><a href="#chapter-15--faq-staff">FAQ</a></li>
+<li><a href="#chapter-16--best-practices-staff">Best Practices</a></li>
+</ol>
+<hr>
+<h1>Chapter 1 — Introduction</h1>
+<h2>Purpose of the System</h2>
+<p>ULMIS is a university-focused library management platform. Institutions use it to:</p>
+<ul>
+<li>Maintain a <strong>bibliographic catalog</strong> with copies, barcodes, and import tools (CSV, MARC JSON, Excel)</li>
+<li>Manage <strong>members</strong> (students, faculty, staff) and membership approval</li>
+<li>Run <strong>circulation</strong>: requests, checkout, return, renew, mark lost</li>
+<li>Operate <strong>holds/reservations</strong> and <strong>fines</strong> in Philippine pesos (₱)</li>
+<li>Offer a <strong>public OPAC</strong>, <strong>member portal</strong>, and <strong>self-service kiosk</strong></li>
+<li>Support <strong>queue display</strong>, <strong>resource locator</strong>, and <strong>attendance</strong> logging</li>
+<li>Export <strong>mandated reports</strong> and monitor <strong>audit</strong> activity</li>
+</ul>
+<h2>Key Benefits</h2>
+<table>
+<thead>
+<tr>
+<th>Benefit</th>
+<th>Business value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Multi-app clients</td>
+<td>Staff, public OPAC, and kiosk share one API</td>
+</tr>
+<tr>
+<td>Policy blocks</td>
+<td>Overdue / unpaid fines / membership rules enforced on borrow</td>
+</tr>
+<tr>
+<td>Import pipeline</td>
+<td>Bulk load from CSV, MARC, or Excel</td>
+</tr>
+<tr>
+<td>Self-service</td>
+<td>Kiosk checkout/return with device keys</td>
+</tr>
+<tr>
+<td>Traceability</td>
+<td>Audit logs for sensitive actions</td>
+</tr>
+<tr>
+<td>Campus hooks</td>
+<td>ARIS/HRIS sync UI; SMTP/Twilio when configured</td>
+</tr>
+</tbody></table>
+<h2>System Overview</h2>
+<pre><code class="language-mermaid">flowchart LR
+  A[Staff Web :5173] --&gt; API[API :3333]
+  B[Public OPAC :5174] --&gt; API
+  C[Kiosk :5175] --&gt; API
+  API --&gt; DB[(Database)]
+  API --&gt; Q[Queue / Redis]
+</code></pre>
+<p>RFID automation is <strong>out of scope</strong> for the current software-complete claim. LDAP/SSO require campus IdP verification before they leave “not configured” (HTTP 501).</p>
+<hr>
+<h1>Chapter 2 — Accessing the System</h1>
+<h2>Local URLs (development)</h2>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Staff web</td>
+<td><code>http://localhost:5173</code></td>
+</tr>
+<tr>
+<td>Public OPAC</td>
+<td><code>http://localhost:5174</code></td>
+</tr>
+<tr>
+<td>Kiosk</td>
+<td><code>http://localhost:5175</code></td>
+</tr>
+<tr>
+<td>API / Swagger</td>
+<td><code>http://localhost:3333/api/v1/docs</code></td>
+</tr>
+</tbody></table>
+<h2>Staff login</h2>
+<ol>
+<li>Open the staff web URL.</li>
+<li>Enter <strong>tenant slug</strong> <code>ulmis</code> when prompted (or rely on default <code>VITE_DEFAULT_TENANT_SLUG</code>).</li>
+<li>Sign in with your staff email and password.</li>
+</ol>
+<p><strong>Preferred training access (University Identity):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Email</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>admin@identity.local</code></td>
+<td>All platforms + Identity admin</td>
+</tr>
+<tr>
+<td><code>employee@identity.local</code></td>
+<td>Library + HRIS + DocsTrack</td>
+</tr>
+<tr>
+<td><code>student@identity.local</code></td>
+<td>Library / OPAC only</td>
+</tr>
+<tr>
+<td><code>nodocs@identity.local</code></td>
+<td>Library + HRIS (no DocsTrack)</td>
+</tr>
+</tbody></table>
+<p>Password is the value of <code>DEMO_SEED_PASSWORD</code> in the Identity API environment. Sign in at the Identity portal, then launch Library from the platform launcher.</p>
+<p><strong>Legacy local bootstrap (non-production only):</strong> <code>admin@university.library</code> — rotate immediately; do not document a shared password.</p>
+<h2>Session tips</h2>
+<ul>
+<li>If API calls fail with 401, sign out and sign in again (token expired).</li>
+<li>Confirm the API is running and CORS includes your client origin.</li>
+<li>Tenant slug must be correct — do not use a campus location name as the slug.</li>
+</ul>
+<hr>
+<h1>Chapter 3 — Navigating the Platform</h1>
+<p>Typical staff navigation (labels may vary slightly by build):</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dashboard</td>
+<td>Counts, widgets, PDF summary</td>
+</tr>
+<tr>
+<td>Books / Catalog</td>
+<td>Titles, copies, import, versions</td>
+</tr>
+<tr>
+<td>Members</td>
+<td>Patrons, approve pending</td>
+</tr>
+<tr>
+<td>Circulation / Borrowings</td>
+<td>Checkout desk workflows</td>
+</tr>
+<tr>
+<td>Reservations</td>
+<td>Holds queue</td>
+</tr>
+<tr>
+<td>Fines</td>
+<td>Collect / waive</td>
+</tr>
+<tr>
+<td>Digital</td>
+<td>Repository &amp; e-resources</td>
+</tr>
+<tr>
+<td>OPAC (staff)</td>
+<td>Authenticated catalog browse; link to public OPAC</td>
+</tr>
+<tr>
+<td>Kiosk Platform</td>
+<td>Devices, queue, locator</td>
+</tr>
+<tr>
+<td>Attendance</td>
+<td>Visit log</td>
+</tr>
+<tr>
+<td>Reports</td>
+<td>Export mandated reports</td>
+</tr>
+<tr>
+<td>Integrations</td>
+<td>ARIS / HRIS / LDAP status</td>
+</tr>
+<tr>
+<td>Users</td>
+<td>Staff accounts</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Branding, links, prefs, scheduled reports</td>
+</tr>
+<tr>
+<td>Notifications</td>
+<td>Inbox + preferences</td>
+</tr>
+</tbody></table>
+<p>Public OPAC and Kiosk are <strong>separate apps</strong>. Staff web may deep-link via <code>VITE_OPAC_URL</code> / <code>VITE_KIOSK_URL</code>.</p>
+<hr>
+<h1>Chapter 4 — Dashboard Overview</h1>
+<p>The dashboard aggregates circulation health: active loans, overdue, pending requests, attendance summary, and configurable widgets.</p>
+<ul>
+<li>Toggle widgets in <strong>Settings</strong> (or dashboard preferences where available).</li>
+<li>Export a <strong>summary PDF</strong> when the control is shown on the dashboard.</li>
+<li>Scheduled email reports require SMTP + background queue worker (<code>queue:listen</code>).</li>
+</ul>
+<hr>
+<h1>Chapter 5 — Catalog &amp; Inventory</h1>
+<h2>Create a title</h2>
+<ol>
+<li>Open <strong>Books</strong> → <strong>Add</strong> (or equivalent).</li>
+<li>Enter title, authors, ISBN, category, and description.</li>
+<li>Save, then add <strong>copies</strong> with barcodes and location.</li>
+</ol>
+<h2>Copies</h2>
+<ul>
+<li>Each physical item is a <strong>copy</strong> with a unique barcode.</li>
+<li>Statuses include available, on loan, lost, etc.</li>
+<li>Circulation always binds to a copy, not only the title.</li>
+</ul>
+<h2>Import</h2>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CSV file</td>
+<td>Catalog → Import CSV</td>
+</tr>
+<tr>
+<td>MARC JSON</td>
+<td>Catalog → Import MARC</td>
+</tr>
+<tr>
+<td>Excel <code>.xlsx</code></td>
+<td>Catalog → Import Excel</td>
+</tr>
+</tbody></table>
+<p>After import, open the title’s <strong>Versions</strong> panel to review catalog history.</p>
+<h2>Digital files on a book</h2>
+<p>Attach files from the book detail screen; authorized users can download via the digital-file endpoint / UI.</p>
+<hr>
+<h1>Chapter 6 — Members</h1>
+<h2>Register a member</h2>
+<ol>
+<li><strong>Members</strong> → create.</li>
+<li>Capture name, email, member number / ID, membership type.</li>
+<li>If approval is required, the record stays <strong>pending</strong> until a librarian approves.</li>
+</ol>
+<h2>Approve / reject</h2>
+<p>Use <strong>Pending</strong> list → Approve or Reject.</p>
+<h2>Card &amp; history</h2>
+<ul>
+<li><strong>Card</strong> view for membership card data.</li>
+<li><strong>Borrowing history</strong> for past loans.</li>
+</ul>
+<p>Suspended or unpaid-fine members may be blocked from new loans by policy.</p>
+<hr>
+<h1>Chapter 7 — Circulation</h1>
+<h2>Checkout (desk)</h2>
+<ol>
+<li>Identify the member (search by name, number, or barcode).</li>
+<li>Scan or select an available copy.</li>
+<li>Complete <strong>Checkout</strong>. System applies due dates and borrow blocks.</li>
+</ol>
+<h2>Return</h2>
+<ol>
+<li>Find the active loan (scan barcode or search).</li>
+<li><strong>Return</strong>. Overdue items may generate fines in ₱.</li>
+</ol>
+<h2>Renew</h2>
+<p>Renew from staff circulation or member portal when policy allows.</p>
+<h2>Mark lost</h2>
+<p>Use <strong>Mark lost</strong> when an item will not be returned; follow local fine/replacement policy.</p>
+<h2>Borrow blocks</h2>
+<p>Typical blocks: overdue items, unpaid fines, inactive membership. Resolve the underlying issue before retrying checkout.</p>
+<hr>
+<h1>Chapter 8 — Reservations &amp; Fines</h1>
+<h2>Reservations (holds)</h2>
+<ol>
+<li>Create a reservation for a title/member when copies are unavailable.</li>
+<li>When ready, <strong>Fulfill</strong> (mark ready for pickup) per desk procedure.</li>
+<li><strong>Cancel</strong> if the patron no longer needs the item.</li>
+</ol>
+<h2>Fines</h2>
+<ul>
+<li>View fine list and <strong>summary</strong>.</li>
+<li><strong>Collect</strong> payments (record amount received).</li>
+<li><strong>Waive</strong> or <strong>adjust</strong> with appropriate permission.</li>
+<li>Review <strong>payment lines</strong> for auditability.</li>
+</ul>
+<p>Currency: <strong>PHP (₱)</strong>.</p>
+<hr>
+<h1>Chapter 9 — Digital Repository</h1>
+<ul>
+<li>Create repository items and grant <strong>access</strong> (view/download) to authorized users.</li>
+<li>Manage <strong>e-resources</strong> (external URLs) and open them from the UI.</li>
+<li>Search across digital holdings from the Digital module.</li>
+</ul>
+<hr>
+<h1>Chapter 10 — Reports &amp; Analytics</h1>
+<h2>On-demand exports</h2>
+<p>Open <strong>Reports</strong> and export the university-mandated report types (CSV/PDF as implemented). Permission: <code>reports:export</code>.</p>
+<h2>Analytics</h2>
+<p>Dashboard analytics require <code>analytics:read</code>. Use for collection and circulation insight—not as a substitute for official exports.</p>
+<h2>Scheduled email</h2>
+<p>Administrators configure schedule under <strong>Settings</strong>. Requires:</p>
+<ol>
+<li>Valid <code>SMTP_*</code> on the API</li>
+<li>Queue worker running</li>
+<li>Recipient preferences as configured</li>
+</ol>
+<hr>
+<h1>Chapter 11 — Attendance</h1>
+<p>Log walk-in / visit events under <strong>Attendance</strong>. Summary counts appear on the dashboard. Use for gate/counter tallies and daily activity reporting.</p>
+<hr>
+<h1>Chapter 12 — Settings &amp; Users</h1>
+<h2>Settings</h2>
+<p>Admins with <code>settings:update</code> can edit:</p>
+<ul>
+<li>Institution branding and display name</li>
+<li>Public links (OPAC, help)</li>
+<li>Notification / report preferences</li>
+<li>Dashboard-related toggles where exposed</li>
+</ul>
+<h2>Users</h2>
+<p>Admins manage staff accounts under <strong>Users</strong>: invite/create, update roles, deactivate as needed. Prefer least-privilege roles (<code>librarian</code>, <code>staff</code>) over full <code>admin</code>.</p>
+<hr>
+<h1>Chapter 13 — Roles &amp; Permissions</h1>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Administrator</strong></td>
+<td>Full tenant permissions</td>
+</tr>
+<tr>
+<td><strong>Librarian</strong></td>
+<td>Catalog, members, circulation, fines, reports; limited user/settings</td>
+</tr>
+<tr>
+<td><strong>Staff</strong></td>
+<td>Desk-focused checkout/return/fines; limited admin</td>
+</tr>
+<tr>
+<td><strong>Member</strong></td>
+<td>Portal self-service only</td>
+</tr>
+</tbody></table>
+<p>Permission codes use <code>resource:action</code> (e.g. <code>borrowings:checkout</code>). See the <a href="./API-Specs-Manual.md">API Specs Manual</a> §7 for the full matrix.</p>
+<hr>
+<h1>Chapter 14 — Troubleshooting (Staff)</h1>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cannot login</td>
+<td>Wrong password / API down</td>
+<td>Verify API health; reset via seeder in non-prod</td>
+</tr>
+<tr>
+<td>Empty catalog</td>
+<td>Wrong tenant slug</td>
+<td>Confirm <code>ulmis</code></td>
+</tr>
+<tr>
+<td>CORS errors in browser</td>
+<td>Origin not allowed</td>
+<td>Add client URL to <code>CORS_ORIGIN</code></td>
+</tr>
+<tr>
+<td>Import fails</td>
+<td>Bad file / columns</td>
+<td>Check format; retry smaller file</td>
+</tr>
+<tr>
+<td>Emails not sent</td>
+<td>SMTP unset / queue idle</td>
+<td>Configure SMTP; run <code>queue:listen</code></td>
+</tr>
+<tr>
+<td>SMS not sent</td>
+<td>Twilio unset</td>
+<td>Set <code>TWILIO_*</code> or disable SMS prefs</td>
+</tr>
+<tr>
+<td>LDAP/SSO 501</td>
+<td>Not campus-verified</td>
+<td>Expected until IdP integration</td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Chapter 15 — FAQ (Staff)</h1>
+<p><strong>Q: Is RFID included?</strong><br>A: RFID routes may exist as stubs; the RFID module is excluded from current software-complete readiness.</p>
+<p><strong>Q: Can citizens search without login?</strong><br>A: Yes — Public OPAC on port 5174.</p>
+<p><strong>Q: Where do kiosk keys come from?</strong><br>A: Kiosk Platform → register or rotate device; copy the key once.</p>
+<p><strong>Q: What currency are fines?</strong><br>A: Philippine pesos (₱).</p>
+<hr>
+<h1>Chapter 16 — Best Practices (Staff)</h1>
+<ul>
+<li>Always scan barcodes rather than typing when possible.</li>
+<li>Resolve fines before forcing exceptions.</li>
+<li>Rotate kiosk keys if a terminal is compromised or a key was truncated.</li>
+<li>Export reports on a fixed calendar; do not rely only on dashboard widgets.</li>
+<li>Keep admin accounts few; use librarian/staff for daily work.</li>
+<li>Test SMTP in staging before enabling scheduled report mail.</li>
+</ul>
+<hr>
+<h1>Part 2 — Quick Start Guide</h1>
+<h2>15-minute setup (local)</h2>
+<ol>
+<li>Start API: <code>npm run dev:api</code> (from monorepo root or documented script).</li>
+<li>Start staff web: <code>npm run dev:web</code>.</li>
+<li>Login: University Identity <code>admin@identity.local</code> or <code>student@identity.local</code> (password from <code>DEMO_SEED_PASSWORD</code>), then launch Library; slug <code>ulmis</code> for local staff login if needed.</li>
+<li>Create one book + one copy with barcode.</li>
+<li>Create one active member.</li>
+<li>Checkout and return the copy.</li>
+<li>Optional: <code>npm run dev:opac</code> and search the title publicly.</li>
+<li>Optional: register a kiosk device, start <code>npm run dev:kiosk</code>, connect with full API key.</li>
+</ol>
+<h2>Daily desk checklist</h2>
+<ol>
+<li>Sign in to staff web.</li>
+<li>Process overnight returns / overdue list.</li>
+<li>Clear reservation pickup shelf (fulfill / expire).</li>
+<li>Collect fines as patrons visit.</li>
+<li>Glance at attendance and queue board if used.</li>
+</ol>
+<hr>
+<h1>Part 3 — Administrator Guide</h1>
+<h2>Bootstrap &amp; seeders</h2>
+<ul>
+<li>University bootstrap / permission seeders create roles and the admin user.</li>
+<li>In non-production, admin password may reset when <code>ULMIS_RESET_ADMIN_PASSWORD</code> (or equivalent) is enabled — see API <code>.env.example</code>.</li>
+</ul>
+<h2>Environment essentials</h2>
+<table>
+<thead>
+<tr>
+<th>Variable area</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Database</td>
+<td>Migrate before first run</td>
+</tr>
+<tr>
+<td>Redis / queue</td>
+<td>Required for scheduled jobs &amp; some notifications</td>
+</tr>
+<tr>
+<td><code>CORS_ORIGIN</code></td>
+<td>Include all three client ports</td>
+</tr>
+<tr>
+<td><code>DEPLOYMENT_MODE=university</code></td>
+<td>ULMIS mode</td>
+</tr>
+<tr>
+<td>SMTP / Twilio</td>
+<td>Optional channels</td>
+</tr>
+<tr>
+<td>Client <code>VITE_*</code></td>
+<td>API URL, tenant slug, OPAC/Kiosk URLs</td>
+</tr>
+</tbody></table>
+<h2>Integrations page</h2>
+<p>Use <strong>Integrations</strong> to view adapter status and trigger ARIS/HRIS sync when campus credentials/jobs are ready. LDAP and Smart Campus SSO remain gated until verified.</p>
+<h2>Security checklist</h2>
+<ul>
+<li>Change default admin password.</li>
+<li>Store secrets only in env / secret manager.</li>
+<li>Rotate kiosk keys on device reassignment.</li>
+<li>Restrict <code>users:*</code> and <code>settings:update</code> to trusted admins.</li>
+<li>Review audit logs periodically.</li>
+</ul>
+<h2>Backups &amp; ops</h2>
+<p>Follow campus backup policy for PostgreSQL/MySQL (as deployed) and uploaded digital files. Monitor API health and queue depth in production.</p>
+<hr>
+<h1>Part 4 — Public OPAC Guide</h1>
+<h2>Audience</h2>
+<p>Students, faculty, and visitors searching the catalog without staff login.</p>
+<h2>How to search</h2>
+<ol>
+<li>Open OPAC (<code>http://localhost:5174</code> locally).</li>
+<li>Enter keywords (title, author, subject as supported).</li>
+<li>Open a result for availability and <strong>citations</strong>.</li>
+<li>Signed-in members (where linked) may <strong>add to reading list</strong> when portal auth is available in that UI flow.</li>
+</ol>
+<h2>Queue display</h2>
+<p>Public queue board route uses tenant-scoped <code>GET /api/v1/public/queue/board</code> — suitable for lobby screens via OPAC <code>/queue</code> when enabled.</p>
+<h2>Tips</h2>
+<ul>
+<li>Ensure <code>X-Tenant-Slug</code> / default slug is <code>ulmis</code>.</li>
+<li>OPAC does not replace circulation desk for checkout unless your campus also provides kiosk or portal renew.</li>
+</ul>
+<hr>
+<h1>Part 5 — Kiosk Self-Service Guide</h1>
+<h2>Staff: register a device</h2>
+<ol>
+<li>Staff web → <strong>Kiosk Platform</strong>.</li>
+<li><strong>Register</strong> device: set an exact <strong>device code</strong> (e.g. <code>KIOSK-001</code>) and label/location.</li>
+<li>Copy the <strong>API key</strong> immediately (shown once). Store it in the kiosk app or secure device config.</li>
+<li>If lost, <strong>Rotate key</strong> and update the kiosk.</li>
+</ol>
+<h2>Kiosk app setup</h2>
+<ol>
+<li>Open <code>http://localhost:5175</code> (or campus kiosk URL).</li>
+<li>Enter:<ul>
+<li>Tenant slug: <code>ulmis</code></li>
+<li>Device code: exact match (e.g. <code>KIOSK-001</code>)</li>
+<li>API key: full <code>ksk_…</code> value</li>
+</ul>
+</li>
+<li>Save. The home screen shows Borrow / Return / Account / History.</li>
+</ol>
+<h2>Patron flow</h2>
+<ol>
+<li>Identify with member number / barcode as prompted.</li>
+<li><strong>Borrow</strong>: scan item barcode(s) → confirm.</li>
+<li><strong>Return</strong>: scan item(s) → confirm.</li>
+<li><strong>Account / History</strong>: view loans and recent activity.</li>
+<li>Idle timeout logs the patron out automatically (server time).</li>
+</ol>
+<h2>Common kiosk mistakes</h2>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tenant = location name</td>
+<td>Auth fails</td>
+</tr>
+<tr>
+<td>Device code typo</td>
+<td>401 / unknown device</td>
+</tr>
+<tr>
+<td>Truncated API key</td>
+<td>401 — rotate and re-enter</td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Part 6 — Member Portal Guide</h1>
+<p>Members with portal access can:</p>
+<ul>
+<li>View current loans and renew when allowed</li>
+<li>Manage reservations</li>
+<li>Create <strong>reading lists</strong> and add titles</li>
+<li>See fine information</li>
+</ul>
+<p>Access depends on member login being enabled for your deployment and correct tenant context.</p>
+<hr>
+<h1>Part 7 — Training Outline</h1>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Duration</th>
+<th>Outcomes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Login &amp; navigation</td>
+<td>20 min</td>
+<td>Reach all primary menus</td>
+</tr>
+<tr>
+<td>Catalog &amp; copies</td>
+<td>45 min</td>
+<td>Create title + barcode copy</td>
+</tr>
+<tr>
+<td>Circulation desk</td>
+<td>60 min</td>
+<td>Checkout, return, renew, lost</td>
+</tr>
+<tr>
+<td>Fines &amp; holds</td>
+<td>40 min</td>
+<td>Collect, waive, fulfill hold</td>
+</tr>
+<tr>
+<td>Imports</td>
+<td>30 min</td>
+<td>Run a CSV import safely</td>
+</tr>
+<tr>
+<td>OPAC &amp; kiosk</td>
+<td>45 min</td>
+<td>Public search + kiosk connect</td>
+</tr>
+<tr>
+<td>Reports &amp; settings</td>
+<td>30 min</td>
+<td>Export report; update branding</td>
+</tr>
+</tbody></table>
+<p>Include a hands-on quiz: complete one full loan cycle and one kiosk return.</p>
+<hr>
+<h1>Part 8 — Frequently Asked Questions</h1>
+<p><strong>What apps make up ULMIS?</strong><br>Staff web, public OPAC, kiosk, and shared API.</p>
+<p><strong>Is multi-tenant?</strong><br>Yes. University demo tenant slug is <code>ulmis</code>.</p>
+<p><strong>Can we connect Active Directory today?</strong><br>API surface exists; expect 501 until campus IdP is verified and configured.</p>
+<p><strong>Do we need Redis?</strong><br>Recommended for queues (scheduled reports, async notifications).</p>
+<p><strong>Where is the API contract?</strong><br>Swagger at <code>/api/v1/docs</code> and <a href="./API-Specs-Manual.md">API-Specs-Manual.md</a>.</p>
+<p><strong>Is there a load certification?</strong><br>A smoke script exists; formal 300-concurrent certification is an ops exercise — see compliance NFR notes.</p>
+<hr>
+<h1>Part 9 — Troubleshooting</h1>
+<h2>Staff web</h2>
+<ul>
+<li>Blank data → wrong tenant or empty seed.</li>
+<li>Permission denied → role lacks permission; ask admin.</li>
+<li>PDF/export empty → check report type and date filters.</li>
+</ul>
+<h2>OPAC</h2>
+<ul>
+<li>No results → catalog empty or wrong slug.</li>
+<li>Citations missing → title lacks metadata fields used by citation builder.</li>
+</ul>
+<h2>Kiosk</h2>
+<ul>
+<li>Cannot connect → verify code, full key, slug <code>ulmis</code>, API up, CORS.</li>
+<li>Checkout blocked → member policy (fines/overdue); resolve in staff web.</li>
+</ul>
+<h2>Email / SMS</h2>
+<ul>
+<li>Prefs on but nothing sent → env not set or queue worker not running.</li>
+</ul>
+<hr>
+<h1>Part 10 — Glossary</h1>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Tenant</strong></td>
+<td>Institution partition; slug e.g. <code>ulmis</code></td>
+</tr>
+<tr>
+<td><strong>Copy</strong></td>
+<td>Physical (or tracked) instance of a title with barcode</td>
+</tr>
+<tr>
+<td><strong>Circulation</strong></td>
+<td>Loan lifecycle: request, checkout, return, renew</td>
+</tr>
+<tr>
+<td><strong>Hold / reservation</strong></td>
+<td>Queue for a title when copies are busy</td>
+</tr>
+<tr>
+<td><strong>OPAC</strong></td>
+<td>Online Public Access Catalog</td>
+</tr>
+<tr>
+<td><strong>Kiosk</strong></td>
+<td>Self-service terminal using device API key</td>
+</tr>
+<tr>
+<td><strong>Portal</strong></td>
+<td>Authenticated member self-service</td>
+</tr>
+<tr>
+<td><strong>Fine</strong></td>
+<td>Monetary charge in ₱ for overdue/lost/etc.</td>
+</tr>
+<tr>
+<td><strong>MARC</strong></td>
+<td>Machine-Readable Cataloging data format</td>
+</tr>
+<tr>
+<td><strong>ARIS / HRIS</strong></td>
+<td>Campus academic / HR systems for sync</td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Part 11 — Best Practices</h1>
+<ol>
+<li>Prefer barcodes over manual IDs.</li>
+<li>Keep kiosk keys offline-secret; never commit them to git.</li>
+<li>Run imports first in a staging tenant.</li>
+<li>Document local due-date and fine policies for desk staff.</li>
+<li>Review audit logs after bulk waives or user role changes.</li>
+<li>Keep OPAC and kiosk URLs in tenant settings / env for consistent linking.</li>
+</ol>
+<hr>
+<h1>Part 12 — Task: Catalog a Title</h1>
+<ol>
+<li>Books → Add title → fill metadata → Save.</li>
+<li>Add copy → assign barcode → set location → Save.</li>
+<li>Search in staff OPAC or public OPAC to verify visibility.</li>
+<li>Optional: attach a digital file.</li>
+</ol>
+<hr>
+<h1>Part 13 — Task: Check Out and Return</h1>
+<ol>
+<li>Members → ensure patron is <strong>active</strong>.</li>
+<li>Borrowings → Checkout → select member + copy.</li>
+<li>Confirm due date.</li>
+<li>Later: Return → scan copy → confirm.</li>
+<li>If overdue, open Fines → Collect.</li>
+</ol>
+<hr>
+<h1>Part 14 — Task: Import Catalog</h1>
+<ol>
+<li>Prepare CSV/XLSX with required columns (see import UI hints) or MARC JSON payload.</li>
+<li>Catalog → Import → upload / paste → submit.</li>
+<li>Review success/error counts.</li>
+<li>Open a sample title → Versions.</li>
+</ol>
+<hr>
+<h1>Part 15 — Task: Register a Kiosk</h1>
+<ol>
+<li>Kiosk Platform → Register → <code>KIOSK-001</code> + label.</li>
+<li>Copy full API key.</li>
+<li>On kiosk app, enter <code>ulmis</code>, <code>KIOSK-001</code>, key → Connect.</li>
+<li>Test patron lookup and a return or checkout with a sample item.</li>
+<li>Confirm heartbeat / session in platform list.</li>
+</ol>
+<hr>
+<h1>Part 16 — Task: Export Reports</h1>
+<ol>
+<li>Reports → choose type (e.g. circulation, overdue, inventory — as listed).</li>
+<li>Apply date filters if prompted.</li>
+<li>Download file.</li>
+<li>Archive per university records policy.</li>
+</ol>
+<hr>
+<h1>Part 17 — Task: Manage Users</h1>
+<ol>
+<li>Users → Create / invite → assign role (<code>librarian</code> or <code>staff</code>).</li>
+<li>User signs in and verifies menu access.</li>
+<li>To revoke: disable or remove role via update flow.</li>
+<li>Never share the seeded admin password across operators.</li>
+</ol>
+<hr>
+<h2>Related documents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>API Specs Manual</td>
+<td><a href="./API-Specs-Manual.md">API-Specs-Manual.md</a></td>
+</tr>
+<tr>
+<td>Client apps</td>
+<td><a href="./architecture/CLIENT_APPS.md">architecture/CLIENT_APPS.md</a></td>
+</tr>
+<tr>
+<td>Readiness</td>
+<td><a href="./compliance/ULMIS_READINESS.md">compliance/ULMIS_READINESS.md</a></td>
+</tr>
+<tr>
+<td>)</td>
+<td></td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

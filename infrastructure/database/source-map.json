@@ -1,0 +1,77 @@
+{
+  "targetDatabase": "wmsu_cis",
+  "phase": "phase3-db-consolidation",
+  "note": "Satellite DBs/schemas → target schemas. Dry-run by default; no big-bang cutover.",
+  "sources": [
+    {
+      "module": "common",
+      "torSystem": "Common Platform / identity",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_identity",
+      "targetSchema": "common",
+      "engine": "wmsu-api",
+      "defaultPort": 5434,
+      "notes": "Identity + org MDM in librastack.wmsu_identity on library_postgres :5434 (satellite .env authoritative)"
+    },
+    {
+      "module": "enrollment",
+      "torSystem": "USiS",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_enr",
+      "targetSchema": "enrollment",
+      "engine": "wmsu-enrollment",
+      "defaultPort": 5434,
+      "notes": "Local USiS schema currently hosted on library Postgres (librastack:5434); satellite .env is authoritative"
+    },
+    {
+      "module": "finance",
+      "torSystem": "UFMS",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_fin",
+      "targetSchema": "finance",
+      "engine": "wmsu-finance",
+      "defaultPort": 5434,
+      "notes": "Local UFMS schema currently hosted on library Postgres (librastack:5434); satellite .env is authoritative"
+    },
+    {
+      "module": "records",
+      "torSystem": "TORMS",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_tor",
+      "targetSchema": "records",
+      "engine": "wmsu-records",
+      "defaultPort": 5434,
+      "notes": "Local TORMS schema currently hosted on library Postgres (librastack:5434); satellite .env is authoritative"
+    },
+    {
+      "module": "inventory",
+      "torSystem": "UIMS",
+      "sourceDatabase": "postgres",
+      "sourceSchema": "wmsu_inv",
+      "targetSchema": "inventory",
+      "engine": "wmsu-inventory",
+      "defaultPort": 6543,
+      "notes": "Remote Supabase dump failed (tenant not found Nov 2026); use db:absorb-module for structure; re-dump when credentials recover. Local librastack does not host wmsu_inv."
+    },
+    {
+      "module": "library",
+      "torSystem": "ULMIS",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "public",
+      "targetSchema": "library",
+      "engine": "wmsu-library",
+      "defaultPort": 5434,
+      "notes": "ULMIS tables live in librastack.public on library_postgres :5434. Satellite .env may still point at unreachable Supabase — use SOURCE_PG* overrides for restore."
+    },
+    {
+      "module": "documents",
+      "torSystem": "UDMS",
+      "sourceDatabase": "cdts",
+      "sourceSchema": "public",
+      "targetSchema": "documents",
+      "engine": "wmsu-document",
+      "defaultPort": 5435,
+      "notes": "Metadata in cdts.public on cdts-postgres :5435. Blobs stay in object storage. Satellite .env may point at unreachable Supabase — use SOURCE_PG* overrides."
+    }
+  ]
+}

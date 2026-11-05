@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>USiS API Specs Manual</title>
+  <style>
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.55; max-width: 210mm; margin: 0 auto; padding: 12mm; color: #1a1a1a; }
+  h1 { font-size: 22pt; color: #2f2a6b; border-bottom: 2px solid #635bff; padding-bottom: 6px; }
+  h2 { font-size: 14pt; color: #4338ca; margin-top: 1.5em; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d0f0; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #eef0ff; }
+  code { background: #f4f6ff; padding: 2px 5px; border-radius: 3px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+<h1>USiS / Enrollment API</h1>
+<table>
+<tr><th>Base URL (local CIS)</th><td><code>http://127.0.0.1:3500/api/v1/enrollment</code></td></tr>
+<tr><th>Web app</th><td><code>http://127.0.0.1:5180</code></td></tr>
+<tr><th>Auth</th><td>Identity Bearer JWT (RS256)</td></tr>
+<tr><th>Authorization</th><td>Identity role → permission pack; <code>enrollment.access</code> is launch-only</td></tr>
+<tr><th>OpenAPI</th><td><a href="http://127.0.0.1:3500/api/v1/openapi.json">/api/v1/openapi.json</a> — filter paths by <code>/enrollment/</code></td></tr>
+<tr><th>Swagger UI</th><td><a href="http://127.0.0.1:3500/api/v1/docs">/api/v1/docs</a></td></tr>
+</table>
+
+<h2>Auth &amp; session</h2>
+<table>
+<tr><th>Method</th><th>Path</th><th>Notes</th></tr>
+<tr><td>GET</td><td><code>/auth/me</code></td><td>Profile, permissions, identity roles for UI home/nav</td></tr>
+<tr><td>POST</td><td><code>/auth/refresh</code></td><td>Local refresh when not using Identity-only SSO</td></tr>
+</table>
+
+<h2>Registrar &amp; academic</h2>
+<table>
+<tr><th>Area</th><th>Example paths</th><th>Typical roles</th></tr>
+<tr><td>Applicants</td><td><code>/applicants</code></td><td>registrar</td></tr>
+<tr><td>Students</td><td><code>/students</code>, <code>/students/:id</code></td><td>registrar; students get 403 on list</td></tr>
+<tr><td>Enrollments</td><td><code>/enrollments</code></td><td>registrar, adviser (read), student (self)</td></tr>
+<tr><td>Academic setup</td><td><code>/academic/*</code> programs, terms, sections</td><td>registrar</td></tr>
+<tr><td>Grades</td><td><code>/grades/*</code></td><td>registrar, adviser, student (own)</td></tr>
+<tr><td>Assessments / payments</td><td><code>/assessments/*</code>, clearance reads</td><td>cashier, student</td></tr>
+</table>
+
+<h2>Student self-service</h2>
+<table>
+<tr><th>Path prefix</th><th>Notes</th></tr>
+<tr><td><code>/student/*</code></td><td>Portal profile, enrollment status, COR, payment status — <code>student</code> role</td></tr>
+</table>
+
+<h2>Reports &amp; dashboards</h2>
+<table>
+<tr><th>Path</th><th>Notes</th></tr>
+<tr><td><code>/reports/dashboard</code></td><td>Role-aware registrar/student report cards</td></tr>
+</table>
+
+<p>Extended narrative: <code>WMSU/docs/USIS_API_DOCUMENTATION.md</code></p>
+</body>
+</html>

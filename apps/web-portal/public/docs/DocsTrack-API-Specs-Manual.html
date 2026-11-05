@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>API-Specs-Manual</title>
+  <style>
+  @page { margin: 22mm 18mm; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 12mm;
+  }
+  h1 { font-size: 22pt; color: #0f3d5c; border-bottom: 2px solid #0f3d5c; padding-bottom: 6px; margin-top: 28px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 16pt; color: #145374; margin-top: 22px; }
+  h3 { font-size: 13pt; color: #1a5f7a; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d6e0; padding: 8px 10px; text-align: left; }
+  th { background: #e8f1f6; font-weight: 600; }
+  img { max-width: 100%; height: auto; border: 1px solid #dde4ea; border-radius: 4px; margin: 12px 0; }
+  code { background: #f4f6f8; padding: 2px 5px; border-radius: 3px; font-size: 0.92em; }
+  pre { background: #f4f6f8; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 9pt; }
+  blockquote { border-left: 4px solid #0f3d5c; margin: 12px 0; padding: 8px 16px; background: #f7fafc; color: #334; }
+  a { color: #0f6ba8; }
+  hr { border: none; border-top: 1px solid #dde4ea; margin: 24px 0; }
+</style>
+</head>
+<body>
+<h1>DocsTrack API Specs Manual</h1>
+<p><strong>Intelligent Document Tracking &amp; Workflow Automation — REST API Reference</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>DocsTrack (CDTS Platform)</td>
+</tr>
+<tr>
+<td><strong>API version</strong></td>
+<td>1.2.0</td>
+</tr>
+<tr>
+<td><strong>OpenAPI</strong></td>
+<td>3.0.3 (<code>api/docs/openapi.yaml</code>)</td>
+</tr>
+<tr>
+<td><strong>Base URL (local CIS)</strong></td>
+<td><code>http://127.0.0.1:3500/api/v1/documents</code></td>
+</tr>
+<tr>
+<td><strong>Web app</strong></td>
+<td><code>http://127.0.0.1:5185</code></td>
+</tr>
+<tr>
+<td><strong>Legacy standalone (deprecated)</strong></td>
+<td><code>http://localhost:3333</code></td>
+</tr>
+<tr>
+<td><strong>API prefix</strong></td>
+<td><code>/api/v1</code></td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>Integrators, frontend engineers, DevOps, partner developers</td>
+</tr>
+<tr>
+<td><strong>Published</strong></td>
+<td>August 2026</td>
+</tr>
+</tbody></table>
+<p>Interactive Swagger UI (when API is running):</p>
+<ul>
+<li><code>GET /api/v1/docs</code></li>
+<li>Raw spec: <code>GET /api/v1/docs/openapi.yaml</code></li>
+</ul>
+<p>Machine-readable source of truth: <a href="../api/docs/openapi.yaml"><code>api/docs/openapi.yaml</code></a></p>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#1-overview">Overview</a></li>
+<li><a href="#2-authentication--tokens">Authentication &amp; Tokens</a></li>
+<li><a href="#3-multi-tenancy">Multi-Tenancy</a></li>
+<li><a href="#4-headers--conventions">Headers &amp; Conventions</a></li>
+<li><a href="#5-error-model">Error Model</a></li>
+<li><a href="#6-rate-limiting--throttling">Rate Limiting &amp; Throttling</a></li>
+<li><a href="#7-permissions-reference">Permissions Reference</a></li>
+<li><a href="#8-endpoint-catalog">Endpoint Catalog</a></li>
+<li><a href="#9-core-resource-schemas">Core Resource Schemas</a></li>
+<li><a href="#10-common-workflows">Common Workflows</a></li>
+<li><a href="#11-webhooks">Webhooks</a></li>
+<li><a href="#12-realtime--background-jobs">Realtime &amp; Background Jobs</a></li>
+<li><a href="#13-environments--health">Environments &amp; Health</a></li>
+<li><a href="#14-changelog-notes">Changelog Notes</a></li>
+</ol>
+<hr>
+<h2>1. Overview</h2>
+<p>DocsTrack exposes a versioned REST API for tenant registration, document lifecycle, workflows/approvals, search, billing, notifications, AI copilot, and platform administration.</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Prefix</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Infrastructure</td>
+<td><code>/</code>, <code>/health/*</code>, <code>/metrics</code></td>
+<td>Public (metrics gated in production)</td>
+</tr>
+<tr>
+<td>Public tracking &amp; assets</td>
+<td><code>/track/*</code>, <code>/uploads/*</code>, <code>/api/v1/public/*</code></td>
+<td>Public</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td><code>/api/v1/auth/*</code></td>
+<td>Public</td>
+</tr>
+<tr>
+<td>Tenant account</td>
+<td><code>/api/v1/account/*</code></td>
+<td>Bearer JWT + tenant context</td>
+</tr>
+<tr>
+<td>Platform admin</td>
+<td><code>/api/v1/admin/*</code></td>
+<td>Bearer JWT + super-admin</td>
+</tr>
+<tr>
+<td>Billing webhooks</td>
+<td><code>/api/v1/webhooks/billing/*</code></td>
+<td>Provider signature (no JWT)</td>
+</tr>
+</tbody></table>
+<p><strong>Approximate route count:</strong> 158 HTTP registrations.</p>
+<p>Content type for JSON bodies: <code>application/json</code> unless uploading multipart files.</p>
+<hr>
+<h2>2. Authentication &amp; Tokens</h2>
+<h3>2.1 Token types</h3>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Lifetime (typical)</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Access token (JWT)</td>
+<td>Short-lived (~15 min / <code>expiresIn</code>)</td>
+<td><code>Authorization: Bearer &lt;accessToken&gt;</code></td>
+</tr>
+<tr>
+<td>Refresh token</td>
+<td>Longer-lived</td>
+<td><code>POST /api/v1/auth/refresh</code></td>
+</tr>
+<tr>
+<td>MFA challenge token</td>
+<td>Short-lived</td>
+<td>Complete MFA after login</td>
+</tr>
+</tbody></table>
+<p>Successful login / register / MFA / refresh returns:</p>
+<pre><code class="language-json">{
+  &quot;user&quot;: {
+    &quot;id&quot;: &quot;uuid&quot;,
+    &quot;email&quot;: &quot;owner@demo.com&quot;,
+    &quot;fullName&quot;: &quot;Demo Owner&quot;,
+    &quot;tenantId&quot;: &quot;uuid&quot;,
+    &quot;isSuperAdmin&quot;: false,
+    &quot;emailVerified&quot;: true,
+    &quot;mfaEnabled&quot;: false
+  },
+  &quot;tokens&quot;: {
+    &quot;accessToken&quot;: &quot;…&quot;,
+    &quot;refreshToken&quot;: &quot;…&quot;,
+    &quot;expiresIn&quot;: 900,
+    &quot;tokenType&quot;: &quot;Bearer&quot;
+  }
+}
+</code></pre>
+<p>When MFA is required at login:</p>
+<pre><code class="language-json">{
+  &quot;mfaRequired&quot;: true,
+  &quot;mfaChallengeToken&quot;: &quot;…&quot;
+}
+</code></pre>
+<p>Then call <code>POST /api/v1/auth/mfa/challenge</code> with <code>{ &quot;mfaChallengeToken&quot;, &quot;mfaCode&quot; }</code>.</p>
+<h3>2.2 Auth endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/auth/register</code></td>
+<td>Register tenant + owner</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/login</code></td>
+<td>Email/password login</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/mfa/challenge</code></td>
+<td>Complete MFA</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/refresh</code></td>
+<td>Rotate access token</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/forgot-password</code></td>
+<td>Request reset email</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/reset-password</code></td>
+<td>Apply new password</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/reset-password/validate</code></td>
+<td>Validate reset token</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/verify-email</code></td>
+<td>Verify email</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/resend-verification</code></td>
+<td>Resend verification</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/oauth/:provider/redirect</code></td>
+<td>OAuth start (<code>google</code> / <code>microsoft</code>)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/oauth/:provider/callback</code></td>
+<td>OAuth callback</td>
+</tr>
+</tbody></table>
+<h3>2.3 Register body (required)</h3>
+<p><code>email</code>, <code>password</code>, <code>passwordConfirmation</code>, <code>fullName</code>, <code>organizationName</code></p>
+<p>Password rules: typically 8–32 characters (enforced by VineJS validators).</p>
+<h3>2.4 Session logout</h3>
+<p><code>POST /api/v1/account/logout</code> — requires authenticated account context; invalidates current session/refresh pair as implemented by the auth service.</p>
+<hr>
+<h2>3. Multi-Tenancy</h2>
+<ul>
+<li>Tenant membership is bound to the authenticated user (<code>user.tenantId</code>).</li>
+<li>Account routes require <strong>auth + tenant</strong> middleware.</li>
+<li>Super-admins may operate across tenants; the web client can send <code>X-Tenant-Id</code> for impersonation / context override when allowed by the API.</li>
+<li>Data isolation is enforced in repositories and policies (documents, drafts, files, etc.).</li>
+</ul>
+<p>Always send the access token on account and admin routes. Do not rely on tenant id alone.</p>
+<hr>
+<h2>4. Headers &amp; Conventions</h2>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Authorization</code></td>
+<td>Account / Admin</td>
+<td><code>Bearer &lt;accessToken&gt;</code></td>
+</tr>
+<tr>
+<td><code>Content-Type</code></td>
+<td>JSON writes</td>
+<td><code>application/json</code></td>
+</tr>
+<tr>
+<td><code>X-Tenant-Id</code></td>
+<td>Optional</td>
+<td>Super-admin / client override when supported</td>
+</tr>
+<tr>
+<td><code>Accept</code></td>
+<td>Optional</td>
+<td>Prefer <code>application/json</code></td>
+</tr>
+</tbody></table>
+<p><strong>Path params:</strong> UUIDs unless noted (e.g. tracking numbers, filenames).</p>
+<p><strong>Pagination:</strong> list endpoints typically accept <code>page</code>, <code>limit</code> (and sometimes cursor/<code>search</code> query params). Check OpenAPI for each operation.</p>
+<p><strong>Idempotency:</strong> Prefer safe retries on <code>GET</code>. Mutations (<code>POST</code>/<code>PUT</code>/<code>PATCH</code>/<code>DELETE</code>) should not be blindly retried without client-side guards.</p>
+<hr>
+<h2>5. Error Model</h2>
+<p>Failed requests generally return JSON with an error payload, for example:</p>
+<pre><code class="language-json">{
+  &quot;error&quot;: &quot;Unauthorized&quot;
+}
+</code></pre>
+<p>Validation failures may include field-level messages from VineJS. HTTP status codes follow REST norms:</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200 / 201</td>
+<td>Success</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Validation / bad request</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Missing or invalid token</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Authenticated but forbidden (permission / tenant)</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Resource not found (or metrics disabled)</td>
+</tr>
+<tr>
+<td>409</td>
+<td>Conflict (duplicate, state machine)</td>
+</tr>
+<tr>
+<td>413</td>
+<td>Payload too large</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Rate limited</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Server error</td>
+</tr>
+</tbody></table>
+<p>Frontend clients normalize Axios errors into <code>ApiError</code> (see <code>web/docs/API_LAYER.md</code>).</p>
+<hr>
+<h2>6. Rate Limiting &amp; Throttling</h2>
+<ul>
+<li>Auth and account route groups use Adonis limiter middleware (Redis or memory store).</li>
+<li>Public tracking (<code>GET /track/:trackingNumber</code>) has a dedicated throttle.</li>
+<li>Respect <code>429</code> responses; back off and retry with jitter.</li>
+</ul>
+<p>Exact limits are environment-configurable via limiter config — treat documented OpenAPI/Swagger as the contract for request shapes; treat ops config for numeric quotas.</p>
+<hr>
+<h2>7. Permissions Reference</h2>
+<p>Account routes may require a named permission in addition to auth + tenant:</p>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>documents.view</code></td>
+<td>List/show/search/view files</td>
+</tr>
+<tr>
+<td><code>documents.create</code></td>
+<td>Create documents</td>
+</tr>
+<tr>
+<td><code>documents.update</code></td>
+<td>Edit, submit, archive, upload</td>
+</tr>
+<tr>
+<td><code>documents.delete</code></td>
+<td>Delete documents/files</td>
+</tr>
+<tr>
+<td><code>documents.download</code></td>
+<td>Download attachments</td>
+</tr>
+<tr>
+<td><code>documents.approve</code></td>
+<td>Approval actions</td>
+</tr>
+<tr>
+<td><code>workflows.manage</code></td>
+<td>Workflow CRUD / publish</td>
+</tr>
+<tr>
+<td><code>settings.manage</code></td>
+<td>Org, branding, domains, departments, doc types</td>
+</tr>
+<tr>
+<td><code>billing.manage</code></td>
+<td>Checkout, invoices, plan changes</td>
+</tr>
+<tr>
+<td><code>roles.manage</code></td>
+<td>Roles &amp; permission matrix</td>
+</tr>
+<tr>
+<td><code>users.manage</code></td>
+<td>Invite/update/remove users</td>
+</tr>
+<tr>
+<td><code>audit.view</code></td>
+<td>Audit log listing</td>
+</tr>
+<tr>
+<td><code>reports.view</code></td>
+<td>Dashboard trend / usage charts / ops report</td>
+</tr>
+<tr>
+<td><code>documents.esign</code></td>
+<td>Electronic signature envelopes</td>
+</tr>
+<tr>
+<td><code>records.request.create</code></td>
+<td>Create records access requests</td>
+</tr>
+<tr>
+<td><code>records.release.manage</code></td>
+<td>Approve / release / return requests</td>
+</tr>
+<tr>
+<td><code>records.digitization.manage</code></td>
+<td>Digitization batches &amp; OCR QA</td>
+</tr>
+<tr>
+<td><code>records.receiving.manage</code></td>
+<td>Receiving desk receipts</td>
+</tr>
+<tr>
+<td><code>records.archives.manage</code></td>
+<td>Archival transfers, disposal, legal hold</td>
+</tr>
+<tr>
+<td><code>records.retention.manage</code></td>
+<td>Retention schedule CRUD</td>
+</tr>
+<tr>
+<td><code>records.restricted.view</code></td>
+<td>View confidential/restricted records</td>
+</tr>
+<tr>
+<td><code>records.restricted.download</code></td>
+<td>Download restricted records</td>
+</tr>
+</tbody></table>
+<p>Current user permissions: <code>GET /api/v1/account/permissions/me</code>.</p>
+<p>Platform routes under <code>/api/v1/admin/*</code> require <code>isSuperAdmin</code> (no tenant permission keys).</p>
+<hr>
+<h2>8. Endpoint Catalog</h2>
+<p>Auth legend: <code>public</code> · <code>auth</code> · <code>tenant</code> · <code>permission:…</code> · <code>superAdmin</code> · <code>webhook</code></p>
+<h3>8.1 Infrastructure</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>public</td>
+<td>API metadata</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/health/live</code></td>
+<td>public</td>
+<td>Liveness</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/health/ready</code></td>
+<td>public</td>
+<td>Readiness</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/metrics</code></td>
+<td>gated</td>
+<td>Prometheus metrics</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/docs</code></td>
+<td>public</td>
+<td>Swagger UI</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/docs/openapi.yaml</code></td>
+<td>public</td>
+<td>OpenAPI YAML</td>
+</tr>
+</tbody></table>
+<p><strong>Metrics (production):</strong> If <code>METRICS_TOKEN</code> is set, send <code>Authorization: Bearer &lt;METRICS_TOKEN&gt;</code>. If unset in production, endpoint returns <code>404</code>.</p>
+<h3>8.2 Public</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/track/:trackingNumber</code></td>
+<td>public</td>
+<td>Public tracking page data</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/uploads/tenants/:tenantId/:filename</code></td>
+<td>public</td>
+<td>Tenant public asset</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/public/branding</code></td>
+<td>public</td>
+<td>Public branding</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/public/plans</code></td>
+<td>public</td>
+<td>Marketing / plans list</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/internal/files/download</code></td>
+<td>public*</td>
+<td>Internal/local download helper (*disabled or restricted in production)</td>
+</tr>
+</tbody></table>
+<h3>8.3 Authentication</h3>
+<p>See <a href="#22-auth-endpoints">§2.2</a>.</p>
+<h3>8.4 Account — Profile</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/profile</code></td>
+<td>auth + tenant</td>
+<td>Current profile</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/logout</code></td>
+<td>auth + tenant</td>
+<td>Logout</td>
+</tr>
+</tbody></table>
+<h3>8.5 Account — Organization &amp; settings</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/PUT</td>
+<td><code>/api/v1/account/organization</code></td>
+<td>auth + tenant (+ <code>settings.manage</code> on write)</td>
+<td>Organization</td>
+</tr>
+<tr>
+<td>GET/PUT</td>
+<td><code>/api/v1/account/settings</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Tenant settings</td>
+</tr>
+<tr>
+<td>GET/PUT</td>
+<td><code>/api/v1/account/branding</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Branding</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/branding/logo</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Logo upload</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/domains</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Domains</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/domains/verify</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Verify domain</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/domains/:id/primary</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Set primary</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/account/domains/:id</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Remove domain</td>
+</tr>
+</tbody></table>
+<h3>8.6 Account — Departments &amp; document types</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/departments</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Departments</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/document-types</code></td>
+<td>+ <code>settings.manage</code></td>
+<td>Document types</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/document-types/:documentTypeId/workflow</code></td>
+<td>+ <code>workflows.manage</code></td>
+<td>Assign workflow</td>
+</tr>
+</tbody></table>
+<h3>8.7 Account — Billing &amp; subscription</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/subscription</code></td>
+<td>auth + tenant</td>
+<td>Subscription</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/subscription/usage</code></td>
+<td>auth + tenant</td>
+<td>Usage counters</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/billing/plans</code></td>
+<td>auth + tenant</td>
+<td>Plans</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/billing/checkout|upgrade|downgrade|cancel</code></td>
+<td>+ <code>billing.manage</code></td>
+<td>Plan lifecycle</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/billing/coupons/validate</code></td>
+<td>+ <code>billing.manage</code></td>
+<td>Coupons</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/billing/invoices</code></td>
+<td>+ <code>billing.manage</code></td>
+<td>Invoices</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/billing/invoices/:id</code></td>
+<td>+ <code>billing.manage</code></td>
+<td>Invoice detail</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/billing/invoices/:id/pdf</code></td>
+<td>+ <code>billing.manage</code></td>
+<td>Invoice PDF</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/billing/usage</code></td>
+<td>+ <code>billing.manage</code></td>
+<td>Usage report / record</td>
+</tr>
+</tbody></table>
+<h3>8.8 Account — Security (sessions, MFA, RBAC, users, audit)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/DELETE</td>
+<td><code>/api/v1/account/sessions</code></td>
+<td>auth + tenant</td>
+<td>Sessions</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/sessions/revoke-all</code></td>
+<td>auth + tenant</td>
+<td>Revoke all</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/mfa/*</code></td>
+<td>auth + tenant</td>
+<td>MFA status/setup/enable/disable</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/permissions</code></td>
+<td>+ <code>roles.manage</code></td>
+<td>Permission catalog</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/permissions/me</code></td>
+<td>auth + tenant</td>
+<td>My permissions</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/roles</code></td>
+<td>+ <code>roles.manage</code></td>
+<td>Roles</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/account/roles/:id/permissions</code></td>
+<td>+ <code>roles.manage</code></td>
+<td>Role permissions</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/users</code></td>
+<td>+ <code>users.manage</code></td>
+<td>Users</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/users/assignable-roles</code></td>
+<td>+ <code>users.manage</code></td>
+<td>Assignable roles</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/users/:userId/roles</code></td>
+<td>+ <code>users.manage</code></td>
+<td>Assign role</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/audit-logs</code></td>
+<td>+ <code>audit.view</code></td>
+<td>Audit trail</td>
+</tr>
+</tbody></table>
+<h3>8.9 Account — Dashboard &amp; search</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/dashboard/stats|overview|user-access</code></td>
+<td>auth + tenant</td>
+<td>Dashboard</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/dashboard/trend|usage-trend|files-trend</code></td>
+<td>+ <code>reports.view</code></td>
+<td>Trends</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/search</code></td>
+<td>+ <code>documents.view</code></td>
+<td>Text search</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/search/image</code></td>
+<td>+ <code>documents.view</code></td>
+<td>Image search</td>
+</tr>
+</tbody></table>
+<h3>8.10 Account — Copilot</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/account/copilot/chat</code></td>
+<td>auth + tenant</td>
+<td>Chat / intent</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/copilot/confirm</code></td>
+<td>auth + tenant</td>
+<td>Confirm action</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/copilot/cancel</code></td>
+<td>auth + tenant</td>
+<td>Cancel action</td>
+</tr>
+</tbody></table>
+<h3>8.11 Account — Documents (core)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/documents</code></td>
+<td><code>documents.view</code></td>
+<td>List</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/documents</code></td>
+<td><code>documents.create</code></td>
+<td>Create</td>
+</tr>
+<tr>
+<td>GET/PUT/DELETE</td>
+<td><code>/api/v1/account/documents/:id</code></td>
+<td>view / update / delete</td>
+<td>CRUD</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/documents/:id/submit</code></td>
+<td><code>documents.update</code></td>
+<td>Submit for workflow</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/documents/:id/archive</code></td>
+<td><code>documents.update</code></td>
+<td>Archive</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/documents/search</code></td>
+<td><code>documents.view</code></td>
+<td>Document search</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/documents/departments</code></td>
+<td><code>documents.view</code></td>
+<td>Lookup</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/documents/document-types</code></td>
+<td><code>documents.view</code></td>
+<td>Lookup</td>
+</tr>
+</tbody></table>
+<p><strong>Versions</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/documents/:documentId/versions</code></td>
+<td>view / update</td>
+<td>Versions</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>…/versions/:versionId/submit</code></td>
+<td>update</td>
+<td>Submit version</td>
+</tr>
+</tbody></table>
+<p><strong>Files</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>…/files</code></td>
+<td>view</td>
+<td>List files</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>…/versions/:versionId/files</code></td>
+<td>update</td>
+<td>Multipart upload</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>…/files/presign</code> + <code>…/complete</code></td>
+<td>update</td>
+<td>Direct-to-storage upload</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>…/files/:fileId/replace</code></td>
+<td>update</td>
+<td>Replace</td>
+</tr>
+<tr>
+<td>GET/PUT</td>
+<td><code>…/files/:fileId/edit</code></td>
+<td>view / update</td>
+<td>Online edit</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>…/files/:fileId/download</code></td>
+<td>download</td>
+<td>Signed download</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>…/files/:fileId/view</code></td>
+<td>view</td>
+<td>Inline view URL</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>…/files/:fileId</code></td>
+<td>delete</td>
+<td>Remove file</td>
+</tr>
+</tbody></table>
+<p><strong>Intelligence, content, approvals</strong></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>…/intelligence</code> (+ analyze, jobs)</td>
+<td>view / update</td>
+<td>OCR / AI jobs</td>
+</tr>
+<tr>
+<td>GET/PUT</td>
+<td><code>…/content</code></td>
+<td>view / update</td>
+<td>Rich content</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>…/views</code></td>
+<td>view</td>
+<td>Record view</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>…/workflow</code></td>
+<td>view</td>
+<td>Workflow state</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>…/timeline|approvals|activity</code></td>
+<td>view</td>
+<td>History</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>…/approvals</code></td>
+<td><code>documents.approve</code></td>
+<td>Approve / reject / etc.</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>…/intelligence/metadata</code></td>
+<td>update</td>
+<td>Correct OCR/AI metadata + reindex</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/documents/:id/lifecycle</code></td>
+<td>update</td>
+<td>Lifecycle transition (fan-out)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/documents/:documentId/legal-hold</code></td>
+<td><code>records.archives.manage</code></td>
+<td>Set / release legal hold</td>
+</tr>
+</tbody></table>
+<h3>8.11b Account — Records modules</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CRUD + actions</td>
+<td><code>/api/v1/account/record-requests*</code></td>
+<td>request / release perms</td>
+<td>Request &amp; release desk</td>
+</tr>
+<tr>
+<td>CRUD + OCR/QA/ingest</td>
+<td><code>/api/v1/account/digitization/batches*</code></td>
+<td><code>records.digitization.manage</code></td>
+<td>Digitization batches</td>
+</tr>
+<tr>
+<td>CRUD + register/ack</td>
+<td><code>/api/v1/account/receiving/receipts*</code></td>
+<td><code>records.receiving.manage</code></td>
+<td>Receiving desk</td>
+</tr>
+<tr>
+<td>CRUD + approve/complete</td>
+<td><code>/api/v1/account/archives/transfers*</code></td>
+<td><code>records.archives.manage</code></td>
+<td>Archival transfers</td>
+</tr>
+<tr>
+<td>CRUD + approve/execute</td>
+<td><code>/api/v1/account/archives/disposals*</code></td>
+<td><code>records.archives.manage</code></td>
+<td>Disposal + certificates</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/records/inventory</code></td>
+<td><code>reports.view</code></td>
+<td>Inventory (+ <code>?format=csv</code>)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/records/summary</code></td>
+<td><code>reports.view</code></td>
+<td>Records summary</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/records/ops-report</code></td>
+<td><code>reports.view</code></td>
+<td>Ops KPIs (+ CSV)</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/retention-schedules*</code></td>
+<td>view / <code>records.retention.manage</code></td>
+<td>Retention schedules</td>
+</tr>
+</tbody></table>
+<h3>8.12 Account — Workflows &amp; notifications</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CRUD + publish/archive</td>
+<td><code>/api/v1/account/workflows</code></td>
+<td><code>workflows.manage</code></td>
+<td>Workflow definitions</td>
+</tr>
+<tr>
+<td>GET/PATCH/POST</td>
+<td><code>/api/v1/account/notifications*</code></td>
+<td>auth + tenant</td>
+<td>Inbox</td>
+</tr>
+<tr>
+<td>POST/DELETE</td>
+<td><code>/api/v1/account/push-tokens</code></td>
+<td>auth + tenant</td>
+<td>Mobile push</td>
+</tr>
+</tbody></table>
+<h3>8.13 Admin (super-admin)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CRUD + suspend/activate</td>
+<td><code>/api/v1/admin/tenants</code></td>
+<td>Tenant ops</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/analytics/overview|revenue|tenants</code></td>
+<td>Platform analytics</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/admin/plans</code></td>
+<td>Plan catalog</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/billing/overview</code></td>
+<td>Billing overview</td>
+</tr>
+</tbody></table>
+<h3>8.14 Webhooks</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/webhooks/billing/stripe</code></td>
+<td>webhook</td>
+<td>Stripe events</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/webhooks/billing/paymongo</code></td>
+<td>webhook</td>
+<td>PayMongo events</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/webhooks/billing/stub</code></td>
+<td>webhook</td>
+<td>Local/stub provider</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. Core Resource Schemas</h2>
+<p>Abbreviated shapes from OpenAPI. Full schemas live in <code>api/docs/openapi.yaml</code>.</p>
+<h3>User</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>fullName</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>tenantId</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>isSuperAdmin</code></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td><code>emailVerified</code></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td><code>mfaEnabled</code></td>
+<td>boolean</td>
+</tr>
+</tbody></table>
+<h3>AuthTokens</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>accessToken</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>refreshToken</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>expiresIn</code></td>
+<td>integer (seconds)</td>
+</tr>
+<tr>
+<td><code>tokenType</code></td>
+<td><code>&quot;Bearer&quot;</code></td>
+</tr>
+</tbody></table>
+<h3>DocumentFile</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code>, <code>versionId</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>originalName</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>mimeType</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>fileSize</code></td>
+<td>integer</td>
+</tr>
+<tr>
+<td><code>checksum</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>virusScanned</code> / <code>virusClean</code></td>
+<td>boolean</td>
+</tr>
+<tr>
+<td><code>extractedMetadata</code></td>
+<td>object | null</td>
+</tr>
+<tr>
+<td><code>createdAt</code></td>
+<td>date-time</td>
+</tr>
+</tbody></table>
+<h3>DocumentVersion</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>versionNumber</code></td>
+<td>integer</td>
+</tr>
+<tr>
+<td><code>label</code></td>
+<td>string (e.g. <code>v1</code>)</td>
+</tr>
+<tr>
+<td><code>changeNotes</code></td>
+<td>string | null</td>
+</tr>
+<tr>
+<td><code>files</code></td>
+<td>DocumentFile[]</td>
+</tr>
+<tr>
+<td><code>createdAt</code></td>
+<td>date-time</td>
+</tr>
+</tbody></table>
+<h3>SignedDownloadUrl</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>url</code></td>
+<td>uri</td>
+</tr>
+<tr>
+<td><code>expiresIn</code></td>
+<td>integer (e.g. 900)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>10. Common Workflows</h2>
+<h3>10.1 Login → list documents</h3>
+<ol>
+<li><code>POST /api/v1/auth/login</code></li>
+<li>Store tokens; send <code>Authorization: Bearer …</code></li>
+<li><code>GET /api/v1/account/documents</code></li>
+</ol>
+<h3>10.2 Create → upload → submit</h3>
+<ol>
+<li><code>POST /api/v1/account/documents</code></li>
+<li><code>POST …/versions/:versionId/files</code> (or presign flow)</li>
+<li><code>POST /api/v1/account/documents/:id/submit</code></li>
+</ol>
+<h3>10.3 Approve</h3>
+<ol>
+<li><code>GET …/approvals</code> or approvals queue via list filters</li>
+<li><code>POST …/approvals</code> with action payload (<code>approve</code> / <code>reject</code> / …)</li>
+</ol>
+<h3>10.4 Public tracking</h3>
+<ol>
+<li>Obtain tracking number from document</li>
+<li><code>GET /track/:trackingNumber</code> (no auth)</li>
+</ol>
+<h3>10.5 Token refresh</h3>
+<ol>
+<li>On <code>401</code>, call <code>POST /api/v1/auth/refresh</code> with <code>refreshToken</code></li>
+<li>Retry original request with new access token</li>
+<li>If refresh fails, force re-login</li>
+</ol>
+<hr>
+<h2>11. Webhooks</h2>
+<p>Billing providers POST events to <code>/api/v1/webhooks/billing/{stripe|paymongo|stub}</code>.</p>
+<ul>
+<li>Verify signatures using provider secrets (<code>STRIPE_WEBHOOK_SECRET</code>, <code>PAYMONGO_WEBHOOK_SECRET</code>).</li>
+<li>Respond quickly with <code>2xx</code>; processing may enqueue side effects.</li>
+<li>Stub webhook is for local/dev when <code>BILLING_PROVIDER=stub</code>.</li>
+</ul>
+<hr>
+<h2>12. Realtime &amp; Background Jobs</h2>
+<p>Not REST, but part of the integration surface:</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Socket.IO</td>
+<td>Live notifications / document events (when enabled)</td>
+</tr>
+<tr>
+<td>BullMQ workers</td>
+<td>Notifications, file processing, document intelligence</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td><code>queue:work</code>, <code>sla:check</code></td>
+</tr>
+</tbody></table>
+<p>Clients should treat REST as source of truth and use realtime as an optimization.</p>
+<hr>
+<h2>13. Environments &amp; Health</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Path</th>
+<th>Expect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Liveness</td>
+<td><code>GET /health/live</code></td>
+<td>Process up</td>
+</tr>
+<tr>
+<td>Readiness</td>
+<td><code>GET /health/ready</code></td>
+<td>Dependencies ready (DB/Redis as configured)</td>
+</tr>
+<tr>
+<td>Docs</td>
+<td><code>GET /api/v1/docs</code></td>
+<td>Swagger UI</td>
+</tr>
+</tbody></table>
+<p>Configure API URL in the web app via <code>VITE_API_URL</code> (see <code>web/docs/API_LAYER.md</code>).</p>
+<hr>
+<h2>14. Changelog Notes</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.0.0</td>
+<td>Initial DocsTrack API surface: auth, account, documents, workflows, billing, admin, webhooks</td>
+</tr>
+<tr>
+<td>2026-07</td>
+<td>Metrics endpoint hardened for production (<code>METRICS_TOKEN</code>)</td>
+</tr>
+<tr>
+<td>2026-07</td>
+<td>Draft document / version visibility tightened to creator until submit</td>
+</tr>
+<tr>
+<td>2026-08</td>
+<td>Records modules: request/release, digitization ingest+OCR, receiving, archives/disposal/legal hold, ops report, metadata correction</td>
+</tr>
+</tbody></table>
+<p>For field-level request/response details, always prefer the live OpenAPI file and Swagger UI over this summary when implementing clients.</p>
+<hr>
+<h2>Related documents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Complete User Guide</td>
+<td><a href="./DocsTrack-Complete-Guide.md">DocsTrack-Complete-Guide.md</a></td>
+</tr>
+<tr>
+<td>OpenAPI YAML</td>
+<td><a href="../api/docs/openapi.yaml"><code>api/docs/openapi.yaml</code></a></td>
+</tr>
+<tr>
+<td>Web API client layer</td>
+<td><a href="../web/docs/API_LAYER.md"><code>web/docs/API_LAYER.md</code></a></td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td><a href="./engineering/ARCHITECTURE.md">engineering/ARCHITECTURE.md</a></td>
+</tr>
+<tr>
+<td>ERD</td>
+<td><a href="./engineering/ERD.md">engineering/ERD.md</a></td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

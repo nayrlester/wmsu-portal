@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Identity Service Complete User Guide</title>
+  <style>
+  @page { margin: 22mm 18mm; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 12mm;
+  }
+  h1 { font-size: 22pt; color: #2f2a6b; border-bottom: 2px solid #635bff; padding-bottom: 6px; margin-top: 28px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 16pt; color: #3d3780; margin-top: 22px; }
+  h3 { font-size: 13pt; color: #4a4494; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d0f0; padding: 8px 10px; text-align: left; }
+  th { background: #eef0ff; font-weight: 600; }
+  img { max-width: 100%; height: auto; border: 1px solid #dde4ea; border-radius: 4px; margin: 12px 0; }
+  code { background: #f4f6ff; padding: 2px 5px; border-radius: 3px; font-size: 0.92em; }
+  pre { background: #f4f6ff; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 9pt; }
+  blockquote { border-left: 4px solid #635bff; margin: 12px 0; padding: 8px 16px; background: #f7f8ff; color: #334; }
+  a { color: #4a3fd4; }
+  hr { border: none; border-top: 1px solid #dde4ea; margin: 24px 0; }
+</style>
+</head>
+<body>
+<h1>Identity Service Complete User Guide</h1>
+<p><strong>University Platform Access Service</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>Identity Service</td>
+</tr>
+<tr>
+<td><strong>Document version</strong></td>
+<td>2.0</td>
+</tr>
+<tr>
+<td><strong>Published</strong></td>
+<td>August 2026</td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>End users, Identity administrators, campus IT, trainers</td>
+</tr>
+</tbody></table>
+<p>This guide covers signing in, launching campus platforms (USiS, TORMS, ULMIS, UFMS, DocsTrack, UIMS), Portal Admin roles and platforms, RBAC inside each app, MFA, SSO, FAQ, and troubleshooting.</p>
+<h2>Guide Contents</h2>
+<ol>
+<li>Introduction</li>
+<li>Accessing the Portal</li>
+<li>Signing In</li>
+<li>Platform Launcher</li>
+<li>Student Access Rules</li>
+<li>Administrator Console</li>
+<li>Enrollment Partner Overview</li>
+<li>Dual-Mode SSO (platforms)</li>
+<li>Training Outline</li>
+<li>Frequently Asked Questions</li>
+<li>Troubleshooting</li>
+<li>Glossary</li>
+<li>Best Practices</li>
+<li>Task: Create a staff user</li>
+<li>Task: Disable a withdrawn student</li>
+<li>Task: Configure platform dual SSO</li>
+</ol>
+<hr>
+<h1>Part 1 — User Manual</h1>
+<h2>Chapter 1 — Introduction</h2>
+<h3>Purpose</h3>
+<p>Identity Service is the <strong>central login hub</strong> for WMSU Campus Information Systems. Users sign in once at the WMSU Portal, then launch only the platforms assigned to them:</p>
+<ul>
+<li><strong>USiS</strong> — Enrollment / student information</li>
+<li><strong>TORMS</strong> — Transcripts and official records</li>
+<li><strong>ULMIS</strong> — Library staff, OPAC, kiosk</li>
+<li><strong>UFMS</strong> — Budget, accounting, procurement, POS</li>
+<li><strong>DocsTrack (UDMS)</strong> — Document tracking and approvals</li>
+<li><strong>UIMS</strong> — Inventory and assets</li>
+</ul>
+<h3>Benefits</h3>
+<ul>
+<li>One password for multiple systems</li>
+<li>Platform grants control which tiles appear on the launcher</li>
+<li>Identity roles map to <strong>permission packs</strong> inside each app (student vs registrar vs employee)</li>
+<li>RS256 SSO tokens platforms verify via JWKS</li>
+</ul>
+<hr>
+<h2>Chapter 2 — Accessing the Portal</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Local default</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Portal URL</td>
+<td><a href="http://127.0.0.1:5173">http://127.0.0.1:5173</a> (WMSU Portal / Unified Access)</td>
+</tr>
+<tr>
+<td>Identity API</td>
+<td><a href="http://127.0.0.1:3411">http://127.0.0.1:3411</a></td>
+</tr>
+<tr>
+<td>CIS Base API</td>
+<td><a href="http://127.0.0.1:3500">http://127.0.0.1:3500</a> (enrollment, finance, library, …)</td>
+</tr>
+</tbody></table>
+<p>Use the production URL provided by campus IT when deployed.</p>
+<p>Recommended browsers: current Chrome, Edge, or Firefox.</p>
+<hr>
+<h2>Chapter 3 — Signing In</h2>
+<ol>
+<li>Open the Identity portal.</li>
+<li>Enter your <strong>email</strong> and <strong>password</strong> (use the eye icon to show or hide the password).</li>
+<li>Click <strong>Login</strong>.</li>
+<li>On success you land on the home / launcher screen.</li>
+</ol>
+<h3>Demo accounts (non-production)</h3>
+<p>Set <code>DEMO_SEED_PASSWORD</code> in the API env, then run <code>node ace db:seed</code>. Accounts:</p>
+<table>
+<thead>
+<tr>
+<th>Email</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>admin@identity.local</code></td>
+<td>Full admin + all platforms</td>
+</tr>
+<tr>
+<td><code>student@identity.local</code></td>
+<td>Student role — USiS student portal, library/OPAC/kiosk, records self-service when assigned</td>
+</tr>
+<tr>
+<td><code>employee@identity.local</code></td>
+<td>Employee — multiple platforms; menus depend on roles (not full registrar by default)</td>
+</tr>
+<tr>
+<td><code>nodocs@identity.local</code></td>
+<td>Library platforms only (no DocsTrack)</td>
+</tr>
+</tbody></table>
+<p>If login fails, check caps lock, email spelling, and that your account status is <strong>active</strong>.</p>
+<hr>
+<h2>Chapter 4 — Platform Launcher</h2>
+<p>After login, the portal lists <strong>platforms you are allowed to open</strong>.</p>
+<ol>
+<li>Choose a platform card (USiS, TORMS, Library, UFMS Finance, DocsTrack, UIMS, …).</li>
+<li>The portal opens the platform SSO callback with your tokens.</li>
+<li>Continue working inside that platform.</li>
+</ol>
+<p>Platforms you are <strong>not</strong> granted do not appear (or cannot be launched).</p>
+<hr>
+<h2>Chapter 5 — Roles, platforms, and in-app access</h2>
+<p><strong>Platforms</strong> control launcher tiles and SSO into an app (<code>enrollment</code>, <code>records</code>, <code>library</code>, <code>finance</code>, <code>docstrack</code>, <code>inventory</code>, …).</p>
+<p><strong>Roles</strong> control what you can do <em>inside</em> each app after launch. Examples:</p>
+<ul>
+<li><code>student</code> — USiS student portal only; ULMIS member/OPAC; not registrar staff modules</li>
+<li><code>registrar</code> — USiS registrar workflows; ULMIS staff when library is granted</li>
+<li><code>employee</code> — launch-only unless another role is assigned</li>
+<li><code>identity_admin</code> — full access on assigned platforms</li>
+</ul>
+<p>Coarse permissions such as <code>enrollment.access</code> mean “may use USiS,” not “see every registrar menu.” Portal Admin shows a short access note under each role when editing users.</p>
+<hr>
+<h2>Chapter 6 — Administrator Console</h2>
+<p>Identity Admins can:</p>
+<ul>
+<li>List and create users</li>
+<li>Assign roles and platform grants</li>
+<li>Manage role permissions</li>
+<li>Review available platforms</li>
+</ul>
+<p>Use <strong>Portal Admin</strong> in the WMSU Portal (Identity administrators) or the Admin API in the <a href="./Identity-API-Specs-Manual.html">API Specs Manual</a>.</p>
+<p>Assign both <strong>roles</strong> and <strong>platforms</strong>. Role checkboxes include access notes that match in-app permission packs.</p>
+<hr>
+<h2>Chapter 7 — Enrollment Partner Overview</h2>
+<p>A third-party enrollment system can create/update student accounts via API key.</p>
+<ul>
+<li>Upsert one or many students</li>
+<li>Deactivate withdrawn/graduated students</li>
+<li>Always Library-only platforms</li>
+</ul>
+<p>Details: <a href="./enrollment-integration.md">enrollment-integration.md</a>.</p>
+<hr>
+<h2>Chapter 8 — Dual-Mode SSO (platforms)</h2>
+<p>Each platform (USiS, ULMIS, UFMS, DocsTrack, …) can keep <strong>local login</strong> while Identity SSO is rolled out.</p>
+<p>On the platform feature branch / config:</p>
+<ol>
+<li>Set <code>AUTH_MODE=dual</code> (or <code>platform</code> when fully cut over)</li>
+<li>Point Identity URL / JWKS / issuer / audience at this service</li>
+<li>Optionally map tenant/company IDs for JWT app claims</li>
+<li>Accept SSO callback tokens from the Identity launcher</li>
+</ol>
+<p>Leave <code>AUTH_MODE=local</code> until Identity is ready — existing platform logins stay unchanged.</p>
+<hr>
+<h2>Chapter 9 — Training Outline</h2>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Duration</th>
+<th>Audience</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Portal login &amp; launcher</td>
+<td>20 min</td>
+<td>All users</td>
+</tr>
+<tr>
+<td>Student vs employee grants</td>
+<td>15 min</td>
+<td>Librarians, registrars</td>
+</tr>
+<tr>
+<td>Admin user management</td>
+<td>30 min</td>
+<td>Identity admins</td>
+</tr>
+<tr>
+<td>Enrollment API handoff</td>
+<td>30 min</td>
+<td>Integrators</td>
+</tr>
+<tr>
+<td>Dual SSO cutover checklist</td>
+<td>45 min</td>
+<td>IT / DevOps</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Chapter 10 — Frequently Asked Questions</h2>
+<p><strong>Why don’t I see UFMS Finance or USiS?</strong><br>Your account is not granted that platform code yet — ask an identity admin to assign <code>finance</code> or <code>enrollment</code>.</p>
+<p><strong>Why do I only see the student menu in USiS?</strong><br>Your Identity role is <code>student</code> (or your permission pack is student-only). Registrar menus require the <code>registrar</code> role.</p>
+<p><strong>I forgot my password.</strong><br>Contact an Identity administrator to reset it (self-serve reset may be added later).</p>
+<p><strong>Can I use the same Identity account on ULMIS before SSO is enabled?</strong><br>Platforms on <code>AUTH_MODE=local</code> use their own accounts until dual/platform mode is configured.</p>
+<p><strong>Where are signing keys?</strong><br>On the API host under <code>apps/api/keys/</code> (private key is never committed to git).</p>
+<hr>
+<h2>Chapter 11 — Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Login 401</td>
+<td>Password, account <code>disabled</code>, API running</td>
+</tr>
+<tr>
+<td>Launcher opens but platform rejects token</td>
+<td>JWKS URL, issuer/audience, clock skew</td>
+</tr>
+<tr>
+<td>Student sees registrar menus</td>
+<td>Remove registrar/staff roles; keep <code>student</code> only in Portal Admin</td>
+</tr>
+<tr>
+<td>Enrollment 401</td>
+<td><code>X-Service-Api-Key</code> vs <code>ENROLLMENT_SERVICE_API_KEY</code></td>
+</tr>
+<tr>
+<td><code>/auth/me</code> unauthorized</td>
+<td>Missing Bearer token or wrong public key</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Chapter 12 — Glossary</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Access token</td>
+<td>Short-lived RS256 JWT for API/SSO</td>
+</tr>
+<tr>
+<td>Refresh token</td>
+<td>Longer-lived token to mint new access tokens</td>
+</tr>
+<tr>
+<td>JWKS</td>
+<td>JSON Web Key Set published at <code>/.well-known/jwks.json</code></td>
+</tr>
+<tr>
+<td>Platform grant</td>
+<td>Permission to launch a specific app code</td>
+</tr>
+<tr>
+<td>Enrollment externalId</td>
+<td>Stable id from the enrollment system</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Chapter 13 — Best Practices</h2>
+<ul>
+<li>Rotate enrollment API keys periodically.</li>
+<li>Never commit <code>.env</code> or <code>*.pem</code> private keys.</li>
+<li>Prefer dual mode during migration; monitor SSO failures before disabling local login.</li>
+<li>Assign platforms and roles together; read the access notes in Portal Admin.</li>
+<li>Do not grant registrar roles to student accounts.</li>
+<li>Use unique emails per person; link via <code>externalId</code> for enrollment.</li>
+</ul>
+<hr>
+<h2>Chapter 14 — Task: Create a staff user</h2>
+<ol>
+<li>Sign in as Identity Admin.</li>
+<li>Open Admin → Users → Create.</li>
+<li>Enter email, name, password.</li>
+<li>Assign role (e.g. <code>employee</code> or <code>registrar</code>) and platforms (<code>enrollment</code>, <code>library</code>, <code>finance</code>, … as needed).</li>
+<li>Save and verify the user can log in.</li>
+</ol>
+<hr>
+<h2>Chapter 15 — Task: Disable a withdrawn student</h2>
+<p><strong>Via enrollment API:</strong><br><code>POST /api/v1/integrations/enrollment/students/{externalId}/deactivate</code> with service API key.</p>
+<p><strong>Via admin:</strong><br>Set user status to <code>disabled</code>.</p>
+<p>Confirm the student can no longer log in to Identity.</p>
+<hr>
+<h2>Chapter 16 — Task: Configure platform dual SSO</h2>
+<ol>
+<li>Deploy Identity API with JWKS reachable from the platform.</li>
+<li>On the platform, set <code>AUTH_MODE=dual</code> and Identity/JWKS/issuer/audience env vars.</li>
+<li>From Identity portal, launch the platform and confirm callback login.</li>
+<li>Confirm local login still works until you cut over.</li>
+</ol>
+<hr>
+<h2>Related documents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>API Specs Manual</td>
+<td><a href="./API-Specs-Manual.md">API-Specs-Manual.md</a></td>
+</tr>
+<tr>
+<td>Enrollment integration</td>
+<td><a href="./enrollment-integration.md">enrollment-integration.md</a></td>
+</tr>
+<tr>
+<td>Project README</td>
+<td><a href="../README.md">../README.md</a></td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

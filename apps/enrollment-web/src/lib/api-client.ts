@@ -1,0 +1,92 @@
+import axios from 'axios'
+import { attachAxiosHttpNotifications, parseAxiosErrorMessage } from '@wmsu/ui'
+import { useAuthStore } from '@/stores/auth-store'
+import { clearQueryCache } from '@/lib/query-client'
+
+function resolveApiBase(): string {
+  const configured = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
+  if (configured) return configured
+  return '/api/v1/enrollment'
+}
+
+function resolveIdentityUrl(): string {
+  return (
+    (import.meta.env.VITE_PLATFORM_IDENTITY_URL as string | undefined)?.trim() ||
+    'http://127.0.0.1:3411'
+  ).replace(/\/$/, '')
+}
+
+const API_BASE = resolveApiBase()
+const IDENTITY_URL = resolveIdentityUrl()
+
+export const apiClient = axios.create({
+  baseURL: API_BASE,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+apiClient.interceptors.request.use((config) => {
+  const { accessToken } = useAuthStore.getState()
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`
+  } else if (!config.headers.Authorization && apiClient.defaults.headers.common.Authorization) {
+    config.headers.Authorization = apiClient.defaults.headers.common.Authorization as string
+  }
+  return config
+})
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config
+    if (error.response?.status === 401 && !original._retry) {
+      original._retry = true
+      const { refreshToken, setTokens, logout, tokenKind } = useAuthStore.getState()
+      if (refreshToken) {
+        try {
+          if (tokenKind === 'platform') {
+            const { data } = await axios.post(`${IDENTITY_URL}/api/v1/auth/refresh`, {
+              refreshToken,
+            })
+            const tokens = data.data?.tokens ?? data.data
+            setTokens(tokens.accessToken, tokens.refreshToken, 'platform')
+            original.headers.Authorization = `Bearer ${tokens.accessToken}`
+            return apiClient(original)
+          }
+
+          const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken })
+          const tokens = data.data?.tokens ?? data.data
+          setTokens(tokens.accessToken, tokens.refreshToken, 'local')
+          original.headers.Authorization = `Bearer ${tokens.accessToken}`
+          return apiClient(original)
+        } catch {
+          delete apiClient.defaults.headers.common.Authorization
+          logout()
+          clearQueryCache()
+          const portal =
+            (import.meta.env.VITE_PORTAL_URL as string | undefined)?.trim()?.replace(/\/$/, '') ||
+            'http://127.0.0.1:5173'
+          window.location.assign(`${portal}/login`)
+        }
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+attachAxiosHttpNotifications(apiClient)
+
+export function getApiErrorMessage(
+  err: unknown,
+  fallback = 'Something went wrong. Please try again.'
+): string {
+  if (axios.isAxiosError(err)) {
+    return parseAxiosErrorMessage(err, fallback)
+  }
+  if (err instanceof Error && err.message) {
+    if (/network error|failed to fetch|econnrefused/i.test(err.message)) {
+      return 'Cannot reach USiS API. Confirm wmsu-enrollment API is running on port 3340.'
+    }
+    return err.message
+  }
+  return fallback
+}

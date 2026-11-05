@@ -1,0 +1,2988 @@
+openapi: 3.0.3
+info:
+  title: UFMS API
+  description: |
+    WMSU University Financial Management System — chart of accounts, cashiering,
+    budget baseline, procurement, and Identity SSO.
+
+    Interactive docs: `GET /api/v1/docs`
+  version: 1.0.0
+  contact:
+    name: WMSU UFMS
+servers:
+  - url: http://127.0.0.1:3342
+    description: Local development
+  - url: https://{host}
+    description: Deployed environment
+    variables:
+      host:
+        default: your-api.up.railway.app
+
+tags:
+  - name: Health
+  - name: Docs
+  - name: Authentication
+  - name: Dashboard
+  - name: Organization
+  - name: Campuses
+  - name: Offices
+  - name: Departments
+  - name: Users
+  - name: RBAC
+  - name: Item Categories
+  - name: Items
+  - name: Warehouses
+  - name: Stock
+  - name: Suppliers
+  - name: Requisitions
+  - name: COA Forms
+  - name: Physical Counts
+  - name: Depreciation
+  - name: Reports
+  - name: Assets
+  - name: Audit
+  - name: Internal
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: API health check with database probe
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Validation error
+  /api/v1/docs:
+    get:
+      tags:
+        - Docs
+      summary: Swagger UI
+      operationId: getApiV1Docs
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Validation error
+  /api/v1/docs/openapi.yaml:
+    get:
+      tags:
+        - Docs
+      summary: OpenAPI 3.0 YAML specification
+      operationId: getApiV1DocsOpenapi.yaml
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Validation error
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Email/password login (local JWT)
+      operationId: postApiV1AuthLogin
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Validation error
+  /api/v1/auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh local access token
+      operationId: postApiV1AuthRefresh
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Validation error
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout / invalidate refresh token
+      operationId: postApiV1AuthLogout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Current user + effective permissions (local or Identity SSO)
+      operationId: getApiV1AuthMe
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/dashboard/summary:
+    get:
+      tags:
+        - Dashboard
+      summary: "KPIs: items, assets, warehouses, low stock, near expiry, categories"
+      operationId: getApiV1DashboardSummary
+      description: Requires permission `reports.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/org:
+    get:
+      tags:
+        - Organization
+      summary: Get organization profile
+      operationId: getApiV1Org
+      description: Requires permission `org.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Organization
+      summary: Update organization profile
+      operationId: patchApiV1Org
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/org/campuses:
+    get:
+      tags:
+        - Campuses
+      summary: List campuses
+      operationId: getApiV1OrgCampuses
+      description: Requires permission `org.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Campuses
+      summary: Create campus
+      operationId: postApiV1OrgCampuses
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/org/campuses/{id}:
+    get:
+      tags:
+        - Campuses
+      summary: Get campus
+      operationId: getApiV1OrgCampusesId
+      description: Requires permission `org.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Campuses
+      summary: Update campus
+      operationId: patchApiV1OrgCampusesId
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Campuses
+      summary: Delete campus
+      operationId: deleteApiV1OrgCampusesId
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/org/offices:
+    get:
+      tags:
+        - Offices
+      summary: List offices
+      operationId: getApiV1OrgOffices
+      description: Requires permission `org.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Offices
+      summary: Create office
+      operationId: postApiV1OrgOffices
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/org/offices/{id}:
+    get:
+      tags:
+        - Offices
+      summary: Get office
+      operationId: getApiV1OrgOfficesId
+      description: Requires permission `org.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Offices
+      summary: Update office
+      operationId: patchApiV1OrgOfficesId
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Offices
+      summary: Delete office
+      operationId: deleteApiV1OrgOfficesId
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/org/departments:
+    get:
+      tags:
+        - Departments
+      summary: List departments
+      operationId: getApiV1OrgDepartments
+      description: Requires permission `org.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Departments
+      summary: Create department
+      operationId: postApiV1OrgDepartments
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/org/departments/{id}:
+    get:
+      tags:
+        - Departments
+      summary: Get department
+      operationId: getApiV1OrgDepartmentsId
+      description: Requires permission `org.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Departments
+      summary: Update department
+      operationId: patchApiV1OrgDepartmentsId
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Departments
+      summary: Delete department
+      operationId: deleteApiV1OrgDepartmentsId
+      description: Requires permission `org.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      operationId: getApiV1Users
+      description: Requires permission `users.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Users
+      summary: Create user
+      operationId: postApiV1Users
+      description: Requires permission `users.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user
+      operationId: getApiV1UsersId
+      description: Requires permission `users.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Users
+      summary: Update user
+      operationId: patchApiV1UsersId
+      description: Requires permission `users.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Users
+      summary: Soft-delete user
+      operationId: deleteApiV1UsersId
+      description: Requires permission `users.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/permissions:
+    get:
+      tags:
+        - RBAC
+      summary: List permission catalog
+      operationId: getApiV1Permissions
+      description: Requires permission `roles.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/roles:
+    get:
+      tags:
+        - RBAC
+      summary: List roles
+      operationId: getApiV1Roles
+      description: Requires permission `roles.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - RBAC
+      summary: Create role
+      operationId: postApiV1Roles
+      description: Requires permission `roles.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/roles/{id}:
+    get:
+      tags:
+        - RBAC
+      summary: Get role
+      operationId: getApiV1RolesId
+      description: Requires permission `roles.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - RBAC
+      summary: Update role
+      operationId: patchApiV1RolesId
+      description: Requires permission `roles.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - RBAC
+      summary: Delete role
+      operationId: deleteApiV1RolesId
+      description: Requires permission `roles.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/item-categories:
+    get:
+      tags:
+        - Item Categories
+      summary: List item categories
+      operationId: getApiV1Item-categories
+      description: Requires permission `items.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Item Categories
+      summary: Create category
+      operationId: postApiV1Item-categories
+      description: Requires permission `items.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/item-categories/{id}:
+    get:
+      tags:
+        - Item Categories
+      summary: Get category
+      operationId: getApiV1Item-categoriesId
+      description: Requires permission `items.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Item Categories
+      summary: Update category
+      operationId: patchApiV1Item-categoriesId
+      description: Requires permission `items.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Item Categories
+      summary: Delete category
+      operationId: deleteApiV1Item-categoriesId
+      description: Requires permission `items.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/items:
+    get:
+      tags:
+        - Items
+      summary: List / search items
+      operationId: getApiV1Items
+      description: Requires permission `items.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Items
+      summary: Create item
+      operationId: postApiV1Items
+      description: Requires permission `items.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/items/import:
+    post:
+      tags:
+        - Items
+      summary: Bulk import items from CSV
+      operationId: postApiV1ItemsImport
+      description: Requires permission `items.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/items/{id}:
+    get:
+      tags:
+        - Items
+      summary: Get item
+      operationId: getApiV1ItemsId
+      description: Requires permission `items.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Items
+      summary: Update item
+      operationId: patchApiV1ItemsId
+      description: Requires permission `items.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Items
+      summary: Soft-delete item
+      operationId: deleteApiV1ItemsId
+      description: Requires permission `items.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/warehouses:
+    get:
+      tags:
+        - Warehouses
+      summary: List warehouses
+      operationId: getApiV1Warehouses
+      description: Requires permission `warehouses.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Warehouses
+      summary: Create warehouse
+      operationId: postApiV1Warehouses
+      description: Requires permission `warehouses.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/warehouses/{id}:
+    get:
+      tags:
+        - Warehouses
+      summary: Get warehouse
+      operationId: getApiV1WarehousesId
+      description: Requires permission `warehouses.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Warehouses
+      summary: Update warehouse
+      operationId: patchApiV1WarehousesId
+      description: Requires permission `warehouses.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Warehouses
+      summary: Delete warehouse
+      operationId: deleteApiV1WarehousesId
+      description: Requires permission `warehouses.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/warehouses/{id}/bins:
+    get:
+      tags:
+        - Warehouses
+      summary: List bins
+      operationId: getApiV1WarehousesIdBins
+      description: Requires permission `warehouses.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Warehouses
+      summary: Create bin
+      operationId: postApiV1WarehousesIdBins
+      description: Requires permission `warehouses.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/warehouses/{id}/bins/{binId}:
+    delete:
+      tags:
+        - Warehouses
+      summary: Delete bin
+      operationId: deleteApiV1WarehousesIdBinsBinId
+      description: Requires permission `warehouses.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: binId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/beginning:
+    post:
+      tags:
+        - Stock
+      summary: Post beginning balance (idempotent)
+      operationId: postApiV1StockBeginning
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/receive:
+    post:
+      tags:
+        - Stock
+      summary: Receive stock (idempotent)
+      operationId: postApiV1StockReceive
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/issue:
+    post:
+      tags:
+        - Stock
+      summary: Issue stock (idempotent)
+      operationId: postApiV1StockIssue
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/transfer:
+    post:
+      tags:
+        - Stock
+      summary: Transfer stock between warehouses (idempotent)
+      operationId: postApiV1StockTransfer
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/adjust:
+    post:
+      tags:
+        - Stock
+      summary: Adjust stock quantity (idempotent)
+      operationId: postApiV1StockAdjust
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/return:
+    post:
+      tags:
+        - Stock
+      summary: Return stock (idempotent)
+      operationId: postApiV1StockReturn
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/disposal:
+    post:
+      tags:
+        - Stock
+      summary: Dispose stock (idempotent)
+      operationId: postApiV1StockDisposal
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/reserve:
+    post:
+      tags:
+        - Stock
+      summary: Reserve stock (idempotent)
+      operationId: postApiV1StockReserve
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/release:
+    post:
+      tags:
+        - Stock
+      summary: Release reserved stock (idempotent)
+      operationId: postApiV1StockRelease
+      description: Requires permission `stock.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/transactions:
+    get:
+      tags:
+        - Stock
+      summary: List stock transactions
+      operationId: getApiV1StockTransactions
+      description: Requires permission `stock.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/ledger/{itemId}:
+    get:
+      tags:
+        - Stock
+      summary: Item stock ledger
+      operationId: getApiV1StockLedgerItemId
+      description: Requires permission `stock.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/stock/balances:
+    get:
+      tags:
+        - Stock
+      summary: Stock balances by warehouse
+      operationId: getApiV1StockBalances
+      description: Requires permission `stock.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/suppliers:
+    get:
+      tags:
+        - Suppliers
+      summary: List suppliers
+      operationId: getApiV1Suppliers
+      description: Requires permission `suppliers.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Suppliers
+      summary: Create supplier
+      operationId: postApiV1Suppliers
+      description: Requires permission `suppliers.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/suppliers/{id}:
+    get:
+      tags:
+        - Suppliers
+      summary: Get supplier
+      operationId: getApiV1SuppliersId
+      description: Requires permission `suppliers.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Suppliers
+      summary: Update supplier
+      operationId: patchApiV1SuppliersId
+      description: Requires permission `suppliers.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Suppliers
+      summary: Delete supplier
+      operationId: deleteApiV1SuppliersId
+      description: Requires permission `suppliers.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/requisitions:
+    get:
+      tags:
+        - Requisitions
+      summary: List requisitions
+      operationId: getApiV1Requisitions
+      description: Requires permission `requisitions.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Requisitions
+      summary: Create requisition
+      operationId: postApiV1Requisitions
+      description: Requires permission `requisitions.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/requisitions/{id}:
+    get:
+      tags:
+        - Requisitions
+      summary: Get requisition
+      operationId: getApiV1RequisitionsId
+      description: Requires permission `requisitions.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/requisitions/{id}/submit:
+    post:
+      tags:
+        - Requisitions
+      summary: Submit for approval
+      operationId: postApiV1RequisitionsIdSubmit
+      description: Requires permission `requisitions.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/requisitions/{id}/approve:
+    post:
+      tags:
+        - Requisitions
+      summary: Approve requisition
+      operationId: postApiV1RequisitionsIdApprove
+      description: Requires permission `requisitions.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/requisitions/{id}/reject:
+    post:
+      tags:
+        - Requisitions
+      summary: Reject requisition
+      operationId: postApiV1RequisitionsIdReject
+      description: Requires permission `requisitions.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/requisitions/{id}/fulfill:
+    post:
+      tags:
+        - Requisitions
+      summary: Fulfill requisition (issues stock)
+      operationId: postApiV1RequisitionsIdFulfill
+      description: Requires permission `requisitions.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/coa:
+    get:
+      tags:
+        - COA Forms
+      summary: List COA documents (ICS/PAR/RPCPPE/IIRUP/WMR)
+      operationId: getApiV1Coa
+      description: Requires permission `coa.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - COA Forms
+      summary: Create COA document
+      operationId: postApiV1Coa
+      description: Requires permission `coa.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/coa/{id}:
+    get:
+      tags:
+        - COA Forms
+      summary: Get COA document
+      operationId: getApiV1CoaId
+      description: Requires permission `coa.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - COA Forms
+      summary: Update COA document
+      operationId: patchApiV1CoaId
+      description: Requires permission `coa.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/coa/{id}/approve:
+    post:
+      tags:
+        - COA Forms
+      summary: Approve COA document
+      operationId: postApiV1CoaIdApprove
+      description: Requires permission `coa.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/coa/{id}/export:
+    get:
+      tags:
+        - COA Forms
+      summary: Export COA document (PDF/print payload)
+      operationId: getApiV1CoaIdExport
+      description: Requires permission `coa.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/counts:
+    get:
+      tags:
+        - Physical Counts
+      summary: List physical count sessions
+      operationId: getApiV1Counts
+      description: Requires permission `counts.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Physical Counts
+      summary: Open count session
+      operationId: postApiV1Counts
+      description: Requires permission `counts.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/counts/{id}:
+    get:
+      tags:
+        - Physical Counts
+      summary: Get count session
+      operationId: getApiV1CountsId
+      description: Requires permission `counts.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/counts/{id}/scan:
+    post:
+      tags:
+        - Physical Counts
+      summary: Post scan / counted line
+      operationId: postApiV1CountsIdScan
+      description: Requires permission `counts.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/counts/{id}/reconcile:
+    post:
+      tags:
+        - Physical Counts
+      summary: Reconcile variances
+      operationId: postApiV1CountsIdReconcile
+      description: Requires permission `counts.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/counts/{id}/close:
+    post:
+      tags:
+        - Physical Counts
+      summary: Close count session
+      operationId: postApiV1CountsIdClose
+      description: Requires permission `counts.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/depreciation/profiles:
+    post:
+      tags:
+        - Depreciation
+      summary: Create GAM depreciation profile
+      operationId: postApiV1DepreciationProfiles
+      description: Requires permission `depreciation.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/depreciation/profiles/{assetId}:
+    get:
+      tags:
+        - Depreciation
+      summary: Get depreciation profile for asset
+      operationId: getApiV1DepreciationProfilesAssetId
+      description: Requires permission `depreciation.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: assetId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/depreciation/run:
+    post:
+      tags:
+        - Depreciation
+      summary: Run depreciation for a period
+      operationId: postApiV1DepreciationRun
+      description: Requires permission `depreciation.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/depreciation/lapsing-schedule:
+    get:
+      tags:
+        - Depreciation
+      summary: Lapsing schedule
+      operationId: getApiV1DepreciationLapsing-schedule
+      description: Requires permission `depreciation.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/depreciation/property-ledger:
+    get:
+      tags:
+        - Depreciation
+      summary: Property ledger (depreciation view)
+      operationId: getApiV1DepreciationProperty-ledger
+      description: Requires permission `depreciation.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/reports/stock-inventory:
+    get:
+      tags:
+        - Reports
+      summary: Stock inventory report
+      operationId: getApiV1ReportsStock-inventory
+      description: Requires permission `reports.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/reports/property-ledger:
+    get:
+      tags:
+        - Reports
+      summary: Property ledger report
+      operationId: getApiV1ReportsProperty-ledger
+      description: Requires permission `reports.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/reports/consumption:
+    get:
+      tags:
+        - Reports
+      summary: Consumption report
+      operationId: getApiV1ReportsConsumption
+      description: Requires permission `reports.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/reports/depreciation:
+    get:
+      tags:
+        - Reports
+      summary: Depreciation report
+      operationId: getApiV1ReportsDepreciation
+      description: Requires permission `reports.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/assets:
+    get:
+      tags:
+        - Assets
+      summary: List PPE / assets
+      operationId: getApiV1Assets
+      description: Requires permission `assets.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    post:
+      tags:
+        - Assets
+      summary: Register asset
+      operationId: postApiV1Assets
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/assets/{id}:
+    get:
+      tags:
+        - Assets
+      summary: Get asset
+      operationId: getApiV1AssetsId
+      description: Requires permission `assets.read`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    patch:
+      tags:
+        - Assets
+      summary: Update asset
+      operationId: patchApiV1AssetsId
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+    delete:
+      tags:
+        - Assets
+      summary: Soft-delete asset
+      operationId: deleteApiV1AssetsId
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/assets/{id}/assign:
+    post:
+      tags:
+        - Assets
+      summary: Assign asset to custodian
+      operationId: postApiV1AssetsIdAssign
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/assets/{id}/return:
+    post:
+      tags:
+        - Assets
+      summary: Return asset from custodian
+      operationId: postApiV1AssetsIdReturn
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/assets/{id}/retire:
+    post:
+      tags:
+        - Assets
+      summary: Retire / dispose asset
+      operationId: postApiV1AssetsIdRetire
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/assets/{id}/maintenance:
+    post:
+      tags:
+        - Assets
+      summary: Schedule maintenance
+      operationId: postApiV1AssetsIdMaintenance
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/assets/{id}/maintenance/{maintenanceId}/complete:
+    patch:
+      tags:
+        - Assets
+      summary: Complete maintenance
+      operationId: patchApiV1AssetsIdMaintenanceMaintenanceIdComplete
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: maintenanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/assets/{id}/qr:
+    post:
+      tags:
+        - Assets
+      summary: Generate / refresh asset QR payload
+      operationId: postApiV1AssetsIdQr
+      description: Requires permission `assets.write`.
+      security:
+        - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/audit-logs:
+    get:
+      tags:
+        - Audit
+      summary: List audit logs
+      operationId: getApiV1Audit-logs
+      description: Requires permission `audit.read`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+  /api/v1/internal/custodianships:
+    get:
+      tags:
+        - Internal
+      summary: HRIS M2M custodianship feed
+      operationId: getApiV1InternalCustodianships
+      security:
+        - ServiceApiKey: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (missing permission)
+        '422':
+          description: Validation error
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Local UIMS access token or Identity platform access JWT (AUTH_MODE=dual|platform)
+    ServiceApiKey:
+      type: apiKey
+      in: header
+      name: X-Service-Api-Key
+      description: M2M key for HRIS internal custodianship feed
+
+  schemas:
+    SuccessEnvelope:
+      type: object
+      properties:
+        data:
+          description: Payload (object or array)
+        meta:
+          type: object
+          additionalProperties: true
+
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+
+    AuthTokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          example: 3600
+        tokenType:
+          type: string
+          example: Bearer
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+          nullable: true
+        platformUserId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        minStock:
+          type: number
+        unit:
+          type: string
+
+    Asset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyNumber:
+          type: string
+        name:
+          type: string
+        assetType:
+          type: string
+          enum: [equipment, furniture, vehicle, it_hardware, building, other]
+        status:
+          type: string
+          enum: [available, assigned, maintenance, retired, disposed]
+
+    Warehouse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        campusId:
+          type: string
+          format: uuid
+          nullable: true
+
+    CoaDocument:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        formType:
+          type: string
+          enum: [ICS, PAR, RPCPPE, IIRUP, WMR]
+        status:
+          type: string
+          enum: [draft, pending, approved, void]
+        documentNumber:
+          type: string

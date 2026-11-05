@@ -1,0 +1,17 @@
+export const TOR_PHASE2_MODULES = [
+  { id: 14, code: 'ENR-PORTAL', name: 'Student and Faculty Self-Service Portals' },
+  { id: 15, code: 'ENR-REPORT', name: 'Registrar Reporting and Analytics' },
+  { id: 16, code: 'ENR-ID', name: 'Student ID and RFID Software Integration' },
+  { id: 17, code: 'ENR-MULTI', name: 'Multi-Campus Operations' },
+  { id: 18, code: 'ENR-EMP', name: 'Employee Records Extensions' },
+  { id: 19, code: 'ENR-SCHOL', name: 'Scholarship Operations Depth' },
+  { id: 20, code: 'ENR-GUID', name: 'Guidance and Counseling' },
+  { id: 21, code: 'ENR-HEALTH', name: 'University Health Services' },
+  { id: 22, code: 'ENR-OSA', name: 'Office of Student Affairs and Discipline' },
+  { id: 23, code: 'ENR-UNIFIED', name: 'Unified Student Profile and Cross-Office Workflow' },
+  { id: 24, code: 'ENR-PAY', name: 'Online Payment Gateway Reconciliation' },
+  { id: 25, code: 'ENR-QUEUE', name: 'Queue Management Software' },
+  { id: 26, code: 'ENR-ALUMNI-LINK', name: 'Graduation to Alumni Handoff' },
+  { id: 27, code: 'ENR-AUDIT', name: 'Extended Audit and Compliance Dashboards' },
+  { id: 28, code: 'ENR-API', name: 'Public Integration APIs for Partner Systems' },
+] as const

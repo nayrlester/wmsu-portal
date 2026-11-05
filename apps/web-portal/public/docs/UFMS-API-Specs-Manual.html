@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UFMS Finance API Specs Manual</title>
+  <style>
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.55; max-width: 210mm; margin: 0 auto; padding: 12mm; }
+  h1 { font-size: 22pt; color: #0f766e; border-bottom: 2px solid #0f766e; padding-bottom: 6px; }
+  h2 { font-size: 14pt; margin-top: 1.5em; }
+  table { border-collapse: collapse; width: 100%; font-size: 10pt; margin: 12px 0; }
+  th, td { border: 1px solid #c8d0f0; padding: 8px; text-align: left; }
+  th { background: #ecfdf5; }
+  code { background: #f4f6ff; padding: 2px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<h1>UFMS / Finance API</h1>
+<table>
+<tr><th>Base URL</th><td><code>http://127.0.0.1:3500/api/v1/finance</code></td></tr>
+<tr><th>Web app</th><td><code>http://127.0.0.1:5182</code></td></tr>
+<tr><th>Swagger</th><td><a href="http://127.0.0.1:3500/api/v1/docs">CIS Swagger</a> — filter <code>/finance/</code></td></tr>
+</table>
+
+<h2>Dashboard</h2>
+<table>
+<tr><th>GET</th><th><code>/dashboard/summary</code></th><th>Budget plans, JEV count, open POs, POS today, pending requisitions</th></tr>
+</table>
+
+<h2>Reference data</h2>
+<table>
+<tr><td>Chart of accounts</td><td><code>/coa</code></td></tr>
+<tr><td>Funds, banks, fiscal periods</td><td><code>/funds</code>, <code>/banks</code>, <code>/fiscal-periods</code></td></tr>
+<tr><td>OR series, workflows</td><td><code>/or-series</code>, <code>/approval-workflows</code></td></tr>
+</table>
+
+<h2>Budget (TOR FIN)</h2>
+<table>
+<tr><td>Plans</td><td><code>/budget/plans</code> submit, approve, revise</td></tr>
+</table>
+
+<h2>Accounting</h2>
+<table>
+<tr><td>Journal entries</td><td><code>/accounting/journal-entries</code></td></tr>
+<tr><td>GL / trial balance</td><td><code>/accounting/*</code> reports</td></tr>
+<tr><td>Withholding, bank recon</td><td><code>/accounting/withholding</code>, <code>/accounting/bank-reconciliations</code></td></tr>
+</table>
+
+<h2>Procurement &amp; POS</h2>
+<table>
+<tr><td>Requisitions &amp; PO</td><td><code>/procurement/*</code></td></tr>
+<tr><td>POS</td><td><code>/pos/sales</code>, <code>/pos/eod</code>, stock snapshots</td></tr>
+</table>
+
+<h2>Internal integrations</h2>
+<table>
+<tr><td>Service API key</td><td><code>/api/v1/finance/internal/*</code> assessments, clearance, PO hooks</td></tr>
+</table>
+</body>
+</html>

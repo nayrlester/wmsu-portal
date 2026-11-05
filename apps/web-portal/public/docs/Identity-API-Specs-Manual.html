@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Identity Service API Specs Manual</title>
+  <style>
+  @page { margin: 22mm 18mm; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 12mm;
+  }
+  h1 { font-size: 22pt; color: #2f2a6b; border-bottom: 2px solid #635bff; padding-bottom: 6px; margin-top: 28px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 16pt; color: #3d3780; margin-top: 22px; }
+  h3 { font-size: 13pt; color: #4a4494; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d0f0; padding: 8px 10px; text-align: left; }
+  th { background: #eef0ff; font-weight: 600; }
+  img { max-width: 100%; height: auto; border: 1px solid #dde4ea; border-radius: 4px; margin: 12px 0; }
+  code { background: #f4f6ff; padding: 2px 5px; border-radius: 3px; font-size: 0.92em; }
+  pre { background: #f4f6ff; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 9pt; }
+  blockquote { border-left: 4px solid #635bff; margin: 12px 0; padding: 8px 16px; background: #f7f8ff; color: #334; }
+  a { color: #4a3fd4; }
+  hr { border: none; border-top: 1px solid #dde4ea; margin: 24px 0; }
+</style>
+</head>
+<body>
+<h1>Identity Service API Specs Manual</h1>
+<p><strong>Enterprise Identity &amp; SSO — REST API Reference</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>Identity Service (University Platform Access)</td>
+</tr>
+<tr>
+<td><strong>API version</strong></td>
+<td>0.1.0</td>
+</tr>
+<tr>
+<td><strong>OpenAPI</strong></td>
+<td>3.0.3 (<code>apps/api/docs/openapi.yaml</code> — also <code>openapi.yml</code>)</td>
+</tr>
+<tr>
+<td><strong>Base URL (dev)</strong></td>
+<td><code>http://127.0.0.1:3401</code></td>
+</tr>
+<tr>
+<td><strong>Base URL (prod)</strong></td>
+<td><code>https://identity-service-api.arzaitsolutions.site</code></td>
+</tr>
+<tr>
+<td><strong>API prefix</strong></td>
+<td><code>/api/v1</code></td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>Platform integrators, frontend engineers, DevOps, enrollment partners</td>
+</tr>
+<tr>
+<td><strong>Published</strong></td>
+<td>August 2026</td>
+</tr>
+</tbody></table>
+<p>Interactive Swagger UI (when API is running):</p>
+<ul>
+<li><code>GET /api/v1/docs</code></li>
+<li>Raw spec: <code>GET /api/v1/docs/openapi.yaml</code></li>
+</ul>
+<p>Machine-readable source of truth: <a href="../apps/api/docs/openapi.yaml"><code>apps/api/docs/openapi.yaml</code></a></p>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#1-overview">Overview</a></li>
+<li><a href="#2-authentication--tokens">Authentication &amp; Tokens</a></li>
+<li><a href="#3-sso--jwks">SSO &amp; JWKS</a></li>
+<li><a href="#4-headers--conventions">Headers &amp; Conventions</a></li>
+<li><a href="#5-error-model">Error Model</a></li>
+<li><a href="#6-platform-grants">Platform Grants</a></li>
+<li><a href="#7-endpoint-catalog">Endpoint Catalog</a></li>
+<li><a href="#8-enrollment-integration">Enrollment Integration</a></li>
+<li><a href="#9-admin-surface">Admin Surface</a></li>
+<li><a href="#10-common-workflows">Common Workflows</a></li>
+<li><a href="#11-environments--health">Environments &amp; Health</a></li>
+<li><a href="#12-changelog-notes">Changelog Notes</a></li>
+</ol>
+<hr>
+<h2>1. Overview</h2>
+<p>Identity Service is the central login hub and <strong>RS256 SSO issuer</strong> for:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Codes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ULMIS (Library)</td>
+<td><code>library</code>, <code>library_opac</code>, <code>library_kiosk</code></td>
+</tr>
+<tr>
+<td>HRIS Payroll</td>
+<td><code>hris</code></td>
+</tr>
+<tr>
+<td>DocsTrack (CDTS)</td>
+<td><code>docstrack</code></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Prefix</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Service root / JWKS</td>
+<td><code>/</code>, <code>/.well-known/jwks.json</code></td>
+<td>Public</td>
+</tr>
+<tr>
+<td>Docs</td>
+<td><code>/api/v1/docs*</code></td>
+<td>Public</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td><code>/api/v1/auth/*</code></td>
+<td>Public login/refresh; Bearer for me/logout</td>
+</tr>
+<tr>
+<td>Enrollment provision</td>
+<td><code>/api/v1/integrations/enrollment/*</code></td>
+<td><code>X-Service-Api-Key</code></td>
+</tr>
+<tr>
+<td>Admin console API</td>
+<td><code>/api/v1/admin/*</code></td>
+<td>Bearer JWT + Identity Admin</td>
+</tr>
+</tbody></table>
+<p><strong>Approximate route count:</strong> 18 HTTP registrations (including docs + health).</p>
+<p><strong>Clients (local):</strong></p>
+<table>
+<thead>
+<tr>
+<th>App</th>
+<th>Port</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Identity portal (<code>apps/web</code>)</td>
+<td>3400</td>
+</tr>
+<tr>
+<td>Identity API (<code>apps/api</code>)</td>
+<td>3401</td>
+</tr>
+</tbody></table>
+<p>Content type for JSON bodies: <code>application/json</code>.</p>
+<hr>
+<h2>2. Authentication &amp; Tokens</h2>
+<h3>2.1 Token types</h3>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Access token (JWT, RS256)</td>
+<td><code>Authorization: Bearer &lt;accessToken&gt;</code></td>
+</tr>
+<tr>
+<td>Refresh token</td>
+<td><code>POST /api/v1/auth/refresh</code></td>
+</tr>
+</tbody></table>
+<p>Successful login returns a structure similar to:</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: {
+    &quot;accessToken&quot;: &quot;…&quot;,
+    &quot;refreshToken&quot;: &quot;…&quot;,
+    &quot;expiresIn&quot;: 900,
+    &quot;tokenType&quot;: &quot;Bearer&quot;
+  }
+}
+</code></pre>
+<p>Exact nesting follows OpenAPI / runtime responses.</p>
+<h3>2.2 Auth endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/auth/login</code></td>
+<td>Email/password login</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/refresh</code></td>
+<td>Rotate access token</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/logout</code></td>
+<td>Invalidate session</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/me</code></td>
+<td>Current user, roles, platforms</td>
+</tr>
+</tbody></table>
+<h3>2.3 Demo credentials (dev)</h3>
+<p>Seeded when <code>DEMO_SEED_PASSWORD</code> is set in the API environment (never commit production passwords):</p>
+<table>
+<thead>
+<tr>
+<th>Email</th>
+<th>Role</th>
+<th>Platforms</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>admin@identity.local</code></td>
+<td>Identity Admin</td>
+<td>All + admin</td>
+</tr>
+<tr>
+<td><code>student@identity.local</code></td>
+<td>Student</td>
+<td>Library, OPAC, Kiosk only</td>
+</tr>
+<tr>
+<td><code>employee@identity.local</code></td>
+<td>Employee</td>
+<td>Library, HRIS, DocsTrack</td>
+</tr>
+<tr>
+<td><code>nodocs@identity.local</code></td>
+<td>Employee</td>
+<td>Library, HRIS (no DocsTrack)</td>
+</tr>
+</tbody></table>
+<p>Password is whatever you set in <code>DEMO_SEED_PASSWORD</code>. Do <strong>not</strong> reuse production passwords here.</p>
+<hr>
+<h2>3. SSO &amp; JWKS</h2>
+<p>Platforms verify Identity access tokens using JWKS:</p>
+<pre><code class="language-http">GET /.well-known/jwks.json
+</code></pre>
+<p>Typical JWT claims include:</p>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>iss</code></td>
+<td><code>JWT_ISSUER</code></td>
+</tr>
+<tr>
+<td><code>aud</code></td>
+<td><code>JWT_AUDIENCE</code></td>
+</tr>
+<tr>
+<td><code>sub</code></td>
+<td>Identity user id</td>
+</tr>
+<tr>
+<td><code>roles</code></td>
+<td>Role codes</td>
+</tr>
+<tr>
+<td><code>apps</code></td>
+<td>Granted platform codes / deep-link context</td>
+</tr>
+</tbody></table>
+<p>Dual-mode SSO on platforms (<code>AUTH_MODE=dual</code>):</p>
+<ol>
+<li>User signs in on Identity portal</li>
+<li>Launcher opens <code>{platform}/sso/callback#access_token=…&amp;refresh_token=…</code></li>
+<li>Platform validates JWT via JWKS and links/provisions local user</li>
+</ol>
+<p>Leave platform <code>AUTH_MODE=local</code> until Identity is ready.</p>
+<hr>
+<h2>4. Headers &amp; Conventions</h2>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Authorization</code></td>
+<td>Protected / admin</td>
+<td><code>Bearer &lt;accessToken&gt;</code></td>
+</tr>
+<tr>
+<td><code>X-Service-Api-Key</code></td>
+<td>Enrollment routes</td>
+<td>Must match <code>ENROLLMENT_SERVICE_API_KEY</code></td>
+</tr>
+<tr>
+<td><code>Content-Type</code></td>
+<td>JSON writes</td>
+<td><code>application/json</code></td>
+</tr>
+</tbody></table>
+<p><strong>Path params:</strong> UUIDs unless noted (<code>externalId</code> is enrollment string).</p>
+<hr>
+<h2>5. Error Model</h2>
+<pre><code class="language-json">{
+  &quot;error&quot;: &quot;Unauthorized&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200</td>
+<td>Success</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Validation / bad request</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Missing or invalid token / API key</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Authenticated but not admin</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Resource not found</td>
+</tr>
+<tr>
+<td>409</td>
+<td>Conflict (duplicate email)</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Server error</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>6. Platform Grants</h2>
+<p>Students are <strong>Library-only</strong>. Identity clamps student platform codes to:</p>
+<ul>
+<li><code>library</code></li>
+<li><code>library_opac</code></li>
+<li><code>library_kiosk</code></li>
+</ul>
+<p>Students never receive <code>hris</code> or <code>docstrack</code> — enforced on enrollment provision, admin edits, launcher, and JWT <code>apps</code> claims.</p>
+<hr>
+<h2>7. Endpoint Catalog</h2>
+<p>Auth legend: <code>public</code> · <code>bearer</code> · <code>admin</code> · <code>serviceKey</code></p>
+<h3>7.1 Infrastructure &amp; docs</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>public</td>
+<td>Service name + version</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/health</code></td>
+<td>public</td>
+<td>Health check (Railway)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/.well-known/jwks.json</code></td>
+<td>public</td>
+<td>JWKS</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/docs</code></td>
+<td>public</td>
+<td>Swagger UI</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/docs/openapi.yaml</code></td>
+<td>public</td>
+<td>OpenAPI YAML</td>
+</tr>
+</tbody></table>
+<h3>7.2 Authentication</h3>
+<p>See <a href="#22-auth-endpoints">§2.2</a>.</p>
+<h3>7.3 Enrollment</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/integrations/enrollment/students</code></td>
+<td>serviceKey</td>
+<td>Upsert one student</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/integrations/enrollment/students/batch</code></td>
+<td>serviceKey</td>
+<td>Batch upsert (≤500)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/integrations/enrollment/students/{externalId}/deactivate</code></td>
+<td>serviceKey</td>
+<td>Disable student</td>
+</tr>
+</tbody></table>
+<h3>7.4 Admin</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/users</code></td>
+<td>admin</td>
+<td>List users</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/users</code></td>
+<td>admin</td>
+<td>Create user</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/admin/users/{id}</code></td>
+<td>admin</td>
+<td>Update user</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/roles</code></td>
+<td>admin</td>
+<td>List roles</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/admin/roles/{id}/permissions</code></td>
+<td>admin</td>
+<td>Set role permissions</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/permissions</code></td>
+<td>admin</td>
+<td>List permissions</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/platforms</code></td>
+<td>admin</td>
+<td>List platforms</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Enrollment Integration</h2>
+<p>See also <a href="./enrollment-integration.md">enrollment-integration.md</a>.</p>
+<p>All enrollment routes require:</p>
+<pre><code class="language-http">X-Service-Api-Key: &lt;ENROLLMENT_SERVICE_API_KEY&gt;
+</code></pre>
+<h3>Upsert one student</h3>
+<p><code>POST /api/v1/integrations/enrollment/students</code></p>
+<pre><code class="language-json">{
+  &quot;externalId&quot;: &quot;ENR-2026-00421&quot;,
+  &quot;email&quot;: &quot;juan.dela.cruz@student.university.edu&quot;,
+  &quot;fullName&quot;: &quot;Juan Dela Cruz&quot;,
+  &quot;studentNumber&quot;: &quot;2026-00421&quot;,
+  &quot;status&quot;: &quot;active&quot;
+}
+</code></pre>
+<p>Omitting <code>password</code> generates a one-time <code>temporaryPassword</code> on create (returned once).</p>
+<h3>Batch upsert</h3>
+<p><code>POST /api/v1/integrations/enrollment/students/batch</code> with <code>{ &quot;students&quot;: [ … ] }</code> (max 500). Partial failures appear in <code>data.errors</code>.</p>
+<h3>Deactivate</h3>
+<p><code>POST /api/v1/integrations/enrollment/students/{externalId}/deactivate</code> sets <code>status=disabled</code>.</p>
+<hr>
+<h2>9. Admin Surface</h2>
+<p>Admin routes require a valid Bearer access token for a user with Identity Admin privileges (<code>middleware.auth</code> + <code>middleware.admin</code>).</p>
+<p>Create user body (illustrative):</p>
+<pre><code class="language-json">{
+  &quot;email&quot;: &quot;new.staff@university.edu&quot;,
+  &quot;fullName&quot;: &quot;New Staff&quot;,
+  &quot;password&quot;: &quot;&lt;strong-password&gt;&quot;,
+  &quot;roleCodes&quot;: [&quot;employee&quot;],
+  &quot;platformCodes&quot;: [&quot;library&quot;, &quot;hris&quot;, &quot;docstrack&quot;]
+}
+</code></pre>
+<p>Student role codes force Library-only platforms even if HRIS/DocsTrack codes are sent.</p>
+<hr>
+<h2>10. Common Workflows</h2>
+<h3>10.1 Portal login → launch platform</h3>
+<ol>
+<li><code>POST /api/v1/auth/login</code></li>
+<li><code>GET /api/v1/auth/me</code> (roles + platforms)</li>
+<li>Portal launcher redirects to platform SSO callback with tokens</li>
+<li>Platform validates JWT via JWKS</li>
+</ol>
+<h3>10.2 Enrollment → Library SSO</h3>
+<ol>
+<li>Enrollment system upserts student via service key</li>
+<li>Student logs in on Identity (Library-only grants)</li>
+<li>ULMIS with <code>AUTH_MODE=dual</code> provisions/links member on first SSO</li>
+</ol>
+<hr>
+<h2>11. Environments &amp; Health</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Local API</td>
+<td><code>http://127.0.0.1:3401</code></td>
+</tr>
+<tr>
+<td>Local portal</td>
+<td><code>http://127.0.0.1:3400</code></td>
+</tr>
+<tr>
+<td>DB</td>
+<td>Postgres (often Supabase) schema <code>identity</code> (<code>DB_SCHEMA</code>)</td>
+</tr>
+<tr>
+<td>Signing keys</td>
+<td><code>apps/api/keys/private.pem</code> + <code>public.pem</code> (gitignored)</td>
+</tr>
+</tbody></table>
+<p>Root <code>GET /</code> returns <code>{ &quot;service&quot;: &quot;identity-service&quot;, &quot;version&quot;: &quot;0.1.0&quot; }</code>.</p>
+<hr>
+<h2>12. Changelog Notes</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.1.0</td>
+<td>Initial Identity API, enrollment provision, admin users/RBAC, JWKS SSO, OpenAPI + manuals package</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Related documents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Complete User Guide</td>
+<td><a href="./Identity-Complete-Guide.md">Identity-Complete-Guide.md</a></td>
+</tr>
+<tr>
+<td>Enrollment guide</td>
+<td><a href="./enrollment-integration.md">enrollment-integration.md</a></td>
+</tr>
+<tr>
+<td>OpenAPI</td>
+<td><a href="../apps/api/docs/openapi.yaml">apps/api/docs/openapi.yaml</a></td>
+</tr>
+<tr>
+<td>README</td>
+<td><a href="../README.md">../README.md</a></td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

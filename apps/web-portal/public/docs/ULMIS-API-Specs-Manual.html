@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ULMIS API Specs Manual</title>
+  <style>
+  @page { margin: 22mm 18mm; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 12mm;
+  }
+  h1 { font-size: 22pt; color: #0f3d5c; border-bottom: 2px solid #0f3d5c; padding-bottom: 6px; margin-top: 28px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 16pt; color: #145374; margin-top: 22px; }
+  h3 { font-size: 13pt; color: #1a5f7a; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d6e0; padding: 8px 10px; text-align: left; }
+  th { background: #e8f1f6; font-weight: 600; }
+  img { max-width: 100%; height: auto; border: 1px solid #dde4ea; border-radius: 4px; margin: 12px 0; }
+  code { background: #f4f6f8; padding: 2px 5px; border-radius: 3px; font-size: 0.92em; }
+  pre { background: #f4f6f8; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 9pt; }
+  blockquote { border-left: 4px solid #0f3d5c; margin: 12px 0; padding: 8px 16px; background: #f7fafc; color: #334; }
+  a { color: #0f6ba8; }
+  hr { border: none; border-top: 1px solid #dde4ea; margin: 24px 0; }
+</style>
+</head>
+<body>
+<h1>ULMIS API Specs Manual</h1>
+<p><strong>University Library Management Information System — REST API Reference</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>ULMIS (LibraStack / LibraryManagementSystem)</td>
+</tr>
+<tr>
+<td><strong>API version</strong></td>
+<td>0.2.0</td>
+</tr>
+<tr>
+<td><strong>OpenAPI</strong></td>
+<td>3.0.3 (<code>apps/api/docs/openapi.yaml</code> — also <code>openapi.yml</code>)</td>
+</tr>
+<tr>
+<td><strong>Base URL (local CIS)</strong></td>
+<td><code>http://127.0.0.1:3500/api/v1/library</code></td>
+</tr>
+<tr>
+<td><strong>Web app (staff)</strong></td>
+<td><code>http://127.0.0.1:5183</code></td>
+</tr>
+<tr>
+<td><strong>Legacy standalone API (deprecated)</strong></td>
+<td><code>http://localhost:3333</code> — use CIS Base API above</td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>Integrators, frontend engineers, DevOps, campus IT partners</td>
+</tr>
+<tr>
+<td><strong>Published</strong></td>
+<td>August 2026</td>
+</tr>
+</tbody></table>
+<p>Interactive Swagger UI (when API is running):</p>
+<ul>
+<li><code>GET /api/v1/docs</code></li>
+<li>Raw spec: <code>GET /api/v1/docs/openapi.yaml</code></li>
+</ul>
+<p>Machine-readable source of truth: <a href="../apps/api/docs/openapi.yaml"><code>apps/api/docs/openapi.yaml</code></a></p>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#1-overview">Overview</a></li>
+<li><a href="#2-authentication--tokens">Authentication &amp; Tokens</a></li>
+<li><a href="#3-multi-tenancy">Multi-Tenancy</a></li>
+<li><a href="#4-headers--conventions">Headers &amp; Conventions</a></li>
+<li><a href="#5-error-model">Error Model</a></li>
+<li><a href="#6-client-surfaces">Client Surfaces</a></li>
+<li><a href="#7-permissions-reference">Permissions Reference</a></li>
+<li><a href="#8-endpoint-catalog">Endpoint Catalog</a></li>
+<li><a href="#9-core-resource-schemas">Core Resource Schemas</a></li>
+<li><a href="#10-common-workflows">Common Workflows</a></li>
+<li><a href="#11-kiosk-device-auth">Kiosk Device Auth</a></li>
+<li><a href="#12-integrations--notifications">Integrations &amp; Notifications</a></li>
+<li><a href="#13-environments--health">Environments &amp; Health</a></li>
+<li><a href="#14-changelog-notes">Changelog Notes</a></li>
+</ol>
+<hr>
+<h2>1. Overview</h2>
+<p>ULMIS exposes a versioned REST API for university library operations: catalog/inventory, members, circulation, reservations, fines, OPAC, member portal, digital repository, self-service kiosk, queue/locator hardware platform, attendance, reports, and campus integrations.</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Prefix</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Infrastructure</td>
+<td><code>/health</code>, <code>/api/v1/docs*</code></td>
+<td>Public</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td><code>/api/v1/auth/*</code></td>
+<td>Public (login/register/refresh)</td>
+</tr>
+<tr>
+<td>Tenant resolve</td>
+<td><code>/api/v1/tenants/resolve</code></td>
+<td>Public</td>
+</tr>
+<tr>
+<td>Public OPAC / queue</td>
+<td><code>/api/v1/public/*</code></td>
+<td>Tenant slug header</td>
+</tr>
+<tr>
+<td>Staff LMS</td>
+<td><code>/api/v1/*</code> (books, members, …)</td>
+<td>Bearer JWT + tenant</td>
+</tr>
+<tr>
+<td>Member portal</td>
+<td><code>/api/v1/portal/*</code></td>
+<td>Bearer JWT (member) + tenant</td>
+</tr>
+<tr>
+<td>Kiosk self-service</td>
+<td><code>/api/v1/kiosk/*</code></td>
+<td>Device code + API key + tenant</td>
+</tr>
+<tr>
+<td>Hardware admin</td>
+<td><code>/api/v1/hardware/*</code></td>
+<td>Bearer JWT + tenant</td>
+</tr>
+<tr>
+<td>Integrations</td>
+<td><code>/api/v1/integrations/*</code></td>
+<td>Bearer JWT + tenant</td>
+</tr>
+</tbody></table>
+<p>Content type for JSON bodies: <code>application/json</code> unless uploading multipart files (catalog CSV/XLSX, digital files).</p>
+<p><strong>Approximate route count:</strong> 133 HTTP registrations (plus <code>GET /health</code>).</p>
+<p><strong>Clients (local):</strong></p>
+<table>
+<thead>
+<tr>
+<th>App</th>
+<th>Port</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Staff web (<code>apps/web</code>)</td>
+<td>5173</td>
+<td>JWT + <code>X-Tenant-Slug</code></td>
+</tr>
+<tr>
+<td>Public OPAC (<code>apps/opac</code>)</td>
+<td>5174</td>
+<td><code>X-Tenant-Slug</code></td>
+</tr>
+<tr>
+<td>Kiosk (<code>apps/kiosk</code>)</td>
+<td>5175</td>
+<td>Kiosk headers + tenant</td>
+</tr>
+<tr>
+<td>API (<code>apps/api</code>)</td>
+<td>3333</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<p>See also <a href="./architecture/CLIENT_APPS.md">CLIENT_APPS.md</a>.</p>
+<hr>
+<h2>2. Authentication &amp; Tokens</h2>
+<h3>2.1 Token types</h3>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Lifetime (typical)</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Access token (JWT)</td>
+<td>Short-lived (<code>expiresIn</code>)</td>
+<td><code>Authorization: Bearer &lt;accessToken&gt;</code></td>
+</tr>
+<tr>
+<td>Refresh token</td>
+<td>Longer-lived</td>
+<td><code>POST /api/v1/auth/refresh</code></td>
+</tr>
+<tr>
+<td>Kiosk API key</td>
+<td>Until rotated</td>
+<td><code>X-Kiosk-Api-Key</code> (plaintext shown once)</td>
+</tr>
+</tbody></table>
+<p>Default university mode uses local jose JWTs. Enterprise platform SSO JWTs apply when <code>AUTH_MODE=platform|dual</code>.</p>
+<p>Successful login returns a structure similar to:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;user&quot;: {
+      &quot;id&quot;: &quot;uuid&quot;,
+      &quot;email&quot;: &quot;admin@university.library&quot;,
+      &quot;fullName&quot;: &quot;Library Admin&quot;,
+      &quot;tenantId&quot;: &quot;uuid&quot;
+    },
+    &quot;tokens&quot;: {
+      &quot;accessToken&quot;: &quot;…&quot;,
+      &quot;refreshToken&quot;: &quot;…&quot;,
+      &quot;expiresIn&quot;: 900,
+      &quot;tokenType&quot;: &quot;Bearer&quot;
+    }
+  }
+}
+</code></pre>
+<p>Exact field nesting follows OpenAPI / runtime responses — always prefer the live Swagger schema.</p>
+<h3>2.2 Auth endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/auth/register</code></td>
+<td>Register user (when enabled)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/login</code></td>
+<td>Email/password login</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/refresh</code></td>
+<td>Rotate access token</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/me</code></td>
+<td>Current authenticated user</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/logout</code></td>
+<td>Invalidate session / refresh</td>
+</tr>
+</tbody></table>
+<h3>2.3 Demo / training credentials (University Identity)</h3>
+<p>Prefer University Identity demo accounts (seeded when <code>DEMO_SEED_PASSWORD</code> is set):</p>
+<table>
+<thead>
+<tr>
+<th>Email</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>admin@identity.local</code></td>
+<td>All platforms + Identity admin</td>
+</tr>
+<tr>
+<td><code>employee@identity.local</code></td>
+<td>Library + HRIS + DocsTrack</td>
+</tr>
+<tr>
+<td><code>student@identity.local</code></td>
+<td>Library / OPAC only</td>
+</tr>
+<tr>
+<td><code>nodocs@identity.local</code></td>
+<td>Library + HRIS (no DocsTrack)</td>
+</tr>
+</tbody></table>
+<p>Password: <code>DEMO_SEED_PASSWORD</code> from the Identity API environment. Legacy local bootstrap email <code>admin@university.library</code> (tenant slug <code>ulmis</code>) may still exist for direct Library login — rotate immediately and do not reuse shared demo passwords in production.</p>
+<hr>
+<h2>3. Multi-Tenancy</h2>
+<ul>
+<li>Every institution is a <strong>tenant</strong> identified by slug (e.g. <code>ulmis</code>).</li>
+<li>Resolve tenant metadata: <code>GET /api/v1/tenants/resolve?slug=ulmis</code> (or equivalent query per OpenAPI).</li>
+<li>Staff clients send <code>X-Tenant-Slug: ulmis</code> on API calls.</li>
+<li>Public OPAC and kiosk also require the tenant slug header.</li>
+<li>Data isolation is enforced in repositories and policies (catalog, members, loans, fines, etc.).</li>
+</ul>
+<p>Always send the access token <strong>and</strong> tenant context on protected staff/portal routes. Do not rely on slug alone.</p>
+<p>Update tenant branding / preferences: <code>GET|PATCH /api/v1/tenant</code> (authenticated staff with settings permissions).</p>
+<hr>
+<h2>4. Headers &amp; Conventions</h2>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Authorization</code></td>
+<td>Staff / Portal</td>
+<td><code>Bearer &lt;accessToken&gt;</code></td>
+</tr>
+<tr>
+<td><code>X-Tenant-Slug</code></td>
+<td>Most routes</td>
+<td>Institution slug (e.g. <code>ulmis</code>)</td>
+</tr>
+<tr>
+<td><code>X-Kiosk-Device-Code</code></td>
+<td>Kiosk routes</td>
+<td>Registered device code (exact match)</td>
+</tr>
+<tr>
+<td><code>X-Kiosk-Api-Key</code></td>
+<td>Kiosk routes</td>
+<td>Full plaintext key (<code>ksk_…</code>)</td>
+</tr>
+<tr>
+<td><code>Content-Type</code></td>
+<td>JSON writes</td>
+<td><code>application/json</code></td>
+</tr>
+<tr>
+<td><code>Accept</code></td>
+<td>Optional</td>
+<td>Prefer <code>application/json</code></td>
+</tr>
+</tbody></table>
+<p><strong>Path params:</strong> UUIDs unless noted.</p>
+<p><strong>Pagination:</strong> list endpoints typically accept <code>page</code>, <code>perPage</code> (and often <code>q</code> for search). Defaults: <code>page=1</code>, <code>perPage=25</code> (max 100).</p>
+<p><strong>Idempotency:</strong> Prefer safe retries on <code>GET</code>. Mutations (<code>POST</code>/<code>PUT</code>/<code>PATCH</code>/<code>DELETE</code>) should not be blindly retried without client-side guards.</p>
+<p><strong>Currency:</strong> Monetary amounts are in <strong>PHP (₱)</strong> for university deployment.</p>
+<hr>
+<h2>5. Error Model</h2>
+<p>Failed requests generally return JSON with an error payload, for example:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: false,
+  &quot;error&quot;: {
+    &quot;message&quot;: &quot;Unauthorized&quot;,
+    &quot;code&quot;: &quot;E_UNAUTHORIZED&quot;
+  }
+}
+</code></pre>
+<p>Validation failures may include field-level messages from VineJS. HTTP status codes follow REST norms:</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200 / 201</td>
+<td>Success</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Validation / bad request</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Missing or invalid token / kiosk key</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Authenticated but forbidden (permission / policy)</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Resource not found</td>
+</tr>
+<tr>
+<td>409</td>
+<td>Conflict (duplicate barcode, state machine)</td>
+</tr>
+<tr>
+<td>413</td>
+<td>Payload too large</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Rate limited (when configured)</td>
+</tr>
+<tr>
+<td>501</td>
+<td>Integration not configured / not verified (LDAP, SSO)</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Server error</td>
+</tr>
+</tbody></table>
+<p>Borrow blocks (overdue, unpaid fines, membership) return structured policy errors from circulation services — treat as business-rule failures, not transport errors.</p>
+<hr>
+<h2>6. Client Surfaces</h2>
+<h3>6.1 Staff web</h3>
+<p>Full JWT-protected LMS: books, members, borrowings, reservations, fines, reports, users, settings, digital, attendance, integrations, Kiosk Platform, staff OPAC.</p>
+<h3>6.2 Public OPAC</h3>
+<p>Unauthenticated catalog search and detail (citations). Optional public queue board for display screens.</p>
+<h3>6.3 Member portal</h3>
+<p>Authenticated member: profile/loans, renew, reservations, reading lists, fine visibility (via portal + fines APIs as exposed).</p>
+<h3>6.4 Kiosk</h3>
+<p>Device-authenticated self-service: session, heartbeat, patron lookup, account, history, checkout, return.</p>
+<h3>6.5 Hardware / Kiosk Platform (staff)</h3>
+<p>Register/rotate kiosk devices, queue tickets, call-next, locations, resource locate. RFID routes exist but the RFID <strong>module claim is excluded</strong> from software-complete readiness.</p>
+<hr>
+<h2>7. Permissions Reference</h2>
+<p>Account routes may require a named permission in addition to auth + tenant. Codes use <code>resource:action</code> form.</p>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>books:read</code> / <code>create</code> / <code>update</code> / <code>delete</code></td>
+<td>Catalog &amp; copies</td>
+</tr>
+<tr>
+<td><code>members:read</code> / <code>create</code> / <code>update</code> / <code>delete</code> / <code>approve</code></td>
+<td>Patrons</td>
+</tr>
+<tr>
+<td><code>users:read</code> / <code>create</code> / <code>update</code></td>
+<td>Staff user admin</td>
+</tr>
+<tr>
+<td><code>settings:read</code> / <code>update</code></td>
+<td>Tenant settings</td>
+</tr>
+<tr>
+<td><code>borrowings:read</code> / <code>request</code> / <code>approve</code> / <code>checkout</code> / <code>return</code> / <code>renew</code> / <code>mark_lost</code></td>
+<td>Circulation</td>
+</tr>
+<tr>
+<td><code>fines:read</code> / <code>collect</code> / <code>waive</code> / <code>adjust</code></td>
+<td>Fines</td>
+</tr>
+<tr>
+<td><code>reservations:read</code> / <code>create</code> / <code>cancel</code> / <code>fulfill</code></td>
+<td>Holds</td>
+</tr>
+<tr>
+<td><code>digital:read</code> / <code>create</code> / <code>access</code> / <code>delete</code></td>
+<td>Repository / e-resources</td>
+</tr>
+<tr>
+<td><code>search:query</code></td>
+<td>Staff search</td>
+</tr>
+<tr>
+<td><code>ai:query</code></td>
+<td>AI assistant</td>
+</tr>
+<tr>
+<td><code>analytics:read</code></td>
+<td>Dashboard analytics</td>
+</tr>
+<tr>
+<td><code>reports:export</code></td>
+<td>Operational reports</td>
+</tr>
+<tr>
+<td><code>audit:read</code> / <code>audit:export</code></td>
+<td>Audit logs</td>
+</tr>
+<tr>
+<td><code>activity:read</code></td>
+<td>Activity feed</td>
+</tr>
+</tbody></table>
+<p><strong>Seeded roles:</strong> <code>admin</code> (all), <code>librarian</code>, <code>staff</code>, <code>member</code> — see <code>rbac_service.ts</code>.</p>
+<p>Current user: <code>GET /api/v1/auth/me</code> (includes roles/permissions as implemented).</p>
+<hr>
+<h2>8. Endpoint Catalog</h2>
+<p>Auth legend: <code>public</code> · <code>tenant</code> · <code>jwt</code> · <code>kiosk</code> · <code>permission:…</code></p>
+<h3>8.1 Infrastructure &amp; docs</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/health</code></td>
+<td>public</td>
+<td>Health check</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/docs</code></td>
+<td>public</td>
+<td>Swagger UI</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/docs/openapi.yaml</code></td>
+<td>public</td>
+<td>OpenAPI YAML</td>
+</tr>
+</tbody></table>
+<h3>8.2 Tenants</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/tenants/resolve</code></td>
+<td>public</td>
+<td>Resolve tenant by slug</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/tenant</code></td>
+<td>jwt + tenant</td>
+<td>Current tenant profile</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/tenant</code></td>
+<td>jwt + <code>settings:update</code></td>
+<td>Branding, links, prefs, report schedule</td>
+</tr>
+</tbody></table>
+<h3>8.3 Authentication</h3>
+<p>See <a href="#22-auth-endpoints">§2.2</a>.</p>
+<h3>8.4 Users</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/users</code></td>
+<td>jwt + <code>users:read</code></td>
+<td>List staff/users</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/users</code></td>
+<td>jwt + <code>users:create</code></td>
+<td>Invite / create user</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/users/{id}</code></td>
+<td>jwt + users perms</td>
+<td>Show / update</td>
+</tr>
+</tbody></table>
+<h3>8.5 Books &amp; catalog</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>/api/v1/books</code></td>
+<td>jwt + books</td>
+<td>List / create titles</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/books/categories</code></td>
+<td>jwt</td>
+<td>Categories</td>
+</tr>
+<tr>
+<td>GET/PATCH/DELETE</td>
+<td><code>/api/v1/books/{id}</code></td>
+<td>jwt + books</td>
+<td>Title CRUD</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/books/{id}/copies</code></td>
+<td>jwt</td>
+<td>Add copies</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/books/{id}/digital-files</code></td>
+<td>jwt</td>
+<td>Attach digital file</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/books/{id}/digital-files/{fileId}/download</code></td>
+<td>jwt</td>
+<td>Download</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/catalog/import/csv</code></td>
+<td>jwt</td>
+<td>CSV import (multipart)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/catalog/import/marc</code></td>
+<td>jwt</td>
+<td>MARC JSON import</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/catalog/import/xlsx</code></td>
+<td>jwt</td>
+<td>Excel import</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/catalog/books/{id}/versions</code></td>
+<td>jwt</td>
+<td>Catalog version history</td>
+</tr>
+</tbody></table>
+<h3>8.6 Members</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>/api/v1/members</code></td>
+<td>jwt + members</td>
+<td>List / create</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/members/pending</code></td>
+<td>jwt</td>
+<td>Pending approvals</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/members/{id}</code></td>
+<td>jwt</td>
+<td>Show / update</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/members/{id}/approve</code></td>
+<td>jwt + <code>members:approve</code></td>
+<td>Approve</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/members/{id}/reject</code></td>
+<td>jwt</td>
+<td>Reject</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/members/{id}/card</code></td>
+<td>jwt</td>
+<td>Membership card data</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/members/{id}/borrowing-history</code></td>
+<td>jwt</td>
+<td>History</td>
+</tr>
+</tbody></table>
+<h3>8.7 Borrowings (circulation)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/borrowings</code></td>
+<td>jwt</td>
+<td>List loans / requests</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/borrowings/dashboard</code></td>
+<td>jwt</td>
+<td>Circulation dashboard</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/borrowings/request</code></td>
+<td>jwt</td>
+<td>Member/staff request</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/borrowings/checkout</code></td>
+<td>jwt + checkout</td>
+<td>Direct checkout</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/borrowings/{id}</code></td>
+<td>jwt</td>
+<td>Detail</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/borrowings/{id}/approve</code></td>
+<td>jwt</td>
+<td>Approve request</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/borrowings/{id}/checkout</code></td>
+<td>jwt</td>
+<td>Checkout approved</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/borrowings/{id}/return</code></td>
+<td>jwt</td>
+<td>Return</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/borrowings/{id}/renew</code></td>
+<td>jwt</td>
+<td>Renew</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/borrowings/{id}/mark-lost</code></td>
+<td>jwt</td>
+<td>Mark lost</td>
+</tr>
+</tbody></table>
+<h3>8.8 Reservations &amp; fines</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>/api/v1/reservations</code></td>
+<td>jwt</td>
+<td>List / create hold</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/reservations/{id}/cancel</code></td>
+<td>jwt</td>
+<td>Cancel</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/reservations/{id}/fulfill</code></td>
+<td>jwt</td>
+<td>Fulfill / ready</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/fines</code></td>
+<td>jwt</td>
+<td>List fines</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/fines/summary</code></td>
+<td>jwt</td>
+<td>Summary</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/fines/{id}</code></td>
+<td>jwt</td>
+<td>Detail / adjust</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/fines/{id}/waive</code></td>
+<td>jwt</td>
+<td>Waive</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/fines/{id}/collect</code></td>
+<td>jwt</td>
+<td>Collect payment</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/fines/{id}/payments</code></td>
+<td>jwt</td>
+<td>Payment lines</td>
+</tr>
+</tbody></table>
+<h3>8.9 Search &amp; OPAC</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/search</code></td>
+<td>jwt</td>
+<td>Staff search</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/search/recent</code></td>
+<td>jwt</td>
+<td>Recent searches</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/search/saved</code></td>
+<td>jwt</td>
+<td>Saved searches</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/search/saved/{id}</code></td>
+<td>jwt</td>
+<td>Delete saved</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/opac/search</code></td>
+<td>jwt</td>
+<td>Staff OPAC search</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/opac/books/{id}</code></td>
+<td>jwt</td>
+<td>Staff OPAC detail</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/opac/books/{id}/citations</code></td>
+<td>jwt</td>
+<td>Citations</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/public/opac/search</code></td>
+<td>tenant</td>
+<td>Public search</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/public/opac/books/{id}</code></td>
+<td>tenant</td>
+<td>Public detail</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/public/opac/books/{id}/citations</code></td>
+<td>tenant</td>
+<td>Public citations</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/public/queue/board</code></td>
+<td>tenant</td>
+<td>Public queue display</td>
+</tr>
+</tbody></table>
+<h3>8.10 Portal</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/portal/me</code></td>
+<td>jwt</td>
+<td>Member home (loans, fines summary)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/portal/loans/{id}/renew</code></td>
+<td>jwt</td>
+<td>Self-renew</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/portal/reservations</code></td>
+<td>jwt</td>
+<td>My reservations</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/portal/reading-lists</code></td>
+<td>jwt</td>
+<td>Reading lists</td>
+</tr>
+<tr>
+<td>GET/PATCH/DELETE</td>
+<td><code>/api/v1/portal/reading-lists/{id}</code></td>
+<td>jwt</td>
+<td>List CRUD</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/portal/reading-lists/{id}/items</code></td>
+<td>jwt</td>
+<td>Add item</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/portal/reading-lists/{id}/items/{itemId}</code></td>
+<td>jwt</td>
+<td>Remove item</td>
+</tr>
+</tbody></table>
+<h3>8.11 Digital</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>/api/v1/digital/repository</code></td>
+<td>jwt</td>
+<td>Repository items</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/digital/repository/{id}/access</code></td>
+<td>jwt</td>
+<td>View/download access</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/digital/eresources</code></td>
+<td>jwt</td>
+<td>External e-resources</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/digital/search</code></td>
+<td>jwt</td>
+<td>Digital search</td>
+</tr>
+</tbody></table>
+<h3>8.12 Kiosk (device)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/kiosk/session</code></td>
+<td>kiosk</td>
+<td>Device session / config</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/kiosk/heartbeat</code></td>
+<td>kiosk</td>
+<td>Keepalive</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/kiosk/patron</code></td>
+<td>kiosk</td>
+<td>Lookup patron</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/kiosk/account</code></td>
+<td>kiosk</td>
+<td>Patron account</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/kiosk/history</code></td>
+<td>kiosk</td>
+<td>History</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/kiosk/checkout</code></td>
+<td>kiosk</td>
+<td>Self-checkout</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/kiosk/return</code></td>
+<td>kiosk</td>
+<td>Self-return</td>
+</tr>
+</tbody></table>
+<h3>8.13 Hardware (staff)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>/api/v1/hardware/kiosks</code></td>
+<td>jwt</td>
+<td>List / register devices</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/hardware/kiosks/transactions</code></td>
+<td>jwt</td>
+<td>Transaction log</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/hardware/kiosks/{id}</code></td>
+<td>jwt</td>
+<td>Device detail / update</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/hardware/kiosks/{id}/rotate-key</code></td>
+<td>jwt</td>
+<td>Rotate API key (new key once)</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/hardware/queue/tickets</code></td>
+<td>jwt</td>
+<td>Queue tickets</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/hardware/queue/call-next</code></td>
+<td>jwt</td>
+<td>Call next</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/hardware/queue/board</code></td>
+<td>jwt</td>
+<td>Staff board</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/hardware/locations</code></td>
+<td>jwt</td>
+<td>Locations</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/hardware/locate</code></td>
+<td>jwt</td>
+<td>Resource locator</td>
+</tr>
+<tr>
+<td>*</td>
+<td><code>/api/v1/hardware/rfid*</code></td>
+<td>jwt</td>
+<td>RFID stubs — <strong>excluded from readiness claim</strong></td>
+</tr>
+</tbody></table>
+<h3>8.14 Attendance</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/attendance/summary</code></td>
+<td>jwt</td>
+<td>Dashboard counts</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/attendance/events</code></td>
+<td>jwt</td>
+<td>List / log visits</td>
+</tr>
+</tbody></table>
+<h3>8.15 Integrations</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/integrations/status</code></td>
+<td>jwt</td>
+<td>Adapter status</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/integrations/aris/sync</code></td>
+<td>jwt</td>
+<td>ARIS push sync</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/integrations/hris/sync</code></td>
+<td>jwt</td>
+<td>HRIS push sync</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/integrations/ldap/authenticate</code></td>
+<td>jwt</td>
+<td>LDAP (501 until IdP verified)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/integrations/smart-campus/sso</code></td>
+<td>jwt</td>
+<td>SSO (501 until verified)</td>
+</tr>
+</tbody></table>
+<h3>8.16 Reports, analytics, notifications, audit, AI</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/reports</code></td>
+<td>jwt</td>
+<td>Report catalog</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/reports/{type}</code></td>
+<td>jwt + <code>reports:export</code></td>
+<td>Export report (CSV/PDF as implemented)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/analytics/dashboard</code></td>
+<td>jwt</td>
+<td>Dashboard widgets</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/notifications</code></td>
+<td>jwt</td>
+<td>In-app notifications</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/notifications/unread-count</code></td>
+<td>jwt</td>
+<td>Unread count</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/notifications/read-all</code></td>
+<td>jwt</td>
+<td>Mark all read</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/notifications/{id}/read</code></td>
+<td>jwt</td>
+<td>Mark one read</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/notifications/preferences</code></td>
+<td>jwt</td>
+<td>Email/SMS prefs</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/audit-logs</code></td>
+<td>jwt + audit</td>
+<td>Audit trail</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/ai/chat</code></td>
+<td>jwt + <code>ai:query</code></td>
+<td>AI chat</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/ai/quick-actions</code></td>
+<td>jwt</td>
+<td>Quick actions</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/ai/conversations</code></td>
+<td>jwt</td>
+<td>Conversations</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/ai/conversations/{id}</code></td>
+<td>jwt</td>
+<td>Conversation detail</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. Core Resource Schemas</h2>
+<p>Canonical schemas live in OpenAPI (<code>components/schemas</code>). Conceptual shapes:</p>
+<h3>Book (title)</h3>
+<p><code>id</code>, <code>title</code>, <code>authors</code>, <code>isbn</code>, <code>category</code>, <code>description</code>, copy counts / availability fields, timestamps.</p>
+<h3>Copy</h3>
+<p><code>id</code>, <code>bookId</code>, <code>barcode</code>, <code>status</code> (<code>available</code> | <code>on_loan</code> | <code>lost</code> | …), location metadata.</p>
+<h3>Member</h3>
+<p><code>id</code>, <code>memberNumber</code>, <code>fullName</code>, <code>email</code>, <code>membershipType</code>, <code>status</code> (<code>pending</code> | <code>active</code> | <code>suspended</code> | …).</p>
+<h3>Borrowing</h3>
+<p><code>id</code>, <code>memberId</code>, <code>copyId</code>, <code>status</code>, <code>borrowedAt</code>, <code>dueAt</code>, <code>returnedAt</code>, renew count.</p>
+<h3>Fine</h3>
+<p><code>id</code>, <code>memberId</code>, <code>amount</code>, <code>currency</code> (PHP), <code>status</code>, line items / payments.</p>
+<h3>Kiosk device</h3>
+<p><code>id</code>, <code>deviceCode</code>, <code>label</code>, <code>location</code>, <code>status</code>, <code>lastHeartbeatAt</code> — API key never returned after create/rotate response.</p>
+<hr>
+<h2>10. Common Workflows</h2>
+<h3>10.1 Staff login → catalog</h3>
+<ol>
+<li><code>POST /api/v1/auth/login</code> with email, password, tenant context as required.</li>
+<li>Store access + refresh tokens.</li>
+<li>Call <code>GET /api/v1/books</code> with <code>Authorization</code> + <code>X-Tenant-Slug</code>.</li>
+</ol>
+<h3>10.2 Checkout / return (staff)</h3>
+<ol>
+<li>Resolve member and available copy.</li>
+<li><code>POST /api/v1/borrowings/checkout</code> (or request → approve → checkout).</li>
+<li>On return: <code>POST /api/v1/borrowings/{id}/return</code> (fines may be created for overdue).</li>
+</ol>
+<h3>10.3 Public OPAC search</h3>
+<ol>
+<li>Send <code>X-Tenant-Slug: ulmis</code>.</li>
+<li><code>GET /api/v1/public/opac/search?q=…</code>.</li>
+<li><code>GET /api/v1/public/opac/books/{id}</code> and <code>/citations</code>.</li>
+</ol>
+<h3>10.4 Kiosk self-checkout</h3>
+<ol>
+<li>Staff registers device; copies full <code>ksk_…</code> key once.</li>
+<li>Kiosk app stores device code + key + tenant <code>ulmis</code>.</li>
+<li><code>GET /api/v1/kiosk/session</code> then patron lookup → <code>POST /api/v1/kiosk/checkout</code>.</li>
+</ol>
+<h3>10.5 Catalog import</h3>
+<ol>
+<li>Multipart <code>POST /api/v1/catalog/import/csv</code> or <code>/xlsx</code>, or JSON body for <code>/marc</code>.</li>
+<li>Review <code>GET /api/v1/catalog/books/{id}/versions</code> for history.</li>
+</ol>
+<h3>10.6 Scheduled report email</h3>
+<ol>
+<li>Configure schedule on <code>PATCH /api/v1/tenant</code> (report prefs).</li>
+<li>Ensure <code>SMTP_*</code> env and <code>node ace queue:listen</code> (or equivalent) are running.</li>
+<li>Reports also available on-demand via <code>GET /api/v1/reports/{type}</code>.</li>
+</ol>
+<hr>
+<h2>11. Kiosk Device Auth</h2>
+<p>Headers required on every <code>/api/v1/kiosk/*</code> call:</p>
+<pre><code class="language-http">X-Tenant-Slug: ulmis
+X-Kiosk-Device-Code: KIOSK-001
+X-Kiosk-Api-Key: ksk_••••••••
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Pitfall</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Using location name as tenant</td>
+<td>Use slug <code>ulmis</code>, not a city/campus label</td>
+</tr>
+<tr>
+<td>Wrong device code</td>
+<td>Exact match to registered code (e.g. <code>KIOSK-001</code> ≠ <code>KIOSK-01</code>)</td>
+</tr>
+<tr>
+<td>Truncated API key</td>
+<td>Re-rotate key; copy the full value once</td>
+</tr>
+</tbody></table>
+<p>Rotate: <code>POST /api/v1/hardware/kiosks/{id}/rotate-key</code> — previous key is invalidated.</p>
+<hr>
+<h2>12. Integrations &amp; Notifications</h2>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>In-app notifications</td>
+<td>Always (DB-backed)</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>Sends when <code>SMTP_*</code> configured</td>
+</tr>
+<tr>
+<td>SMS</td>
+<td>Sends when <code>TWILIO_*</code> configured</td>
+</tr>
+<tr>
+<td>ARIS / HRIS sync</td>
+<td>Push sync API + UI; campus job/credentials required</td>
+</tr>
+<tr>
+<td>LDAP / Smart Campus SSO</td>
+<td>Adapters return <strong>501</strong> until IdP verification</td>
+</tr>
+</tbody></table>
+<p>Preferences: <code>GET|PATCH /api/v1/notifications/preferences</code>.</p>
+<p>Status: <code>GET /api/v1/integrations/status</code>.</p>
+<hr>
+<h2>13. Environments &amp; Health</h2>
+<table>
+<thead>
+<tr>
+<th>Env var (examples)</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PORT</code></td>
+<td>API port (3333)</td>
+</tr>
+<tr>
+<td><code>DEPLOYMENT_MODE</code></td>
+<td><code>university</code> for ULMIS</td>
+</tr>
+<tr>
+<td><code>APP_KEY</code> / DB / Redis</td>
+<td>Core runtime</td>
+</tr>
+<tr>
+<td><code>CORS_ORIGIN</code></td>
+<td>Must include <code>:5173</code>, <code>:5174</code>, <code>:5175</code></td>
+</tr>
+<tr>
+<td><code>SMTP_*</code></td>
+<td>Outbound email</td>
+</tr>
+<tr>
+<td><code>TWILIO_*</code></td>
+<td>SMS</td>
+</tr>
+<tr>
+<td><code>AUTH_MODE</code></td>
+<td><code>local</code> / <code>platform</code> / <code>dual</code></td>
+</tr>
+</tbody></table>
+<p>Health: <code>GET /health</code>.</p>
+<p>NFR smoke (not certification): <code>scripts/load-smoke.mjs</code> — see <a href="./compliance/ULMIS_NFR.md">ULMIS_NFR.md</a> when present.</p>
+<hr>
+<h2>14. Changelog Notes</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.2.0</td>
+<td>Full OpenAPI 3.0.3 published at <code>apps/api/docs/openapi.yaml</code> (+ <code>.yml</code>); ~133 operations; Swagger UI at <code>/api/v1/docs</code>; branded report PDFs; documentation export package aligned with DocsTrack</td>
+</tr>
+<tr>
+<td>0.1.x</td>
+<td>Initial university LMS surface</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Related documents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Complete User Guide</td>
+<td><a href="./ULMIS-Complete-Guide.md">ULMIS-Complete-Guide.md</a></td>
+</tr>
+<tr>
+<td>Client apps</td>
+<td><a href="./architecture/CLIENT_APPS.md">architecture/CLIENT_APPS.md</a></td>
+</tr>
+<tr>
+<td>Readiness</td>
+<td><a href="./compliance/ULMIS_READINESS.md">compliance/ULMIS_READINESS.md</a></td>
+</tr>
+<tr>
+<td>OpenAPI</td>
+<td><a href="../apps/api/docs/openapi.yaml">apps/api/docs/openapi.yaml</a></td>
+</tr>
+<tr>
+<td>)</td>
+<td></td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

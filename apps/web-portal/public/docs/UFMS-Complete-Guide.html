@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UFMS Finance Complete User Guide</title>
+  <style>
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.55; max-width: 210mm; margin: 0 auto; padding: 12mm; }
+  h1 { font-size: 22pt; color: #2f2a6b; border-bottom: 2px solid #635bff; padding-bottom: 6px; }
+  h2 { font-size: 16pt; color: #3d3780; margin-top: 22px; }
+  code { background: #f4f6ff; padding: 2px 5px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<h1>UFMS — University Financial Management System</h1>
+<p><strong>Finance module (WMSU CIS) — TOR VI.E.3</strong></p>
+<ul>
+<li><strong>Web (local):</strong> <code>http://127.0.0.1:5182</code></li>
+<li><strong>Platform code:</strong> <code>finance</code></li>
+<li><strong>API:</strong> <code>http://127.0.0.1:3500/api/v1/finance</code></li>
+</ul>
+
+<h2>Launch</h2>
+<p>Sign in at WMSU Portal and open <strong>Finance (UFMS)</strong>. You need the finance platform plus an Identity role that maps to the right permission pack (e.g. <code>cashier</code> for POS and payment reads, finance staff roles for budget/procurement/accounting).</p>
+
+<h2>Modules</h2>
+<ul>
+<li><strong>Budget</strong> — appropriations and monitoring</li>
+<li><strong>Accounting</strong> — GL, JEV, trial balance, withholding, bank reconciliation (sidebar under Accounting)</li>
+<li><strong>Procurement</strong> — purchase requests and PO workflows</li>
+<li><strong>POS / Cashiering</strong> — point-of-sale and collections</li>
+</ul>
+<p>University Accounting is part of UFMS Finance — there is no separate accounting launcher tile.</p>
+
+<h2>Roles</h2>
+<p><code>finance.access</code> (platform) allows launch only. Menus and APIs follow Identity role packs — assign <code>cashier</code>, <code>registrar</code> (limited reads), or <code>identity_admin</code> as appropriate in Portal Admin.</p>
+
+<p><a href="./Identity-Complete-Guide.html">Identity guide</a> · <a href="./UFMS-API-Specs-Manual.html">API specs</a></p>
+</body>
+</html>

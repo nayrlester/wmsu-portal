@@ -1,0 +1,14 @@
+# Railway service: uims-web
+# Dashboard → Root directory: apps/web → Config-as-code: railway.toml
+# Set VITE_API_URL before first deploy (Variables tab — available as Docker build ARG).
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+watchPatterns = ["**"]
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+numReplicas = 1

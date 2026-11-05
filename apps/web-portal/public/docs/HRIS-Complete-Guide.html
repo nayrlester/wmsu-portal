@@ -1,0 +1,2906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HRIS + Payroll Complete User Guide</title>
+  <style>
+  @page { margin: 22mm 18mm; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 12mm;
+  }
+  h1 { font-size: 22pt; color: #0f3d5c; border-bottom: 2px solid #0f3d5c; padding-bottom: 6px; margin-top: 28px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 16pt; color: #145374; margin-top: 22px; }
+  h3 { font-size: 13pt; color: #1a5f7a; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d6e0; padding: 8px 10px; text-align: left; }
+  th { background: #e8f1f6; font-weight: 600; }
+  img { max-width: 100%; height: auto; border: 1px solid #dde4ea; border-radius: 4px; margin: 12px 0; }
+  code { background: #f4f6f8; padding: 2px 5px; border-radius: 3px; font-size: 0.92em; }
+  pre { background: #f4f6f8; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 9pt; }
+  blockquote { border-left: 4px solid #0f3d5c; margin: 12px 0; padding: 8px 16px; background: #f7fafc; color: #334; }
+  a { color: #0f6ba8; }
+  hr { border: none; border-top: 1px solid #dde4ea; margin: 24px 0; }
+</style>
+</head>
+<body>
+<h1>HRIS + Payroll Complete User Guide</h1>
+<p><strong>Human Resources Information System &amp; Philippine Payroll Platform</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>HRIS + Payroll Management System</td>
+</tr>
+<tr>
+<td><strong>Document version</strong></td>
+<td>1.1</td>
+</tr>
+<tr>
+<td><strong>Published</strong></td>
+<td>August 2026</td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>Employees, supervisors, HR, payroll officers, administrators, trainers</td>
+</tr>
+</tbody></table>
+<p>This single reference combines the full user manuals, role guides, FAQ, troubleshooting, training materials, and knowledge-base task articles.</p>
+<h2>Guide Contents</h2>
+<ol>
+<li>Complete User Manual</li>
+<li>Administrator Manual</li>
+<li>Employee Self-Service Guide</li>
+<li>Payroll Officer Guide</li>
+<li>Quick Start Guide</li>
+<li>Frequently Asked Questions</li>
+<li>Troubleshooting</li>
+<li>Training Materials</li>
+<li>Knowledge Base / How-to Articles</li>
+</ol>
+<p><strong>Related:</strong> <a href="./API-Specs-Manual.md">API Specs Manual</a> · OpenAPI <a href="../apps/api/docs/openapi.yaml"><code>apps/api/docs/openapi.yaml</code></a></p>
+<hr>
+<h1>Part I — Complete User Manual</h1>
+<h1>HRIS + Payroll Management System — User Manual</h1>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document version</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Product version</strong></td>
+<td>1.0.0</td>
+</tr>
+<tr>
+<td><strong>Release date</strong></td>
+<td>June 2025</td>
+</tr>
+<tr>
+<td><strong>Prepared by</strong></td>
+<td>Product Documentation Team</td>
+</tr>
+<tr>
+<td><strong>Classification</strong></td>
+<td>Client-facing</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Figure:</strong> Company Logo Placeholder</p>
+</blockquote>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#1-introduction">Introduction</a></li>
+<li><a href="#2-getting-started">Getting Started</a></li>
+<li><a href="#3-navigation-guide">Navigation Guide</a></li>
+<li><a href="#4-role-based-access">Role-Based Access</a></li>
+<li><a href="#5-dashboard">Dashboard</a></li>
+<li><a href="#6-employee-management">Employee Management</a></li>
+<li><a href="#7-organization">Organization</a></li>
+<li><a href="#8-recruitment">Recruitment</a></li>
+<li><a href="#9-attendance--timekeeping">Attendance &amp; Timekeeping</a></li>
+<li><a href="#10-leave-management">Leave Management</a></li>
+<li><a href="#11-shift--scheduling">Shift &amp; Scheduling</a></li>
+<li><a href="#12-payroll">Payroll</a></li>
+<li><a href="#13-government-compliance">Government Compliance</a></li>
+<li><a href="#14-documents">Documents</a></li>
+<li><a href="#15-approval-center--employee-requests">Approval Center &amp; Employee Requests</a></li>
+<li><a href="#16-assets">Assets</a></li>
+<li><a href="#17-analytics--reports">Analytics &amp; Reports</a></li>
+<li><a href="#18-system-administration">System Administration</a></li>
+<li><a href="#19-employee-self-service-ess">Employee Self-Service (ESS)</a></li>
+<li><a href="#20-mobile-app">Mobile App</a></li>
+<li><a href="#21-troubleshooting">Troubleshooting</a></li>
+<li><a href="#22-faq">FAQ</a></li>
+<li><a href="#23-best-practices">Best Practices</a></li>
+</ol>
+<hr>
+<h2>1. Introduction</h2>
+<h3>1.1 What is this platform?</h3>
+<p>The HRIS + Payroll Management System is an integrated human resources and payroll platform built for Philippine companies. It combines employee records, time and attendance, leave, payroll processing, government compliance (SSS, PhilHealth, Pag-IBIG, BIR), recruitment, documents, and approvals in one secure web application—with a dedicated <strong>Employee Self-Service (ESS)</strong> portal and <strong>mobile app</strong> for staff.</p>
+<h3>1.2 Primary purpose</h3>
+<ul>
+<li>Maintain accurate employee and organizational data</li>
+<li>Track attendance and daily time records (DTR)</li>
+<li>Process leave requests and approvals</li>
+<li>Run payroll with statutory deductions and contributions</li>
+<li>Generate payslips and compliance reports</li>
+<li>Support hiring through job requisitions and candidate tracking</li>
+<li>Route HR and payroll requests through supervisor and workflow approvals</li>
+</ul>
+<h3>1.3 Key benefits</h3>
+<ul>
+<li><strong>Single source of truth</strong> for HR and payroll data</li>
+<li><strong>Role-based access</strong> so employees see only what they need</li>
+<li><strong>Audit trail</strong> for sensitive changes (admin users)</li>
+<li><strong>Philippine payroll rules</strong> including government tables and reporting views</li>
+<li><strong>Self-service</strong> reduces HR workload for routine requests</li>
+</ul>
+<hr>
+<h2>2. Getting Started</h2>
+<h3>2.1 System requirements</h3>
+<p><strong>Web (Admin &amp; ESS)</strong></p>
+<ul>
+<li>Modern browser: Chrome, Edge, Firefox, or Safari (latest two versions)</li>
+<li>Stable internet connection</li>
+<li>Screen resolution 1280×720 or higher recommended</li>
+</ul>
+<p><strong>Mobile</strong></p>
+<ul>
+<li>iOS or Android device with the company HRIS mobile app installed</li>
+<li>Camera and location services if your company requires selfie or geofence clock-in</li>
+</ul>
+<h3>2.2 Accessing the system</h3>
+<ol>
+<li>Open the URL provided by your IT or HR department (e.g. <code>https://hris.yourcompany.com</code>).</li>
+<li>You will see the <strong>Sign in</strong> page.</li>
+</ol>
+<blockquote>
+<p><strong>Figure:</strong> Figure 2-1: Login page</p>
+</blockquote>
+<p><strong>Figure 2-1. Login page</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Element</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Email address</td>
+<td>Your work email registered in the system</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Password</td>
+<td>Your account password</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Sign in</td>
+<td>Submits credentials; redirects based on your role</td>
+</tr>
+</tbody></table>
+<h3>2.3 Signing in</h3>
+<ol>
+<li>Enter your <strong>email address</strong>.</li>
+<li>Enter your <strong>password</strong>.</li>
+<li>Click <strong>Sign in</strong>.</li>
+</ol>
+<p>After a successful login:</p>
+<ul>
+<li><strong>Employees</strong> are taken to the <strong>ESS Home</strong> (<code>/ess</code>).</li>
+<li><strong>Supervisors / managers</strong> with request permissions may land on <strong>Employee Requests</strong> (<code>/requests/coa</code>).</li>
+<li><strong>HR, payroll, and admin users</strong> land on the first module they are allowed to access (often <strong>Dashboard</strong>).</li>
+</ul>
+<h3>2.4 Multi-factor authentication (MFA)</h3>
+<p>If your administrator has enabled MFA on your account:</p>
+<ol>
+<li>After email and password, you are prompted for a verification code.</li>
+<li>Enter the code from your authenticator app or SMS.</li>
+<li>Complete verification to continue.</li>
+</ol>
+<p>If you lose access to your MFA device, contact your system administrator.</p>
+<h3>2.5 Forgot password</h3>
+<p>Password reset is managed by your company administrator through <strong>System Administration → Users</strong>. There is no self-service reset on the login screen unless your deployment adds one. Contact HR or IT if you cannot sign in.</p>
+<h3>2.6 Initial setup (administrators)</h3>
+<p>New company setup typically follows this order:</p>
+<ol>
+<li>Seed organization structure (branches, departments, positions).</li>
+<li>Configure pay groups and payroll settings.</li>
+<li>Create system users and assign roles.</li>
+<li>Link users to employee records where applicable.</li>
+<li>Assign supervisors via <strong>Reporting Lines</strong>.</li>
+<li>Communicate ESS login instructions to employees.</li>
+</ol>
+<h3>2.7 Demo / training access (University Identity)</h3>
+<p>Training and non-production sign-in uses the <strong>University Identity Service</strong> (not legacy HRIS-only demo emails). Sign in at the Identity portal, then launch HRIS from the platform launcher.</p>
+<table>
+<thead>
+<tr>
+<th>Email</th>
+<th>Typical use</th>
+<th>HRIS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>admin@identity.local</code></td>
+<td>Identity Admin — all platforms + admin console</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>employee@identity.local</code></td>
+<td>Employee — Library, HRIS, DocsTrack</td>
+<td>Yes (primary training)</td>
+</tr>
+<tr>
+<td><code>nodocs@identity.local</code></td>
+<td>Employee — Library + HRIS only</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>student@identity.local</code></td>
+<td>Student — Library / OPAC only</td>
+<td>No</td>
+</tr>
+</tbody></table>
+<p>Password is the value of <code>DEMO_SEED_PASSWORD</code> in the Identity API environment. Do <strong>not</strong> use legacy <code>*@demo.ph</code> accounts.</p>
+<hr>
+<h2>3. Navigation Guide</h2>
+<h3>3.1 Admin console layout</h3>
+<p>The admin interface has three main areas:</p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 3-1: Dashboard overview</p>
+</blockquote>
+<p><strong>Figure 3-1. Admin dashboard</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Area</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><strong>Sidebar</strong></td>
+<td>Module menu filtered by your permissions</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Top header</strong></td>
+<td>Company switcher, search, notifications, profile, theme toggle</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Breadcrumbs</strong></td>
+<td>Current location within the app</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Main content</strong></td>
+<td>Page title, tabs, and workspace</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Badge counts</strong></td>
+<td>Red numbers on menu items (pending leave, inbox tasks, etc.)</td>
+</tr>
+</tbody></table>
+<h3>3.2 Sidebar menu (live modules)</h3>
+<p>Your sidebar shows only items you are permitted to access:</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Items</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Dashboard</strong></td>
+<td>Company dashboard</td>
+</tr>
+<tr>
+<td><strong>Organization</strong></td>
+<td>Overview, Reporting Lines, Org Chart, Departments, Positions, Branches</td>
+</tr>
+<tr>
+<td><strong>Job Requisitions</strong></td>
+<td>Dashboard, Job Openings, Archive, Candidate Database, Job Posting Settings</td>
+</tr>
+<tr>
+<td><strong>Employee Management</strong></td>
+<td>Dashboard, Employees, Employee Clearance</td>
+</tr>
+<tr>
+<td><strong>Payroll Management</strong></td>
+<td>Dashboard, Payroll (runs), Attendance (DTR), Government Compliance, Settings</td>
+</tr>
+<tr>
+<td><strong>Approval Center</strong></td>
+<td>Inbox, Leave Management, Employee Request (COA/COE/disputes)</td>
+</tr>
+<tr>
+<td><strong>Asset Management</strong></td>
+<td>Dashboard, Inventory, Assignments &amp; Returns, Maintenance</td>
+</tr>
+<tr>
+<td><strong>Report Center</strong></td>
+<td>HR Analytics hub</td>
+</tr>
+<tr>
+<td><strong>Document Management</strong></td>
+<td>Document repository</td>
+</tr>
+<tr>
+<td><strong>System Administration</strong></td>
+<td>Users, Roles &amp; Permissions, Audit Logs <em>(super admin)</em></td>
+</tr>
+</tbody></table>
+<h3>3.3 Top header</h3>
+<ul>
+<li><strong>Notifications bell</strong> — workflow and system notifications (opens panel).</li>
+<li><strong>Profile menu</strong> — switch company (if multi-company), ESS link (if allowed), sign out.</li>
+<li><strong>Theme</strong> — light/dark mode.</li>
+</ul>
+<h3>3.4 ESS navigation</h3>
+<p>Employees use a bottom tab bar on mobile and a simplified layout on web:</p>
+<table>
+<thead>
+<tr>
+<th>Tab / link</th>
+<th>Route</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Home</td>
+<td><code>/ess</code></td>
+<td>Summary, clock status, quick links</td>
+</tr>
+<tr>
+<td>Time</td>
+<td><code>/ess/attendance</code></td>
+<td>Clock in / out</td>
+</tr>
+<tr>
+<td>Leave</td>
+<td><code>/ess/leave</code></td>
+<td>File and track leave</td>
+</tr>
+<tr>
+<td>Payslips</td>
+<td><code>/ess/payslips</code></td>
+<td>View and download payslips</td>
+</tr>
+<tr>
+<td>More</td>
+<td><code>/ess/menu</code></td>
+<td>DTR, COA, disputes, profile, etc.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Role-Based Access</h2>
+<p>Access is controlled by <strong>roles</strong> and <strong>permissions</strong>. Your administrator assigns one or more roles per company.</p>
+<h3>4.1 Super Admin</h3>
+<p><strong>Typical access:</strong> System Administration (Users, Roles &amp; Permissions, Audit Logs), platform and security modules if deployed.</p>
+<p><strong>Cannot be assumed for:</strong> Day-to-day HR data entry unless also given HR roles.</p>
+<h3>4.2 Company Admin / HR Manager</h3>
+<p><strong>Typical access:</strong> Dashboard, Organization, Employees, Recruitment, Leave approvals, Documents, Clearance, Analytics.</p>
+<p><strong>Common tasks:</strong> Hire employees, maintain org structure, approve leave, manage recruitment.</p>
+<h3>4.3 Payroll Manager / Payroll Officer</h3>
+<p><strong>Typical access:</strong> Payroll dashboard, payroll runs, payslips, adjustments, government compliance, attendance DTR (company view).</p>
+<p><strong>Common tasks:</strong> Create periods, compute payroll, review entries, approve runs, export reports.</p>
+<h3>4.4 Department Manager / Supervisor (<code>line_manager</code>)</h3>
+<p><strong>Typical access:</strong> Approval Center — leave, Certificate of Attendance (COA), workflow inbox for direct reports.</p>
+<p><strong>Requirement:</strong> Employee record linked to user; reporting line from team members to supervisor.</p>
+<h3>4.5 Employee</h3>
+<p><strong>Typical access:</strong> ESS only — clock, leave, payslips, COA, disputes, profile.</p>
+<h3>4.6 Auditor</h3>
+<p><strong>Typical access:</strong> Read-only views on reports, analytics, and audit-related screens (as configured).</p>
+<hr>
+<h2>5. Dashboard</h2>
+<p><strong>Path:</strong> <code>/dashboard</code><br><strong>Permission:</strong> <code>company.dashboard.view</code></p>
+<p>The company dashboard summarizes workforce and operational metrics (headcount, attendance trends, pending items—exact widgets depend on your permissions and data).</p>
+<p><strong>How to use:</strong></p>
+<ol>
+<li>Sign in as an admin or HR user.</li>
+<li>Click <strong>Dashboard</strong> in the sidebar.</li>
+<li>Review KPI cards and charts.</li>
+<li>Use links from widgets to drill into Employees, Leave, or Payroll where available.</li>
+</ol>
+<hr>
+<h2>6. Employee Management</h2>
+<h3>6.1 Employee directory</h3>
+<p><strong>Path:</strong> <code>/employees/directory</code><br><strong>Permission:</strong> <code>employee.view</code></p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 6-1: Employee directory</p>
+</blockquote>
+<p><strong>Figure 6-1. Employee directory</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Control</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Search</td>
+<td>Find by name, employee number, email</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Filters</td>
+<td>Department, status, branch, etc.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Add employee</td>
+<td>Opens create form (<code>employee.create</code>)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Import / Export</td>
+<td>Bulk import or export (<code>employee.import</code> / <code>employee.export</code>)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Row / card</td>
+<td>Open employee profile</td>
+</tr>
+</tbody></table>
+<h3>6.2 Add a new employee</h3>
+<p><strong>Path:</strong> <code>/employees/new</code><br><strong>Permission:</strong> <code>employee.create</code></p>
+<ol>
+<li>Go to <strong>Employee Management → Employees</strong>.</li>
+<li>Click <strong>Add employee</strong> (or navigate to <code>/employees/new</code>).</li>
+<li>Complete required fields:<ul>
+<li>Employee number, name, branch, department, position</li>
+<li>Pay group, hire date</li>
+<li><strong>Supervisor / manager</strong> (required for approval routing)</li>
+<li>Leave <strong>work email</strong> blank — add it on the employee profile after save (see §6.5).</li>
+</ul>
+</li>
+<li>Click <strong>Save</strong> — status is <strong>Newly Hired</strong> when no work email is provided.</li>
+<li>Open the employee profile → <strong>Employment</strong> tab to send the welcome email (§6.5).</li>
+</ol>
+<blockquote>
+<p><strong>Figure:</strong> Figure 6-2: Add employee</p>
+</blockquote>
+<h3>6.3 Employee profile</h3>
+<p><strong>Path:</strong> <code>/employees/{id}</code></p>
+<p>Tabs typically include Employment, Personal &amp; Gov IDs, Compensation, Documents, History, and Transfer / Promote / Offboard depending on permissions.</p>
+<p><strong>Edit employee:</strong> <code>employee.update</code> — change department, position, supervisor, contact info, and work email.</p>
+<p><strong>Sensitive data:</strong> PII fields may require <code>employee.view_pii</code> / <code>employee.update_pii</code>.</p>
+<h3>6.4 Newly Hired status and welcome email</h3>
+<p>When an employee is hired from recruitment or added without a work email, their status is <strong>Newly Hired</strong>. They do not have a login account until HR completes onboarding.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Who</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>HR (recruitment)</td>
+<td><strong>Hire</strong> candidate — employee record created; no welcome email yet</td>
+</tr>
+<tr>
+<td>2</td>
+<td>HR</td>
+<td>Open employee → <strong>Employment</strong> tab</td>
+</tr>
+<tr>
+<td>3</td>
+<td>HR</td>
+<td>Enter <strong>work email</strong> and click <strong>Save changes</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td>System</td>
+<td>Creates user account, sends welcome email with invite link</td>
+</tr>
+<tr>
+<td>5</td>
+<td>System</td>
+<td>Status changes to <strong>Probationary</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Employee</td>
+<td>Opens invite link from email → sets password → uses ESS</td>
+</tr>
+</tbody></table>
+<p><strong>Employment tab notes:</strong></p>
+<ul>
+<li><strong>Newly Hired</strong> status is system-assigned and read-only until work email is saved.</li>
+<li>Helper text on the work email field explains that saving will create login and send the welcome email.</li>
+<li>If email delivery fails, a warning is shown; fix mail settings and save again.</li>
+</ul>
+<p><strong>Employee first login:</strong> New hires must use the <strong>invite link</strong> in the welcome email (<code>/invite?token=...</code>), not the standard login page first. After setting a password, they sign in with their <strong>work email</strong>.</p>
+<p>See also: <a href="./knowledge-base/kb-send-welcome-email.md">Knowledge base — Send welcome email</a>.</p>
+<h3>6.5 Employee clearance</h3>
+<p><strong>Path:</strong> <code>/clearance/checklist</code><br><strong>Permission:</strong> <code>clearance.view</code></p>
+<p>Used for offboarding: checklist items, asset return, and sign-offs before separation.</p>
+<hr>
+<h2>7. Organization</h2>
+<p><strong>Base path:</strong> <code>/organization/{section}</code></p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Overview</td>
+<td><code>/organization/overview</code></td>
+<td>Summary of org units</td>
+</tr>
+<tr>
+<td>Reporting Lines</td>
+<td><code>/organization/reporting</code></td>
+<td>Assign supervisors to employees</td>
+</tr>
+<tr>
+<td>Organization Chart</td>
+<td><code>/organization/org-chart</code></td>
+<td>Visual hierarchy</td>
+</tr>
+<tr>
+<td>Departments</td>
+<td><code>/organization/departments</code></td>
+<td>Maintain departments</td>
+</tr>
+<tr>
+<td>Positions</td>
+<td><code>/organization/positions</code></td>
+<td>Job titles / positions</td>
+</tr>
+<tr>
+<td>Branches</td>
+<td><code>/organization/branches</code></td>
+<td>Locations, geofence settings for attendance</td>
+</tr>
+</tbody></table>
+<p><strong>Best practice:</strong> Set reporting lines before go-live so leave and COA approvals route to the correct manager.</p>
+<hr>
+<h2>8. Recruitment</h2>
+<p><strong>Base path:</strong> <code>/recruitment/{section}</code></p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dashboard</td>
+<td><code>/recruitment/dashboard</code></td>
+<td>Pipeline metrics and summaries</td>
+</tr>
+<tr>
+<td>Job Openings</td>
+<td><code>/recruitment/jobs</code></td>
+<td>Create and publish requisitions</td>
+</tr>
+<tr>
+<td>Archive</td>
+<td><code>/recruitment/archive</code></td>
+<td>Closed or cancelled openings</td>
+</tr>
+<tr>
+<td>Candidate Database</td>
+<td><code>/recruitment/candidates</code></td>
+<td>All candidates across jobs</td>
+</tr>
+<tr>
+<td>Job Posting Settings</td>
+<td><code>/recruitment/settings/...</code></td>
+<td>Departments, employment types, etc.</td>
+</tr>
+</tbody></table>
+<p><strong>Hire flow:</strong></p>
+<ol>
+<li>Create job → add candidates → move through pipeline stages.</li>
+<li>On <strong>Hire</strong>, enter agreed salary and select a <strong>supervisor</strong> (required).</li>
+<li>System creates an employee with status <strong>Newly Hired</strong> — <strong>no welcome email is sent at this step</strong>.</li>
+<li>Open the new employee profile → <strong>Employment</strong> tab → enter <strong>work email</strong> → <strong>Save changes</strong> to send the welcome email and create their login (see §6.4).</li>
+</ol>
+<hr>
+<h2>9. Attendance &amp; Timekeeping</h2>
+<h3>9.1 Company DTR (admin)</h3>
+<p><strong>Path:</strong> <code>/attendance/dtr</code><br><strong>Permission:</strong> <code>attendance.view</code></p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 9-1: DTR view</p>
+</blockquote>
+<ol>
+<li>Select <strong>date range</strong> and optionally filter by employee or department.</li>
+<li>Review daily time records: time in/out, late minutes, status.</li>
+<li>Export if your role allows.</li>
+</ol>
+<p><strong>Tabs:</strong> DTR | Corrections (<code>attendance.correct</code> for HR corrections panel).</p>
+<h3>9.2 Employee clock (ESS)</h3>
+<p><strong>Path:</strong> <code>/ess/attendance</code><br><strong>Permission:</strong> <code>attendance.clock</code></p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 9-2: ESS attendance</p>
+</blockquote>
+<ol>
+<li>Open <strong>Time</strong> from ESS.</li>
+<li>Review <strong>last event</strong> and whether session is open.</li>
+<li>Tap <strong>Time in</strong> or <strong>Time out</strong> as appropriate.</li>
+<li>If required: allow location and complete selfie capture.</li>
+</ol>
+<p><strong>Note:</strong> Geofence and selfie requirements depend on company attendance policy.</p>
+<h3>9.3 Certificate of Attendance (COA) — employee correction</h3>
+<p><strong>Path:</strong> <code>/ess/coa</code><br><strong>Permission:</strong> <code>ess.access</code></p>
+<p>When an employee misses time-in or time-out:</p>
+<ol>
+<li>Open <strong>Certificate of Attendance</strong> (ESS menu or <code>/ess/coa</code>).</li>
+<li>Select <strong>correction type</strong>: Missing time-in, Missing time-out, or Missing both.</li>
+<li>Enter <strong>reason</strong> (minimum 10 characters).</li>
+<li>Add one or more <strong>dates</strong> with proposed times.</li>
+<li>Click <strong>Submit to supervisor</strong>.</li>
+</ol>
+<blockquote>
+<p><strong>Figure:</strong> Figure 9-3: ESS COA form</p>
+</blockquote>
+<p>Supervisor approves under <strong>Approval Center → Employee Request → COA Requests</strong>.</p>
+<h3>9.4 View your DTR (ESS)</h3>
+<p><strong>Path:</strong> <code>/ess/dtr</code> — personal daily time record for a selected period.</p>
+<hr>
+<h2>10. Leave Management</h2>
+<h3>10.1 Admin leave module</h3>
+<p><strong>Base path:</strong> <code>/leave/{section}</code></p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Balances</td>
+<td><code>/leave/balances</code></td>
+<td>Company-wide leave balances</td>
+</tr>
+<tr>
+<td>Requests</td>
+<td><code>/leave/requests</code></td>
+<td>All leave requests</td>
+</tr>
+<tr>
+<td>Approvals</td>
+<td><code>/leave/approvals</code></td>
+<td>Pending approvals</td>
+</tr>
+<tr>
+<td>Calendar</td>
+<td><code>/leave/calendar</code></td>
+<td>Team calendar view</td>
+</tr>
+<tr>
+<td>Policies</td>
+<td><code>/leave/policies</code></td>
+<td>Policy reference</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td><code>/leave/settings</code></td>
+<td>Leave types (<code>leave.type.manage</code>)</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Figure:</strong> Figure 10-1: Leave approvals</p>
+</blockquote>
+<p><strong>Approve leave:</strong></p>
+<ol>
+<li>Go to <strong>Approval Center → Leave Management</strong> or <code>/leave/approvals</code>.</li>
+<li>Select a pending request.</li>
+<li>Click <strong>Approve</strong> or <strong>Reject</strong> and add remarks if required.</li>
+</ol>
+<p><strong>Approval stages:</strong> Supervisor first, then HR when configured.</p>
+<h3>10.2 File leave (ESS)</h3>
+<p><strong>Path:</strong> <code>/ess/leave</code></p>
+<ol>
+<li>Review <strong>leave balances</strong>.</li>
+<li>Select <strong>leave type</strong>, <strong>start date</strong>, <strong>end date</strong>.</li>
+<li>Enter reason if required.</li>
+<li>Submit — track status on the same page or under <strong>Requests</strong>.</li>
+</ol>
+<blockquote>
+<p><strong>Figure:</strong> Figure 10-2: ESS leave</p>
+</blockquote>
+<hr>
+<h2>11. Shift &amp; Scheduling</h2>
+<p>Shift management is available at <code>/shifts/{section}</code> for users with <code>shift.view</code> but is <strong>not</strong> in the default sidebar catalog. If your company enables it:</p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Templates</td>
+<td><code>/shifts/templates</code></td>
+</tr>
+<tr>
+<td>Team calendar</td>
+<td><code>/shifts/calendar</code></td>
+</tr>
+<tr>
+<td>Shift swaps</td>
+<td><code>/shifts/swaps</code></td>
+</tr>
+</tbody></table>
+<p><strong>ESS schedule:</strong> <code>/ess/schedule</code> — employee weekly shift calendar.</p>
+<hr>
+<h2>12. Payroll</h2>
+<p>See also the dedicated <a href="./PAYROLL_GUIDE.md">PAYROLL_GUIDE.md</a>.</p>
+<h3>12.1 Payroll dashboard</h3>
+<p><strong>Path:</strong> <code>/payroll/dashboard</code><br><strong>Permission:</strong> <code>payroll.dashboard.view</code></p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 12-1: Payroll dashboard</p>
+</blockquote>
+<h3>12.2 Payroll runs</h3>
+<p><strong>Path:</strong> <code>/payroll/runs</code><br><strong>Permissions:</strong> <code>payroll.view</code>, <code>payroll.run</code> to compute</p>
+<p><strong>Typical monthly process:</strong></p>
+<ol>
+<li><strong>Create or select payroll period</strong> (Settings or Runs screen).</li>
+<li>Ensure attendance and leave are finalized for the period.</li>
+<li>Click <strong>Compute</strong> / run payroll for the period.</li>
+<li>Review register: gross, deductions, net per employee.</li>
+<li>Resolve exceptions and adjustments.</li>
+<li><strong>Approve</strong> run (<code>payroll.approve</code>) when accurate.</li>
+<li>Distribute payslips (generated on approval).</li>
+</ol>
+<blockquote>
+<p><strong>Figure:</strong> Figure 12-2: Payroll runs</p>
+</blockquote>
+<h3>12.3 Other payroll tabs</h3>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Payslips</td>
+<td><code>/payroll/payslips</code></td>
+</tr>
+<tr>
+<td>Adjustments</td>
+<td><code>/payroll/adjustments</code></td>
+</tr>
+<tr>
+<td>13th Month</td>
+<td><code>/payroll/thirteenth-month</code></td>
+</tr>
+<tr>
+<td>Final Pay</td>
+<td><code>/payroll/final-pay</code></td>
+</tr>
+<tr>
+<td>Settings</td>
+<td><code>/payroll/settings</code></td>
+</tr>
+</tbody></table>
+<h3>12.4 Payslips (ESS)</h3>
+<p><strong>Path:</strong> <code>/ess/payslips</code> — employees view and download their own payslips.</p>
+<hr>
+<h2>13. Government Compliance</h2>
+<p><strong>Base path:</strong> <code>/compliance/{section}</code></p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SSS</td>
+<td><code>/compliance/sss</code></td>
+</tr>
+<tr>
+<td>PhilHealth</td>
+<td><code>/compliance/philhealth</code></td>
+</tr>
+<tr>
+<td>Pag-IBIG</td>
+<td><code>/compliance/pagibig</code></td>
+</tr>
+<tr>
+<td>BIR &amp; Alphalist</td>
+<td><code>/compliance/bir</code></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Figure:</strong> Figure 13-1: SSS compliance</p>
+</blockquote>
+<p>Use these screens to review contribution data and generate/export reports appropriate to your payroll period. Exact export buttons depend on the live UI for each agency tab.</p>
+<p><strong>Warning:</strong> Run compliance reports only after payroll for the period is approved and locked.</p>
+<hr>
+<h2>14. Documents</h2>
+<p><strong>Path:</strong> <code>/documents</code><br><strong>Permission:</strong> <code>document.view</code></p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 14-1: Documents</p>
+</blockquote>
+<ul>
+<li>Browse company and HR documents.</li>
+<li>Upload (<code>document.upload</code>), edit (<code>document.edit</code>), or delete (<code>document.delete</code>) per permission.</li>
+<li>Employee-specific documents may also appear on the employee profile when <code>employee.document.view</code> is granted.</li>
+</ul>
+<hr>
+<h2>15. Approval Center &amp; Employee Requests</h2>
+<h3>15.1 Workflow inbox</h3>
+<p><strong>Path:</strong> <code>/workflows/inbox</code><br><strong>Permission:</strong> <code>workflow.approve</code></p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 15-1: Workflow inbox</p>
+</blockquote>
+<p>Pending workflow tasks assigned to you (clearance, profile updates, custom workflows).</p>
+<p><strong>Actions:</strong> Open task → <strong>Approve</strong> or <strong>Reject</strong> with comments.</p>
+<h3>15.2 Employee requests</h3>
+<p><strong>Path:</strong> <code>/requests/coa</code> (default) | <code>/requests/coe</code> | <code>/requests/disputes</code><br><strong>Permission:</strong> <code>request.view</code></p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>COA Requests</strong></td>
+<td>Certificate of Attendance — missing punch corrections</td>
+</tr>
+<tr>
+<td><strong>COE Requests</strong></td>
+<td>Certificate of Employment</td>
+</tr>
+<tr>
+<td><strong>Payroll Disputes</strong></td>
+<td>Employee-reported payslip issues</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Figure:</strong> Figure 15-2: COA approvals</p>
+</blockquote>
+<p><strong>Supervisor COA review:</strong></p>
+<ol>
+<li>Open pending request.</li>
+<li>Verify dates, proposed times, and reason.</li>
+<li>Click <strong>Approve</strong> (applies attendance correction) or <strong>Decline</strong>.</li>
+</ol>
+<hr>
+<h2>16. Assets</h2>
+<p><strong>Base path:</strong> <code>/assets/{section}</code></p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dashboard</td>
+<td>Asset KPIs</td>
+</tr>
+<tr>
+<td>Inventory</td>
+<td>Asset register</td>
+</tr>
+<tr>
+<td>Assignments &amp; Returns</td>
+<td>Issue equipment to employees</td>
+</tr>
+<tr>
+<td>Maintenance</td>
+<td>Maintenance records</td>
+</tr>
+</tbody></table>
+<p><strong>ESS:</strong> <code>/ess/assets</code> — view assets assigned to you.</p>
+<hr>
+<h2>17. Analytics &amp; Reports</h2>
+<p><strong>Path:</strong> <code>/analytics</code> (Report Center in menu)<br><strong>Permission:</strong> <code>analytics.dashboard.view</code></p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 17-1: Analytics</p>
+</blockquote>
+<p>Sub-reports may include headcount, attrition, payroll cost, attendance, and recruitment depending on permissions (<code>analytics.view</code>, <code>analytics.export</code>).</p>
+<p>Legacy route <code>/reports</code> may redirect or complement analytics depending on deployment.</p>
+<hr>
+<h2>18. System Administration</h2>
+<p><strong>Requires:</strong> <code>super_admin.access</code> (and related permissions)</p>
+<table>
+<thead>
+<tr>
+<th>Screen</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Users</td>
+<td><code>/admin/users</code></td>
+<td>Create users, link to employees, reset access</td>
+</tr>
+<tr>
+<td>Roles &amp; Permissions</td>
+<td><code>/admin/roles</code></td>
+<td>Define roles and permission sets</td>
+</tr>
+<tr>
+<td>Audit logs</td>
+<td><code>/admin/audit</code></td>
+<td>Review system activity</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Figure:</strong> Figure 18-1: Roles</p>
+</blockquote>
+<p><strong>Roles &amp; permissions workflow:</strong></p>
+<ol>
+<li>Open <strong>Roles &amp; Permissions</strong>.</li>
+<li>Select a role or create custom role.</li>
+<li>Toggle permissions by module.</li>
+<li>Assign role to users under <strong>Users</strong>.</li>
+</ol>
+<hr>
+<h2>19. Employee Self-Service (ESS)</h2>
+<p>Full detail: <a href="./EMPLOYEE_GUIDE.md">EMPLOYEE_GUIDE.md</a>.</p>
+<blockquote>
+<p><strong>Figure:</strong> Figure 19-1: ESS home</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Home dashboard</td>
+<td><code>/ess</code></td>
+</tr>
+<tr>
+<td>Clock in/out</td>
+<td><code>/ess/attendance</code></td>
+</tr>
+<tr>
+<td>DTR</td>
+<td><code>/ess/dtr</code></td>
+</tr>
+<tr>
+<td>Schedule</td>
+<td><code>/ess/schedule</code></td>
+</tr>
+<tr>
+<td>Leave</td>
+<td><code>/ess/leave</code></td>
+</tr>
+<tr>
+<td>Payslips</td>
+<td><code>/ess/payslips</code></td>
+</tr>
+<tr>
+<td>Certificate of Attendance</td>
+<td><code>/ess/coa</code></td>
+</tr>
+<tr>
+<td>Payroll disputes</td>
+<td><code>/ess/disputes</code></td>
+</tr>
+<tr>
+<td>My requests</td>
+<td><code>/ess/requests</code></td>
+</tr>
+<tr>
+<td>Profile updates</td>
+<td><code>/ess/profile</code></td>
+</tr>
+<tr>
+<td>Notifications</td>
+<td><code>/ess/notifications</code></td>
+</tr>
+</tbody></table>
+<p>Employees with HR permissions may see <strong>HR Admin</strong> link on the ESS menu to switch to the admin console.</p>
+<hr>
+<h2>20. Mobile App</h2>
+<p>The mobile app mirrors core ESS features with bottom tabs:</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Feature</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Home</td>
+<td>Dashboard summary</td>
+</tr>
+<tr>
+<td>Attendance</td>
+<td>Clock in/out</td>
+</tr>
+<tr>
+<td>Requests</td>
+<td>Leave, COA, disputes, track submissions</td>
+</tr>
+<tr>
+<td>Payslips</td>
+<td>View payslips</td>
+</tr>
+<tr>
+<td>Profile</td>
+<td>Account and settings</td>
+</tr>
+</tbody></table>
+<p><strong>Sign in:</strong> Same email and password as web ESS. Demo shortcuts on login screen for employee and supervisor training accounts.</p>
+<p><strong>COA on mobile:</strong> Requests tab → <strong>COA</strong> → select type, date, times, reason → Submit.</p>
+<hr>
+<h2>21. Troubleshooting</h2>
+<p>See <a href="./TROUBLESHOOTING.md">TROUBLESHOOTING.md</a> for detailed solutions.</p>
+<hr>
+<h2>22. FAQ</h2>
+<p>See <a href="./FAQ.md">FAQ.md</a> for 50+ frequently asked questions.</p>
+<hr>
+<h2>23. Best Practices</h2>
+<h3>HR</h3>
+<ul>
+<li>Keep reporting lines current when managers change.</li>
+<li>Require supervisor on every active employee.</li>
+<li>Process COA and leave within SLA so payroll is accurate.</li>
+<li>Use clearance checklist for all separations.</li>
+</ul>
+<h3>Payroll</h3>
+<ul>
+<li>Lock attendance before compute.</li>
+<li>Review adjustments and loans before approving a run.</li>
+<li>Reconcile government reports against approved payroll each period.</li>
+<li>Never approve a run until spot-checks are complete.</li>
+</ul>
+<h3>Security</h3>
+<ul>
+<li>Use unique accounts; do not share passwords.</li>
+<li>Assign least-privilege roles.</li>
+<li>Review audit logs periodically.</li>
+<li>Disable users immediately on separation.</li>
+</ul>
+<h3>Employees</h3>
+<ul>
+<li>Clock in and out daily; use COA promptly if you miss a punch.</li>
+<li>File leave early for planned absences.</li>
+<li>Verify payslips within the dispute window defined by HR.</li>
+</ul>
+<hr>
+<p><em>End of User Manual — Document version 1.0</em></p>
+<hr>
+<h1>Part II — Administrator Manual</h1>
+<h1>Administrator Manual — HRIS + Payroll</h1>
+<p><strong>Audience:</strong> HR administrators, company admins, super admins<br><strong>Version:</strong> 1.0 | June 2025</p>
+<hr>
+<h2>1. Administrator responsibilities</h2>
+<p>Administrators maintain organizational data, user access, employee records, approvals configuration, and integration with payroll operations. This manual covers admin-console features visible in the live navigation catalog.</p>
+<hr>
+<h2>2. Access and roles</h2>
+<h3>2.1 Recommended roles</h3>
+<table>
+<thead>
+<tr>
+<th>Role code</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>company_admin</code></td>
+<td>Full company HRIS (except platform super-admin tools)</td>
+</tr>
+<tr>
+<td><code>hr_manager</code></td>
+<td>Employees, leave, recruitment, attendance</td>
+</tr>
+<tr>
+<td><code>payroll_manager</code></td>
+<td>Payroll runs, compliance, payslips</td>
+</tr>
+<tr>
+<td><code>line_manager</code></td>
+<td>Approvals only (supervisor) — not full admin</td>
+</tr>
+<tr>
+<td><code>auditor</code></td>
+<td>Read-only reporting</td>
+</tr>
+<tr>
+<td><code>super_admin</code></td>
+<td>Users, roles, audit logs</td>
+</tr>
+</tbody></table>
+<h3>2.2 Managing users</h3>
+<p><strong>Path:</strong> <code>/admin/users</code></p>
+<ol>
+<li>Click <strong>Add user</strong> — enter name, email, password policy-compliant password.</li>
+<li>Assign <strong>company membership</strong> and default company.</li>
+<li>Assign <strong>roles</strong> for that company.</li>
+<li><strong>Link employee record</strong> when the user is also an employee (required for ESS and supervisor routing).</li>
+</ol>
+<h3>2.3 Managing roles</h3>
+<p><strong>Path:</strong> <code>/admin/roles</code></p>
+<ol>
+<li>Review system roles (cannot delete system flag roles).</li>
+<li>Clone or create custom roles with minimum permissions needed.</li>
+<li>Avoid granting <code>super_admin.access</code> to routine HR staff.</li>
+</ol>
+<p><strong>Privileged permissions</strong> (restrict carefully): <code>user.manage</code>, <code>role.manage</code>, <code>super_admin.access</code>, <code>audit.view</code>.</p>
+<hr>
+<h2>3. Organization setup</h2>
+<p>Complete before importing employees:</p>
+<ol>
+<li><strong>Branches</strong> — legal/work sites; configure geofence if attendance requires it.</li>
+<li><strong>Departments &amp; positions</strong> — used on employee profiles and recruitment.</li>
+<li><strong>Reporting lines</strong> — <code>/organization/reporting</code> — every employee must have a supervisor for leave and COA.</li>
+</ol>
+<hr>
+<h2>4. Employee lifecycle</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Action</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hire (recruitment)</td>
+<td>Move candidate to Hired; creates <strong>Newly Hired</strong> employee</td>
+<td><code>/recruitment/jobs</code></td>
+</tr>
+<tr>
+<td>Onboard login</td>
+<td>Add work email on Employment tab → welcome email sent</td>
+<td><code>/employees/{id}</code></td>
+</tr>
+<tr>
+<td>Hire (manual)</td>
+<td>Add employee without work email</td>
+<td><code>/employees/new</code></td>
+</tr>
+<tr>
+<td>Update</td>
+<td>Transfer, promotion, supervisor change</td>
+<td><code>/employees/{id}</code></td>
+</tr>
+<tr>
+<td>Documents</td>
+<td>Upload 201 file items</td>
+<td>Employee profile / Documents</td>
+</tr>
+<tr>
+<td>Separate</td>
+<td>Clearance + offboarding</td>
+<td><code>/clearance/checklist</code></td>
+</tr>
+</tbody></table>
+<p><strong>Supervisor field:</strong> Mandatory on create. Updates take effect immediately for new approval routing.</p>
+<h3>Employee onboarding (welcome email)</h3>
+<p>Welcome emails are <strong>not</strong> sent at hire time. Use this sequence:</p>
+<ol>
+<li><strong>Hire</strong> from recruitment (or create employee without work email).</li>
+<li>Employee status = <strong>Newly Hired</strong>, work email empty, no user account.</li>
+<li>Open <strong>Employment</strong> tab, enter work email, <strong>Save changes</strong>.</li>
+<li>System provisions account (<code>pending_invite</code>), emails invite link, sets status to <strong>Probationary</strong>.</li>
+<li>Employee accepts invite at <code>/invite</code>, sets password, then uses ESS.</li>
+</ol>
+<p><strong>Mail configuration (server):</strong> Ensure <code>MAIL_DRIVER</code>, SMTP credentials, <code>MAIL_FROM</code>, and <code>WEB_APP_URL</code> (production web URL for invite links) are set on the API service.</p>
+<p><strong>Organization → HR Settings</strong> (<code>/organization/hr-settings</code>): Optional company email domain for reference; work email is entered manually per employee on the Employment tab.</p>
+<hr>
+<h2>5. Approval configuration</h2>
+<table>
+<thead>
+<tr>
+<th>Request type</th>
+<th>Where approved</th>
+<th>Routing</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Leave</td>
+<td><code>/leave/approvals</code></td>
+<td>Supervisor → HR stages</td>
+</tr>
+<tr>
+<td>COA</td>
+<td><code>/requests/coa</code></td>
+<td>Direct supervisor or <code>request.manage</code></td>
+</tr>
+<tr>
+<td>COE</td>
+<td><code>/requests/coe</code></td>
+<td>HR / request managers</td>
+</tr>
+<tr>
+<td>Payroll disputes</td>
+<td><code>/requests/disputes</code></td>
+<td>HR / payroll</td>
+</tr>
+<tr>
+<td>Workflow tasks</td>
+<td><code>/workflows/inbox</code></td>
+<td>Per workflow definition</td>
+</tr>
+</tbody></table>
+<p>Ensure reporting lines match real managers before enabling self-service COA.</p>
+<hr>
+<h2>6. Recruitment administration</h2>
+<ol>
+<li>Configure lookups: <code>/recruitment/settings/departments</code> (and related sections).</li>
+<li>Create job openings with department, position, headcount.</li>
+<li>Manage candidates and interviews on job detail pages.</li>
+<li><strong>Hire</strong> candidate — creates employee with status <strong>Newly Hired</strong>; supervisor and agreed salary required.</li>
+<li><strong>Do not expect a welcome email at hire</strong> — open the new employee profile, <strong>Employment</strong> tab, enter work email, and save to send onboarding email (see §4).</li>
+</ol>
+<hr>
+<h2>7. Documents and compliance</h2>
+<ul>
+<li><strong>Documents:</strong> <code>/documents</code> — policies, templates, company files.</li>
+<li><strong>Clearance:</strong> <code>/clearance</code> — exit process templates and checklists.</li>
+</ul>
+<hr>
+<h2>8. Audit and security</h2>
+<p><strong>Path:</strong> <code>/admin/audit</code></p>
+<p>Filter by date, user, action, entity. Use for investigations and compliance evidence.</p>
+<p><strong>Security checklist:</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Remove access on last working day</li>
+<li><input disabled="" type="checkbox"> Review role assignments quarterly</li>
+<li><input disabled="" type="checkbox"> Enforce MFA for admin accounts (when enabled)</li>
+<li><input disabled="" type="checkbox"> Train supervisors on COA/leave approval only for direct reports</li>
+</ul>
+<hr>
+<h2>9. Navigation and menu maintenance</h2>
+<p>Navigation items are seeded from <code>navigation_catalog</code>. After permission or menu changes, run navigation seed in deployment:</p>
+<pre><code class="language-bash">npm run dev:seed-navigation --workspace=apps/api
+</code></pre>
+<p>Users see menu items only if they hold the listed permission code.</p>
+<hr>
+<h2>10. Training environments</h2>
+<p>Use a dedicated non-production environment for training. Ask your system administrator for training user accounts — do not reuse production credentials.</p>
+<hr>
+<p><em>See also: <a href="./USER_MANUAL.md">USER_MANUAL.md</a>, <a href="./TRAINING_MATERIALS.md">TRAINING_MATERIALS.md</a></em></p>
+<hr>
+<h1>Part III — Employee Self-Service Guide</h1>
+<h1>Employee User Guide — Self-Service (ESS)</h1>
+<p><strong>Audience:</strong> All employees using web ESS or mobile app<br><strong>Version:</strong> 1.0 | June 2025</p>
+<hr>
+<h2>1. Overview</h2>
+<p>Employee Self-Service lets you manage your own time, leave, payslips, and HR requests without visiting the HR office for every task. You need a user account linked to your employee record.</p>
+<p><strong>New employees:</strong> HR will send a welcome email to your <strong>work email</strong> after your record is set up. Use the <strong>invite link</strong> in that email to set your password before using the normal login page.</p>
+<p><strong>Web ESS URL:</strong> Same as company login — you are redirected to <code>/ess</code> after sign-in.</p>
+<hr>
+<h2>2. First login (new hires)</h2>
+<p>If you were just hired:</p>
+<ol>
+<li>Wait for HR to add your work email — you will receive a <strong>welcome email</strong> when they save your profile.</li>
+<li>Click the <strong>invite link</strong> in the email (not the login page first).</li>
+<li>Set your password on the invite screen.</li>
+<li>You are signed in and taken to ESS.</li>
+<li>Later visits: use the company login URL with your <strong>work email</strong> and password.</li>
+</ol>
+<p>See <a href="./knowledge-base/kb-accept-invite.md">How to accept your invite</a>.</p>
+<hr>
+<h2>3. ESS home</h2>
+<blockquote>
+<p><strong>Figure:</strong> ESS Home</p>
+</blockquote>
+<p>The home screen shows:</p>
+<ul>
+<li>Your name, department, and position</li>
+<li><strong>Clock status</strong> — last punch and whether you are timed in</li>
+<li><strong>Leave balance</strong> summary</li>
+<li>Shortcuts to Time, Schedule, DTR, Leave, Payslips</li>
+</ul>
+<hr>
+<h2>4. Time and attendance</h2>
+<h3>3.1 Clock in and clock out</h3>
+<p><strong>Path:</strong> <code>/ess/attendance</code> or mobile <strong>Attendance</strong> tab</p>
+<ol>
+<li>Open the Time screen.</li>
+<li>Read the status message (e.g. “You are timed in since 8:02 AM”).</li>
+<li>Press <strong>Time in</strong> when you arrive.</li>
+<li>Press <strong>Time out</strong> when you leave.</li>
+</ol>
+<p>If your company requires <strong>location</strong> or <strong>selfie</strong>, follow the prompts. Denying permissions may block clocking.</p>
+<h3>3.2 Daily Time Record (DTR)</h3>
+<p><strong>Path:</strong> <code>/ess/dtr</code></p>
+<ol>
+<li>Select the date range (e.g. current pay period).</li>
+<li>Review each day: status, worked hours, late minutes.</li>
+<li>If a day is wrong, use <strong>Certificate of Attendance</strong> (section 4).</li>
+</ol>
+<h3>3.3 Schedule</h3>
+<p><strong>Path:</strong> <code>/ess/schedule</code></p>
+<p>View your assigned shifts for the week (if scheduling is configured).</p>
+<hr>
+<h2>5. Certificate of Attendance (COA)</h2>
+<p>Use when you forgot to time in or out.</p>
+<p><strong>Path:</strong> <code>/ess/coa</code> | Mobile: <strong>Requests → COA</strong></p>
+<blockquote>
+<p><strong>Figure:</strong> COA Form</p>
+</blockquote>
+<ol>
+<li>Choose <strong>correction type</strong>:<ul>
+<li>Missing time-in</li>
+<li>Missing time-out</li>
+<li>Missing both</li>
+</ul>
+</li>
+<li>Enter a clear <strong>reason</strong> (at least 10 characters).</li>
+<li>For each affected date:<ul>
+<li><strong>Work date</strong></li>
+<li><strong>Proposed time-in</strong> and/or <strong>time-out</strong></li>
+<li>Optional remarks per date</li>
+</ul>
+</li>
+<li>Click <strong>Add date</strong> for multiple days in one request.</li>
+<li>Submit — status becomes <strong>Pending</strong> until your supervisor acts.</li>
+</ol>
+<p>You can track submissions under <strong>My requests</strong> (<code>/ess/requests</code>) or the COA <strong>My requests</strong> tab.</p>
+<hr>
+<h2>6. Leave</h2>
+<p><strong>Path:</strong> <code>/ess/leave</code></p>
+<ol>
+<li>Check <strong>balances</strong> for each leave type.</li>
+<li>Select leave type, start date, end date.</li>
+<li>Add reason if required.</li>
+<li>Submit.</li>
+</ol>
+<p>You cannot cancel approved leave in ESS — contact HR. Pending requests may be visible to your supervisor immediately.</p>
+<hr>
+<h2>7. Payslips</h2>
+<p><strong>Path:</strong> <code>/ess/payslips</code></p>
+<ol>
+<li>Open the payslip list (most recent first).</li>
+<li>Select a period to view gross, deductions, and net pay.</li>
+<li>Download PDF if available.</li>
+</ol>
+<p>If something looks wrong, use <strong>Payroll Disputes</strong> (section 7).</p>
+<hr>
+<h2>8. Payroll disputes</h2>
+<p><strong>Path:</strong> <code>/ess/disputes</code></p>
+<ol>
+<li>Select the <strong>payslip period</strong> in question.</li>
+<li>Describe the issue (minimum 10 characters).</li>
+<li>Submit — HR/payroll reviews under admin <strong>Employee Requests → Payroll Disputes</strong>.</li>
+</ol>
+<hr>
+<h2>9. Other ESS features</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Path</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>My requests</td>
+<td><code>/ess/requests</code></td>
+<td>Leave, COA, profile updates, shift swaps</td>
+</tr>
+<tr>
+<td>My assets</td>
+<td><code>/ess/assets</code></td>
+<td>Equipment assigned to you</td>
+</tr>
+<tr>
+<td>Notifications</td>
+<td><code>/ess/notifications</code></td>
+<td>System messages</td>
+</tr>
+<tr>
+<td>Profile</td>
+<td><code>/ess/profile</code></td>
+<td>Contact info; changes may need approval</td>
+</tr>
+<tr>
+<td>Menu</td>
+<td><code>/ess/menu</code></td>
+<td>Full list of ESS tools</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>10. Mobile app</h2>
+<p>Bottom tabs: <strong>Home | Attendance | Requests | Payslips | Profile</strong></p>
+<ul>
+<li><strong>Requests</strong> includes Leave, COA, Dispute, and tracking.</li>
+<li>Use the same email/password as web.</li>
+<li>Demo login shortcuts appear in training builds.</li>
+</ul>
+<hr>
+<h2>11. Getting help</h2>
+<ul>
+<li><strong>Cannot log in:</strong> Contact HR — password reset is admin-assisted.</li>
+<li><strong>Missing menu item:</strong> Your role may not include ESS; HR must link your user to your employee record.</li>
+<li><strong>Supervisor not receiving COA:</strong> HR must verify reporting line to your manager.</li>
+</ul>
+<p><em>See <a href="./FAQ.md">FAQ.md</a> and <a href="./TROUBLESHOOTING.md">TROUBLESHOOTING.md</a></em></p>
+<hr>
+<h1>Part IV — Payroll Officer Guide</h1>
+<h1>Payroll User Guide</h1>
+<p><strong>Audience:</strong> Payroll officers, payroll managers<br><strong>Version:</strong> 1.0 | June 2025</p>
+<hr>
+<h2>1. Payroll module map</h2>
+<table>
+<thead>
+<tr>
+<th>Screen</th>
+<th>Path</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dashboard</td>
+<td><code>/payroll/dashboard</code></td>
+<td><code>payroll.dashboard.view</code></td>
+</tr>
+<tr>
+<td>Payroll runs</td>
+<td><code>/payroll/runs</code></td>
+<td><code>payroll.view</code>, <code>payroll.run</code></td>
+</tr>
+<tr>
+<td>Payslips</td>
+<td><code>/payroll/payslips</code></td>
+<td><code>payroll.view</code></td>
+</tr>
+<tr>
+<td>Adjustments</td>
+<td><code>/payroll/adjustments</code></td>
+<td><code>payroll.adjustment.view</code></td>
+</tr>
+<tr>
+<td>13th month</td>
+<td><code>/payroll/thirteenth-month</code></td>
+<td><code>payroll.view</code></td>
+</tr>
+<tr>
+<td>Final pay</td>
+<td><code>/payroll/final-pay</code></td>
+<td><code>payroll.view</code></td>
+</tr>
+<tr>
+<td>Settings</td>
+<td><code>/payroll/settings</code></td>
+<td><code>payroll.run</code></td>
+</tr>
+<tr>
+<td>Attendance DTR</td>
+<td><code>/attendance/dtr</code></td>
+<td><code>attendance.view</code></td>
+</tr>
+<tr>
+<td>Compliance</td>
+<td><code>/compliance/sss</code> (+ philhealth, pagibig, bir)</td>
+<td><code>compliance.view</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>2. Monthly payroll cycle (recommended)</h2>
+<pre><code class="language-mermaid">flowchart LR
+  A[Close attendance] --&gt; B[Review leave]
+  B --&gt; C[Post adjustments]
+  C --&gt; D[Create / open period]
+  D --&gt; E[Compute payroll]
+  E --&gt; F[Review register]
+  F --&gt; G[Approve run]
+  G --&gt; H[Payslips + compliance]
+</code></pre>
+<h3>Step 1 — Prepare data</h3>
+<ul>
+<li>Confirm all COA requests for the period are approved or rejected.</li>
+<li>Resolve open payroll disputes.</li>
+<li>Enter loans and one-off adjustments in <strong>Adjustments</strong>.</li>
+</ul>
+<h3>Step 2 — Payroll period</h3>
+<p><strong>Path:</strong> <code>/payroll/settings</code> or runs screen</p>
+<p>Create a period matching your pay frequency (e.g. semi-monthly: 1–15, 16–end).</p>
+<h3>Step 3 — Compute</h3>
+<p><strong>Path:</strong> <code>/payroll/runs</code></p>
+<ol>
+<li>Select the period and run (or create new run).</li>
+<li>Click <strong>Compute</strong> / equivalent action.</li>
+<li>Wait for processing (large companies may use background queue).</li>
+</ol>
+<p>Status progresses through draft → computing → computed (wording may vary in UI).</p>
+<h3>Step 4 — Review register</h3>
+<p>For each employee verify:</p>
+<ul>
+<li>Basic pay and allowances</li>
+<li>Overtime and holiday pay from DTR</li>
+<li>SSS, PhilHealth, Pag-IBIG, withholding tax</li>
+<li>Loan deductions</li>
+<li>Net pay reasonableness</li>
+</ul>
+<p>Use pagination and filters on the entries table. Investigate zero or negative net pay before approval.</p>
+<h3>Step 5 — Approve</h3>
+<p><strong>Permission:</strong> <code>payroll.approve</code></p>
+<p>Approval typically:</p>
+<ul>
+<li>Locks the run</li>
+<li>Generates payslip PDFs</li>
+<li>Makes payslips visible in ESS</li>
+</ul>
+<p><strong>Do not approve</strong> until a second reviewer has spot-checked high-risk accounts (executives, separations, large adjustments).</p>
+<h3>Step 6 — Distribution and compliance</h3>
+<ul>
+<li>Employees access payslips at <code>/ess/payslips</code>.</li>
+<li>Export SSS, PhilHealth, Pag-IBIG, and BIR views from <strong>Government Compliance</strong>.</li>
+<li>Archive exports per your retention policy.</li>
+</ul>
+<hr>
+<h2>3. Adjustments and loans</h2>
+<p><strong>Path:</strong> <code>/payroll/adjustments</code></p>
+<ul>
+<li><strong>Earnings</strong> — bonuses, corrections (taxable flag matters).</li>
+<li><strong>Deductions</strong> — penalties, salary advances.</li>
+<li>Link adjustments to the correct <strong>payroll period</strong> before compute.</li>
+</ul>
+<p>Company loans are managed under payroll loan features when enabled in your deployment.</p>
+<hr>
+<h2>4. 13th month and final pay</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Path</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>13th month</td>
+<td><code>/payroll/thirteenth-month</code></td>
+<td>Statutory bonus run</td>
+</tr>
+<tr>
+<td>Final pay</td>
+<td><code>/payroll/final-pay</code></td>
+<td>Separated employee settlement</td>
+</tr>
+</tbody></table>
+<p>Coordinate with clearance and last DTR before final pay compute.</p>
+<hr>
+<h2>5. Payslip administration</h2>
+<p><strong>Path:</strong> <code>/payroll/payslips</code></p>
+<p>Search by employee or period. Regenerate or re-download if your role allows after corrections (may require run reversal — follow company policy).</p>
+<hr>
+<h2>6. Attendance integration</h2>
+<p>Payroll reads <strong>DTR</strong> data computed from attendance logs and approved COA corrections.</p>
+<p><strong>Path:</strong> <code>/attendance/dtr</code></p>
+<p>If hours look wrong:</p>
+<ol>
+<li>Check raw attendance in DTR.</li>
+<li>Confirm employee COA was approved.</li>
+<li>Use <strong>Corrections</strong> tab (<code>/attendance/corrections</code>) only if HR policy allows manual HR correction (<code>attendance.correct</code>).</li>
+</ol>
+<hr>
+<h2>7. Government compliance screens</h2>
+<blockquote>
+<p><strong>Figure:</strong> SSS</p>
+</blockquote>
+<p>Each agency tab provides period-scoped views aligned to Philippine requirements. Export CSV/Excel/PDF where buttons exist on the live screen.</p>
+<p><strong>Warnings:</strong></p>
+<ul>
+<li>Use the same period dates as the approved payroll run.</li>
+<li>Government tables are versioned in the system — note the table year when auditing.</li>
+<li>Consult your external accountant for statutory filing formats.</li>
+</ul>
+<hr>
+<h2>8. Troubleshooting payroll</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Employee missing from run</td>
+<td>Active status, pay group, hire/separation dates</td>
+</tr>
+<tr>
+<td>Wrong tax</td>
+<td>Compensation record, YTD totals, BIR table version</td>
+</tr>
+<tr>
+<td>Missing OT</td>
+<td>DTR status, approved COA, attendance compute</td>
+</tr>
+<tr>
+<td>Compute fails</td>
+<td>API logs, period status, missing pay group</td>
+</tr>
+<tr>
+<td>Payslip not in ESS</td>
+<td>Run approved? Employee user linked?</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. Best practices</h2>
+<ul>
+<li>Run parallel <strong>test compute</strong> on staging before production cutover.</li>
+<li>Document manual overrides with adjustment reason text.</li>
+<li>Segregate duties: computer ≠ sole approver.</li>
+<li>Keep a payroll calendar shared with HR for cutoffs.</li>
+</ul>
+<p><em>See <a href="./USER_MANUAL.md">USER_MANUAL.md</a> §12 and <a href="./FAQ.md">FAQ.md</a></em></p>
+<hr>
+<h1>Part V — Quick Start Guide</h1>
+<h1>Quick Start Guide</h1>
+<p><strong>5-minute orientation for new users</strong><br>Version 1.0 | June 2025</p>
+<hr>
+<h2>Employees (ESS)</h2>
+<ol>
+<li><strong>Log in</strong> at your company HRIS URL with email and password.</li>
+<li>You land on <strong>ESS Home</strong> — check clock status.</li>
+<li><strong>Time in</strong> when you start work (<code>Time</code> tab).</li>
+<li><strong>Time out</strong> when you leave.</li>
+<li><strong>File leave</strong> under Leave before your absence.</li>
+<li><strong>Missed a punch?</strong> Submit <strong>Certificate of Attendance</strong> from Menu → COA.</li>
+<li><strong>Payslips</strong> appear after payroll is approved each period.</li>
+</ol>
+<blockquote>
+<p><strong>Figure:</strong> ESS Home</p>
+</blockquote>
+<hr>
+<h2>Supervisors</h2>
+<ol>
+<li>Log in — you may open <strong>Employee Requests → COA</strong>.</li>
+<li>Review pending <strong>leave</strong> under Approval Center → Leave Management.</li>
+<li><strong>Approve</strong> or <strong>Decline</strong> with a short remark.</li>
+<li>Approved COA updates employee attendance automatically.</li>
+</ol>
+<hr>
+<h2>HR administrators</h2>
+<ol>
+<li>Log in → <strong>Dashboard</strong>.</li>
+<li>Verify <strong>Organization → Reporting Lines</strong> for your team.</li>
+<li><strong>Hire from recruitment</strong> or <strong>Add employee</strong> — new hires start as <strong>Newly Hired</strong> without work email.</li>
+<li>Open employee <strong>Employment</strong> tab → enter <strong>work email</strong> → <strong>Save</strong> to send welcome email and create ESS login.</li>
+<li>Monitor <strong>Approval Center</strong> badges on the sidebar.</li>
+</ol>
+<hr>
+<h2>Payroll officers</h2>
+<ol>
+<li>Log in → <strong>Payroll → Dashboard</strong>.</li>
+<li>Confirm DTR for the period (<code>Payroll Management → Attendance</code>).</li>
+<li><strong>Payroll → Payroll Runs</strong> → Compute → Review → Approve.</li>
+<li>Export compliance from <strong>Government Compliance</strong>.</li>
+</ol>
+<hr>
+<h2>Mobile</h2>
+<p>Install the company HRIS app → same login → use <strong>Attendance</strong>, <strong>Requests</strong>, <strong>Payslips</strong> tabs.</p>
+<hr>
+<h2>Need help?</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Document</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Full reference</td>
+<td><a href="./USER_MANUAL.md">USER_MANUAL.md</a></td>
+</tr>
+<tr>
+<td>Employees</td>
+<td><a href="./EMPLOYEE_GUIDE.md">EMPLOYEE_GUIDE.md</a></td>
+</tr>
+<tr>
+<td>Payroll</td>
+<td><a href="./PAYROLL_GUIDE.md">PAYROLL_GUIDE.md</a></td>
+</tr>
+<tr>
+<td>Problems</td>
+<td><a href="./TROUBLESHOOTING.md">TROUBLESHOOTING.md</a></td>
+</tr>
+</tbody></table>
+<hr>
+<h1>Part VI — Frequently Asked Questions</h1>
+<h1>Frequently Asked Questions (FAQ)</h1>
+<p><strong>HRIS + Payroll Management System</strong> — Version 1.0<br>56 questions based on implemented features</p>
+<hr>
+<h2>Login and access</h2>
+<p><strong>1. What URL do I use to log in?</strong><br>Use the web address provided by your employer (e.g. <code>https://hris.company.com</code>). The login page shows “Sign in to continue.”</p>
+<p><strong>2. I forgot my password. What do I do?</strong><br>Contact HR or IT. Administrators reset passwords under System Administration → Users. Self-service reset is not on the default login page.</p>
+<p><strong>3. Why am I sent to <code>/ess</code> instead of the admin dashboard?</strong><br>You have the Employee role or only ESS permissions. That is expected for staff accounts.</p>
+<p><strong>4. What is MFA and when do I need it?</strong><br>Multi-factor authentication adds a second step after password. If enabled on your account, you must enter a code from your authenticator app.</p>
+<p><strong>5. Can I use the same account on web and mobile?</strong><br>Yes. One email/password works for both.</p>
+<p><strong>6. I see “Invalid credentials.”</strong><br>Check caps lock, email spelling, and that your account is active. After several failures, your account may be temporarily locked — contact admin.</p>
+<p><strong>7. Can I belong to more than one company?</strong><br>Yes if configured. Use the company switcher in the top header after login.</p>
+<hr>
+<h2>Navigation and permissions</h2>
+<p><strong>9. Why is a menu item missing?</strong><br>Menus are filtered by permissions. Your role may not include that module. Ask HR to review your role assignment.</p>
+<p><strong>10. What do red numbers on the sidebar mean?</strong><br>Badge counts show pending items (leave approvals, workflow inbox, employee requests).</p>
+<p><strong>11. What is the difference between HR Admin and ESS?</strong><br>HR Admin is the full back-office console. ESS is the employee portal for self-service.</p>
+<p><strong>12. How do I switch from ESS to admin?</strong><br>If you have admin permissions, open <strong>Menu → HR Admin</strong> in ESS or sign in with an admin role.</p>
+<p><strong>13. Who can see audit logs?</strong><br>Users with <code>super_admin.access</code> under System Administration → Audit Logs.</p>
+<hr>
+<h2>Employees and organization</h2>
+<p><strong>14. How do I add a new employee?</strong><br>Employee Management → Employees → Add employee (<code>/employees/new</code>). Requires <code>employee.create</code>.</p>
+<p><strong>15. Is a supervisor required when hiring?</strong><br>Yes. Every employee must have a manager for leave and COA routing.</p>
+<p><strong>16. How do I change someone’s supervisor?</strong><br>Edit the employee profile or update Reporting Lines under Organization.</p>
+<p><strong>17. Can I import employees from Excel?</strong><br>Yes with <code>employee.import</code> — use the import action on the directory (include supervisor employee number per import rules).</p>
+<p><strong>18. How do I export the employee list?</strong><br>Use export on the directory with <code>employee.export</code>.</p>
+<p><strong>19. Where is the org chart?</strong><br>Organization → Organization Chart (<code>/organization/org-chart</code>).</p>
+<p><strong>20. What is employee clearance?</strong><br>Offboarding checklist at <code>/clearance/checklist</code> for exiting employees.</p>
+<hr>
+<h2>Attendance and DTR</h2>
+<p><strong>21. How do employees clock in?</strong><br>ESS → Time (<code>/ess/attendance</code>) or mobile Attendance tab → Time in.</p>
+<p><strong>22. Why is clock-in blocked?</strong><br>Possible causes: geofence required but outside area, selfie required but not provided, or duplicate punch within policy window.</p>
+<p><strong>23. Where does HR view everyone’s DTR?</strong><br>Payroll Management → Attendance → DTR (<code>/attendance/dtr</code>).</p>
+<p><strong>24. What is Certificate of Attendance (COA)?</strong><br>Employee request to correct missing time-in/out. Submitted in ESS; supervisor approves in Employee Requests.</p>
+<p><strong>25. Can I submit COA for multiple dates at once?</strong><br>Yes on web ESS — use <strong>Add date</strong> on the COA form. Mobile COA supports one date per submission in the current app.</p>
+<p><strong>26. What happens when COA is approved?</strong><br>The system creates attendance correction logs and recomputes DTR for those dates.</p>
+<p><strong>27. What is the Corrections tab under Attendance?</strong><br>HR tool for reviewing DTR exceptions (<code>/attendance/corrections</code>) for users with correction permissions.</p>
+<p><strong>28. Can employees see their own DTR?</strong><br>Yes — ESS → DTR (<code>/ess/dtr</code>).</p>
+<hr>
+<h2>Leave</h2>
+<p><strong>29. How do employees file leave?</strong><br>ESS → Leave — select type, dates, reason, submit.</p>
+<p><strong>30. How are leave requests approved?</strong><br>Typically supervisor first, then HR depending on approval stage. Approvers use <code>/leave/approvals</code>.</p>
+<p><strong>31. Where do I see leave balances?</strong><br>Employees: ESS Leave. HR: <code>/leave/balances</code>.</p>
+<p><strong>32. Can I reject a leave request?</strong><br>Yes with <code>leave.approve</code> — rejected requests restore pending balance.</p>
+<p><strong>33. Is there a leave calendar?</strong><br>Yes at <code>/leave/calendar</code> for users with <code>leave.view</code>.</p>
+<p><strong>34. Who configures leave types?</strong><br>HR with <code>leave.type.manage</code> under Leave → Settings / Policies.</p>
+<hr>
+<h2>Payroll and payslips</h2>
+<p><strong>35. When will my payslip appear?</strong><br>After payroll officers approve the payroll run for that period.</p>
+<p><strong>36. How do I download a payslip?</strong><br>ESS → Payslips → select period → download.</p>
+<p><strong>37. How do I run monthly payroll?</strong><br>Payroll → Payroll Runs — select period, compute, review, approve (<code>payroll.run</code>, <code>payroll.approve</code>).</p>
+<p><strong>38. What is a payroll period?</strong><br>Date range defining which days are paid — created in payroll settings.</p>
+<p><strong>39. Can I adjust pay after compute?</strong><br>Use Adjustments before approval, or follow company policy for reversal if already approved.</p>
+<p><strong>40. What is 13th month pay in the system?</strong><br>Dedicated module at <code>/payroll/thirteenth-month</code> for statutory bonus processing.</p>
+<p><strong>41. What is final pay?</strong><br>Settlement payroll for separated employees at <code>/payroll/final-pay</code>.</p>
+<p><strong>42. How do I dispute a payslip?</strong><br>ESS → Payroll Disputes — select payslip, describe issue. HR resolves under Requests → Disputes.</p>
+<hr>
+<h2>Government compliance</h2>
+<p><strong>43. Where are SSS reports?</strong><br>Payroll Management → Government Compliance → SSS.</p>
+<p><strong>44. Are PhilHealth and Pag-IBIG separate screens?</strong><br>Yes — <code>/compliance/philhealth</code> and <code>/compliance/pagibig</code>.</p>
+<p><strong>45. Where is BIR data?</strong><br><code>/compliance/bir</code> for alphalist-related views.</p>
+<p><strong>46. Must payroll be approved before compliance export?</strong><br>Best practice: yes — exports should match an approved run.</p>
+<hr>
+<h2>Recruitment</h2>
+<p><strong>47. How do I post a job?</strong><br>Job Requisitions → Job Openings → create opening.</p>
+<p><strong>48. Where are candidates stored?</strong><br>Per job on job detail page, or Candidate Database for all candidates.</p>
+<p><strong>49. How does hire work?</strong><br>Move the candidate to <strong>Hired</strong> with agreed salary and supervisor. The system creates an employee with status <strong>Newly Hired</strong> but does <strong>not</strong> send email yet. Open the employee profile → <strong>Employment</strong> tab → enter <strong>work email</strong> → <strong>Save</strong> to send the welcome email and create their login.</p>
+<p><strong>50. What is Newly Hired status?</strong><br>A system status for employees who have been hired but do not yet have a work email and user account. After work email is saved, status becomes <strong>Probationary</strong>.</p>
+<p><strong>51. New employee did not receive welcome email?</strong><br>Confirm HR saved a work email on the Employment tab, SMTP is configured on the server, and the employee checked the correct inbox. They must use the invite link in the email, not the login page first.</p>
+<p><strong>52. Can I hire without sending email immediately?</strong><br>Yes — that is the default. Email is sent only when work email is added and saved on the employee profile.</p>
+<hr>
+<h2>Documents and assets</h2>
+<p><strong>53. Where are company policies stored?</strong><br>Document Management → <code>/documents</code>.</p>
+<p><strong>54. Can employees see assigned laptops?</strong><br>ESS → My Assets (<code>/ess/assets</code>).</p>
+<p><strong>55. How do I assign an asset?</strong><br>Asset Management → Assignments &amp; Returns.</p>
+<hr>
+<h2>Approvals and workflows</h2>
+<p><strong>56. What is the workflow inbox?</strong><br><code>/workflows/inbox</code> — tasks assigned to you (clearance, custom workflows).</p>
+<p><strong>57. What is a COE request?</strong><br>Certificate of Employment — HR creates or reviews under <code>/requests/coe</code>.</p>
+<p><strong>58. Can supervisors approve COE?</strong><br>COE is typically HR-managed (<code>request.manage</code> to create); viewing uses <code>request.view</code>.</p>
+<p><strong>59. How long until sidebar badges update?</strong><br>Usually within a minute; badge cache refreshes automatically after approvals.</p>
+<hr>
+<p><em>For troubleshooting steps see <a href="./TROUBLESHOOTING.md">TROUBLESHOOTING.md</a></em></p>
+<hr>
+<h1>Part VII — Troubleshooting</h1>
+<h1>Troubleshooting Guide</h1>
+<p><strong>HRIS + Payroll</strong> — Version 1.0</p>
+<hr>
+<h2>Cannot log in</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Invalid email or password</td>
+<td>Typo or expired password</td>
+<td>Verify credentials; admin reset</td>
+</tr>
+<tr>
+<td>Blank page after login</td>
+<td>Browser extension blocking</td>
+<td>Try incognito; disable ad blockers</td>
+</tr>
+<tr>
+<td>MFA code rejected</td>
+<td>Clock drift on phone</td>
+<td>Sync device time; request MFA reset</td>
+</tr>
+<tr>
+<td>Account locked</td>
+<td>Too many failed attempts</td>
+<td>Wait or contact admin to unlock</td>
+</tr>
+<tr>
+<td>Redirect loop</td>
+<td>Cookie/storage blocked</td>
+<td>Allow cookies for HRIS domain</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Missing permissions / empty menu</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Only ESS visible</td>
+<td>Employee-only role</td>
+<td>Expected for staff; request role change if you need admin</td>
+</tr>
+<tr>
+<td>Expected module missing</td>
+<td>Permission not granted</td>
+<td>Admin: Roles → add permission → re-login</td>
+</tr>
+<tr>
+<td>“Forbidden” on direct URL</td>
+<td>Route guard blocked</td>
+<td>You lack permission for that path</td>
+</tr>
+<tr>
+<td>Supervisor cannot see COA</td>
+<td>No <code>request.view</code> or not linked as manager</td>
+<td>Assign line_manager role; verify reporting line</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>ESS issues</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“Employee not found” on ESS API</td>
+<td>User not linked to employee record</td>
+<td>Admin: link user to employee on membership</td>
+</tr>
+<tr>
+<td>Clock button disabled</td>
+<td>Policy or sequence (already timed in)</td>
+<td>Time out first, or contact HR</td>
+</tr>
+<tr>
+<td>Geofence error</td>
+<td>Outside branch radius</td>
+<td>Move on-site or HR disables geofence for remote staff</td>
+</tr>
+<tr>
+<td>Selfie required error</td>
+<td>Policy requires photo</td>
+<td>Capture selfie when prompted</td>
+</tr>
+<tr>
+<td>COA submit fails validation</td>
+<td>Reason &lt; 10 chars or missing times</td>
+<td>Complete all required fields per correction type</td>
+</tr>
+<tr>
+<td>Payslips empty</td>
+<td>No approved payroll yet</td>
+<td>Wait for payroll approval</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Attendance and DTR</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DTR shows absent but employee worked</td>
+<td>Missing punches</td>
+<td>Employee submits COA; supervisor approves</td>
+</tr>
+<tr>
+<td>Late minutes seem wrong</td>
+<td>Policy grace period</td>
+<td>Review attendance policy in company settings</td>
+</tr>
+<tr>
+<td>COA approved but DTR unchanged</td>
+<td>Compute not run</td>
+<td>HR triggers DTR recompute if separate job</td>
+</tr>
+<tr>
+<td>Duplicate punch error</td>
+<td>Within duplicate window</td>
+<td>Wait or HR corrects via policy</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Leave</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Insufficient balance</td>
+<td>Not enough entitlement</td>
+<td>HR reviews accrual / adjustment</td>
+</tr>
+<tr>
+<td>Cannot approve leave</td>
+<td>Not supervisor or wrong stage</td>
+<td>Check approval stage and <code>leave.approve</code></td>
+</tr>
+<tr>
+<td>Leave stuck pending</td>
+<td>Supervisor not acting</td>
+<td>Escalate or HR approves if policy allows</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Payroll</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Compute button disabled</td>
+<td>Period closed or missing permission</td>
+<td>Check <code>payroll.run</code> and period status</td>
+</tr>
+<tr>
+<td>Employee missing from run</td>
+<td>Inactive, wrong pay group, dates</td>
+<td>Verify employee status and pay group</td>
+</tr>
+<tr>
+<td>Wrong withholding tax</td>
+<td>Compensation or YTD incorrect</td>
+<td>Update compensation; verify BIR tables seeded</td>
+</tr>
+<tr>
+<td>Compute hangs</td>
+<td>Large workforce / queue backlog</td>
+<td>Check worker service and job queue logs</td>
+</tr>
+<tr>
+<td>Cannot approve</td>
+<td>Missing <code>payroll.approve</code></td>
+<td>Assign permission to approver role</td>
+</tr>
+<tr>
+<td>Payslip PDF missing</td>
+<td>Approval incomplete or storage error</td>
+<td>Re-approve after fixing storage config</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>New hire onboarding and welcome email</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>No welcome email after hire</td>
+<td>Expected — email sends when work email is saved</td>
+<td>HR: Employment tab → enter work email → Save</td>
+</tr>
+<tr>
+<td>Welcome email not received</td>
+<td>SMTP not configured or wrong inbox</td>
+<td>Admin: verify API mail env vars; employee checks work email</td>
+</tr>
+<tr>
+<td>Invite link invalid / expired</td>
+<td>Token used or expired</td>
+<td>HR saves work email again; admin may reset invite</td>
+</tr>
+<tr>
+<td>Employee cannot log in with personal email</td>
+<td>Login uses work email</td>
+<td>Use address HR entered on Employment tab</td>
+</tr>
+<tr>
+<td>Lands on admin dashboard not ESS</td>
+<td>User has admin roles</td>
+<td>Employee-only users should use <code>/ess</code></td>
+</tr>
+<tr>
+<td>Status stuck Newly Hired</td>
+<td>Work email not saved or provision failed</td>
+<td>Check save warning message; verify unique work email</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Upload and file failures</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Document upload fails</td>
+<td>Size limit or S3 config</td>
+<td>Check file size; verify storage credentials</td>
+</tr>
+<tr>
+<td>Import Excel fails</td>
+<td>Invalid template or missing supervisor column</td>
+<td>Use latest template; fix row errors in message</td>
+</tr>
+<tr>
+<td>Payslip download 404</td>
+<td>Entry not generated</td>
+<td>Approve run; check payroll entry exists</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Mobile app</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cannot reach API</td>
+<td>Wrong API URL in build</td>
+<td>IT verifies mobile env <code>API_URL</code></td>
+</tr>
+<tr>
+<td>Login works on web not mobile</td>
+<td>Outdated app version</td>
+<td>Update app from distribution channel</td>
+</tr>
+<tr>
+<td>Location not detected</td>
+<td>OS permission denied</td>
+<td>Enable location for HRIS app in settings</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Performance</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Slow navigation</td>
+<td>Cold cache / large badge queries</td>
+<td>Normal on first load; report if persistent</td>
+</tr>
+<tr>
+<td>Timeout on export</td>
+<td>Large dataset</td>
+<td>Narrow date range; export off-peak</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>When to contact support</h2>
+<p>Provide:</p>
+<ol>
+<li>Your email and company code  </li>
+<li>Exact URL and time of error  </li>
+<li>Screenshot of error message  </li>
+<li>Steps to reproduce</li>
+</ol>
+<p>Escalate to technical support for database errors, 500 responses, or payroll compute failures affecting all users.</p>
+<hr>
+<h1>Part VIII — Training Materials</h1>
+<h1>Training Materials</h1>
+<p><strong>HRIS + Payroll — Instructor outline</strong><br>Version 1.0 | June 2025</p>
+<hr>
+<h2>Session 1 — All staff (30 min)</h2>
+<p><strong>Objective:</strong> Log in and use ESS basics.</p>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Topic</th>
+<th>Activity</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5 min</td>
+<td>Introduction &amp; benefits</td>
+<td>Slides</td>
+</tr>
+<tr>
+<td>10 min</td>
+<td>Login demo</td>
+<td>Live: training employee account</td>
+</tr>
+<tr>
+<td>10 min</td>
+<td>Clock in/out + DTR</td>
+<td>Hands-on</td>
+</tr>
+<tr>
+<td>5 min</td>
+<td>Q&amp;A</td>
+<td>FAQ handout</td>
+</tr>
+</tbody></table>
+<p><strong>Handouts:</strong> <a href="./QUICK_START.md">QUICK_START.md</a>, <a href="./EMPLOYEE_GUIDE.md">EMPLOYEE_GUIDE.md</a></p>
+<hr>
+<h2>Session 2 — Supervisors (45 min)</h2>
+<p><strong>Objective:</strong> Approve leave and COA.</p>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Topic</th>
+<th>Activity</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10 min</td>
+<td>Reporting lines concept</td>
+<td>Slides</td>
+</tr>
+<tr>
+<td>15 min</td>
+<td>Leave approvals</td>
+<td>Live: <code>/leave/approvals</code></td>
+</tr>
+<tr>
+<td>15 min</td>
+<td>COA approvals</td>
+<td>Live: <code>/requests/coa</code> as a supervisor account</td>
+</tr>
+<tr>
+<td>5 min</td>
+<td>Workflow inbox overview</td>
+<td>Demo <code>/workflows/inbox</code></td>
+</tr>
+</tbody></table>
+<p><strong>Exercise:</strong> Approve a sample COA and leave request in the training environment.</p>
+<hr>
+<h2>Session 3 — HR administrators (2 hr)</h2>
+<p><strong>Objective:</strong> Employee lifecycle and organization.</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Duration</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Organization setup</td>
+<td>20 min</td>
+<td><code>/organization/*</code></td>
+</tr>
+<tr>
+<td>Add / edit employee</td>
+<td>30 min</td>
+<td><code>/employees/new</code>, profile</td>
+</tr>
+<tr>
+<td>Reporting lines</td>
+<td>20 min</td>
+<td><code>/organization/reporting</code></td>
+</tr>
+<tr>
+<td>Recruitment hire + onboarding email</td>
+<td>25 min</td>
+<td><code>/recruitment/jobs</code> → employee Employment tab</td>
+</tr>
+<tr>
+<td>Clearance</td>
+<td>15 min</td>
+<td><code>/clearance</code></td>
+</tr>
+<tr>
+<td>Documents</td>
+<td>15 min</td>
+<td><code>/documents</code></td>
+</tr>
+</tbody></table>
+<p><strong>Handout:</strong> <a href="./ADMIN_MANUAL.md">ADMIN_MANUAL.md</a></p>
+<hr>
+<h2>Session 4 — Payroll officers (2 hr)</h2>
+<p><strong>Objective:</strong> End-to-end payroll run.</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Duration</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Payroll calendar &amp; periods</td>
+<td>20 min</td>
+<td>Settings</td>
+</tr>
+<tr>
+<td>DTR review</td>
+<td>20 min</td>
+<td><code>/attendance/dtr</code></td>
+</tr>
+<tr>
+<td>Adjustments</td>
+<td>15 min</td>
+<td><code>/payroll/adjustments</code></td>
+</tr>
+<tr>
+<td>Compute &amp; review</td>
+<td>40 min</td>
+<td><code>/payroll/runs</code></td>
+</tr>
+<tr>
+<td>Approve &amp; payslips</td>
+<td>15 min</td>
+<td>ESS verification</td>
+</tr>
+<tr>
+<td>Compliance export</td>
+<td>10 min</td>
+<td><code>/compliance/sss</code></td>
+</tr>
+</tbody></table>
+<p><strong>Handout:</strong> <a href="./PAYROLL_GUIDE.md">PAYROLL_GUIDE.md</a></p>
+<hr>
+<h2>Session 5 — System administrators (1 hr)</h2>
+<p><strong>Objective:</strong> Users, roles, audit.</p>
+<ul>
+<li>Create user and link employee  </li>
+<li>Clone role with least privilege  </li>
+<li>Read audit log entry  </li>
+<li>Demo password reset procedure</li>
+</ul>
+<p><strong>Handout:</strong> <a href="./ADMIN_MANUAL.md">ADMIN_MANUAL.md</a> §2</p>
+<hr>
+<h2>Assessment checklist</h2>
+<p><strong>Employee</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Successful clock in/out  </li>
+<li><input disabled="" type="checkbox"> Submitted leave  </li>
+<li><input disabled="" type="checkbox"> Located payslip</li>
+</ul>
+<p><strong>Supervisor</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Approved or declined COA  </li>
+<li><input disabled="" type="checkbox"> Approved leave request</li>
+</ul>
+<p><strong>HR</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Created employee with supervisor  </li>
+<li><input disabled="" type="checkbox"> Updated reporting line</li>
+</ul>
+<p><strong>Payroll</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Computed draft run  </li>
+<li><input disabled="" type="checkbox"> Identified one adjustment scenario</li>
+</ul>
+<hr>
+<h2>Training environment setup</h2>
+<pre><code class="language-bash">npm run docker:infra:up
+npm run dev:api
+npm run dev:web
+node docs/user-manual/scripts/capture-screenshots.mjs
+</code></pre>
+<p>Sign in with accounts provided by your training or development administrator.</p>
+<hr>
+<h1>Appendix A — Knowledge Base Index</h1>
+<h1>Knowledge Base</h1>
+<p>Self-service articles for HRIS + Payroll. Each article maps to one common task.</p>
+<table>
+<thead>
+<tr>
+<th>Article</th>
+<th>Link</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>How to log in</td>
+<td><a href="./kb-login.md">kb-login.md</a></td>
+</tr>
+<tr>
+<td>How to clock in and out</td>
+<td><a href="./kb-clock-in-out.md">kb-clock-in-out.md</a></td>
+</tr>
+<tr>
+<td>How to submit Certificate of Attendance</td>
+<td><a href="./kb-submit-coa.md">kb-submit-coa.md</a></td>
+</tr>
+<tr>
+<td>How to approve COA as supervisor</td>
+<td><a href="./kb-approve-coa.md">kb-approve-coa.md</a></td>
+</tr>
+<tr>
+<td>How to file leave (employee)</td>
+<td><a href="./kb-file-leave.md">kb-file-leave.md</a></td>
+</tr>
+<tr>
+<td>How to approve leave</td>
+<td><a href="./kb-approve-leave.md">kb-approve-leave.md</a></td>
+</tr>
+<tr>
+<td>How to add an employee</td>
+<td><a href="./kb-add-employee.md">kb-add-employee.md</a></td>
+</tr>
+<tr>
+<td>How to send welcome email to a new hire</td>
+<td><a href="./kb-send-welcome-email.md">kb-send-welcome-email.md</a></td>
+</tr>
+<tr>
+<td>How to accept invite (new employees)</td>
+<td><a href="./kb-accept-invite.md">kb-accept-invite.md</a></td>
+</tr>
+<tr>
+<td>How to run payroll</td>
+<td><a href="./kb-run-payroll.md">kb-run-payroll.md</a></td>
+</tr>
+<tr>
+<td>How to view payslips</td>
+<td><a href="./kb-view-payslips.md">kb-view-payslips.md</a></td>
+</tr>
+<tr>
+<td>How to reset a user password</td>
+<td><a href="./kb-reset-password.md">kb-reset-password.md</a></td>
+</tr>
+</tbody></table>
+<p><strong>Tags:</strong> <code>ess</code>, <code>attendance</code>, <code>leave</code>, <code>payroll</code>, <code>admin</code>, <code>supervisor</code></p>
+<hr>
+<h2>title: How to log in
+category: Getting Started
+audience: All users
+tags: [login, ess, admin]</h2>
+<h1>How to log in</h1>
+<ol>
+<li>Open your company HRIS URL in a browser.</li>
+<li>Enter your <strong>work email</strong> and <strong>password</strong>.</li>
+<li>Click <strong>Sign in</strong>.</li>
+<li>Complete MFA if prompted.</li>
+<li>You are redirected to ESS (<code>/ess</code>) or the admin dashboard based on your role.</li>
+</ol>
+<p><strong>Problems?</strong> See <a href="../TROUBLESHOOTING.md#cannot-log-in">Troubleshooting — Cannot log in</a>.</p>
+<hr>
+<h2>title: How to clock in and out
+category: Attendance
+audience: Employee
+tags: [ess, attendance]</h2>
+<h1>How to clock in and out</h1>
+<p><strong>Web:</strong> ESS → <strong>Time</strong> (<code>/ess/attendance</code>)<br><strong>Mobile:</strong> <strong>Attendance</strong> tab</p>
+<ol>
+<li>Open the Time / Attendance screen.</li>
+<li>Check your current status (timed in or out).</li>
+<li>Tap <strong>Time in</strong> when you start your shift.</li>
+<li>Tap <strong>Time out</strong> when you end your shift.</li>
+<li>Allow location or camera if the app requests them (company policy).</li>
+</ol>
+<p>If you forget a punch, submit <a href="./kb-submit-coa.md">Certificate of Attendance</a>.</p>
+<hr>
+<h2>title: How to file leave
+category: Leave
+audience: Employee
+tags: [ess, leave]</h2>
+<h1>How to file leave (employee)</h1>
+<ol>
+<li>ESS → <strong>Leave</strong> (<code>/ess/leave</code>).</li>
+<li>Review available balance for your leave type.</li>
+<li>Select <strong>leave type</strong>, <strong>start date</strong>, and <strong>end date</strong>.</li>
+<li>Enter <strong>reason</strong> if required.</li>
+<li>Submit.</li>
+</ol>
+<p>Track status on the same page or <strong>My requests</strong>. Your supervisor receives the request for approval.</p>
+<hr>
+<h2>title: How to approve leave
+category: Leave
+audience: Supervisor, HR
+tags: [leave, approvals]</h2>
+<h1>How to approve leave</h1>
+<ol>
+<li>Go to <strong>Approval Center → Leave Management</strong> or <code>/leave/approvals</code>.</li>
+<li>Filter <strong>Pending</strong> if needed.</li>
+<li>Open a request and verify dates and balance impact.</li>
+<li>Click <strong>Approve</strong> or <strong>Reject</strong> and add remarks if required.</li>
+</ol>
+<p>Multi-stage approval may require HR approval after supervisor approval.</p>
+<hr>
+<h2>title: How to submit a Certificate of Attendance (COA)
+category: Attendance
+audience: Employee
+tags: [ess, attendance, coa]</h2>
+<h1>How to submit a Certificate of Attendance (COA)</h1>
+<p>Use this when you forgot to <strong>time in</strong> or <strong>time out</strong> for one or more workdays.</p>
+<h2>Before you start</h2>
+<ul>
+<li>You need an active ESS account linked to your employee record.</li>
+<li>Know the correct dates and approximate times you worked.</li>
+<li>Your supervisor must be set in the system (HR assigns reporting lines).</li>
+</ul>
+<h2>Steps (web)</h2>
+<ol>
+<li>Sign in — you should land on ESS Home.</li>
+<li>Open <strong>Menu</strong> → <strong>Certificate of Attendance</strong>, or go to <code>/ess/coa</code>.</li>
+<li>Select <strong>Correction type</strong>:<ul>
+<li><em>Missing time-in</em> — you forgot to clock in.</li>
+<li><em>Missing time-out</em> — you forgot to clock out.</li>
+<li><em>Missing both</em> — both punches missing for that day.</li>
+</ul>
+</li>
+<li>Enter a <strong>Reason</strong> (at least 10 characters). Example: “Forgot to clock in after client meeting.”</li>
+<li>Under <strong>Dates</strong>, enter:<ul>
+<li><strong>Work date</strong> (YYYY-MM-DD)</li>
+<li><strong>Proposed time-in</strong> and/or <strong>time-out</strong> as required by the type</li>
+</ul>
+</li>
+<li>Click <strong>Add date</strong> to include more days in one request.</li>
+<li>Click <strong>Submit to supervisor</strong>.</li>
+</ol>
+<h2>Steps (mobile)</h2>
+<ol>
+<li>Open <strong>Requests</strong> tab → <strong>COA</strong>.</li>
+<li>Choose correction type, date, times, and reason.</li>
+<li>Tap <strong>Submit COA</strong>.</li>
+</ol>
+<h2>After submission</h2>
+<ul>
+<li>Status shows <strong>Pending</strong> until your supervisor approves or declines.</li>
+<li>Track progress under <strong>My requests</strong> or COA history tab.</li>
+<li>When <strong>approved</strong>, your DTR is updated automatically.</li>
+</ul>
+<h2>Related</h2>
+<ul>
+<li><a href="./kb-approve-coa.md">Approve COA (supervisor)</a></li>
+<li><a href="./kb-clock-in-out.md">Clock in and out</a></li>
+</ul>
+<hr>
+<h2>title: How to approve Certificate of Attendance requests
+category: Approvals
+audience: Supervisor
+tags: [supervisor, attendance, coa]</h2>
+<h1>How to approve Certificate of Attendance (COA)</h1>
+<p>Supervisors and managers with <code>request.view</code> (or <code>request.manage</code>) can review COA submissions from direct reports.</p>
+<h2>Before you start</h2>
+<ul>
+<li>You must be the employee’s <strong>primary supervisor</strong> in Reporting Lines, unless you have company-wide request management rights.</li>
+<li>Sign in with a supervisor account provided by your administrator.</li>
+</ul>
+<h2>Steps</h2>
+<ol>
+<li>Sign in — you may land on <strong>Employee Requests → COA</strong> (<code>/requests/coa</code>).</li>
+<li>Or open <strong>Approval Center → Employee Request</strong> from the sidebar.</li>
+<li>Use the status filter <strong>Pending</strong> if needed.</li>
+<li>Review each row:<ul>
+<li>Employee name and number</li>
+<li>Correction type (missing in/out/both)</li>
+<li>Dates and reason in the table</li>
+</ul>
+</li>
+<li>Click <strong>Approve</strong> if times and reason are reasonable.</li>
+<li>Click <strong>Decline</strong> if the request is invalid — employee may re-submit.</li>
+</ol>
+<h2>What approval does</h2>
+<p>Approved COA creates attendance correction entries and recalculates DTR for the listed dates. Payroll for that period will use updated hours.</p>
+<h2>Tips</h2>
+<ul>
+<li>Verify against team schedule or security logs when in doubt.</li>
+<li>Process COA before payroll cutoff for the period.</li>
+</ul>
+<h2>Related</h2>
+<ul>
+<li><a href="./kb-submit-coa.md">Submit COA (employee)</a></li>
+<li><a href="../USER_MANUAL.md#7-organization">Reporting lines</a></li>
+</ul>
+<hr>
+<h2>title: How to add an employee
+category: Employee Management
+audience: HR Administrator
+tags: [admin, employees]</h2>
+<h1>How to add an employee</h1>
+<h2>Permission required</h2>
+<p><code>employee.create</code></p>
+<h2>Steps</h2>
+<ol>
+<li>Navigate to <strong>Employee Management → Employees</strong> (<code>/employees/directory</code>).</li>
+<li>Click <strong>Add employee</strong> (or open <code>/employees/new</code>).</li>
+<li>Complete required fields:<ul>
+<li>Employee number (unique)</li>
+<li>First and last name</li>
+<li>Branch, department, position</li>
+<li>Pay group and hire date</li>
+<li><strong>Supervisor / manager</strong> — required</li>
+<li>Leave <strong>work email</strong> blank (add on profile after save)</li>
+</ul>
+</li>
+<li>Save the record — status is <strong>Newly Hired</strong> when no work email is provided.</li>
+<li>Open the employee profile → <strong>Employment</strong> tab → enter <strong>work email</strong> → <strong>Save changes</strong> to send welcome email and create ESS login.</li>
+</ol>
+<h2>After hire</h2>
+<ul>
+<li>Verify reporting line on <strong>Organization → Reporting Lines</strong>.</li>
+<li>Assign assets if applicable.</li>
+<li>Confirm the employee received the welcome email and completed the invite link.</li>
+</ul>
+<h2>Related</h2>
+<ul>
+<li><a href="./kb-send-welcome-email.md">How to send a welcome email to a new hire</a></li>
+<li><a href="../ADMIN_MANUAL.md">Administrator Manual</a></li>
+<li><a href="../USER_MANUAL.md#7-organization">Reporting lines</a></li>
+</ul>
+<hr>
+<h2>title: How to send a welcome email to a new hire
+category: Employee Management
+audience: HR Administrator
+tags: [admin, employees, recruitment, onboarding]</h2>
+<h1>How to send a welcome email to a new hire</h1>
+<h2>Overview</h2>
+<p>New hires do <strong>not</strong> receive a welcome email automatically when you click <strong>Hire</strong> in recruitment. The system creates the employee record first with status <strong>Newly Hired</strong> and <strong>no work email</strong>. HR adds the work email later; saving the profile triggers account creation and sends the welcome email with the invite link.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>SMTP or mail delivery configured on the server (<code>MAIL_DRIVER</code>, <code>SMTP_*</code>, <code>MAIL_FROM</code>, <code>WEB_APP_URL</code>).</li>
+<li>Permission <code>employee.update</code> to edit employee profiles.</li>
+<li>Permission <code>recruitment.manage</code> (or equivalent) to hire from recruitment.</li>
+</ul>
+<h2>Hire from recruitment</h2>
+<ol>
+<li>Open <strong>Job Requisitions → Job Openings</strong> and select a job.</li>
+<li>Move the candidate through the pipeline to <strong>Hired</strong>.</li>
+<li>Enter <strong>agreed salary</strong> and select a <strong>supervisor</strong> when prompted.</li>
+<li>Confirm hire — the system creates an employee record and opens their profile.</li>
+<li>You will see a notice: <em>Employee record created. Open their profile and add a work email to send the welcome email.</em></li>
+</ol>
+<p>The new employee appears with:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value after hire</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Employment status</td>
+<td><strong>Newly Hired</strong></td>
+</tr>
+<tr>
+<td>Work email</td>
+<td>Empty</td>
+</tr>
+<tr>
+<td>User account</td>
+<td>Not created yet</td>
+</tr>
+</tbody></table>
+<h2>Send the welcome email</h2>
+<ol>
+<li>Open <strong>Employee Management → Employees</strong> and select the new hire (or follow the redirect after hire).</li>
+<li>Open the <strong>Employment</strong> tab.</li>
+<li>Confirm status shows <strong>Newly Hired</strong> (read-only until onboarding completes).</li>
+<li>Enter the employee&#39;s <strong>work email</strong> (this becomes their login username).</li>
+<li>Click <strong>Save changes</strong>.</li>
+<li>On success, the system:<ul>
+<li>Creates a user account linked to the employee</li>
+<li>Sends the welcome email with an <strong>invite link</strong> to set their password</li>
+<li>Changes status from <strong>Newly Hired</strong> to <strong>Probationary</strong></li>
+</ul>
+</li>
+</ol>
+<p>If mail delivery fails, you may see a warning that the account was created but the email could not be sent. Fix mail configuration and save again, or reset the invite from User Administration.</p>
+<h2>New employee: accept invite</h2>
+<ol>
+<li>Open the welcome email on the work email inbox.</li>
+<li>Click the <strong>invite link</strong> (do not use the general login page first).</li>
+<li>Set a password on the <code>/invite</code> page.</li>
+<li>After accepting, sign in with <strong>work email</strong> and the new password.</li>
+<li>Employee-only users are routed to <strong>Employee Self-Service</strong> (<code>/ess</code>).</li>
+</ol>
+<h2>Manual add employee (without recruitment)</h2>
+<ol>
+<li><strong>Employee Management → Add employee</strong> — leave work email blank on the create form.</li>
+<li>Save — status defaults to <strong>Newly Hired</strong> when no work email is provided.</li>
+<li>Open the employee profile → <strong>Employment</strong> tab → enter work email → <strong>Save changes</strong> (same as above).</li>
+</ol>
+<h2>Related</h2>
+<ul>
+<li><a href="./kb-add-employee.md">How to add an employee</a></li>
+<li><a href="../ADMIN_MANUAL.md">Administrator Manual</a> — Employee onboarding</li>
+<li><a href="../EMPLOYEE_GUIDE.md">Employee Guide</a> — First login via invite</li>
+</ul>
+<hr>
+<h2>title: How to accept your invite and sign in (new employees)
+category: Employee Self-Service
+audience: Employee
+tags: [ess, onboarding]</h2>
+<h1>How to accept your invite and sign in</h1>
+<h2>Before you start</h2>
+<ul>
+<li>HR must add your <strong>work email</strong> on your employee record and save it before you receive a welcome email.</li>
+<li>Use the email address HR assigned (your work email), not a personal email, unless HR told you otherwise.</li>
+</ul>
+<h2>Steps</h2>
+<ol>
+<li>Check your <strong>work email</strong> inbox for the welcome message from your company.</li>
+<li>Click the <strong>Set up your account</strong> (invite) link in the email.<ul>
+<li>Do <strong>not</strong> go to the login page first — the invite link contains a one-time token.</li>
+</ul>
+</li>
+<li>On the invite page, enter and confirm your new password.</li>
+<li>You are signed in automatically and taken to <strong>Employee Self-Service</strong>.</li>
+<li>For later visits, open the company login URL and sign in with your <strong>work email</strong> and password.</li>
+</ol>
+<h2>Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>No email received</td>
+<td>Ask HR to confirm work email was saved on your Employment tab and mail is configured</td>
+</tr>
+<tr>
+<td>Link expired or invalid</td>
+<td>Ask HR to save your work email again or request a new invite from admin</td>
+</tr>
+<tr>
+<td>Lands on admin dashboard</td>
+<td>Contact HR — your account may have extra roles; ESS users should open <code>/ess</code></td>
+</tr>
+<tr>
+<td>Wrong password at login</td>
+<td>Use <strong>work email</strong>, not personal email</td>
+</tr>
+</tbody></table>
+<h2>Related</h2>
+<ul>
+<li><a href="./kb-login.md">How to log in</a></li>
+<li><a href="../EMPLOYEE_GUIDE.md">Employee Guide</a></li>
+</ul>
+<hr>
+<h2>title: How to run payroll
+category: Payroll
+audience: Payroll Officer
+tags: [payroll, admin]</h2>
+<h1>How to run payroll</h1>
+<p>Standard semi-monthly or monthly payroll using the Payroll Runs screen.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><code>payroll.view</code> and <code>payroll.run</code> permissions</li>
+<li>Attendance and leave for the period are finalized</li>
+<li>COA and disputes for the period are resolved</li>
+<li>Payroll <strong>period</strong> exists for the date range</li>
+</ul>
+<h2>Steps</h2>
+<ol>
+<li>Go to <strong>Payroll Management → Payroll</strong> (<code>/payroll/runs</code>).</li>
+<li>Select the <strong>payroll period</strong> (create one under Settings if missing).</li>
+<li>Start or select a <strong>payroll run</strong> for that period.</li>
+<li>Click <strong>Compute</strong> and wait for completion.</li>
+<li>Review the employee register — check gross, deductions, net.</li>
+<li>Post any last-minute <strong>Adjustments</strong> and re-compute if needed.</li>
+<li>Click <strong>Approve</strong> (<code>payroll.approve</code>) when accurate.</li>
+<li>Confirm payslips appear in ESS for sample employees.</li>
+<li>Export <strong>Government Compliance</strong> reports for the same period.</li>
+</ol>
+<h2>Warnings</h2>
+<ul>
+<li>Do not approve with known DTR errors.</li>
+<li>Keep compute and approve roles separated when possible.</li>
+</ul>
+<h2>Related</h2>
+<ul>
+<li><a href="../PAYROLL_GUIDE.md">Payroll User Guide</a></li>
+<li><a href="./kb-view-payslips.md">View payslips</a></li>
+</ul>
+<hr>
+<h2>title: How to view payslips
+category: Payroll
+audience: Employee
+tags: [ess, payslips]</h2>
+<h1>How to view payslips</h1>
+<ol>
+<li>ESS → <strong>Payslips</strong> (<code>/ess/payslips</code>) or mobile <strong>Payslips</strong> tab.</li>
+<li>Select a payroll period from the list.</li>
+<li>Review earnings and deductions.</li>
+<li>Download PDF if the download action is shown.</li>
+</ol>
+<p>Payslips appear only after payroll is <strong>approved</strong> for that period.</p>
+<hr>
+<h2>title: How to reset a user password
+category: System Administration
+audience: Super Admin
+tags: [admin, security]</h2>
+<h1>How to reset a user password</h1>
+<p><strong>Permission:</strong> <code>super_admin.access</code> / user management</p>
+<ol>
+<li><strong>System Administration → Users</strong> (<code>/admin/users</code>).</li>
+<li>Search for the user by email.</li>
+<li>Open the user record.</li>
+<li>Set a new temporary password per your security policy.</li>
+<li>Communicate the password securely to the user.</li>
+<li>Require password change on first login if your policy mandates it.</li>
+</ol>
+<p>Disable accounts for separated employees the same day as last working day.</p>
+<hr>
+<h1>Appendix B — Release Notes Template</h1>
+<h1>Release Notes — [Version X.Y.Z]</h1>
+<p><strong>Release date:</strong> YYYY-MM-DD<br><strong>Product:</strong> HRIS + Payroll Management System</p>
+<hr>
+<h2>Summary</h2>
+<p>One-paragraph overview of this release for HR and IT stakeholders.</p>
+<hr>
+<h2>New features</h2>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Description</th>
+<th>User impact</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Improvements</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Performance</td>
+<td></td>
+</tr>
+<tr>
+<td>UX</td>
+<td></td>
+</tr>
+<tr>
+<td>Security</td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Bug fixes</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Module</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Breaking changes</h2>
+<p>- </p>
+<hr>
+<h2>Database / migration notes</h2>
+<ul>
+<li>Migration files: </li>
+<li>Downtime required: Yes / No</li>
+<li>Run order: <code>node ace migration:run</code></li>
+</ul>
+<hr>
+<h2>Configuration changes</h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Post-deployment checklist</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Migrations applied</li>
+<li><input disabled="" type="checkbox"> Navigation seed run (if menu changes)</li>
+<li><input disabled="" type="checkbox"> Permission seed run (if RBAC changes)</li>
+<li><input disabled="" type="checkbox"> Smoke test: login, ESS clock, payroll dashboard</li>
+<li><input disabled="" type="checkbox"> Notify users of new features</li>
+</ul>
+<hr>
+<h2>Known issues</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Workaround</th>
+<th>Target fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Documentation updates</h2>
+<ul>
+<li><input disabled="" type="checkbox"> User manual version bumped</li>
+<li><input disabled="" type="checkbox"> FAQ updated</li>
+<li><input disabled="" type="checkbox"> Training slides updated</li>
+</ul>
+<hr>
+<p><strong>Prepared by:</strong> _______________<br><strong>Approved by:</strong> _______________</p>
+
+</body>
+</html>

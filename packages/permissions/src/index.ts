@@ -1,0 +1,110 @@
+/**
+ * RBAC permission constants — shared between API and Web.
+ * Format: resource:action
+ * TOR roles (LIB-019): system administrator (admin), librarian, faculty, student.
+ */
+
+export const PERMISSIONS = {
+  BOOKS_READ: 'books:read',
+  BOOKS_CREATE: 'books:create',
+  BOOKS_UPDATE: 'books:update',
+  BOOKS_DELETE: 'books:delete',
+
+  MEMBERS_READ: 'members:read',
+  MEMBERS_CREATE: 'members:create',
+  MEMBERS_UPDATE: 'members:update',
+  MEMBERS_DELETE: 'members:delete',
+
+  BORROWINGS_READ: 'borrowings:read',
+  BORROWINGS_CHECKOUT: 'borrowings:checkout',
+  BORROWINGS_RETURN: 'borrowings:return',
+  BORROWINGS_RENEW: 'borrowings:renew',
+
+  FINES_READ: 'fines:read',
+  FINES_COLLECT: 'fines:collect',
+  FINES_WAIVE: 'fines:waive',
+
+  RESERVATIONS_READ: 'reservations:read',
+  RESERVATIONS_CREATE: 'reservations:create',
+  RESERVATIONS_CANCEL: 'reservations:cancel',
+  RESERVATIONS_FULFILL: 'reservations:fulfill',
+
+  DIGITAL_READ: 'digital:read',
+  DIGITAL_CREATE: 'digital:create',
+  DIGITAL_ACCESS: 'digital:access',
+  DIGITAL_DELETE: 'digital:delete',
+
+  SEARCH_QUERY: 'search:query',
+
+  ANALYTICS_READ: 'analytics:read',
+  REPORTS_EXPORT: 'reports:export',
+
+  AI_QUERY: 'ai:query',
+
+  SETTINGS_READ: 'settings:read',
+  SETTINGS_UPDATE: 'settings:update',
+  USERS_READ: 'users:read',
+  USERS_CREATE: 'users:create',
+  USERS_UPDATE: 'users:update',
+  AUDIT_READ: 'audit:read',
+  AUDIT_EXPORT: 'audit:export',
+  ACTIVITY_READ: 'activity:read',
+} as const
+
+export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
+
+const PATRON: Permission[] = [
+  PERMISSIONS.BOOKS_READ,
+  PERMISSIONS.BORROWINGS_READ,
+  PERMISSIONS.BORROWINGS_RENEW,
+  PERMISSIONS.RESERVATIONS_READ,
+  PERMISSIONS.RESERVATIONS_CREATE,
+  PERMISSIONS.RESERVATIONS_CANCEL,
+  PERMISSIONS.DIGITAL_ACCESS,
+  PERMISSIONS.SEARCH_QUERY,
+]
+
+export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
+  admin: Object.values(PERMISSIONS),
+  librarian: [
+    PERMISSIONS.BOOKS_READ,
+    PERMISSIONS.BOOKS_CREATE,
+    PERMISSIONS.BOOKS_UPDATE,
+    PERMISSIONS.MEMBERS_READ,
+    PERMISSIONS.MEMBERS_CREATE,
+    PERMISSIONS.MEMBERS_UPDATE,
+    PERMISSIONS.BORROWINGS_READ,
+    PERMISSIONS.BORROWINGS_CHECKOUT,
+    PERMISSIONS.BORROWINGS_RETURN,
+    PERMISSIONS.BORROWINGS_RENEW,
+    PERMISSIONS.FINES_READ,
+    PERMISSIONS.FINES_COLLECT,
+    PERMISSIONS.FINES_WAIVE,
+    PERMISSIONS.RESERVATIONS_READ,
+    PERMISSIONS.RESERVATIONS_CREATE,
+    PERMISSIONS.RESERVATIONS_CANCEL,
+    PERMISSIONS.RESERVATIONS_FULFILL,
+    PERMISSIONS.DIGITAL_READ,
+    PERMISSIONS.DIGITAL_CREATE,
+    PERMISSIONS.DIGITAL_ACCESS,
+    PERMISSIONS.SEARCH_QUERY,
+    PERMISSIONS.ANALYTICS_READ,
+    PERMISSIONS.REPORTS_EXPORT,
+    PERMISSIONS.SETTINGS_READ,
+    PERMISSIONS.SETTINGS_UPDATE,
+    PERMISSIONS.AUDIT_READ,
+    PERMISSIONS.ACTIVITY_READ,
+  ],
+  staff: [
+    PERMISSIONS.BOOKS_READ,
+    PERMISSIONS.MEMBERS_READ,
+    PERMISSIONS.BORROWINGS_READ,
+    PERMISSIONS.BORROWINGS_CHECKOUT,
+    PERMISSIONS.BORROWINGS_RETURN,
+    PERMISSIONS.RESERVATIONS_READ,
+    PERMISSIONS.SEARCH_QUERY,
+  ],
+  faculty: [...PATRON],
+  student: [...PATRON],
+  member: [...PATRON, PERMISSIONS.AI_QUERY],
+}

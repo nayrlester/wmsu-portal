@@ -1,0 +1,183 @@
+import { UimsSchema } from '../helpers/uims_schema.js'
+
+/**
+ * ENR-015 / 016 / 020 / 026 — assessment preparation + UFMS integration refs (not UFMS SoR).
+ */
+export default class extends UimsSchema {
+  private ref(table: string) {
+    return `${this.schemaName}.${table}`
+  }
+
+  async up() {
+    this.s.createTable('fee_schedules', (t) => {
+      t.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
+      t.uuid('organization_id').notNullable().references('id').inTable(this.ref('organizations')).onDelete('CASCADE')
+      t.uuid('academic_year_id').nullable().references('id').inTable(this.ref('academic_years')).onDelete('SET NULL')
+      t.integer('semester').nullable()
+      t.string('code', 64).notNullable()
+      t.string('name', 255).notNullable()
+      t.string('classification', 40).nullable()
+      t.boolean('is_active').notNullable().defaultTo(true)
+      t.string('approved_by_role', 80).nullable()
+      t.timestamp('effective_from', { useTz: true }).nullable()
+      t.timestamp('effective_to', { useTz: true }).nullable()
+      t.timestamp('created_at', { useTz: true }).notNullable()
+      t.timestamp('updated_at', { useTz: true }).nullable()
+      t.unique(['organization_id', 'code'])
+    })
+
+    this.s.createTable('fee_schedule_lines', (t) => {
+      t.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
+      t.uuid('organization_id').notNullable().references('id').inTable(this.ref('organizations')).onDelete('CASCADE')
+      t.uuid('fee_schedule_id').notNullable().references('id').inTable(this.ref('fee_schedules')).onDelete('CASCADE')
+      t.string('fee_code', 64).notNullable()
+      t.string('description', 255).notNullable()
+      t.string('fee_type', 40).notNullable()
+      t.string('calculation_method', 40).notNullable().defaultTo('fixed')
+      t.decimal('amount', 12, 2).notNullable().defaultTo(0)
+      t.string('subject_code', 32).nullable()
+      t.integer('priority').notNullable().defaultTo(100)
+      t.boolean('is_active').notNullable().defaultTo(true)
+      t.timestamp('created_at', { useTz: true }).notNullable()
+      t.timestamp('updated_at', { useTz: true }).nullable()
+    })
+
+    this.s.alterTable('assessments', (t) => {
+      t.uuid('fee_schedule_id').nullable()
+      t.string('status', 32).notNullable().defaultTo('draft')
+      t.string('ufms_assessment_id').nullable()
+      t.string('ufms_sync_status', 32).nullable()
+      t.string('ufms_payment_status', 32).nullable()
+      t.decimal('paid_amount', 12, 2).nullable()
+      t.decimal('balance_amount', 12, 2).nullable()
+      t.boolean('unifast_tagged').notNullable().defaultTo(false)
+      t.integer('version').notNullable().defaultTo(1)
+      t.jsonb('breakdown').nullable()
+      t.timestamp('submitted_to_ufms_at', { useTz: true }).nullable()
+      t.string('last_idempotency_key', 180).nullable()
+    })
+
+    this.s.createTable('assessment_lines', (t) => {
+      t.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
+      t.uuid('organization_id').notNullable().references('id').inTable(this.ref('organizations')).onDelete('CASCADE')
+      t.uuid('assessment_id').notNullable().references('id').inTable(this.ref('assessments')).onDelete('CASCADE')
+      t.string('fee_code', 64).notNullable()
+      t.string('description', 255).notNullable()
+      t.string('fee_type', 40).notNullable()
+      t.decimal('quantity', 10, 2).notNullable().defaultTo(1)
+      t.decimal('unit_amount', 12, 2).notNullable().defaultTo(0)
+      t.decimal('amount', 12, 2).notNullable()
+      t.boolean('is_aid').notNullable().defaultTo(false)
+      t.string('aid_source', 64).nullable()
+      t.timestamp('created_at', { useTz: true }).notNullable()
+      t.index(['assessment_id'])
+    })
+
+    this.s.createTable('assessment_aid_tags', (t) => {
+      t.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
+      t.uuid('organization_id').notNullable().references('id').inTable(this.ref('organizations')).onDelete('CASCADE')
+      t.uuid('student_id').notNullable().references('id').inTable(this.ref('students')).onDelete('CASCADE')
+      t.uuid('enrollment_id').nullable().references('id').inTable(this.ref('enrollments')).onDelete('CASCADE')
+      t.string('tag_type', 40).notNullable()
+      t.string('code', 64).notNullable()
+      t.string('name', 255).notNullable()
+      t.string('calculation_method', 40).notNullable().defaultTo('fixed')
+      t.decimal('value', 12, 2).notNullable().defaultTo(0)
+      t.boolean('unifast').notNullable().defaultTo(false)
+      t.string('status', 32).notNullable().defaultTo('active')
+      t.text('notes').nullable()
+      t.uuid('tagged_by').nullable().references('id').inTable(this.ref('users')).onDelete('SET NULL')
+      t.timestamp('created_at', { useTz: true }).notNullable()
+      t.timestamp('updated_at', { useTz: true }).nullable()
+      t.index(['student_id', 'status'])
+      t.index(['enrollment_id'])
+    })
+
+    this.s.createTable('balance_snapshots', (t) => {
+      t.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
+      t.uuid('organization_id').notNullable().references('id').inTable(this.ref('organizations')).onDelete('CASCADE')
+      t.uuid('student_id').notNullable().references('id').inTable(this.ref('students')).onDelete('CASCADE')
+      t.uuid('enrollment_id').nullable().references('id').inTable(this.ref('enrollments')).onDelete('SET NULL')
+      t.uuid('assessment_id').nullable().references('id').inTable(this.ref('assessments')).onDelete('SET NULL')
+      t.decimal('assessed_amount', 12, 2).notNullable().defaultTo(0)
+      t.decimal('paid_amount', 12, 2).notNullable().defaultTo(0)
+      t.decimal('balance_amount', 12, 2).notNullable().defaultTo(0)
+      t.string('source', 40).notNullable().defaultTo('ufms')
+      t.string('ufms_assessment_id').nullable()
+      t.timestamp('as_of', { useTz: true }).notNullable()
+      t.timestamp('created_at', { useTz: true }).notNullable()
+      t.index(['student_id', 'as_of'])
+    })
+
+    this.s.createTable('registration_documents', (t) => {
+      t.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
+      t.uuid('organization_id').notNullable().references('id').inTable(this.ref('organizations')).onDelete('CASCADE')
+      t.uuid('enrollment_id').notNullable().references('id').inTable(this.ref('enrollments')).onDelete('CASCADE')
+      t.uuid('assessment_id').nullable().references('id').inTable(this.ref('assessments')).onDelete('SET NULL')
+      t.string('doc_type', 40).notNullable()
+      t.string('document_number', 64).notNullable()
+      t.string('qr_token', 128).notNullable().unique()
+      t.jsonb('snapshot').notNullable()
+      t.uuid('issued_by').nullable().references('id').inTable(this.ref('users')).onDelete('SET NULL')
+      t.timestamp('issued_at', { useTz: true }).notNullable()
+      t.timestamp('created_at', { useTz: true }).notNullable()
+      t.unique(['enrollment_id', 'doc_type', 'document_number'])
+      t.index(['enrollment_id', 'doc_type'])
+    })
+
+    this.s.createTable('finance_integration_transactions', (t) => {
+      t.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
+      t.uuid('organization_id').notNullable().references('id').inTable(this.ref('organizations')).onDelete('CASCADE')
+      t.uuid('enrollment_id').nullable().references('id').inTable(this.ref('enrollments')).onDelete('SET NULL')
+      t.uuid('assessment_id').nullable().references('id').inTable(this.ref('assessments')).onDelete('SET NULL')
+      t.string('operation', 64).notNullable()
+      t.string('idempotency_key', 180).notNullable()
+      t.string('direction', 16).notNullable().defaultTo('outbound')
+      t.string('status', 32).notNullable()
+      t.integer('http_status').nullable()
+      t.jsonb('request_payload').nullable()
+      t.jsonb('response_payload').nullable()
+      t.text('error_message').nullable()
+      t.timestamp('created_at', { useTz: true }).notNullable()
+      t.unique(['organization_id', 'idempotency_key'])
+      t.index(['assessment_id', 'created_at'])
+    })
+
+    this.s.alterTable('payments', (t) => {
+      t.uuid('assessment_id').nullable()
+      t.string('ufms_payment_id').nullable()
+      t.string('confirmation_source', 40).nullable()
+      t.boolean('ufms_confirmed').notNullable().defaultTo(false)
+    })
+  }
+
+  async down() {
+    this.s.alterTable('payments', (t) => {
+      t.dropColumn('assessment_id')
+      t.dropColumn('ufms_payment_id')
+      t.dropColumn('confirmation_source')
+      t.dropColumn('ufms_confirmed')
+    })
+    this.s.dropTableIfExists('finance_integration_transactions')
+    this.s.dropTableIfExists('registration_documents')
+    this.s.dropTableIfExists('balance_snapshots')
+    this.s.dropTableIfExists('assessment_aid_tags')
+    this.s.dropTableIfExists('assessment_lines')
+    this.s.alterTable('assessments', (t) => {
+      t.dropColumn('fee_schedule_id')
+      t.dropColumn('status')
+      t.dropColumn('ufms_assessment_id')
+      t.dropColumn('ufms_sync_status')
+      t.dropColumn('ufms_payment_status')
+      t.dropColumn('paid_amount')
+      t.dropColumn('balance_amount')
+      t.dropColumn('unifast_tagged')
+      t.dropColumn('version')
+      t.dropColumn('breakdown')
+      t.dropColumn('submitted_to_ufms_at')
+      t.dropColumn('last_idempotency_key')
+    })
+    this.s.dropTableIfExists('fee_schedule_lines')
+    this.s.dropTableIfExists('fee_schedules')
+  }
+}

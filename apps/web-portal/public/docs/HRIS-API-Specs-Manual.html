@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>HRIS + Payroll API Specs Manual</title>
+</head>
+<body>
+<h1>HRIS + Payroll API Specs Manual</h1>
+<p><strong>Human Resources Information System &amp; Philippine Payroll — REST API Reference</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>System</strong></td>
+<td>HRIS + Payroll Management System</td>
+</tr>
+<tr>
+<td><strong>API version</strong></td>
+<td>1.0.0</td>
+</tr>
+<tr>
+<td><strong>OpenAPI</strong></td>
+<td>3.0.3 (<code>apps/api/docs/openapi.yaml</code>)</td>
+</tr>
+<tr>
+<td><strong>Base URL (dev)</strong></td>
+<td><code>http://localhost:3333</code></td>
+</tr>
+<tr>
+<td><strong>API prefix</strong></td>
+<td><code>/api/v1</code></td>
+</tr>
+<tr>
+<td><strong>Audience</strong></td>
+<td>Integrators, frontend engineers, mobile developers, DevOps, partner developers</td>
+</tr>
+<tr>
+<td><strong>Published</strong></td>
+<td>August 2026</td>
+</tr>
+</tbody></table>
+<p>Interactive Swagger UI (when the API is running):</p>
+<ul>
+<li>Local: <code>http://localhost:3333/api/v1/docs</code></li>
+<li>Production: <code>https://hris-pro-api.arzaitsolutions.site/api/v1/docs</code></li>
+<li>Raw spec: <code>GET /api/v1/docs/openapi.yaml</code></li>
+</ul>
+<p>Machine-readable source of truth: <a href="../apps/api/docs/openapi.yaml"><code>apps/api/docs/openapi.yaml</code></a> (~500 operations; regenerate with <code>npm run docs:openapi</code>)<br>Live route registration: <code>apps/api/start/routes/</code> (prefer routes over a stale OpenAPI snapshot when they differ).</p>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#1-overview">Overview</a></li>
+<li><a href="#2-authentication--tokens">Authentication &amp; Tokens</a></li>
+<li><a href="#3-multi-company-tenancy">Multi-Company Tenancy</a></li>
+<li><a href="#4-headers--conventions">Headers &amp; Conventions</a></li>
+<li><a href="#5-error-model">Error Model</a></li>
+<li><a href="#6-rate-limiting--throttling">Rate Limiting &amp; Throttling</a></li>
+<li><a href="#7-permissions-reference">Permissions Reference</a></li>
+<li><a href="#8-endpoint-catalog">Endpoint Catalog</a></li>
+<li><a href="#9-core-resource-schemas">Core Resource Schemas</a></li>
+<li><a href="#10-common-workflows">Common Workflows</a></li>
+<li><a href="#11-background-jobs">Background Jobs</a></li>
+<li><a href="#12-client-surfaces">Client Surfaces</a></li>
+<li><a href="#13-environments--health">Environments &amp; Health</a></li>
+<li><a href="#14-changelog-notes">Changelog Notes</a></li>
+</ol>
+<hr>
+<h2>1. Overview</h2>
+<p>HRIS + Payroll exposes a versioned REST API for multi-company Philippine HR operations: organization structure, employee lifecycle, attendance/DTR, leave, shifts, payroll runs, government compliance, ESS, recruitment, documents, assets, workflows, analytics, SaaS subscription, and platform administration.</p>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Prefix</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Infrastructure</td>
+<td><code>/health</code>, <code>/ready</code></td>
+<td>Public</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td><code>/api/v1/auth/*</code></td>
+<td>Public (rate-limited)</td>
+</tr>
+<tr>
+<td>Public SaaS</td>
+<td><code>/api/v1/public/*</code>, <code>/api/v1/enterprise/*</code></td>
+<td>Public</td>
+</tr>
+<tr>
+<td>Tenant account</td>
+<td><code>/api/v1/account/*</code></td>
+<td>Bearer token + company context</td>
+</tr>
+<tr>
+<td>Platform admin</td>
+<td><code>/api/v1/platform/*</code></td>
+<td>Bearer token + super-admin / platform permissions</td>
+</tr>
+</tbody></table>
+<p>Content type for JSON bodies: <code>application/json</code> unless uploading multipart files (employee import, documents, COA attachments).</p>
+<p><strong>Clients (local):</strong></p>
+<table>
+<thead>
+<tr>
+<th>App</th>
+<th>Port</th>
+<th>Env</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Web admin + ESS (<code>apps/web</code>)</td>
+<td>5173</td>
+<td><code>VITE_API_URL</code> → <code>{host}/api/v1</code></td>
+</tr>
+<tr>
+<td>Mobile ESS (<code>apps/mobile</code>)</td>
+<td>Expo</td>
+<td><code>EXPO_PUBLIC_API_URL</code> → <code>{host}/api/v1</code></td>
+</tr>
+<tr>
+<td>API (<code>apps/api</code>)</td>
+<td>3333</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>2. Authentication &amp; Tokens</h2>
+<h3>2.1 Token types</h3>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Lifetime (typical)</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Access token</td>
+<td>~60 minutes (<code>ACCESS_TOKEN_TTL_MINUTES</code>)</td>
+<td><code>Authorization: Bearer &lt;accessToken&gt;</code></td>
+</tr>
+<tr>
+<td>Refresh token</td>
+<td>~30 days (<code>REFRESH_TOKEN_TTL_DAYS</code>)</td>
+<td><code>POST /api/v1/auth/refresh</code></td>
+</tr>
+<tr>
+<td>MFA challenge</td>
+<td>Until completed / expired</td>
+<td>Login returns <code>requiresMfa</code> + <code>userId</code></td>
+</tr>
+</tbody></table>
+<p>Default mode (<code>AUTH_MODE=local</code>) uses Adonis opaque access tokens. Enterprise platform SSO JWTs apply when <code>AUTH_MODE=platform|dual</code> (JWKS verification via <code>PLATFORM_*</code> env).</p>
+<p>Successful login / invite accept / MFA verify / refresh returns a structure similar to:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;user&quot;: {
+      &quot;id&quot;: &quot;uuid&quot;,
+      &quot;email&quot;: &quot;employee@identity.local&quot;,
+      &quot;fullName&quot;: &quot;Demo Employee&quot;,
+      &quot;permissions&quot;: [&quot;employee.view&quot;, &quot;payroll.view&quot;],
+      &quot;memberships&quot;: [{ &quot;companyId&quot;: &quot;uuid&quot;, &quot;companyCode&quot;: &quot;DEMO&quot;, &quot;role&quot;: &quot;company_admin&quot; }]
+    },
+    &quot;accessToken&quot;: &quot;…&quot;,
+    &quot;refreshToken&quot;: &quot;…&quot;,
+    &quot;expiresIn&quot;: 3600
+  }
+}
+</code></pre>
+<p>When MFA is required at login:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;requiresMfa&quot;: true,
+    &quot;userId&quot;: &quot;…&quot;
+  }
+}
+</code></pre>
+<p>Then call <code>POST /api/v1/auth/mfa/verify</code> with <code>{ &quot;userId&quot;, &quot;code&quot; }</code> (TOTP or recovery code).</p>
+<h3>2.2 Auth endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/auth/login</code></td>
+<td>Email/password login</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/mfa/verify</code></td>
+<td>Complete MFA</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/refresh</code></td>
+<td>Rotate access token</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/accept-invite</code></td>
+<td>Accept invite + set password</td>
+</tr>
+</tbody></table>
+<h3>2.3 Login body (required)</h3>
+<p><code>email</code>, <code>password</code></p>
+<p>Lockout: typically <strong>5 failed attempts</strong> → lock for <strong>30 minutes</strong>. Users with <code>pending_invite</code> status cannot log in until the invite is accepted.</p>
+<h3>2.4 Session &amp; MFA (authenticated)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/me</code></td>
+<td>Current user, memberships, permissions</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/logout</code></td>
+<td>Revoke current session tokens</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/mfa/setup</code></td>
+<td>Begin TOTP setup</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/mfa/enable</code></td>
+<td>Enable MFA</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/mfa/disable</code></td>
+<td>Disable MFA</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/mfa/recovery-codes</code></td>
+<td>Regenerate recovery codes</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Multi-Company Tenancy</h2>
+<ul>
+<li>Company membership is bound to the authenticated user via <code>UserCompanyMembership</code>.</li>
+<li>Account routes require <strong>auth → companyContext → companyMembership → saasSubscription → rateLimit → audit → securityEvent</strong>.</li>
+<li>Send <code>X-Company-Id</code> when the user belongs to more than one company.</li>
+<li>SaaS middleware may return <strong>402</strong> (<code>TRIAL_EXPIRED</code>, <code>SUBSCRIPTION_REQUIRED</code>) when the tenant subscription/trial blocks writes.</li>
+<li>IP allowlists (hardening) may return <strong>403</strong> <code>IP_NOT_ALLOWED</code>.</li>
+</ul>
+<p>Always send the access token on account and platform routes. Do not rely on company id alone.</p>
+<p><strong>Exempt from membership/subscription checks (typical):</strong> <code>/auth/*</code>, <code>/account/me</code>, <code>/account/saas/*</code>, <code>/health</code>, <code>/ready</code>.</p>
+<p>Demo company code: <code>DEMO</code>.</p>
+<hr>
+<h2>4. Headers &amp; Conventions</h2>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Authorization</code></td>
+<td>Account / Platform</td>
+<td><code>Bearer &lt;accessToken&gt;</code></td>
+</tr>
+<tr>
+<td><code>Content-Type</code></td>
+<td>JSON writes</td>
+<td><code>application/json</code></td>
+</tr>
+<tr>
+<td><code>X-Company-Id</code></td>
+<td>Multi-company users</td>
+<td>Active company UUID</td>
+</tr>
+<tr>
+<td><code>X-Device-Source</code></td>
+<td>Optional</td>
+<td>e.g. <code>mobile</code> (Expo)</td>
+</tr>
+<tr>
+<td><code>X-Device-Fingerprint</code></td>
+<td>Optional</td>
+<td>Auth audit metadata</td>
+</tr>
+<tr>
+<td><code>Accept</code></td>
+<td>Optional</td>
+<td>Prefer <code>application/json</code></td>
+</tr>
+</tbody></table>
+<p><strong>Path params:</strong> UUIDs unless noted (employee numbers, public branding codes).</p>
+<p><strong>Pagination:</strong> list endpoints typically accept <code>page</code>, <code>perPage</code> (and often <code>search</code> / filters). Check OpenAPI or controller validators for each operation.</p>
+<p><strong>Idempotency:</strong> Prefer safe retries on <code>GET</code>. Mutations (<code>POST</code>/<code>PATCH</code>/<code>DELETE</code>) should not be blindly retried without client-side guards (especially payroll compute / approve / lock).</p>
+<hr>
+<h2>5. Error Model</h2>
+<p>Success envelope:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;…&quot;,
+  &quot;data&quot;: {},
+  &quot;meta&quot;: { &quot;page&quot;: 1, &quot;perPage&quot;: 25, &quot;total&quot;: 0, &quot;totalPages&quot;: 0 }
+}
+</code></pre>
+<p>Error envelope:</p>
+<pre><code class="language-json">{
+  &quot;success&quot;: false,
+  &quot;message&quot;: &quot;…&quot;,
+  &quot;errors&quot;: [{ &quot;field&quot;: &quot;email&quot;, &quot;message&quot;: &quot;…&quot; }],
+  &quot;code&quot;: &quot;VALIDATION_ERROR&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200 / 201</td>
+<td>Success / created</td>
+</tr>
+<tr>
+<td>204</td>
+<td>Delete success (when used)</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Validation / business rule (<code>LOGIN_FAILED</code>, <code>MFA_FAILED</code>, …)</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Missing or invalid token (<code>UNAUTHENTICATED</code>, <code>INVALID_REFRESH_TOKEN</code>)</td>
+</tr>
+<tr>
+<td>402</td>
+<td>Trial/subscription required</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden (RBAC, company access, IP allowlist)</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Resource not found</td>
+</tr>
+<tr>
+<td>409</td>
+<td>Conflict</td>
+</tr>
+<tr>
+<td>422</td>
+<td>Invalid state transition (e.g. payroll run status)</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Rate limited</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Server error</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>6. Rate Limiting &amp; Throttling</h2>
+<ul>
+<li>Auth routes use dedicated <code>authRateLimit</code> middleware (tight per-IP limits).</li>
+<li>Account routes use per-user <code>rateLimit</code> middleware.</li>
+<li>Attendance clock / offline sync endpoints are tuned for higher frequency.</li>
+<li>Respect <code>429</code> responses; back off and retry with jitter.</li>
+</ul>
+<p>Exact numeric quotas are environment-configurable — treat OpenAPI/Swagger as the contract for request shapes; treat ops config for quotas.</p>
+<hr>
+<h2>7. Permissions Reference</h2>
+<p>Account routes may require a named permission in addition to auth + company membership. Enforcement is route-level via <code>permission(&#39;{code}&#39;)</code>.</p>
+<h3>Seeded roles (demo)</h3>
+<table>
+<thead>
+<tr>
+<th>Role code</th>
+<th>Typical scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>company_admin</code></td>
+<td>Full company administration</td>
+</tr>
+<tr>
+<td><code>hr_manager</code></td>
+<td>HR modules</td>
+</tr>
+<tr>
+<td><code>payroll_manager</code></td>
+<td>Payroll, loans, adjustments</td>
+</tr>
+<tr>
+<td><code>line_manager</code></td>
+<td>Team approvals / leave</td>
+</tr>
+<tr>
+<td><code>employee</code></td>
+<td>ESS + clock + leave request</td>
+</tr>
+<tr>
+<td><code>auditor</code></td>
+<td>Read-only views + report export</td>
+</tr>
+<tr>
+<td><code>super_admin</code></td>
+<td>Platform + system admin</td>
+</tr>
+</tbody></table>
+<h3>Permission catalog (selected)</h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Example codes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Company / org</td>
+<td><code>company.view</code>, <code>company.dashboard.view</code>, <code>org.view</code>, <code>branch.*</code>, <code>department.*</code>, <code>position.*</code>, <code>paygroup.*</code>, <code>reporting.*</code></td>
+</tr>
+<tr>
+<td>Employees</td>
+<td><code>employee.view</code>, <code>employee.create</code>, <code>employee.update_pii</code>, <code>employee.transfer</code>, <code>employee.promote</code>, <code>employee.offboard</code>, <code>compensation.*</code></td>
+</tr>
+<tr>
+<td>Attendance / shifts</td>
+<td><code>attendance.view</code>, <code>attendance.clock</code>, <code>attendance.compute</code>, <code>shift.*</code>, <code>holiday.*</code></td>
+</tr>
+<tr>
+<td>Leave</td>
+<td><code>leave.view</code>, <code>leave.request</code>, <code>leave.approve</code>, <code>leave.type.manage</code>, <code>leave.accrual.run</code>, <code>leave.report</code></td>
+</tr>
+<tr>
+<td>Payroll</td>
+<td><code>payroll.view</code>, <code>payroll.run</code>, <code>payroll.approve</code>, <code>payroll.adjustment.*</code>, <code>loan.*</code></td>
+</tr>
+<tr>
+<td>ESS</td>
+<td><code>ess.access</code>, <code>ess.profile.update</code></td>
+</tr>
+<tr>
+<td>Workflows / notifications</td>
+<td><code>workflow.view</code>, <code>workflow.manage</code>, <code>workflow.approve</code>, <code>notification.view</code></td>
+</tr>
+<tr>
+<td>Requests / compliance</td>
+<td><code>request.view</code>, <code>request.manage</code>, <code>compliance.view</code>, <code>compliance.manage</code></td>
+</tr>
+<tr>
+<td>Recruitment / docs / assets</td>
+<td><code>recruitment.*</code>, <code>document.*</code>, <code>asset.*</code>, <code>clearance.*</code></td>
+</tr>
+<tr>
+<td>Analytics / reports</td>
+<td><code>analytics.view</code>, <code>report.view</code>, <code>report.export</code></td>
+</tr>
+<tr>
+<td>SaaS / platform</td>
+<td><code>saas.view</code>, <code>saas.manage</code>, <code>platform.view</code>, <code>platform.manage</code>, <code>platform.ops</code></td>
+</tr>
+<tr>
+<td>Hardening / RBAC</td>
+<td><code>hardening.*</code>, <code>user.manage</code>, <code>role.manage</code>, <code>audit.view</code>, <code>super_admin.access</code></td>
+</tr>
+</tbody></table>
+<p>Full catalog: <code>apps/api/app/domain/rbac/permission_catalog.ts</code> (~170 codes).</p>
+<p>Current user permissions are returned on login and via <code>GET /api/v1/account/me</code>.</p>
+<hr>
+<h2>8. Endpoint Catalog</h2>
+<p>Auth legend: <code>public</code> · <code>auth</code> · <code>company</code> · <code>permission:…</code> · <code>superAdmin</code> · <code>platform</code></p>
+<p>Paths below are relative to the host; account routes are under <code>/api/v1/account</code>.</p>
+<h3>8.1 Infrastructure</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/health</code></td>
+<td>public</td>
+<td>Liveness</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/ready</code></td>
+<td>public</td>
+<td>Readiness</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/docs</code></td>
+<td>public</td>
+<td>Swagger UI (when registered)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/docs/openapi.yaml</code></td>
+<td>public</td>
+<td>OpenAPI YAML (when registered)</td>
+</tr>
+</tbody></table>
+<h3>8.2 Authentication</h3>
+<p>See <a href="#22-auth-endpoints">§2.2</a>.</p>
+<h3>8.3 Public SaaS / enterprise trial</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/public/branding/:code</code></td>
+<td>public</td>
+<td>Tenant branding by public code</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/enterprise/register</code></td>
+<td>public</td>
+<td>Trial registration</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/enterprise/resend-verification</code></td>
+<td>public</td>
+<td>Resend verification</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/enterprise/verify-email</code></td>
+<td>public</td>
+<td>Verify email</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/enterprise/plans</code></td>
+<td>public</td>
+<td>Public plan list</td>
+</tr>
+</tbody></table>
+<h3>8.4 Account — Session &amp; MFA</h3>
+<p>See <a href="#24-session--mfa-authenticated">§2.4</a>.</p>
+<h3>8.5 Account — Dashboard &amp; navigation</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/dashboard</code></td>
+<td><code>company.dashboard.view</code></td>
+<td>Company KPIs</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/navigation</code></td>
+<td>auth + company</td>
+<td>Dynamic nav tree</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/navigation/visits</code></td>
+<td>auth + company</td>
+<td>Record visits</td>
+</tr>
+<tr>
+<td>POST/DELETE</td>
+<td><code>/api/v1/account/navigation/favorites/:id</code></td>
+<td>auth + company</td>
+<td>Favorites</td>
+</tr>
+</tbody></table>
+<h3>8.6 Account — Companies &amp; organization</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/companies</code></td>
+<td><code>company.view</code> / <code>company.create</code></td>
+<td>Companies</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/account/companies/:id</code></td>
+<td>view / update</td>
+<td>Company detail</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/account/company/hr-settings</code></td>
+<td><code>company.update</code></td>
+<td>HR settings</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/branches</code>, <code>/departments</code>, <code>/positions</code>, <code>/pay-groups</code>, <code>/cost-centers</code></td>
+<td>module perms</td>
+<td>Legacy org lookups</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/organization/*</code></td>
+<td><code>org.view</code> + module</td>
+<td>Org chart, divisions, locations, salary grades, reporting lines</td>
+</tr>
+</tbody></table>
+<h3>8.7 Account — Employees</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/employees</code></td>
+<td><code>employee.view</code></td>
+<td>List</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/employees/stats</code></td>
+<td><code>employee.dashboard.view</code></td>
+<td>Stats</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/employees</code></td>
+<td><code>employee.create</code></td>
+<td>Create</td>
+</tr>
+<tr>
+<td>GET/PATCH/DELETE</td>
+<td><code>/api/v1/account/employees/:id</code></td>
+<td>view / update / delete</td>
+<td>CRUD</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/account/employees/:id/personal-info</code></td>
+<td>view / <code>employee.update_pii</code></td>
+<td>PII</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/employees/:id/compensation</code></td>
+<td><code>compensation.*</code></td>
+<td>Compensation</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/employees/:id/documents</code></td>
+<td><code>employee.document.*</code></td>
+<td>Documents</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/employees/:id/transfer|promote|offboard</code></td>
+<td>lifecycle perms</td>
+<td>Lifecycle</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/employees/import</code></td>
+<td><code>employee.import</code></td>
+<td>Excel import</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/employees/export</code></td>
+<td><code>employee.export</code></td>
+<td>Excel export</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/employees/approvals/*</code></td>
+<td><code>employee.approve</code></td>
+<td>Approvals</td>
+</tr>
+</tbody></table>
+<h3>8.8 Account — Attendance, leave, shifts</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/attendance/status</code>, <code>/clock</code></td>
+<td><code>attendance.clock</code></td>
+<td>Clock status / punch</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/attendance/logs</code>, <code>/dtr</code></td>
+<td><code>attendance.view</code></td>
+<td>Logs / DTR</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/attendance/dtr/compute</code></td>
+<td><code>attendance.compute</code></td>
+<td>Recompute DTR</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/attendance/offline/sync</code></td>
+<td><code>attendance.clock</code></td>
+<td>Offline queue</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/attendance/biometric/sync</code></td>
+<td><code>attendance.biometric.sync</code></td>
+<td>Biometric ingest</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/attendance/holidays</code></td>
+<td><code>holiday.*</code></td>
+<td>Holidays</td>
+</tr>
+<tr>
+<td>CRUD + actions</td>
+<td><code>/api/v1/account/leave/*</code></td>
+<td><code>leave.*</code></td>
+<td>Types, balances, requests, approve/reject, accrual, reports</td>
+</tr>
+<tr>
+<td>CRUD + actions</td>
+<td><code>/api/v1/account/shifts/*</code></td>
+<td><code>shift.*</code></td>
+<td>Templates, assignments, calendar, swaps, work calendars</td>
+</tr>
+</tbody></table>
+<h3>8.9 Account — Payroll</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/payroll/dashboard</code></td>
+<td><code>payroll.dashboard.view</code></td>
+<td>Payroll KPIs</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/payroll/periods</code></td>
+<td>view / <code>payroll.run</code></td>
+<td>Pay periods</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/payroll/runs</code></td>
+<td>view / run</td>
+<td>Payroll runs</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/payroll/runs/:id</code></td>
+<td><code>payroll.view</code></td>
+<td>Run detail</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/payroll/runs/:id/compute</code></td>
+<td><code>payroll.run</code></td>
+<td>Compute</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/payroll/runs/:id/reset</code></td>
+<td><code>payroll.run</code></td>
+<td>Reset</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/payroll/runs/:id/submit</code></td>
+<td><code>payroll.run</code></td>
+<td>Submit for approval</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/account/payroll/runs/:id/approve|reject|lock</code></td>
+<td><code>payroll.approve</code></td>
+<td>Approval / lock</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/payroll/runs/:id/register</code></td>
+<td><code>payroll.view</code></td>
+<td>Payroll register</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/payroll/runs/:id/bank-file</code></td>
+<td><code>payroll.view</code></td>
+<td>Bank file</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/payroll/entries/:entryId/payslip</code></td>
+<td><code>payroll.view</code></td>
+<td>Payslip</td>
+</tr>
+<tr>
+<td>CRUD + actions</td>
+<td><code>/api/v1/account/payroll/loans*</code>, <code>/loan-types*</code></td>
+<td><code>loan.*</code></td>
+<td>Loans</td>
+</tr>
+<tr>
+<td>GET/POST + approve</td>
+<td><code>/api/v1/account/payroll/adjustments*</code></td>
+<td><code>payroll.adjustment.*</code></td>
+<td>Adjustments</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/payroll/special/thirteenth-month</code></td>
+<td><code>payroll.view</code></td>
+<td>13th month preview</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/payroll/special/final-pay/*</code></td>
+<td><code>payroll.view</code></td>
+<td>Final pay</td>
+</tr>
+</tbody></table>
+<p><strong>Payroll run state machine (typical):</strong> draft → computed → submitted → approved → locked (reject/reset return to earlier states as implemented).</p>
+<h3>8.10 Account — Requests &amp; compliance</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/account/requests/disputes*</code></td>
+<td><code>request.*</code></td>
+<td>Payroll disputes</td>
+</tr>
+<tr>
+<td>GET/POST/PATCH</td>
+<td><code>/api/v1/account/requests/coe*</code></td>
+<td>mixed</td>
+<td>Certificate of employment</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/account/requests/coa*</code></td>
+<td>mixed</td>
+<td>Certificate of attendance</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/compliance/efile/dat</code></td>
+<td><code>compliance.manage</code></td>
+<td>e-file DAT</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/compliance/efile/bir-2316/preview</code></td>
+<td><code>compliance.view</code></td>
+<td>BIR 2316 preview</td>
+</tr>
+</tbody></table>
+<h3>8.11 Account — Reports, workflows, notifications</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/reports/catalog|payroll-runs|preview|export</code></td>
+<td><code>report.view</code> / <code>report.export</code></td>
+<td>Reports</td>
+</tr>
+<tr>
+<td>CRUD + publish</td>
+<td><code>/api/v1/account/workflows/*</code></td>
+<td><code>workflow.*</code></td>
+<td>Definitions, inbox, instances, tasks, SLA, builder</td>
+</tr>
+<tr>
+<td>GET/PATCH/POST</td>
+<td><code>/api/v1/account/notifications*</code></td>
+<td><code>notification.*</code></td>
+<td>Inbox / preferences / push tokens</td>
+</tr>
+</tbody></table>
+<h3>8.12 Account — ESS</h3>
+<p>Employee-scoped; server resolves employee from <code>auth.user</code> + company. Requires <code>ess.access</code> (profile PATCH uses <code>ess.profile.update</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/account/ess/dashboard</code></td>
+<td>ESS home</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/ess/payslips</code></td>
+<td>Own payslips</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/ess/payslips/:entryId/download</code></td>
+<td>Payslip PDF</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/ess/leave/*</code></td>
+<td>Leave types / balances / requests</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/ess/attendance/*</code></td>
+<td>Status, clock, offline sync</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/ess/dtr</code>, <code>/schedule</code></td>
+<td>Monthly DTR / shift schedule</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/v1/account/ess/coa*</code>, <code>/disputes*</code></td>
+<td>COA / disputes</td>
+</tr>
+<tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/account/ess/profile</code></td>
+<td>Profile</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/ess/assets</code></td>
+<td>Assigned assets</td>
+</tr>
+</tbody></table>
+<h3>8.13 Account — Extended HR modules</h3>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Capability</th>
+<th>Typical permissions</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/api/v1/account/documents/*</code></td>
+<td>DMS folders, tags, versions, shares</td>
+<td><code>document.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/assets/*</code></td>
+<td>Inventory, assign/return, maintenance, QR</td>
+<td><code>asset.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/recruitment/*</code></td>
+<td>Jobs, candidates, pipeline, interviews, offers</td>
+<td><code>recruitment.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/performance/*</code></td>
+<td>KPIs, cycles, goals, reviews, 360</td>
+<td><code>performance.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/expenses/*</code></td>
+<td>Budgets, claims, travel, reimbursements</td>
+<td><code>expense.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/clearance/*</code></td>
+<td>Offboarding checklist, certificates</td>
+<td><code>clearance.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/learning/*</code></td>
+<td>Programs, courses, certifications</td>
+<td><code>learning.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/helpdesk/*</code></td>
+<td>Tickets, KB, FAQs, SLA</td>
+<td><code>helpdesk.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/communications/*</code></td>
+<td>News, events, surveys, polls</td>
+<td><code>communications.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/analytics/*</code></td>
+<td>Headcount, attrition, payroll, attendance, forecast</td>
+<td><code>analytics.*</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/account/accounting/*</code></td>
+<td>Integrations, GL mappings, journals</td>
+<td><code>accounting.*</code></td>
+</tr>
+</tbody></table>
+<h3>8.14 Account — SaaS, RBAC, audit, hardening</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET/PATCH</td>
+<td><code>/api/v1/account/saas/*</code></td>
+<td><code>saas.*</code></td>
+<td>Subscription, plans, invoices, usage, branding, trial/onboarding</td>
+</tr>
+<tr>
+<td>CRUD</td>
+<td><code>/api/v1/account/users*</code>, <code>/roles*</code>, <code>/permissions*</code></td>
+<td><code>super_admin.access</code> + <code>user.*</code> / <code>role.*</code></td>
+<td>Users &amp; RBAC</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/account/audit-logs</code></td>
+<td><code>super_admin.access</code> + <code>audit.view</code></td>
+<td>Audit trail</td>
+</tr>
+<tr>
+<td>CRUD / actions</td>
+<td><code>/api/v1/account/hardening/*</code></td>
+<td><code>super_admin.access</code> + <code>hardening.*</code></td>
+<td>Security events, retention, IP rules, backups</td>
+</tr>
+</tbody></table>
+<h3>8.15 Platform (super-admin)</h3>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Capability</th>
+<th>Permissions</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/api/v1/platform/saas/*</code></td>
+<td>Tenant provision, plans, invoices, billing cycle, analytics</td>
+<td><code>platform.view</code> / <code>platform.manage</code> / <code>platform.billing</code></td>
+</tr>
+<tr>
+<td><code>/api/v1/platform/hardening/*</code></td>
+<td>Monitoring, metrics, health history, security events, backups</td>
+<td><code>platform.ops</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. Core Resource Schemas</h2>
+<p>Abbreviated shapes. Full schemas live in <code>apps/api/docs/openapi.yaml</code> and Lucid models.</p>
+<h3>AuthTokens</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>accessToken</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>refreshToken</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>expiresIn</code></td>
+<td>integer (seconds)</td>
+</tr>
+</tbody></table>
+<h3>User (login / me)</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid / string</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>fullName</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>permissions</code></td>
+<td>string[]</td>
+</tr>
+<tr>
+<td><code>memberships</code></td>
+<td>CompanyMembership[]</td>
+</tr>
+<tr>
+<td><code>mfaEnabled</code></td>
+<td>boolean</td>
+</tr>
+</tbody></table>
+<h3>CompanyMembership</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>companyId</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>companyCode</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>companyName</code></td>
+<td>string</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>string</td>
+</tr>
+</tbody></table>
+<h3>PayrollRun (summary)</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>periodId</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>string (draft / computed / submitted / approved / locked / …)</td>
+</tr>
+<tr>
+<td><code>payGroupId</code></td>
+<td>uuid | null</td>
+</tr>
+<tr>
+<td><code>computedAt</code> / <code>approvedAt</code> / <code>lockedAt</code></td>
+<td>date-time | null</td>
+</tr>
+</tbody></table>
+<h3>Payslip entry</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code> / <code>entryId</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>employeeId</code></td>
+<td>uuid</td>
+</tr>
+<tr>
+<td><code>grossPay</code> / <code>netPay</code></td>
+<td>number</td>
+</tr>
+<tr>
+<td><code>deductions</code></td>
+<td>object / array</td>
+</tr>
+<tr>
+<td><code>earnings</code></td>
+<td>object / array</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>10. Common Workflows</h2>
+<h3>10.1 Login → dashboard</h3>
+<ol>
+<li><code>POST /api/v1/auth/login</code></li>
+<li>If <code>requiresMfa</code>, complete <code>POST /api/v1/auth/mfa/verify</code></li>
+<li>Store tokens; send <code>Authorization: Bearer …</code></li>
+<li>If multi-company, set <code>X-Company-Id</code></li>
+<li><code>GET /api/v1/account/me</code> and <code>GET /api/v1/account/dashboard</code></li>
+</ol>
+<h3>10.2 ESS clock in</h3>
+<ol>
+<li>Authenticate as employee with <code>ess.access</code></li>
+<li><code>GET /api/v1/account/ess/attendance/status</code></li>
+<li><code>POST /api/v1/account/ess/attendance/clock</code> with punch payload (and geofence fields when required)</li>
+</ol>
+<h3>10.3 Payroll compute → approve → lock</h3>
+<ol>
+<li>Ensure pay period exists (<code>POST /api/v1/account/payroll/periods</code>)</li>
+<li><code>POST /api/v1/account/payroll/runs</code></li>
+<li><code>POST /api/v1/account/payroll/runs/:id/compute</code></li>
+<li>Review <code>GET …/runs/:id/register</code></li>
+<li><code>POST …/submit</code> → <code>POST …/approve</code> → <code>POST …/lock</code></li>
+<li>Optional: <code>GET …/bank-file</code>, payslip downloads</li>
+</ol>
+<h3>10.4 Leave request → approve</h3>
+<ol>
+<li>ESS: <code>POST /api/v1/account/ess/leave/requests</code></li>
+<li>Approver: workflow inbox or <code>PATCH /api/v1/account/leave/requests/:id/approve</code></li>
+</ol>
+<h3>10.5 Token refresh</h3>
+<ol>
+<li>On <code>401</code>, call <code>POST /api/v1/auth/refresh</code> with <code>refreshToken</code></li>
+<li>Retry original request with new access token</li>
+<li>If refresh fails, force re-login</li>
+</ol>
+<h3>10.6 Accept invite</h3>
+<ol>
+<li>Admin creates user → invite email</li>
+<li>User opens <code>/invite</code> with token</li>
+<li><code>POST /api/v1/auth/accept-invite</code> with token + password</li>
+<li>Continue as authenticated session</li>
+</ol>
+<hr>
+<h2>11. Background Jobs</h2>
+<p>Not REST, but part of the integration surface:</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BullMQ workers</td>
+<td>Payroll compute, DTR, domain events, notifications</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>Rate limits, permission cache, queues</td>
+</tr>
+</tbody></table>
+<p>Clients should treat REST as source of truth; async jobs may update run/DTR status after <code>compute</code> returns accepted.</p>
+<hr>
+<h2>12. Client Surfaces</h2>
+<table>
+<thead>
+<tr>
+<th>Client</th>
+<th>Base config</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Web</td>
+<td><code>VITE_API_URL</code> must include <code>/api/v1</code></td>
+<td>Admin console + ESS at <code>:5173</code></td>
+</tr>
+<tr>
+<td>Mobile</td>
+<td><code>EXPO_PUBLIC_API_URL</code></td>
+<td>ESS-focused; sends <code>X-Device-Source: mobile</code></td>
+</tr>
+<tr>
+<td>Enterprise gateway</td>
+<td>e.g. <code>http://localhost:3400/hr</code></td>
+<td>When fronted by enterprise platform</td>
+</tr>
+</tbody></table>
+<p>See also: <a href="./user-manual/WEB_SPEC.md"><code>docs/user-manual/WEB_SPEC.md</code></a>, <a href="./user-manual/MOBILE_SPEC.md"><code>docs/user-manual/MOBILE_SPEC.md</code></a>.</p>
+<hr>
+<h2>13. Environments &amp; Health</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Path</th>
+<th>Expect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Liveness</td>
+<td><code>GET /health</code></td>
+<td>Process up</td>
+</tr>
+<tr>
+<td>Readiness</td>
+<td><code>GET /ready</code></td>
+<td>Dependencies ready (DB/Redis as configured)</td>
+</tr>
+<tr>
+<td>Docs</td>
+<td><code>GET /api/v1/docs</code></td>
+<td>Swagger UI</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Typical API URL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Local</td>
+<td><code>http://localhost:3333/api/v1</code></td>
+</tr>
+<tr>
+<td>Docker / prod</td>
+<td>From <code>.env</code> / compose (<code>APP_URL</code>)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>14. Changelog Notes</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.0.0</td>
+<td>Production HRIS + Payroll API: auth/MFA, multi-company account surface, ESS, payroll runs, compliance e-file, recruitment, documents, assets, workflows, SaaS, platform hardening</td>
+</tr>
+<tr>
+<td>2026-06</td>
+<td>Enterprise trial registration + onboarding routes</td>
+</tr>
+<tr>
+<td>2026-08</td>
+<td>Documentation package aligned with DocsTrack/ULMIS export format (this manual)</td>
+</tr>
+</tbody></table>
+<p>For field-level request/response details, prefer the live OpenAPI file, Swagger UI, and route validators over this summary when implementing clients.</p>
+<hr>
+<h2>Related documents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Complete User Guide</td>
+<td><a href="./HRIS-Complete-Guide.md">HRIS-Complete-Guide.md</a></td>
+</tr>
+<tr>
+<td>Synced API notes</td>
+<td><a href="./user-manual/API_SPEC.md">user-manual/API_SPEC.md</a></td>
+</tr>
+<tr>
+<td>OpenAPI YAML</td>
+<td><a href="../apps/api/docs/openapi.yaml"><code>apps/api/docs/openapi.yaml</code></a></td>
+</tr>
+<tr>
+<td>Web app spec</td>
+<td><a href="./user-manual/WEB_SPEC.md">user-manual/WEB_SPEC.md</a></td>
+</tr>
+<tr>
+<td>Mobile app spec</td>
+<td><a href="./user-manual/MOBILE_SPEC.md">user-manual/MOBILE_SPEC.md</a></td>
+</tr>
+<tr>
+<td>Design system</td>
+<td><a href="./ui/design-system.md">ui/design-system.md</a></td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

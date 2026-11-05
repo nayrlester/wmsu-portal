@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TORMS API Specs Manual</title>
+  <style>
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.55; max-width: 210mm; margin: 0 auto; padding: 12mm; }
+  h1 { font-size: 22pt; color: #4338ca; border-bottom: 2px solid #4338ca; padding-bottom: 6px; }
+  h2 { font-size: 14pt; margin-top: 1.5em; }
+  table { border-collapse: collapse; width: 100%; font-size: 10pt; margin: 12px 0; }
+  th, td { border: 1px solid #c8d0f0; padding: 8px; text-align: left; }
+  th { background: #eef0ff; }
+  code { background: #f4f6ff; padding: 2px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<h1>TORMS / Records API</h1>
+<table>
+<tr><th>Base URL</th><td><code>http://127.0.0.1:3500/api/v1/records</code></td></tr>
+<tr><th>Web app</th><td><code>http://127.0.0.1:5181</code></td></tr>
+<tr><th>Platform code</th><td><code>records</code></td></tr>
+<tr><th>Permissions</th><td><code>torms.dashboard.read</code>, <code>torms.requests.*</code>, <code>records.*</code> from Identity role packs</td></tr>
+<tr><th>Swagger</th><td><a href="http://127.0.0.1:3500/api/v1/docs">CIS Swagger</a> — filter <code>/records/</code></td></tr>
+</table>
+
+<h2>Management dashboard</h2>
+<table>
+<tr><th>GET</th><th><code>/torms/dashboard/summary</code></th><th>Registrar KPIs, trends (requires <code>torms.dashboard.read</code>)</th></tr>
+</table>
+
+<h2>Requests &amp; issuance</h2>
+<table>
+<tr><th>Area</th><th>Paths</th></tr>
+<tr><td>Transcript requests</td><td><code>/torms/tor-requests/*</code></td></tr>
+<tr><td>Certification requests</td><td><code>/torms/cert-requests/*</code></td></tr>
+<tr><td>Issuance</td><td><code>/torms/issuance/*</code> transcript &amp; certification documents</td></tr>
+<tr><td>Alumni</td><td><code>/torms/alumni/*</code></td></tr>
+</table>
+
+<h2>Foundation &amp; sync</h2>
+<table>
+<tr><th>GET</th><th><code>/torms/foundation/status</code></th><th>Module health and integration contracts</th></tr>
+<tr><td>Academic sync</td><td><code>/torms/sync/*</code></td><td>USiS academic data ingest</td></tr>
+</table>
+
+<p>Design reference: <code>WMSU/docs/01-requirements/TORMS_API_DOCUMENTATION.md</code></p>
+</body>
+</html>

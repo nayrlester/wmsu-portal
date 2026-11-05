@@ -1,0 +1,49 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "WMSU CIS Platform API",
+    "version": "0.0.1",
+    "description": "Infrastructure health and platform bootstrap endpoints (no business modules)."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3500",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/api/v1/health/live": {
+      "get": {
+        "summary": "Liveness probe",
+        "responses": {
+          "200": {
+            "description": "Process is alive"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "summary": "Readiness health check (Postgres + Redis)",
+        "responses": {
+          "200": {
+            "description": "Healthy or degraded"
+          },
+          "503": {
+            "description": "All critical dependencies down"
+          }
+        }
+      }
+    },
+    "/api/v1/ping": {
+      "get": {
+        "summary": "Ping API and enqueue infra.ping job",
+        "responses": {
+          "200": {
+            "description": "Pong with optional queued job id"
+          }
+        }
+      }
+    }
+  }
+}

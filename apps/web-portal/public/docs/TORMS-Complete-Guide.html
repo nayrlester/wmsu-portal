@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TORMS Complete User Guide</title>
+  <style>
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.55; max-width: 210mm; margin: 0 auto; padding: 12mm; }
+  h1 { font-size: 22pt; color: #2f2a6b; border-bottom: 2px solid #635bff; padding-bottom: 6px; }
+  h2 { font-size: 16pt; color: #3d3780; margin-top: 22px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #c8d0f0; padding: 8px 10px; text-align: left; }
+  th { background: #eef0ff; }
+  code { background: #f4f6ff; padding: 2px 5px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<h1>TORMS — Transcript &amp; Official Records Management</h1>
+<p><strong>Records module (WMSU CIS)</strong></p>
+<table>
+<tr><th>Local web URL</th><td><code>http://127.0.0.1:5181</code></td></tr>
+<tr><th>API prefix</th><td><code>/api/v1/records</code> on Base API</td></tr>
+<tr><th>Platform code</th><td><code>records</code></td></tr>
+</table>
+
+<h2>Access</h2>
+<ol>
+<li>Sign in at WMSU Portal and launch <strong>Records (TORMS)</strong> when the <code>records</code> platform is assigned.</li>
+<li>Identity role <code>records_officer</code> maps to registrar staff capabilities inside TORMS.</li>
+<li>Students with the <code>student</code> role may use self-service transcript/certification requests when records platform is granted — not full staff modules.</li>
+</ol>
+
+<h2>Staff workflows (summary)</h2>
+<ul>
+<li>Transcript of Records (TOR) requests — intake, validation, issuance</li>
+<li>Certifications and official document requests</li>
+<li>Alumni and reporting modules as enabled in your deployment</li>
+<li>Integration with USiS academic data for student identity and program context</li>
+</ul>
+
+<h2>Troubleshooting</h2>
+<table>
+<tr><th>Symptom</th><th>Check</th></tr>
+<tr><td>Tile missing</td><td>Assign <code>records</code> platform in Portal Admin</td></tr>
+<tr><td>Staff actions denied</td><td>User needs <code>records_officer</code> or <code>identity_admin</code></td></tr>
+</table>
+<p><a href="./Identity-Complete-Guide.html">Identity guide</a> · <a href="./TORMS-API-Specs-Manual.html">API specs</a></p>
+</body>
+</html>
