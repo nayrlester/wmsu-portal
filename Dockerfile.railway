@@ -29,6 +29,7 @@ COPY --from=build --chown=wmsu:wmsu /app/build ./
 COPY --from=build --chown=wmsu:wmsu /app/node_modules ./node_modules
 COPY --from=build --chown=wmsu:wmsu /app/package.json ./package.json
 COPY --from=build --chown=wmsu:wmsu /app/ace.js ./ace.js
+COPY apps/base-api/start.mjs ./start.mjs
 
 USER wmsu
 EXPOSE 3500
@@ -36,4 +37,4 @@ EXPOSE 3500
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD curl -fsS "http://127.0.0.1:${PORT:-3500}/api/v1/health/live" || exit 1
 
-CMD ["node", "bin/server.js"]
+CMD ["node", "start.mjs"]
