@@ -15,13 +15,13 @@ export function Tabs({
   children,
   className,
 }: {
-  defaultValue: string
+  defaultValue?: string
   value?: string
   onValueChange?: (v: string) => void
   children: ReactNode
   className?: string
 }) {
-  const [internal, setInternal] = useState(defaultValue)
+  const [internal, setInternal] = useState(defaultValue ?? controlled ?? '')
   const value = controlled ?? internal
   const setValue = (v: string) => {
     setInternal(v)
@@ -46,7 +46,17 @@ export function TabsList({ children, className }: { children: ReactNode; classNa
   )
 }
 
-export function TabsTrigger({ value, children, className }: { value: string; children: ReactNode; className?: string }) {
+export function TabsTrigger({
+  value,
+  children,
+  className,
+  disabled,
+}: {
+  value: string
+  children: ReactNode
+  className?: string
+  disabled?: boolean
+}) {
   const ctx = useContext(TabsContext)!
   const active = ctx.value === value
   return (
@@ -54,9 +64,12 @@ export function TabsTrigger({ value, children, className }: { value: string; chi
       type="button"
       role="tab"
       aria-selected={active}
-      onClick={() => ctx.setValue(value)}
+      disabled={disabled}
+      onClick={() => {
+        if (!disabled) ctx.setValue(value)
+      }}
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
         active ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground',
         className
       )}

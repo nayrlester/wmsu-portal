@@ -22,7 +22,10 @@ function metricDisplay(value: number | null | undefined) {
   return value
 }
 
-function distributionItems(map: Record<string, number> | undefined, color = CHART_PALETTE.primary) {
+function distributionItems(
+  map: Record<string, number> | undefined,
+  color: (typeof CHART_PALETTE)[keyof typeof CHART_PALETTE] = CHART_PALETTE.primary
+) {
   if (!map) return []
   return Object.entries(map)
     .filter(([, value]) => value > 0)
