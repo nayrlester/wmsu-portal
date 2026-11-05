@@ -93,7 +93,7 @@ export default class CertificationController {
     const user = auth.user!
     const filters = await request.validateUsing(listCertRequestsValidator)
     const staff = await isStaffUser(user)
-    const rows = await certRequestService.list({
+    const page = await certRequestService.list({
       organizationId: user.organizationId,
       actorUserId: user.id,
       isStaff: staff,
@@ -103,9 +103,10 @@ export default class CertificationController {
       certificationType: filters.certificationType,
       locality: filters.locality,
       mineOnly: filters.mineOnly,
+      page: filters.page,
       limit: filters.limit,
     })
-    return response.ok({ success: true, data: rows })
+    return response.ok({ success: true, data: page.data, meta: page.meta })
   }
 
   async show({ auth, params, response }: HttpContext) {

@@ -16,9 +16,7 @@ import uimsLogo from '@/assets/UIMS-Icon.png'
 const navGroups = [
   {
     label: 'Overview',
-    items: [
-      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    ],
+    items: [{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
   },
   {
     label: 'Inventory',
@@ -30,9 +28,7 @@ const navGroups = [
   },
   {
     label: 'Asset Management',
-    items: [
-      { to: '/assets', label: 'Assets', icon: ClipboardList },
-    ],
+    items: [{ to: '/assets', label: 'Assets', icon: ClipboardList }],
   },
   {
     label: 'Organization',
@@ -48,11 +44,7 @@ function NavContent() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center gap-2.5 px-4">
-        <img
-          src={uimsLogo}
-          alt=""
-          className="h-9 w-9 shrink-0 object-contain"
-        />
+        <img src={uimsLogo} alt="" className="h-9 w-9 shrink-0 object-contain" />
         <span className="truncate text-sm font-bold tracking-tight text-white">UIMS</span>
       </div>
 
@@ -65,9 +57,7 @@ function NavContent() {
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
-                    className={({ isActive }) =>
-                      cn('uims-nav-item', isActive && 'uims-nav-active')
-                    }
+                    className={({ isActive }) => cn('uims-nav-item', isActive && 'uims-nav-active')}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
                     <span>{item.label}</span>
@@ -86,13 +76,7 @@ function NavContent() {
   )
 }
 
-export function Sidebar({
-  open,
-  onClose,
-}: {
-  open: boolean
-  onClose: () => void
-}) {
+export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <>
       {/* Desktop */}
@@ -103,10 +87,7 @@ export function Sidebar({
       {/* Mobile overlay */}
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div
-            className="absolute inset-0 bg-slate-900/50"
-            onClick={onClose}
-          />
+          <div className="absolute inset-0 bg-slate-900/50" onClick={onClose} />
           <aside className="uims-sidebar relative w-64 h-full">
             <button
               type="button"

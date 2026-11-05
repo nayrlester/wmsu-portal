@@ -5,13 +5,26 @@ import AssessmentAidTag from '#modules/enrollment/models/assessment_aid_tag'
 import FeeSchedule from '#modules/enrollment/models/fee_schedule'
 import FinanceIntegrationTransaction from '#modules/enrollment/models/finance_integration_transaction'
 import RegistrationDocument from '#modules/enrollment/models/registration_document'
+import Enrollment from '#modules/enrollment/models/enrollment'
+import Student from '#modules/enrollment/models/student'
 import { AssessmentService } from '#modules/enrollment/services/assessment_service'
+import { rbacService } from '#modules/enrollment/services/rbac_service'
 import {
   feeScheduleValidator,
   prepareAssessmentValidator,
   aidTagValidator,
   issueDocumentValidator,
 } from '#modules/enrollment/validators/assessment_finance'
+
+async function resolveLinkedStudent(organizationId: string, email: string | null | undefined) {
+  const normalized = email?.trim().toLowerCase()
+  if (!normalized) return null
+  return Student.query()
+    .where('organization_id', organizationId)
+    .whereNull('deleted_at')
+    .whereRaw('LOWER(email) = ?', [normalized])
+    .first()
+}
 
 export default class AssessmentFinanceController {
   async upsertFeeSchedule({ request, response, auth }: HttpContext) {
@@ -121,16 +134,67 @@ export default class AssessmentFinanceController {
     return response.ok({ data: { ...assessment.serialize(), lines } })
   }
 
-  async studentMonitor({ params, response, auth }: HttpContext) {
+  async studentMonitor(ctx: HttpContext) {
+    const { params, response, auth } = ctx
     const user = auth.user!
+    const permissions = await rbacService.getEffectivePermissions(user, ctx.platformPermissions ?? [])
+    const canMonitorOthers =
+      permissions.includes('*') ||
+      permissions.includes('students.read') ||
+      permissions.includes('enrollments.read')
+    if (!canMonitorOthers) {
+      const self = await resolveLinkedStudent(user.organizationId, user.email)
+      if (!self || self.id !== params.studentId) {
+        return response.forbidden({ message: 'Forbidden' })
+      }
+    }
     const service = new AssessmentService()
-    const data = await service.listDeficienciesAndBalance(user.organizationId, params.studentId)
+    const data = await service.getStudentAccountMonitor(user.organizationId, params.studentId)
     return response.ok({ data })
   }
 
-  async issueDocument({ request, response, auth }: HttpContext) {
+  async myMonitor({ response, auth }: HttpContext) {
+    const user = auth.user!
+    const student = await resolveLinkedStudent(user.organizationId, user.email)
+    if (!student) {
+      return response.notFound({ message: 'No student profile linked to this account' })
+    }
+    const service = new AssessmentService()
+    const data = await service.getStudentAccountMonitor(user.organizationId, student.id)
+    return response.ok({ data })
+  }
+
+  async issueDocument(ctx: HttpContext) {
+    const { request, response, auth } = ctx
     const user = auth.user!
     const payload = await request.validateUsing(issueDocumentValidator)
+    const permissions = await rbacService.getEffectivePermissions(user, ctx.platformPermissions ?? [])
+    const canStaffIssue =
+      permissions.includes('*') ||
+      permissions.includes('enrollments.write') ||
+      permissions.includes('assessments.write')
+    const canSelfIssue = permissions.includes('students.self')
+
+    if (!canStaffIssue && canSelfIssue) {
+      if (payload.docType !== 'assessment_form') {
+        return response.forbidden({ message: 'Students may only print assessment forms' })
+      }
+      const student = await resolveLinkedStudent(user.organizationId, user.email)
+      if (!student) {
+        return response.notFound({ message: 'No student profile linked to this account' })
+      }
+      const enrollment = await Enrollment.query()
+        .where('id', payload.enrollmentId)
+        .where('organization_id', user.organizationId)
+        .where('student_id', student.id)
+        .first()
+      if (!enrollment) {
+        return response.forbidden({ message: 'Enrollment does not belong to this student' })
+      }
+    } else if (!canStaffIssue) {
+      return response.forbidden({ message: 'Not allowed to issue registration documents' })
+    }
+
     const service = new AssessmentService()
     const doc = await service.issueDocument({
       organizationId: user.organizationId,
@@ -147,11 +211,32 @@ export default class AssessmentFinanceController {
     return response.ok({ data: doc })
   }
 
-  async listDocuments({ request, response, auth }: HttpContext) {
+  async listDocuments(ctx: HttpContext) {
+    const { request, response, auth } = ctx
     const user = auth.user!
+    const permissions = await rbacService.getEffectivePermissions(user, ctx.platformPermissions ?? [])
     const q = RegistrationDocument.query().where('organization_id', user.organizationId)
     if (request.input('enrollmentId')) q.where('enrollment_id', request.input('enrollmentId'))
     if (request.input('docType')) q.where('doc_type', request.input('docType'))
+
+    const staffRead =
+      permissions.includes('*') ||
+      permissions.includes('assessments.read') ||
+      permissions.includes('enrollments.read') ||
+      permissions.includes('enrollments.write')
+    if (!staffRead && permissions.includes('students.self')) {
+      const student = await resolveLinkedStudent(user.organizationId, user.email)
+      if (!student) return response.ok({ data: [] })
+      const enrollmentIds = (
+        await Enrollment.query()
+          .where('organization_id', user.organizationId)
+          .where('student_id', student.id)
+          .select('id')
+      ).map((e) => e.id)
+      if (!enrollmentIds.length) return response.ok({ data: [] })
+      q.whereIn('enrollment_id', enrollmentIds)
+    }
+
     return response.ok({ data: await q.orderBy('issued_at', 'desc') })
   }
 

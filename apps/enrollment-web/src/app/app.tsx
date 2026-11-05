@@ -14,125 +14,224 @@ const LoginPage = lazy(() =>
 const SsoCallbackPage = lazy(() =>
   import('@/features/auth/pages/sso-callback-page').then((m) => ({ default: m.SsoCallbackPage }))
 )
+const SsoLogoutPage = lazy(() =>
+  import('@/features/auth/pages/sso-logout-page').then((m) => ({ default: m.SsoLogoutPage }))
+)
 const AccessDeniedPage = lazy(() =>
   import('@/features/auth/pages/access-denied-page').then((m) => ({ default: m.AccessDeniedPage }))
 )
 
 const StudentDashboardPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentDashboardPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentDashboardPage,
+  }))
 )
 const StudentProfilePage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentProfilePage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentProfilePage,
+  }))
 )
 const StudentAdmissionPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentAdmissionPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentAdmissionPage,
+  }))
 )
 const StudentEnrollmentPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentEnrollmentPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentEnrollmentPage,
+  }))
 )
 const StudentAdvisingPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentAdvisingPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentAdvisingPage,
+  }))
 )
 const StudentSubjectsPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentSubjectsPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentSubjectsPage,
+  }))
 )
 const StudentSchedulePage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentSchedulePage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentSchedulePage,
+  }))
 )
 const StudentStatusPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentStatusPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentStatusPage,
+  }))
 )
 const StudentAssessmentsPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentAssessmentsPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentAssessmentsPage,
+  }))
 )
 const StudentPaymentsPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentPaymentsPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentPaymentsPage,
+  }))
 )
 const StudentCorPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentCorPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentCorPage,
+  }))
 )
 const StudentGradesPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentGradesPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentGradesPage,
+  }))
+)
+const StudentTaskCalendarPage = lazy(() =>
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentTaskCalendarPage,
+  }))
 )
 const StudentHistoryPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentHistoryPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentHistoryPage,
+  }))
 )
 const StudentRequirementsPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentRequirementsPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentRequirementsPage,
+  }))
 )
 const StudentScholarshipsPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentScholarshipsPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentScholarshipsPage,
+  }))
 )
 const StudentSupportPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentSupportPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentSupportPage,
+  }))
 )
 const StudentQueuePage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentQueuePage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentQueuePage,
+  }))
 )
 const StudentFacultyEvalPage = lazy(() =>
-  import('@/features/student/pages/student-portal-pages').then((m) => ({ default: m.StudentFacultyEvalPage }))
+  import('@/features/student/pages/student-portal-pages').then((m) => ({
+    default: m.StudentFacultyEvalPage,
+  }))
 )
 const StudentClearanceReportPage = lazy(() =>
-  import('@/features/clearance/pages/clearance-report-pages').then((m) => ({ default: m.StudentClearanceReportPage }))
+  import('@/features/clearance/pages/clearance-report-pages').then((m) => ({
+    default: m.StudentClearanceReportPage,
+  }))
+)
+const RegistrarClearanceReportPage = lazy(() =>
+  import('@/features/clearance/pages/clearance-report-pages').then((m) => ({
+    default: m.RegistrarClearanceReportPage,
+  }))
 )
 const ClearanceVerifyPage = lazy(() =>
-  import('@/features/clearance/pages/clearance-report-pages').then((m) => ({ default: m.ClearanceVerifyPage }))
+  import('@/features/clearance/pages/clearance-report-pages').then((m) => ({
+    default: m.ClearanceVerifyPage,
+  }))
+)
+const StudentDigitalIdVerifyPage = lazy(() =>
+  import('@/features/student/pages/digital-id-verify-page').then((m) => ({
+    default: m.StudentDigitalIdVerifyPage,
+  }))
+)
+const PortalApplyRedirect = lazy(() =>
+  import('@/features/admissions/pages/portal-apply-redirect').then((m) => ({
+    default: m.PortalApplyRedirect,
+  }))
 )
 
 const FacultyDashboardPage = lazy(() =>
-  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({ default: m.FacultyDashboardPage }))
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultyDashboardPage,
+  }))
 )
 const FacultyClassesPage = lazy(() =>
-  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({ default: m.FacultyClassesPage }))
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultyClassesPage,
+  }))
 )
 const FacultyMasterListsPage = lazy(() =>
-  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({ default: m.FacultyMasterListsPage }))
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultyMasterListsPage,
+  }))
 )
 const FacultyEncodePage = lazy(() =>
-  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({ default: m.FacultyEncodePage }))
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultyEncodePage,
+  }))
 )
 const FacultySubmitPage = lazy(() =>
-  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({ default: m.FacultySubmitPage }))
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultySubmitPage,
+  }))
 )
 const FacultyCorrectionsPage = lazy(() =>
-  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({ default: m.FacultyCorrectionsPage }))
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultyCorrectionsPage,
+  }))
 )
 const FacultyAdvisingPage = lazy(() =>
-  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({ default: m.FacultyAdvisingPage }))
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultyAdvisingPage,
+  }))
 )
 const FacultyAdvisingHistoryPage = lazy(() =>
-  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({ default: m.FacultyAdvisingHistoryPage }))
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultyAdvisingHistoryPage,
+  }))
 )
 
 const RegistrarDashboardPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarDashboardPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarDashboardPage,
+  }))
 )
 const RegistrarApplicantsPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarApplicantsPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarApplicantsPage,
+  }))
 )
 const RegistrarStudentsPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarStudentsPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarStudentsPage,
+  }))
 )
 const RegistrarEnrollmentsPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarEnrollmentsPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarEnrollmentsPage,
+  }))
 )
 const RegistrarAcademicPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarAcademicPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarAcademicPage,
+  }))
 )
 const RegistrarCurriculumPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarCurriculumPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarCurriculumPage,
+  }))
 )
 const RegistrarGradesPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarGradesPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarGradesPage,
+  }))
 )
 const RegistrarRequirementsPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarRequirementsPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarRequirementsPage,
+  }))
 )
 const RegistrarRegistrationPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarRegistrationPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarRegistrationPage,
+  }))
 )
 const RegistrarReportsPage = lazy(() =>
-  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({ default: m.RegistrarReportsPage }))
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarReportsPage,
+  }))
 )
 const RegistrarAnnouncementsPage = lazy(() =>
   import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
@@ -146,19 +245,27 @@ const RegistrarFacultyEvalPage = lazy(() =>
 )
 
 const AdmissionsOfficePage = lazy(() =>
-  import('@/features/offices/pages/office-portal-pages').then((m) => ({ default: m.AdmissionsOfficePage }))
+  import('@/features/offices/pages/office-portal-pages').then((m) => ({
+    default: m.AdmissionsOfficePage,
+  }))
 )
 const GuidanceOfficePage = lazy(() =>
-  import('@/features/offices/pages/office-portal-pages').then((m) => ({ default: m.GuidanceOfficePage }))
+  import('@/features/offices/pages/office-portal-pages').then((m) => ({
+    default: m.GuidanceOfficePage,
+  }))
 )
 const HealthOfficePage = lazy(() =>
-  import('@/features/offices/pages/office-portal-pages').then((m) => ({ default: m.HealthOfficePage }))
+  import('@/features/offices/pages/office-portal-pages').then((m) => ({
+    default: m.HealthOfficePage,
+  }))
 )
 const OsaOfficePage = lazy(() =>
   import('@/features/offices/pages/office-portal-pages').then((m) => ({ default: m.OsaOfficePage }))
 )
 const ScholarshipOfficePage = lazy(() =>
-  import('@/features/offices/pages/office-portal-pages').then((m) => ({ default: m.ScholarshipOfficePage }))
+  import('@/features/offices/pages/office-portal-pages').then((m) => ({
+    default: m.ScholarshipOfficePage,
+  }))
 )
 
 function PageFallback() {
@@ -218,10 +325,58 @@ export function App() {
             }
           />
           <Route
+            path="/sso/logout"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <SsoLogoutPage />
+              </Suspense>
+            }
+          />
+          <Route
             path="/clearance/verify/:token"
             element={
               <Suspense fallback={<PageFallback />}>
                 <ClearanceVerifyPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/student-id/verify/:token"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <StudentDigitalIdVerifyPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/apply"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <PortalApplyRedirect />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/apply/start"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <PortalApplyRedirect />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/apply/status"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <PortalApplyRedirect />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/apply/exam"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <PortalApplyRedirect />
               </Suspense>
             }
           />
@@ -251,6 +406,7 @@ export function App() {
               <Route path="student/payments" element={<StudentPaymentsPage />} />
               <Route path="student/cor" element={<StudentCorPage />} />
               <Route path="student/grades" element={<StudentGradesPage />} />
+              <Route path="student/task-calendar" element={<StudentTaskCalendarPage />} />
               <Route path="student/history" element={<StudentHistoryPage />} />
               <Route path="student/requirements" element={<StudentRequirementsPage />} />
               <Route path="student/scholarships" element={<StudentScholarshipsPage />} />
@@ -280,7 +436,14 @@ export function App() {
             <Route
               element={
                 <RequirePermissionOutlet
-                  anyOf={['enrollments.read', 'applicants.read', 'students.read', 'academic.write', 'announcements.read', 'faculty_eval.read']}
+                  anyOf={[
+                    'enrollments.read',
+                    'applicants.read',
+                    'students.read',
+                    'academic.write',
+                    'announcements.read',
+                    'faculty_eval.read',
+                  ]}
                 />
               }
             >
@@ -294,6 +457,7 @@ export function App() {
               <Route path="registrar/requirements" element={<RegistrarRequirementsPage />} />
               <Route path="registrar/registration" element={<RegistrarRegistrationPage />} />
               <Route path="registrar/reports" element={<RegistrarReportsPage />} />
+              <Route path="registrar/clearance" element={<RegistrarClearanceReportPage />} />
               <Route path="registrar/announcements" element={<RegistrarAnnouncementsPage />} />
               <Route path="registrar/faculty-eval" element={<RegistrarFacultyEvalPage />} />
               <Route path="reports" element={<RegistrarReportsPage />} />

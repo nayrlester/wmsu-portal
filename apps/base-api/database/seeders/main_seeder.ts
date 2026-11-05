@@ -1,5 +1,6 @@
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 import db from '@adonisjs/lucid/services/db'
+import { seedUimsDemoData } from '#modules/finance/domain/seed_demo_data'
 
 export default class extends BaseSeeder {
   async run() {
@@ -19,6 +20,7 @@ export default class extends BaseSeeder {
 
     await this.seedMdmDev()
     await this.seedIntegrationDev()
+    await seedUimsDemoData('UNI')
   }
 
   private async seedIntegrationDev() {

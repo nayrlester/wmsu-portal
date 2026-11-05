@@ -5,12 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Badge } from '@/components/ui/badge'
-import {
-  loadFieldQueue,
-  enqueueScan,
-  syncFieldQueue,
-  clearSyncedQueue,
-} from '../api/field-queue'
+import { loadFieldQueue, enqueueScan, syncFieldQueue, clearSyncedQueue } from '../api/field-queue'
 import type { FieldQueueItem } from '../types'
 
 interface GeoCoords {
@@ -58,7 +53,7 @@ export function FieldPage() {
         setGeoError('')
       },
       (err) => setGeoError(err.message || 'Unable to get location'),
-      { enableHighAccuracy: true, timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 10000 }
     )
   }, [])
 
@@ -159,7 +154,9 @@ export function FieldPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">Field Count</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Mobile barcode scanning with offline queue</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Mobile barcode scanning with offline queue
+          </p>
         </div>
         {!online && (
           <Badge variant="warning">
@@ -187,8 +184,15 @@ export function FieldPage() {
           <div className="space-y-2">
             {scanning ? (
               <>
-                <video ref={videoRef} className="aspect-video w-full rounded-2xl bg-black object-cover" muted playsInline />
-                <Button variant="outline" className="w-full" onClick={stopCamera}>Stop Camera</Button>
+                <video
+                  ref={videoRef}
+                  className="aspect-video w-full rounded-2xl bg-black object-cover"
+                  muted
+                  playsInline
+                />
+                <Button variant="outline" className="w-full" onClick={stopCamera}>
+                  Stop Camera
+                </Button>
               </>
             ) : (
               <Button variant="outline" className="w-full" onClick={startCamera}>
@@ -223,14 +227,28 @@ export function FieldPage() {
         <label className="flex cursor-pointer items-center gap-2 rounded-full border border-dashed border-border px-4 py-3 text-sm text-muted-foreground hover:bg-[var(--color-primary-soft)]">
           <ImagePlus className="h-4 w-4" />
           {photoDataUrl ? 'Photo attached' : 'Attach photo'}
-          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoChange} />
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={onPhotoChange}
+          />
         </label>
 
         {photoDataUrl && (
-          <img src={photoDataUrl} alt="Scan evidence" className="h-24 w-full rounded-xl object-cover" />
+          <img
+            src={photoDataUrl}
+            alt="Scan evidence"
+            className="h-24 w-full rounded-xl object-cover"
+          />
         )}
 
-        <Button className="w-full" disabled={!countId || !barcode} onClick={() => handleEnqueue(barcode)}>
+        <Button
+          className="w-full"
+          disabled={!countId || !barcode}
+          onClick={() => handleEnqueue(barcode)}
+        >
           <ScanBarcode className="h-4 w-4" /> Queue Scan
         </Button>
       </div>

@@ -15,6 +15,9 @@ const LoginPage = lazy(() =>
 const SsoCallbackPage = lazy(() =>
   import('@/features/auth/pages/sso-callback-page').then((m) => ({ default: m.SsoCallbackPage }))
 )
+const SsoLogoutPage = lazy(() =>
+  import('@/features/auth/pages/sso-logout-page').then((m) => ({ default: m.SsoLogoutPage }))
+)
 const DashboardPage = lazy(() =>
   import('@/features/dashboard/pages/dashboard-page').then((m) => ({ default: m.DashboardPage }))
 )
@@ -35,11 +38,6 @@ const TorRequestsPage = lazy(() =>
 const TorRequestDetailPage = lazy(() =>
   import('@/features/tor/pages/tor-request-detail-page').then((m) => ({
     default: m.TorRequestDetailPage,
-  }))
-)
-const DeferredModulePage = lazy(() =>
-  import('@/features/placeholders/deferred-module-page').then((m) => ({
-    default: m.DeferredModulePage,
   }))
 )
 const AlumniPage = lazy(() =>
@@ -123,6 +121,14 @@ export function App() {
             }
           />
           <Route
+            path="/sso/logout"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <SsoLogoutPage />
+              </Suspense>
+            }
+          />
+          <Route
             path="/verify"
             element={
               <Suspense fallback={<PageFallback />}>
@@ -146,15 +152,7 @@ export function App() {
             <Route path="certifications/:idOrNumber" element={<CertRequestDetailPage />} />
             <Route path="alumni" element={<AlumniPage />} />
             <Route path="reports" element={<ReportsPage />} />
-            <Route
-              path="foundation"
-              element={
-                <DeferredModulePage
-                  title="Foundation"
-                  stage="foundation APIs (Prompt 02); UI deferred"
-                />
-              }
-            />
+            <Route path="foundation" element={<Navigate to="/dashboard" replace />} />
             <Route path="organization" element={<OrganizationPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="roles" element={<RolesPage />} />

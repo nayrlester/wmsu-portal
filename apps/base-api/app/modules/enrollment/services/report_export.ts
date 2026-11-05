@@ -45,7 +45,11 @@ function escapeXml(value: unknown): string {
     .replace(/"/g, '&quot;')
 }
 
-export function rowsToSimplePdf(title: string, rows: Record<string, unknown>[]): Buffer {
+export function rowsToSimplePdf(
+  title: string,
+  rows: Record<string, unknown>[],
+  footerLines: string[] = []
+): Buffer {
   const keys = rows.length ? Object.keys(rows[0]) : []
   const lines = [
     title,
@@ -54,6 +58,7 @@ export function rowsToSimplePdf(title: string, rows: Record<string, unknown>[]):
     keys.join(' | '),
     ...rows.slice(0, 200).map((r) => keys.map((k) => String(r[k] ?? '')).join(' | ')),
     rows.length > 200 ? `… ${rows.length - 200} more rows` : '',
+    ...(footerLines.length ? ['', ...footerLines] : []),
   ].filter((l) => l !== undefined)
 
   const contentLines = lines.map((line, i) => {

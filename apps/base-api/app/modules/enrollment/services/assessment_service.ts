@@ -14,15 +14,38 @@ import BalanceSnapshot from '#modules/enrollment/models/balance_snapshot'
 import RegistrationDocument from '#modules/enrollment/models/registration_document'
 import FinanceIntegrationTransaction from '#modules/enrollment/models/finance_integration_transaction'
 import Payment from '#modules/enrollment/models/payment'
+import GradeEntry from '#modules/enrollment/models/grade_entry'
 import { EnrollmentWorkflowError } from '#modules/enrollment/domain/enrollment_workflow'
 import {
   createFinanceAssessmentClient,
   type FinanceAssessmentGateway,
 } from '#modules/enrollment/services/integrations/finance_assessment_client'
 import { assertAdvisingGate } from '#modules/enrollment/services/enrollment_approval_policy_service'
+import { enrollmentPaymentPolicyService } from '#modules/enrollment/services/enrollment_payment_policy_service'
 
 function round2(n: number) {
   return Math.round(n * 100) / 100
+}
+
+function linesForFee(subjectLines: EnrollmentLine[], subjectCode: string | null | undefined) {
+  if (!subjectCode?.trim()) return subjectLines
+  return subjectLines.filter((l) => String(l.subjectCode ?? '') === subjectCode.trim())
+}
+
+function quantityForScheduleLine(
+  line: FeeScheduleLine,
+  subjectLines: EnrollmentLine[]
+) {
+  const scoped = linesForFee(subjectLines, line.subjectCode)
+  if (line.subjectCode?.trim() && scoped.length === 0) return 0
+  const unit = Number(line.amount)
+  if (line.calculationMethod === 'per_unit') {
+    return scoped.reduce((s, l) => s + Number(l.units), 0)
+  }
+  if (line.calculationMethod === 'per_subject') {
+    return scoped.length
+  }
+  return scoped.length > 0 || !line.subjectCode?.trim() ? 1 : 0
 }
 
 export class AssessmentService {
@@ -35,6 +58,7 @@ export class AssessmentService {
     academicYearId?: string | null
     semester?: number | null
     classification?: string | null
+    programId?: string | null
     approvedByRole?: string | null
     lines: Array<{
       feeCode: string
@@ -56,6 +80,7 @@ export class AssessmentService {
           academicYearId: input.academicYearId ?? null,
           semester: input.semester ?? null,
           classification: input.classification ?? null,
+          programId: input.programId ?? null,
           approvedByRole: input.approvedByRole ?? null,
           isActive: true,
           effectiveFrom: DateTime.now(),
@@ -83,6 +108,89 @@ export class AssessmentService {
       const lines = await FeeScheduleLine.query({ client: trx }).where('fee_schedule_id', schedule.id)
       return { schedule, lines }
     })
+  }
+
+  async updateFeeSchedule(input: {
+    organizationId: string
+    scheduleId: string
+    code: string
+    name: string
+    academicYearId?: string | null
+    semester?: number | null
+    classification?: string | null
+    programId?: string | null
+    approvedByRole?: string | null
+    lines: Array<{
+      feeCode: string
+      description: string
+      feeType: string
+      calculationMethod: 'fixed' | 'per_unit' | 'per_subject'
+      amount: number
+      subjectCode?: string | null
+      priority?: number
+    }>
+  }) {
+    return db.transaction(async (trx) => {
+      const schedule = await FeeSchedule.query({ client: trx })
+        .where('id', input.scheduleId)
+        .where('organization_id', input.organizationId)
+        .forUpdate()
+        .firstOrFail()
+
+      const codeTaken = await FeeSchedule.query({ client: trx })
+        .where('organization_id', input.organizationId)
+        .where('code', input.code)
+        .whereNot('id', schedule.id)
+        .first()
+      if (codeTaken) {
+        throw new EnrollmentWorkflowError('Fee schedule code is already used by another schedule', 409, 'FEE_SCHEDULE_CODE_TAKEN')
+      }
+
+      schedule.merge({
+        code: input.code,
+        name: input.name,
+        academicYearId: input.academicYearId ?? null,
+        semester: input.semester ?? null,
+        classification: input.classification ?? null,
+        programId: input.programId ?? null,
+        approvedByRole: input.approvedByRole ?? null,
+        isActive: true,
+        effectiveTo: null,
+      })
+      await schedule.save()
+
+      await FeeScheduleLine.query({ client: trx }).where('fee_schedule_id', schedule.id).delete()
+      for (const line of input.lines) {
+        await FeeScheduleLine.create(
+          {
+            organizationId: input.organizationId,
+            feeScheduleId: schedule.id,
+            feeCode: line.feeCode,
+            description: line.description,
+            feeType: line.feeType,
+            calculationMethod: line.calculationMethod,
+            amount: line.amount,
+            subjectCode: line.subjectCode ?? null,
+            priority: line.priority ?? 100,
+            isActive: true,
+          },
+          { client: trx }
+        )
+      }
+      const lines = await FeeScheduleLine.query({ client: trx }).where('fee_schedule_id', schedule.id)
+      return { schedule, lines }
+    })
+  }
+
+  async deactivateFeeSchedule(input: { organizationId: string; scheduleId: string }) {
+    const schedule = await FeeSchedule.query()
+      .where('id', input.scheduleId)
+      .where('organization_id', input.organizationId)
+      .firstOrFail()
+    schedule.isActive = false
+    schedule.effectiveTo = DateTime.now()
+    await schedule.save()
+    return schedule
   }
 
   async tagAid(input: {
@@ -168,6 +276,12 @@ export class AssessmentService {
           .if(enrollment.academicYearId, (q) =>
             q.where((b) => b.where('academic_year_id', enrollment.academicYearId).orWhereNull('academic_year_id'))
           )
+          .if(enrollment.semester, (q) =>
+            q.where((b) => b.where('semester', enrollment.semester).orWhereNull('semester'))
+          )
+          .if(student.programId, (q) =>
+            q.where((b) => b.where('program_id', student.programId).orWhereNull('program_id'))
+          )
           .if(enrollment.classification, (q) =>
             q.where((b) =>
               b.where('classification', enrollment.classification!).orWhereNull('classification')
@@ -202,10 +316,9 @@ export class AssessmentService {
         tuitionFee = 0
         miscFees = 0
         for (const line of scheduleLines) {
-          let qty = 1
-          let unit = Number(line.amount)
-          if (line.calculationMethod === 'per_unit') qty = totalUnits
-          else if (line.calculationMethod === 'per_subject') qty = subjectLines.length
+          const qty = quantityForScheduleLine(line, subjectLines)
+          if (qty <= 0) continue
+          const unit = Number(line.amount)
           const amount = round2(qty * unit)
           chargeLines.push({
             feeCode: line.feeCode,
@@ -380,6 +493,9 @@ export class AssessmentService {
       breakdown: assessment.breakdown ?? {},
       assessedAt: assessment.assessedAt.toISO()!,
       idempotencyKey,
+      programId: student.programId,
+      yearLevel: enrollment.yearLevel,
+      classification: enrollment.classification,
     }
 
     try {
@@ -547,18 +663,22 @@ export class AssessmentService {
       actorUserId,
     })
 
-    if (
-      synced.status.paymentStatus !== 'paid' &&
-      synced.status.paidAmount + 0.001 < Number(assessmentProbe.netAmount)
-    ) {
+    const required =
+      synced.status.minimumDueRequired != null
+        ? Number(synced.status.minimumDueRequired)
+        : Number(assessmentProbe.netAmount)
+
+    if (synced.status.paidAmount + 0.001 < required) {
+      const paid = Number(synced.status.paidAmount)
       throw new EnrollmentWorkflowError(
-        'UFMS has not confirmed payment covering assessed net amount',
+        `UFMS has not confirmed the registration minimum due (paid ${paid.toFixed(2)} of ${required.toFixed(2)}). Collect at least the minimum at the UFMS cashier, then verify again.`,
         422,
         'PAYMENT_NOT_CONFIRMED',
         {
           paymentStatus: synced.status.paymentStatus,
-          paid: synced.status.paidAmount,
-          required: Number(assessmentProbe.netAmount),
+          paid,
+          required,
+          netAmount: Number(assessmentProbe.netAmount),
         }
       )
     }
@@ -569,18 +689,21 @@ export class AssessmentService {
         throw new EnrollmentWorkflowError('Re-assessment required after schedule changes', 409, 'REASSESSMENT_REQUIRED')
       }
       const assessment = await Assessment.query({ client: trx }).where('enrollment_id', enrollment.id).firstOrFail()
-      if (
-        assessment.ufmsPaymentStatus !== 'paid' &&
-        Number(assessment.paidAmount) + 0.001 < Number(assessment.netAmount)
-      ) {
+      const minDue =
+        synced.status.minimumDueRequired != null
+          ? Number(synced.status.minimumDueRequired)
+          : Number(assessment.netAmount)
+      if (Number(assessment.paidAmount) + 0.001 < minDue) {
+        const paid = Number(assessment.paidAmount)
         throw new EnrollmentWorkflowError(
-          'UFMS has not confirmed payment covering assessed net amount',
+          `UFMS has not confirmed the registration minimum due (paid ${paid.toFixed(2)} of ${minDue.toFixed(2)}). Collect at least the minimum at the UFMS cashier, then verify again.`,
           422,
           'PAYMENT_NOT_CONFIRMED',
           {
             paymentStatus: assessment.ufmsPaymentStatus,
-            paid: Number(assessment.paidAmount),
-            required: Number(assessment.netAmount),
+            paid,
+            required: minDue,
+            netAmount: Number(assessment.netAmount),
           }
         )
       }
@@ -596,13 +719,234 @@ export class AssessmentService {
   }
 
   async listDeficienciesAndBalance(organizationId: string, studentId: string) {
+    return this.getStudentAccountMonitor(organizationId, studentId)
+  }
+
+  async getStudentAccountMonitor(organizationId: string, studentId: string) {
+    const student = await Student.query()
+      .where('organization_id', organizationId)
+      .where('id', studentId)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
     const deficiencies = await StudentDeficiency.query()
-      .where({ organization_id: organizationId, student_id: studentId, status: 'open' })
+      .where({ organization_id: organizationId, student_id: studentId })
+      .whereNull('deleted_at')
+      .orderBy('created_at', 'desc')
+
     const latestBalance = await BalanceSnapshot.query()
       .where({ organization_id: organizationId, student_id: studentId })
       .orderBy('as_of', 'desc')
       .first()
-    return { deficiencies, balance: latestBalance }
+
+    const enrollmentIds = (
+      await Enrollment.query().where('organization_id', organizationId).where('student_id', studentId).select('id')
+    ).map((e) => e.id)
+
+    const latestAssessment =
+      enrollmentIds.length === 0
+        ? null
+        : await Assessment.query()
+            .where('organization_id', organizationId)
+            .whereIn('enrollment_id', enrollmentIds)
+            .orderBy('created_at', 'desc')
+            .first()
+
+    const tuitionBalance = latestBalance
+      ? {
+          assessedAmount: Number(latestBalance.assessedAmount),
+          paidAmount: Number(latestBalance.paidAmount),
+          balanceAmount: Number(latestBalance.balanceAmount),
+          source: latestBalance.source,
+          asOf: latestBalance.asOf?.toISO() ?? null,
+          assessmentId: latestBalance.assessmentId,
+        }
+      : latestAssessment
+        ? {
+            assessedAmount: Number(latestAssessment.netAmount),
+            paidAmount: Number(latestAssessment.paidAmount ?? 0),
+            balanceAmount: Number(
+              latestAssessment.balanceAmount ??
+                Math.max(0, Number(latestAssessment.netAmount) - Number(latestAssessment.paidAmount ?? 0))
+            ),
+            source: 'assessment',
+            asOf: latestAssessment.updatedAt?.toISO() ?? latestAssessment.createdAt?.toISO() ?? null,
+            assessmentId: latestAssessment.id,
+          }
+        : null
+
+    const runningGrades = await GradeEntry.query()
+      .where('organization_id', organizationId)
+      .where((q) => {
+        q.where('student_id', studentId)
+        if (enrollmentIds.length) q.orWhereIn('enrollment_id', enrollmentIds)
+      })
+      .whereIn('status', ['draft', 'submitted', 'posted', 'locked', 'final'])
+      .orderBy('updated_at', 'desc')
+      .limit(100)
+
+    const assessmentForms =
+      enrollmentIds.length === 0
+        ? []
+        : await RegistrationDocument.query()
+            .where('organization_id', organizationId)
+            .whereIn('enrollment_id', enrollmentIds)
+            .where('doc_type', 'assessment_form')
+            .orderBy('issued_at', 'desc')
+            .limit(20)
+
+    const openDeficiencyCount = deficiencies.filter((d) =>
+      ['open', 'submitted', 'rejected'].includes(d.status)
+    ).length
+
+    let assessmentBreakdown: Array<{
+      feeCode: string
+      description: string
+      feeType: string
+      quantity: number
+      unitAmount: number
+      amount: number
+    }> = []
+    if (latestAssessment) {
+      const rawBreakdown = latestAssessment.breakdown as {
+        lines?: Array<{
+          feeCode?: string
+          description?: string
+          feeType?: string
+          quantity?: number
+          unitAmount?: number
+          amount?: number
+          isAid?: boolean
+        }>
+      } | null
+      const fromJson = (rawBreakdown?.lines ?? []).filter((l) => !l.isAid)
+      if (fromJson.length) {
+        assessmentBreakdown = fromJson.map((l) => ({
+          feeCode: String(l.feeCode ?? ''),
+          description: String(l.description ?? ''),
+          feeType: String(l.feeType ?? 'other'),
+          quantity: Number(l.quantity ?? 1),
+          unitAmount: Number(l.unitAmount ?? l.amount ?? 0),
+          amount: Number(l.amount ?? 0),
+        }))
+      } else {
+        const chargeLines = await AssessmentLine.query()
+          .where('assessment_id', latestAssessment.id)
+          .where('is_aid', false)
+          .orderBy('created_at', 'asc')
+        assessmentBreakdown = chargeLines.map((l) => ({
+          feeCode: l.feeCode,
+          description: l.description,
+          feeType: l.feeType,
+          quantity: Number(l.quantity),
+          unitAmount: Number(l.unitAmount),
+          amount: Number(l.amount),
+        }))
+      }
+    }
+
+    let minimumDueRequired: number | null = null
+    let installments: Array<{
+      sequence: number
+      label: string
+      amount: number
+      paidAmount: number
+      dueDate: string | null
+      status: string
+    }> = []
+
+    if (latestAssessment?.assessmentNumber) {
+      try {
+        const ufms = await this.finance.getPaymentStatus({
+          organizationId,
+          assessmentNumber: latestAssessment.assessmentNumber,
+        })
+        minimumDueRequired =
+          ufms.minimumDueRequired != null ? Number(ufms.minimumDueRequired) : null
+        installments = (ufms.installments ?? []).map((i) => ({
+          sequence: i.sequence,
+          label: i.label,
+          amount: Number(i.amount),
+          paidAmount: Number(i.paidAmount),
+          dueDate: i.dueDate,
+          status: i.status,
+        }))
+        if (tuitionBalance && ufms.paidAmount != null) {
+          tuitionBalance.paidAmount = Number(ufms.paidAmount)
+          tuitionBalance.balanceAmount = Number(ufms.balanceAmount)
+        }
+      } catch {
+        if (latestAssessment && tuitionBalance) {
+          const policy = await enrollmentPaymentPolicyService.getPolicy(organizationId)
+          minimumDueRequired = enrollmentPaymentPolicyService.computeMinimumDue({
+            policy,
+            netAmount: Number(latestAssessment.netAmount),
+            installments: [],
+          })
+        }
+      }
+    }
+
+    return {
+      student: {
+        id: student.id,
+        studentNumber: student.studentNumber,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+        classification: student.classification,
+        status: student.status,
+      },
+      deficiencies: deficiencies.map((d) => ({
+        id: d.id,
+        requirementCode: d.requirementCode,
+        description: d.description,
+        status: d.status,
+        createdAt: d.createdAt?.toISO() ?? null,
+      })),
+      openDeficiencyCount,
+      assessmentBreakdown,
+      tuitionBalance: tuitionBalance
+        ? { ...tuitionBalance, minimumDueRequired }
+        : null,
+      paymentSchedule:
+        installments.length > 0 || minimumDueRequired != null
+          ? { minimumDueRequired, installments }
+          : null,
+      runningGrades: runningGrades.map((g) => ({
+        id: g.id,
+        courseCode: g.courseCode,
+        courseTitle: g.courseTitle,
+        units: Number(g.units),
+        markCode: g.markCode,
+        grade: g.grade,
+        numericGrade: g.numericGrade,
+        status: g.status,
+        enrollmentId: g.enrollmentId,
+      })),
+      assessmentForms: assessmentForms.map((d) => ({
+        id: d.id,
+        documentNumber: d.documentNumber,
+        enrollmentId: d.enrollmentId,
+        assessmentId: d.assessmentId,
+        qrToken: d.qrToken,
+        issuedAt: d.issuedAt?.toISO() ?? null,
+        snapshot: d.snapshot,
+      })),
+      latestAssessment: latestAssessment
+        ? {
+            id: latestAssessment.id,
+            assessmentNumber: latestAssessment.assessmentNumber,
+            enrollmentId: latestAssessment.enrollmentId,
+            status: latestAssessment.status,
+            netAmount: Number(latestAssessment.netAmount),
+            paidAmount: Number(latestAssessment.paidAmount ?? 0),
+            balanceAmount: Number(latestAssessment.balanceAmount ?? 0),
+            ufmsPaymentStatus: latestAssessment.ufmsPaymentStatus,
+            minimumDueRequired,
+          }
+        : null,
+    }
   }
 
   async issueDocument(input: {
@@ -642,7 +986,7 @@ export class AssessmentService {
     const documentNumber =
       input.docType === 'certificate_of_registration'
         ? `COR-${enrollment.id.slice(0, 8)}-${Date.now().toString(36).toUpperCase()}`
-        : `AF-${assessment!.assessmentNumber}`
+        : `AF-${assessment!.assessmentNumber}-${Date.now().toString(36).toUpperCase()}`
 
     const snapshot = {
       docType: input.docType,

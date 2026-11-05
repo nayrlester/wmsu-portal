@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import vine from '@vinejs/vine'
-import UsisSectionMeeting from '#modules/enrollment/models/usis_section_meeting'
 import Enrollment from '#modules/enrollment/models/enrollment'
 import { schedulingService } from '#modules/enrollment/services/scheduling_service'
 import { waitlistService } from '#modules/enrollment/services/waitlist_service'
@@ -73,6 +72,14 @@ const applyClassCodesValidator = vine.compile(
   vine.object({
     enrollmentId: vine.string().uuid(),
     line: vine.string().trim().minLength(1).maxLength(500),
+    mode: vine.enum(['irregular', 'block'] as const).optional(),
+  })
+)
+
+const encodeBlockGroupValidator = vine.compile(
+  vine.object({
+    enrollmentId: vine.string().uuid(),
+    blockGroupCode: vine.string().trim().minLength(1).maxLength(64),
   })
 )
 
@@ -80,16 +87,28 @@ export default class SchedulingController {
   async upsertMeeting(ctx: HttpContext) {
     const user = ctx.auth.user!
     const body = await ctx.request.validateUsing(meetingValidator)
-    const row = await UsisSectionMeeting.create({
-      organizationId: user.organizationId,
-      sectionId: ctx.params.sectionId,
-      dayOfWeek: body.dayOfWeek,
-      startMinute: body.startMinute,
-      endMinute: body.endMinute,
-      roomCode: body.roomCode ?? null,
-      facultyUserId: body.facultyUserId ?? null,
-    })
-    return ctx.response.created({ data: row })
+    try {
+      const row = await slotAdminService.createMeeting({
+        organizationId: user.organizationId,
+        sectionId: ctx.params.sectionId,
+        dayOfWeek: body.dayOfWeek,
+        startMinute: body.startMinute,
+        endMinute: body.endMinute,
+        roomCode: body.roomCode ?? null,
+        facultyUserId: body.facultyUserId ?? null,
+        actorUserId: user.id,
+      })
+      return ctx.response.created({ data: row })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Create meeting failed'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
+  }
+
+  async sectionRoster(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const data = await slotAdminService.listSectionRoster(user.organizationId, ctx.params.sectionId)
+    return ctx.response.ok({ data })
   }
 
   async sectionSummary(ctx: HttpContext) {
@@ -174,6 +193,58 @@ export default class SchedulingController {
     })
   }
 
+  async leaveWaitlist(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const student = await facultyEvalService.resolveStudent(user.organizationId, user.email ?? '')
+    if (!student) return ctx.response.notFound({ error: 'No student profile linked' })
+    try {
+      const row = await waitlistService.leave({
+        organizationId: user.organizationId,
+        studentId: student.id,
+        entryId: ctx.params.id,
+        actorUserId: user.id,
+      })
+      return ctx.response.ok({ data: { id: row.id, status: row.status } })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Leave waitlist failed'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
+  }
+
+  async promoteWaitlist(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    try {
+      const row = await waitlistService.promoteNextIfSeatAvailable({
+        organizationId: user.organizationId,
+        sectionId: ctx.params.sectionId,
+        actorUserId: user.id,
+      })
+      return ctx.response.ok({
+        data: row
+          ? { promoted: true, entryId: row.id, studentId: row.studentId, enrollmentId: row.enrollmentId }
+          : { promoted: false, reason: 'No eligible waiter or no open seat' },
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Promote waitlist failed'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
+  }
+
+  async checkMeetingSlotConflicts(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const body = await ctx.request.validateUsing(meetingValidator)
+    const data = await schedulingService.detectMeetingSlotConflicts({
+      organizationId: user.organizationId,
+      sectionId: ctx.params.sectionId,
+      dayOfWeek: body.dayOfWeek,
+      startMinute: body.startMinute,
+      endMinute: body.endMinute,
+      roomCode: body.roomCode ?? null,
+      facultyUserId: body.facultyUserId ?? null,
+    })
+    return ctx.response.ok({ data })
+  }
+
   async listMeetings(ctx: HttpContext) {
     const user = ctx.auth.user!
     const rows = await slotAdminService.listMeetings(user.organizationId, ctx.params.sectionId)
@@ -237,7 +308,17 @@ export default class SchedulingController {
         actorUserId: user.id,
         reason: body.reason ?? null,
       })
-      return ctx.response.ok({ data: result })
+      const enrollmentId = result.line.enrollmentId
+      await enrollmentClassScheduleService.markScheduleChangeForReassessment(
+        enrollmentId,
+        user.organizationId
+      )
+      const autoReassessment = await enrollmentClassScheduleService.tryAutoReassess(
+        user.organizationId,
+        enrollmentId,
+        user.id
+      )
+      return ctx.response.ok({ data: { ...result, autoReassessment } })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Drop failed'
       return ctx.response.unprocessableEntity({ error: message })
@@ -254,7 +335,17 @@ export default class SchedulingController {
         toSectionId: body.toSectionId,
         actorUserId: user.id,
       })
-      return ctx.response.ok({ data: result })
+      const enrollmentId = result.line.enrollmentId
+      await enrollmentClassScheduleService.markScheduleChangeForReassessment(
+        enrollmentId,
+        user.organizationId
+      )
+      const autoReassessment = await enrollmentClassScheduleService.tryAutoReassess(
+        user.organizationId,
+        enrollmentId,
+        user.id
+      )
+      return ctx.response.ok({ data: { ...result, autoReassessment } })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Transfer failed'
       return ctx.response.unprocessableEntity({ error: message })
@@ -271,7 +362,21 @@ export default class SchedulingController {
         actorUserId: user.id,
         reason: body.reason ?? null,
       })
-      return ctx.response.ok({ data: result })
+      const autoReassessments = []
+      for (const enrollmentId of result.enrollmentIds) {
+        await enrollmentClassScheduleService.markScheduleChangeForReassessment(
+          enrollmentId,
+          user.organizationId
+        )
+        autoReassessments.push(
+          await enrollmentClassScheduleService.tryAutoReassess(
+            user.organizationId,
+            enrollmentId,
+            user.id
+          )
+        )
+      }
+      return ctx.response.ok({ data: { ...result, autoReassessments } })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Dissolve failed'
       return ctx.response.unprocessableEntity({ error: message })
@@ -294,6 +399,44 @@ export default class SchedulingController {
         readAt: r.readAt?.toISO() ?? null,
       })),
     })
+  }
+
+  async facultyScheduleNotifications(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const rows = await schedulingNotificationService.listForFaculty(user.organizationId, user.id)
+    return ctx.response.ok({
+      data: rows.map((r) => ({
+        id: r.id,
+        eventType: r.eventType,
+        title: r.title,
+        body: r.body,
+        sectionId: r.sectionId,
+        createdAt: r.createdAt.toISO(),
+        readAt: r.readAt?.toISO() ?? null,
+      })),
+    })
+  }
+
+  async markNotificationRead(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const student = await facultyEvalService.resolveStudent(user.organizationId, user.email ?? '')
+    try {
+      const row = await schedulingNotificationService.markRead({
+        organizationId: user.organizationId,
+        notificationId: ctx.params.id,
+        studentId: student?.id ?? null,
+        facultyUserId: user.id,
+      })
+      return ctx.response.ok({
+        data: {
+          id: row.id,
+          readAt: row.readAt?.toISO() ?? null,
+        },
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Mark read failed'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
   }
 
   async resolveClassCodes(ctx: HttpContext) {
@@ -341,16 +484,59 @@ export default class SchedulingController {
         enrollmentId: body.enrollmentId,
         classCodesLine: body.line,
         actorUserId: user.id,
+        mode: body.mode ?? 'irregular',
       })
       return ctx.response.ok({
         data: {
           enrollmentId: result.enrollment.id,
           addedCount: result.createdLines.length,
           sectionCodes: result.resolvedCodes,
+          autoReassessment: result.autoReassessment,
+          isRegularBlock: result.enrollment.isRegularBlock,
+          requiresReadvising: result.enrollment.requiresReadvising,
+          requiresReassessment: result.enrollment.requiresReassessment,
         },
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Apply failed'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
+  }
+
+  async encodeBlockGroup(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const body = await ctx.request.validateUsing(encodeBlockGroupValidator)
+    const enrollment = await Enrollment.query()
+      .where('id', body.enrollmentId)
+      .where('organization_id', user.organizationId)
+      .firstOrFail()
+    const self = await resolveSelfStudent(user)
+    const permissions = await effectivePermissions(ctx)
+    const isStaff = hasStaffEnrollmentAccess(permissions) || permissions.includes('enrollments.write')
+    if (!isStaff && (!self || self.id !== enrollment.studentId)) {
+      return ctx.response.forbidden({ error: 'Forbidden' })
+    }
+    try {
+      const result = await enrollmentClassScheduleService.encodeBlockGroup({
+        organizationId: user.organizationId,
+        enrollmentId: body.enrollmentId,
+        blockGroupCode: body.blockGroupCode,
+        actorUserId: user.id,
+      })
+      return ctx.response.ok({
+        data: {
+          enrollmentId: result.enrollment.id,
+          addedCount: result.createdLines.length,
+          blockGroupCode: result.blockGroupCode,
+          sectionCodes: result.sectionCodes,
+          autoReassessment: result.autoReassessment,
+          isRegularBlock: result.enrollment.isRegularBlock,
+          requiresReadvising: result.enrollment.requiresReadvising,
+          requiresReassessment: result.enrollment.requiresReassessment,
+        },
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Block encode failed'
       return ctx.response.unprocessableEntity({ error: message })
     }
   }

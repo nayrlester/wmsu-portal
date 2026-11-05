@@ -1,28 +1,26 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import env from '#start/env'
 import db from '@adonisjs/lucid/services/db'
 import { t } from '#modules/finance/helpers/db_schema'
+import { receivablesService } from '#modules/finance/services/ufms/receivables_service'
+import { resolveFinanceOrganizationId } from '#modules/finance/services/ufms/resolve_organization_id'
 
 export default class InternalClearanceController {
-  async checkClearance({ params, response }: HttpContext) {
+  async checkClearance({ params, request, response }: HttpContext) {
     const studentNumber = params.studentNumber
+    let organizationId = String(request.input('organizationId') ?? '').trim()
+    if (!organizationId) {
+      organizationId =
+        env.get('PLATFORM_DEFAULT_ORG_ID')?.trim() ||
+        String((await db.from(t('organizations')).orderBy('code').first())?.id ?? '')
+    }
+    if (!organizationId) {
+      return response.badRequest({ error: 'organizationId is required' })
+    }
+    organizationId = await resolveFinanceOrganizationId(organizationId)
 
-    const payments = await db
-      .from(t('student_payments'))
-      .where('student_number', studentNumber)
-      .sum('amount as total_paid')
-      .first()
+    const data = await receivablesService.getClearance(organizationId, studentNumber)
 
-    const totalPaid = Number(payments?.total_paid ?? 0)
-    const balance = 0 - totalPaid
-    const cleared = balance <= 0
-
-    return response.ok({
-      data: {
-        cleared,
-        balance,
-        totalPaid,
-        openItems: cleared ? 0 : 1,
-      },
-    })
+    return response.ok({ data })
   }
 }

@@ -46,7 +46,11 @@ export function DataTable<T>({
   if (data.length === 0) {
     return (
       <div role="status" aria-live="polite">
-        <EmptyState icon={emptyIcon} title={emptyTitle ?? 'No records found'} description={emptyDescription} />
+        <EmptyState
+          icon={emptyIcon}
+          title={emptyTitle ?? 'No records found'}
+          description={emptyDescription}
+        />
       </div>
     )
   }
@@ -66,7 +70,7 @@ export function DataTable<T>({
                 key={col.key}
                 className={cn(
                   'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]',
-                  col.className,
+                  col.className
                 )}
               >
                 {col.header}
@@ -76,9 +80,15 @@ export function DataTable<T>({
         </thead>
         <tbody className="divide-y divide-[var(--color-border)]">
           {data.map((item) => (
-            <tr key={keyExtractor(item)} className="transition-colors hover:bg-[var(--color-primary-soft)]/50">
+            <tr
+              key={keyExtractor(item)}
+              className="transition-colors hover:bg-[var(--color-primary-soft)]/50"
+            >
               {columns.map((col) => (
-                <td key={col.key} className={cn('px-4 py-3 text-[var(--color-ink)]', col.className)}>
+                <td
+                  key={col.key}
+                  className={cn('px-4 py-3 text-[var(--color-ink)]', col.className)}
+                >
                   {col.render
                     ? col.render(item)
                     : String((item as Record<string, unknown>)[col.key] ?? '—')}

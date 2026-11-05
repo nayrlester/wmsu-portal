@@ -17,7 +17,7 @@ import { useRealtimeSync } from '@/hooks/use-realtime'
 import { authApi, permissionsApi, settingsApi } from '@/lib/api'
 
 import { bootstrapSuperAdminWorkspace } from '@/shared/lib/tenant-session'
-import { redirectToPortalSignIn } from '@/shared/lib/portal'
+import { redirectToPortalLogout } from '@/shared/lib/portal'
 
 const AIAssistantRoot = lazy(() =>
   import('@/features/copilot/components/ai-assistant-root').then((module) => ({
@@ -31,7 +31,7 @@ export function DeskAppLayout() {
   const logoutStore = useAuthStore((s) => s.logout)
   const logout = () => {
     logoutStore()
-    redirectToPortalSignIn()
+    redirectToPortalLogout()
   }
   const setUser = useAuthStore((s) => s.setUser)
   const setPermissions = useAuthStore((s) => s.setPermissions)

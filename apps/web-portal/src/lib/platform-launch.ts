@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/stores/auth-store'
 import type { AuthPlatform } from '@/types/auth'
 
-const PLATFORM_LAUNCH_OVERRIDES: Record<string, string> = {
+export const PLATFORM_LAUNCH_OVERRIDES: Record<string, string> = {
   enrollment: 'http://127.0.0.1:5180',
   records: 'http://127.0.0.1:5181',
   finance: 'http://127.0.0.1:5182',
@@ -59,7 +59,7 @@ export function launchPlatform(
   }
 
   if (isPortalHostedLaunch(launchUrl)) {
-    window.open(launchUrl, '_blank')
+    window.location.assign(launchUrl)
     return
   }
 
@@ -72,7 +72,7 @@ export function launchPlatform(
     ? `${base}/sso/callback#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}`
     : launchUrl
 
-  window.open(url, '_blank')
+  window.location.assign(url)
 }
 
 export function useLaunchPlatform() {

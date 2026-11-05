@@ -11,6 +11,7 @@ import {
   createApprovalWorkflowValidator,
 } from '#modules/finance/validators/ufms'
 import { updateCoaValidator } from '#modules/finance/validators/accounting'
+import { seedOfficialUfmsCoa } from '#modules/finance/domain/ufms_official_coa_seed'
 
 function actorOf(auth: HttpContext['auth']) {
   const user = auth.user!
@@ -193,5 +194,10 @@ export default class UfmsReferenceController {
     } catch (error) {
       return handleError(response, error)
     }
+  }
+
+  async seedOfficialCoa({ response, auth }: HttpContext) {
+    const result = await seedOfficialUfmsCoa(auth.user!.organizationId, auth.user!.id)
+    return response.created(ok(result, 'Official COA seed loaded'))
   }
 }

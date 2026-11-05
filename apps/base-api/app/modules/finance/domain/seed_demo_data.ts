@@ -215,6 +215,8 @@ export async function seedUimsDemoData(orgCode = 'UNI'): Promise<SeedDemoResult>
       status: 'active',
     }
   )
+  admin.password = demoPassword
+  await admin.save()
   await admin.related('roles').sync({ [adminRole.id]: { organization_id: org.id } })
 
   const clerk = await User.updateOrCreate(
@@ -227,6 +229,8 @@ export async function seedUimsDemoData(orgCode = 'UNI'): Promise<SeedDemoResult>
       status: 'active',
     }
   )
+  clerk.password = demoPassword
+  await clerk.save()
   await clerk.related('roles').sync({ [supplyClerkRole.id]: { organization_id: org.id } })
 
   const viewer = await User.updateOrCreate(
@@ -239,6 +243,8 @@ export async function seedUimsDemoData(orgCode = 'UNI'): Promise<SeedDemoResult>
       status: 'active',
     }
   )
+  viewer.password = demoPassword
+  await viewer.save()
   await viewer.related('roles').sync({ [viewerRole.id]: { organization_id: org.id } })
 
   const supplier = await Supplier.updateOrCreate(

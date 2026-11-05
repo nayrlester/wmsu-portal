@@ -12,6 +12,12 @@ const authConfig = defineConfig({
         model: () => import('#modules/enrollment/models/user'),
       }),
     }),
+    financeApi: tokensGuard({
+      provider: tokensUserProvider({
+        tokens: 'accessTokens',
+        model: () => import('#modules/finance/models/user'),
+      }),
+    }),
   },
 })
 

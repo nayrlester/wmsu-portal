@@ -1,5 +1,10 @@
 import { apiClient } from '@/lib/api-client'
-import type { StockMovement, StockMovementFormData, StockBalance, StockLinesPayload } from '../types'
+import type {
+  StockMovement,
+  StockMovementFormData,
+  StockBalance,
+  StockLinesPayload,
+} from '../types'
 
 interface ListParams {
   itemId?: string
@@ -69,7 +74,7 @@ function linesBody(payload: StockMovementFormData, withReason = false): StockLin
 }
 
 export async function fetchStockMovements(
-  params: ListParams = {},
+  params: ListParams = {}
 ): Promise<{ data: StockMovement[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/stock/transactions', { params })
   const rows = (data.data ?? []).map(mapMovement)
@@ -77,7 +82,7 @@ export async function fetchStockMovements(
 }
 
 export async function fetchStockBalances(
-  params: { warehouseId?: string; search?: string } = {},
+  params: { warehouseId?: string; search?: string } = {}
 ): Promise<{ data: StockBalance[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/stock/balances', { params })
   const rows = (data.data ?? []).map(mapBalance)

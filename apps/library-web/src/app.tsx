@@ -7,6 +7,7 @@ import { DialogProvider } from '@/components/providers/dialog-provider'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { RegisterPage } from '@/features/auth/pages/register-page'
 import { SsoCallbackPage } from '@/features/auth/pages/sso-callback-page'
+import { SsoLogoutPage } from '@/features/auth/pages/sso-logout-page'
 import { allowPublicRegister } from '@/lib/deployment'
 import { useAuthStore } from '@/stores/auth-store'
 import { isStudentLimitedAccess } from '@/lib/student-access'
@@ -56,6 +57,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Navigate to={home} replace />} />
             <Route path="/sso/callback" element={<SsoCallbackPage />} />
+            <Route path="/sso/logout" element={<SsoLogoutPage />} />
 
             <Route element={<GuestRoute />}>
               <Route path="/login" element={<LoginPage />} />

@@ -3,6 +3,7 @@ import tls from 'node:tls'
 import env from '#start/env'
 import logger from '@adonisjs/core/services/logger'
 import type { SendNotificationInput } from '#modules/library/services/notifications/notification_types'
+import { emailJsMailerService } from '#modules/common-platform/services/emailjs_mailer_service'
 
 export interface EmailSendResult {
   success: boolean
@@ -75,7 +76,6 @@ async function smtpTransaction(
   const readResponse = async () => {
     let line = await readLine()
     let full = line
-    // Multi-line SMTP responses use "-" after code
     while (/^\d{3}-/.test(line)) {
       line = await readLine()
       full += line
@@ -137,13 +137,30 @@ export default class EmailChannel {
       return { success: false, error: 'No email address for recipient' }
     }
 
+    if (emailJsMailerService.isConfigured()) {
+      const result = await emailJsMailerService.send({
+        toEmail: to,
+        subject: input.title,
+        message: input.body,
+        extraParams: {
+          event_type: input.eventType,
+          channel: 'library',
+        },
+      })
+      return {
+        success: result.success,
+        providerId: result.success ? 'emailjs' : undefined,
+        error: result.error,
+      }
+    }
+
     const smtpHost = env.get('SMTP_HOST')
     if (!smtpHost) {
       logger.info(
         { channel: 'email', to, eventType: input.eventType },
-        'Email skipped: SMTP not configured'
+        'Email skipped: EmailJS and SMTP not configured'
       )
-      return { success: false, error: 'SMTP not configured' }
+      return { success: false, error: 'EmailJS and SMTP not configured' }
     }
 
     const port = env.get('SMTP_PORT') ?? 587

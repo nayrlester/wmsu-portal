@@ -5,14 +5,14 @@ import { WmsuLogo } from '@/components/brand/wmsu-logo'
 import { useAuthStore } from '@/stores/auth-store'
 import { filterNavGroups } from '@/lib/nav-config'
 import { clearQueryCache } from '@/lib/query-client'
-import { portalHomeUrl, redirectToPortalSignIn } from '@/lib/portal'
+import { portalHomeUrl, redirectToPortalLogout } from '@/lib/portal'
 
 function returnToPlatforms(opts?: { clearSession?: boolean }) {
   const { accessToken, refreshToken, logout } = useAuthStore.getState()
   if (opts?.clearSession) {
     logout()
     clearQueryCache()
-    redirectToPortalSignIn()
+    redirectToPortalLogout()
     return
   }
   if (accessToken && refreshToken) {
@@ -35,14 +35,13 @@ export function UsisShell({ children }: { children: React.ReactNode }) {
   )
 
   const navItems = groups.flatMap((group) =>
-    group.items.map((item) => ({
-      ...item,
-      section: group.label,
-    }))
+    group.items.map((item) => ({ ...item, section: group.label }))
   )
   const activeItem = [...navItems]
     .sort((a, b) => b.path.length - a.path.length)
-    .find((item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`))
+    .find(
+      (item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+    )
 
   const items = navItems.map((item) => {
     const Icon = item.icon
@@ -69,15 +68,26 @@ export function UsisShell({ children }: { children: React.ReactNode }) {
               onClick={() => returnToPlatforms()}
               title="Back to Platforms"
             >
-              <WmsuLogo productName="USiS" productTagline="Student Information" variant="sidebar" invert />
+              <WmsuLogo
+                productName="USiS"
+                productTagline="Student Information"
+                variant="sidebar"
+                invert
+              />
             </button>
           ),
           items,
-          footer: <p className="text-[10px] text-white/40">WMSU · University Student Information System</p>,
+          footer: (
+            <p className="text-[10px] text-white/40">
+              WMSU · University Student Information System
+            </p>
+          ),
         }}
         header={{
           title,
-          subtitle: user?.fullName ? `Signed in as ${user.fullName}` : user?.email ?? 'Campus portal',
+          subtitle: user?.fullName
+            ? `Signed in as ${user.fullName}`
+            : (user?.email ?? 'Campus portal'),
           user: {
             name: user?.fullName || user?.email || 'User',
             email: user?.email ?? '',

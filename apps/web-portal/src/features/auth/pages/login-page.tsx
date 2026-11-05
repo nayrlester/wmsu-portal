@@ -212,6 +212,15 @@ export function LoginPage() {
             Secure single sign-on for university platforms.
           </p>
 
+          <p className="mt-4 text-center text-sm">
+            <Link
+              to="/apply"
+              className="font-medium text-[var(--color-primary)] underline underline-offset-4 transition hover:opacity-90"
+            >
+              Apply to WMSU
+            </Link>
+          </p>
+
           <nav
             className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2"
             aria-label="Legal"

@@ -32,7 +32,9 @@ export function LoginPage() {
               variant="auth"
               className="mb-4"
             />
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--color-ink)] sm:text-3xl">Sign in</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--color-ink)] sm:text-3xl">
+              Sign in
+            </h1>
             <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
               Western Mindanao State University · Enrollment
             </p>

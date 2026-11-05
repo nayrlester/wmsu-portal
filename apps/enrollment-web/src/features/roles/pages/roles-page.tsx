@@ -31,11 +31,11 @@ export function RolesPage() {
       return data.data ?? data
     },
   })
-  const roles: RoleRecord[] = Array.isArray(result) ? result : result?.data ?? []
+  const roles: RoleRecord[] = Array.isArray(result) ? result : (result?.data ?? [])
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Roles" description="View and manage system roles" />
+      <PageHeader title="Roles" description="View roles and permissions (assignment via Identity / Platform Access)" />
 
       {isLoading ? (
         <div className="space-y-2">

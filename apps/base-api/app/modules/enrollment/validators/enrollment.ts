@@ -10,6 +10,8 @@ export const createApplicantValidator = vine.compile(
     mobile: vine.string().maxLength(32).optional(),
     birthDate: vine.string().optional(),
     programId: vine.string().uuid().optional(),
+    classification: vine.string().trim().maxLength(40).optional(),
+    mdmCampusId: vine.string().uuid().optional(),
   })
 )
 
@@ -22,7 +24,12 @@ export const updateApplicantValidator = vine.compile(
     mobile: vine.string().maxLength(32).nullable().optional(),
     birthDate: vine.string().nullable().optional(),
     programId: vine.string().uuid().nullable().optional(),
-    status: vine.string().in(['pending', 'admitted', 'rejected']).optional(),
+    classification: vine.string().trim().maxLength(40).nullable().optional(),
+    mdmCampusId: vine.string().uuid().nullable().optional(),
+    status: vine
+      .string()
+      .in(['pending', 'scheduled', 'under_review', 'admitted', 'rejected'])
+      .optional(),
   })
 )
 
@@ -50,6 +57,26 @@ export const createAcademicYearValidator = vine.compile(
   })
 )
 
+export const updateAcademicYearValidator = vine.compile(
+  vine.object({
+    code: vine.string().minLength(1).maxLength(32).optional(),
+    name: vine.string().minLength(2).maxLength(255).optional(),
+    startDate: vine.string().optional(),
+    endDate: vine.string().optional(),
+    isActive: vine.boolean().optional(),
+  })
+)
+
+export const updateProgramValidator = vine.compile(
+  vine.object({
+    code: vine.string().minLength(1).maxLength(32).optional(),
+    name: vine.string().minLength(2).maxLength(255).optional(),
+    degreeLevel: vine.string().maxLength(64).nullable().optional(),
+    years: vine.number().min(1).optional(),
+    isActive: vine.boolean().optional(),
+  })
+)
+
 export const createSectionValidator = vine.compile(
   vine.object({
     academicYearId: vine.string().uuid(),
@@ -59,6 +86,9 @@ export const createSectionValidator = vine.compile(
     yearLevel: vine.number().min(1),
     semester: vine.number().min(1).max(3),
     capacity: vine.number().min(1).optional(),
+    subjectId: vine.string().uuid().nullable().optional(),
+    isBlockSection: vine.boolean().optional(),
+    blockGroupCode: vine.string().trim().maxLength(64).nullable().optional(),
   })
 )
 
@@ -81,8 +111,9 @@ export const advisingApproveValidator = vine.compile(
 export const assessEnrollmentValidator = vine.compile(
   vine.object({
     enrollmentId: vine.string().uuid(),
-    tuitionFee: vine.number().min(0),
-    miscFees: vine.number().min(0),
+    feeScheduleId: vine.string().uuid().optional(),
+    tuitionFee: vine.number().min(0).optional(),
+    miscFees: vine.number().min(0).optional(),
     discount: vine.number().min(0).optional(),
   })
 )

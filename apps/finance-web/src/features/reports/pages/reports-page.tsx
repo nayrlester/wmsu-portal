@@ -2,123 +2,148 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import {
   Download,
-  Package,
-  HardDrive,
-  ShoppingCart,
-  TrendingDown,
   FileSpreadsheet,
-  Printer,
+  Landmark,
+  Scale,
+  PieChart,
+  Receipt,
+  ShieldCheck,
+  Building2,
+  FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
+import { PageHeader } from '@/components/ui/page-chrome'
 import { getApiErrorMessage } from '@/lib/api-client'
-import { downloadReport, triggerBlobDownload } from '../api/reports-api'
+import { runOfficialExport } from '../api/reports-api'
 import type { ReportDefinition, ReportType } from '../types'
 
 const REPORTS: ReportDefinition[] = [
   {
-    id: 'stock-inventory',
-    title: 'Stock Inventory',
-    description: 'Current stock balances by warehouse and item.',
+    id: 'trial-balance',
+    title: 'Trial Balance',
+    description: 'Period-end trial balance by COA account.',
+    path: '/reports/trial-balance',
+    kind: 'json',
   },
   {
-    id: 'property-ledger',
-    title: 'Property Ledger',
-    description: 'PPE register with acquisition cost and custodians.',
+    id: 'financial-position',
+    title: 'Statement of Financial Position',
+    description: 'Assets, liabilities, and net position summary pack.',
+    path: '/reports/financial-position',
+    kind: 'json',
   },
   {
-    id: 'consumption',
-    title: 'Consumption',
-    description: 'Issued and consumed supplies over the period.',
+    id: 'budget-vs-actual',
+    title: 'Budget vs Actual',
+    description: 'Allotment utilization against approved budget lines.',
+    path: '/reports/budget-vs-actual',
+    kind: 'json',
   },
   {
-    id: 'depreciation',
-    title: 'Depreciation',
-    description: 'Depreciation expense and book values.',
+    id: 'receivables-aging',
+    title: 'Receivables Aging',
+    description: 'Student AR open items by age bucket.',
+    path: '/reports/receivables-aging',
+    kind: 'json',
+  },
+  {
+    id: 'saob',
+    title: 'SAOB Summary',
+    description: 'Statement of Allotments, Obligations, and Balances.',
+    path: '/reports/saob',
+    kind: 'json',
+  },
+  {
+    id: 'audit-export',
+    title: 'COA Audit Export',
+    description: 'Non-editable audit trail extract for resident auditors.',
+    path: '/reports/audit-export',
+    kind: 'json',
+  },
+  {
+    id: 'bfar',
+    title: 'BFAR / BED Pack',
+    description: 'Printable budget and financial accountability report pack.',
+    path: '/official/bfar',
+    kind: 'html',
+  },
+  {
+    id: 'bir-withholding',
+    title: 'BIR Withholding Schedule',
+    description: 'Tax withholding remittance CSV for BIR filing.',
+    path: '/official/bir/withholding',
+    kind: 'csv',
+  },
+  {
+    id: 'agency-ebudget',
+    title: 'DBM eBudget Export',
+    description: 'Agency CSV package for eBudget submission.',
+    path: '/reports/agency/ebudget/csv',
+    kind: 'csv',
+  },
+  {
+    id: 'agency-btms',
+    title: 'DBM BTMS Export',
+    description: 'Obligation CSV package for BTMS submission.',
+    path: '/reports/agency/btms/csv',
+    kind: 'csv',
+  },
+  {
+    id: 'agency-engas',
+    title: 'COA eNGAS Export',
+    description: 'General ledger CSV package for eNGAS submission.',
+    path: '/reports/agency/engas/csv',
+    kind: 'csv',
   },
 ]
 
-const ICONS: Record<ReportType, typeof Package> = {
-  'stock-inventory': Package,
-  'property-ledger': HardDrive,
-  consumption: ShoppingCart,
-  depreciation: TrendingDown,
-}
-
-async function printReportPdf(type: ReportType, title: string) {
-  const blob = await downloadReport(type, 'csv')
-  const text = await blob.text()
-  const rows = text
-    .trim()
-    .split(/\r?\n/)
-    .map((line) => line.split(',').map((c) => c.replace(/^"|"$/g, '').replace(/""/g, '"')))
-  const [header, ...body] = rows
-  const win = window.open('', '_blank', 'noopener,noreferrer,width=1024,height=768')
-  if (!win) throw new Error('Popup blocked — allow popups to print PDF')
-  const tableHead = (header ?? []).map((h) => `<th>${escapeHtml(h)}</th>`).join('')
-  const tableBody = body
-    .slice(0, 2000)
-    .map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`)
-    .join('')
-  win.document.write(`<!doctype html><html><head><title>${escapeHtml(title)}</title>
-<style>
-  @page { size: A4 landscape; margin: 12mm; }
-  body { font-family: system-ui, sans-serif; color: #12122a; }
-  h1 { font-size: 18px; margin: 0 0 4px; }
-  p { margin: 0 0 16px; color: #6b6f8c; font-size: 12px; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  th, td { border: 1px solid #dde1f5; padding: 6px 8px; text-align: left; }
-  th { background: #f3f4ff; }
-  @media print { button { display: none; } }
-</style></head><body>
-  <button onclick="window.print()" style="margin-bottom:12px">Print / Save as PDF</button>
-  <h1>${escapeHtml(title)}</h1>
-  <p>Generated ${new Date().toLocaleString()} · Change page size/orientation in the print dialog</p>
-  <table><thead><tr>${tableHead}</tr></thead><tbody>${tableBody}</tbody></table>
-</body></html>`)
-  win.document.close()
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+const ICONS: Record<ReportType, typeof Scale> = {
+  'trial-balance': Scale,
+  'financial-position': Landmark,
+  'budget-vs-actual': PieChart,
+  'receivables-aging': Receipt,
+  saob: FileSpreadsheet,
+  'audit-export': ShieldCheck,
+  bfar: FileText,
+  'bir-withholding': Receipt,
+  'agency-ebudget': Building2,
+  'agency-btms': Building2,
+  'agency-engas': Building2,
 }
 
 export function ReportsPage() {
   const [error, setError] = useState('')
   const [active, setActive] = useState<ReportType | null>(null)
-  const [mode, setMode] = useState<'csv' | 'pdf' | null>(null)
+  const [fiscalYear, setFiscalYear] = useState(String(new Date().getFullYear()))
 
   const mutation = useMutation({
-    mutationFn: async ({ type, action }: { type: ReportType; action: 'csv' | 'pdf' }) => {
+    mutationFn: async (type: ReportType) => {
       setActive(type)
-      setMode(action)
       setError('')
-      if (action === 'csv') {
-        const blob = await downloadReport(type, 'csv')
-        triggerBlobDownload(blob, `${type}-${new Date().toISOString().slice(0, 10)}.csv`)
-        return
-      }
-      const title = REPORTS.find((r) => r.id === type)?.title ?? type
-      await printReportPdf(type, title)
+      await runOfficialExport(type, fiscalYear)
     },
     onError: (err) => setError(getApiErrorMessage(err)),
-    onSettled: () => {
-      setActive(null)
-      setMode(null)
-    },
+    onSettled: () => setActive(null),
   })
 
   return (
     <div className="space-y-4 animate-fade-up">
-      <div>
-        <h1>Reports</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Download CSV or print/save PDF (page size & orientation via browser print dialog)
-        </p>
+      <PageHeader
+        title="Financial Reports"
+        description="Official UFMS report packs, BFAR/BED, BIR schedules, agency CSV exports, and COA audit extracts."
+      />
+
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="text-sm">
+          <span className="mb-1 block text-muted-foreground">Fiscal year</span>
+          <Input
+            value={fiscalYear}
+            onChange={(e) => setFiscalYear(e.target.value)}
+            className="w-32"
+          />
+        </label>
       </div>
 
       {error && (
@@ -140,41 +165,18 @@ export function ReportsPage() {
                 <div className="min-w-0">
                   <h2 className="font-semibold text-[var(--color-ink)]">{report.title}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">{report.description}</p>
+                  <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">
+                    {report.kind}
+                  </p>
                 </div>
               </div>
-              <div className="mt-auto flex flex-wrap gap-2" data-print-hide>
-                <Button
-                  disabled={mutation.isPending}
-                  onClick={() => mutation.mutate({ type: report.id, action: 'csv' })}
-                >
-                  {loading && mode === 'csv' ? (
-                    <Spinner className="h-4 w-4" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  Download CSV
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={mutation.isPending}
-                  onClick={() => mutation.mutate({ type: report.id, action: 'pdf' })}
-                >
-                  {loading && mode === 'pdf' ? (
-                    <Spinner className="h-4 w-4" />
-                  ) : (
-                    <Printer className="h-4 w-4" />
-                  )}
-                  Print / PDF
-                </Button>
-              </div>
+              <Button disabled={mutation.isPending} onClick={() => mutation.mutate(report.id)}>
+                {loading ? <Spinner className="h-4 w-4" /> : <Download className="mr-2 h-4 w-4" />}
+                Export
+              </Button>
             </div>
           )
         })}
-      </div>
-
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <FileSpreadsheet className="h-3.5 w-3.5" />
-        CSV via API; PDF uses browser print with selectable page size/orientation.
       </div>
     </div>
   )

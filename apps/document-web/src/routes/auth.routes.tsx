@@ -4,6 +4,7 @@ import { AuthLayout } from '@/layouts/auth-layout'
 import { RouteFallback } from '@/components/shared/route-fallback'
 import { LoginPage, RegisterPage } from '@/routes/lazy-pages'
 import { SsoCallbackPage } from '@/features/auth/pages/sso-callback.page'
+import { SsoLogoutPage } from '@/features/auth/pages/sso-logout.page'
 
 export const authRoutes = (
   <>
@@ -12,6 +13,14 @@ export const authRoutes = (
       element={
         <Suspense fallback={<RouteFallback />}>
           <SsoCallbackPage />
+        </Suspense>
+      }
+    />
+    <Route
+      path="/sso/logout"
+      element={
+        <Suspense fallback={<RouteFallback />}>
+          <SsoLogoutPage />
         </Suspense>
       }
     />

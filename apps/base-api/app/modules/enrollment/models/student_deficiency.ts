@@ -26,8 +26,20 @@ export default class StudentDeficiency extends BaseModel {
   @column()
   declare status: string
 
+  @column()
+  declare reviewNotes: string | null
+
+  @column()
+  declare reviewedBy: string | null
+
+  @column.dateTime()
+  declare reviewedAt: DateTime | null
+
   @column.dateTime()
   declare clearedAt: DateTime | null
+
+  @column.dateTime()
+  declare deletedAt: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

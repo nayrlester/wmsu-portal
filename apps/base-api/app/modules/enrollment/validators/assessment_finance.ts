@@ -7,6 +7,7 @@ export const feeScheduleValidator = vine.compile(
     academicYearId: vine.string().uuid().optional(),
     semester: vine.number().min(1).max(3).optional(),
     classification: vine.string().trim().maxLength(40).optional(),
+    programId: vine.string().uuid().optional(),
     approvedByRole: vine.string().trim().maxLength(80).optional(),
     lines: vine.array(
       vine.object({

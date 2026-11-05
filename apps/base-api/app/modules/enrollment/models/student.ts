@@ -57,6 +57,12 @@ export default class Student extends BaseModel {
   @column()
   declare platformUserId: string | null
 
+  @column()
+  declare mergedIntoStudentId: string | null
+
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

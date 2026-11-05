@@ -28,6 +28,9 @@ export default class Program extends BaseModel {
   @column()
   declare isActive: boolean
 
+  @column()
+  declare collegeId: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

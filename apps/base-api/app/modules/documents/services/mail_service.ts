@@ -1,5 +1,6 @@
 import logger from '@adonisjs/core/services/logger'
 import env from '#start/env'
+import { emailJsMailerService } from '#modules/common-platform/services/emailjs_mailer_service'
 
 export interface MailPayload {
   to: string
@@ -8,14 +9,45 @@ export interface MailPayload {
   text?: string
 }
 
+function htmlToPlainText(html: string) {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim()
+}
+
 export class MailService {
   async send(payload: MailPayload): Promise<void> {
+    if (emailJsMailerService.isConfigured()) {
+      const result = await emailJsMailerService.send({
+        toEmail: payload.to,
+        subject: payload.subject,
+        message: payload.text || htmlToPlainText(payload.html),
+        extraParams: {
+          html_body: payload.html,
+          channel: 'documents',
+        },
+      })
+      if (!result.success && !result.skipped) {
+        logger.error(
+          { to: payload.to, subject: payload.subject, error: result.error },
+          '[MailService] EmailJS send failed'
+        )
+      }
+      return
+    }
+
     const smtpHost = env.get('SMTP_HOST')
 
     if (!smtpHost) {
       logger.info(
         { to: payload.to, subject: payload.subject },
-        '[MailService] SMTP not configured — email logged to console'
+        '[MailService] EmailJS/SMTP not configured — email logged to console'
       )
       return
     }

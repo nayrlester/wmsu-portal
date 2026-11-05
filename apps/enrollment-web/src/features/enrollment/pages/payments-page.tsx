@@ -34,7 +34,9 @@ export function PaymentsPage() {
     <div className="space-y-4 animate-fade-up">
       <div>
         <h1>Payments</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Tuition and fee receipts synced to UFMS when configured</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Tuition and fee receipts synced to UFMS when configured
+        </p>
       </div>
       <DataTable
         columns={columns}

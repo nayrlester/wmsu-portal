@@ -1,6 +1,7 @@
 import env from '#start/env'
 import Student from '#modules/enrollment/models/student'
 import type { ClearanceReportSnapshot } from '#modules/enrollment/models/usis_clearance_report'
+import { financeInternalPath } from '#modules/enrollment/services/integrations/finance_api_paths'
 import { DateTime } from 'luxon'
 
 type ServiceCheck = { cleared: boolean; openItems?: number; error?: boolean }
@@ -13,20 +14,25 @@ export class ClearanceAggregateService {
       .first()
   }
 
-  async crossSystemChecks(studentNumber: string): Promise<{
+  async crossSystemChecks(
+    studentNumber: string,
+    organizationId?: string | null
+  ): Promise<{
     finance: ServiceCheck
     inventory: ServiceCheck
     library: ServiceCheck
   }> {
-    const financeUrl = env.get('FINANCE_API_URL') ?? 'http://127.0.0.1:3342'
-    const inventoryUrl = env.get('INVENTORY_API_URL') ?? 'http://127.0.0.1:3344'
-    const libraryUrl = env.get('LIBRARY_API_URL') ?? 'http://127.0.0.1:3341'
+    const inventoryUrl = (env.get('INVENTORY_API_URL') ?? 'http://127.0.0.1:3500').replace(/\/$/, '')
+    const libraryUrl = (env.get('LIBRARY_API_URL') ?? 'http://127.0.0.1:3500').replace(/\/$/, '')
     const serviceApiKey = env.get('SERVICE_API_KEY') ?? ''
+    const orgQs = organizationId
+      ? `?organizationId=${encodeURIComponent(organizationId)}`
+      : ''
 
     const checks = await Promise.allSettled([
-      this.checkService(`${financeUrl}/api/v1/internal/clearance/${studentNumber}`, serviceApiKey),
-      this.checkService(`${inventoryUrl}/api/v1/internal/clearance/${studentNumber}`, serviceApiKey),
-      this.checkService(`${libraryUrl}/api/v1/internal/clearance/${studentNumber}`, serviceApiKey),
+      this.checkService(`${financeInternalPath(`/clearance/${studentNumber}`)}${orgQs}`, serviceApiKey),
+      this.checkService(`${inventoryUrl}/api/v1/inventory/internal/clearance/${studentNumber}`, serviceApiKey),
+      this.checkService(`${libraryUrl}/api/v1/library/internal/clearance/${studentNumber}`, serviceApiKey),
     ])
 
     return {
@@ -37,7 +43,7 @@ export class ClearanceAggregateService {
   }
 
   async buildSnapshot(student: Student): Promise<ClearanceReportSnapshot> {
-    const checks = await this.crossSystemChecks(student.studentNumber)
+    const checks = await this.crossSystemChecks(student.studentNumber, student.organizationId)
     const cleared = checks.finance.cleared && checks.inventory.cleared && checks.library.cleared
     return {
       schemaVersion: '1',

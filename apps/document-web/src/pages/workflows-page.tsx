@@ -421,9 +421,8 @@ export function WorkflowsPage() {
                 <option value="none">No side-effect</option>
                 <option value="notify">Notify (email)</option>
                 <option value="webhook">Webhook</option>
-                <option value="sms">SMS (audited stub)</option>
               </Select>
-              {(selectedStep.actionType === 'notify' || selectedStep.actionType === 'sms') && (
+              {selectedStep.actionType === 'notify' && (
                 <Input
                   value={selectedStep.actionMessage ?? ''}
                   onChange={(e) => updateStep(selectedIndex, { actionMessage: e.target.value })}

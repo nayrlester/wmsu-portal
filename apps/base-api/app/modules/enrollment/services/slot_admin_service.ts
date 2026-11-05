@@ -21,6 +21,99 @@ export class SlotAdminService {
       .orderBy('start_minute', 'asc')
   }
 
+  async enrolledStudentIds(organizationId: string, sectionId: string) {
+    const lines = await EnrollmentLine.query()
+      .where('organization_id', organizationId)
+      .where('section_id', sectionId)
+      .whereIn('status', ['planned', 'registered', 'enrolled'])
+      .preload('enrollment')
+    return [...new Set(lines.map((l) => l.enrollment?.studentId).filter(Boolean) as string[])]
+  }
+
+  async listSectionRoster(organizationId: string, sectionId: string) {
+    const lines = await EnrollmentLine.query()
+      .where('organization_id', organizationId)
+      .where('section_id', sectionId)
+      .whereIn('status', ['planned', 'registered', 'enrolled'])
+      .preload('enrollment', (q) => q.preload('student'))
+      .orderBy('created_at', 'asc')
+
+    return lines.map((line) => {
+      const student = line.enrollment?.student
+      return {
+        enrollmentLineId: line.id,
+        enrollmentId: line.enrollmentId,
+        status: line.status,
+        studentId: student?.id ?? line.enrollment?.studentId ?? null,
+        studentNumber: student?.studentNumber ?? null,
+        studentName: student ? `${student.lastName}, ${student.firstName}` : null,
+        subjectCode: line.subjectCode,
+      }
+    })
+  }
+
+  async createMeeting(input: {
+    organizationId: string
+    sectionId: string
+    dayOfWeek: number
+    startMinute: number
+    endMinute: number
+    roomCode?: string | null
+    facultyUserId?: string | null
+    actorUserId: string
+  }) {
+    if (input.endMinute <= input.startMinute) {
+      throw new Error('endMinute must be after startMinute')
+    }
+    const section = await Section.query()
+      .where('organization_id', input.organizationId)
+      .where('id', input.sectionId)
+      .firstOrFail()
+    if (section.status === 'dissolved') throw new Error('Section is dissolved')
+
+    const slotConflict = await schedulingService.detectMeetingSlotConflicts({
+      organizationId: input.organizationId,
+      sectionId: input.sectionId,
+      dayOfWeek: input.dayOfWeek,
+      startMinute: input.startMinute,
+      endMinute: input.endMinute,
+      roomCode: input.roomCode ?? null,
+      facultyUserId: input.facultyUserId ?? null,
+    })
+    if (!slotConflict.ok) {
+      throw new Error(slotConflict.conflicts[0]?.message ?? 'Schedule conflict on meeting slot')
+    }
+
+    const row = await UsisSectionMeeting.create({
+      organizationId: input.organizationId,
+      sectionId: input.sectionId,
+      dayOfWeek: input.dayOfWeek,
+      startMinute: input.startMinute,
+      endMinute: input.endMinute,
+      roomCode: input.roomCode ?? null,
+      facultyUserId: input.facultyUserId ?? null,
+    })
+
+    const studentIds = await this.enrolledStudentIds(input.organizationId, input.sectionId)
+    await schedulingNotificationService.notifySectionStakeholders({
+      organizationId: input.organizationId,
+      sectionId: input.sectionId,
+      eventType: 'schedule_slot_added',
+      title: 'Class meeting added',
+      body: `A meeting slot was added to section ${section.code}.`,
+      studentIds,
+    })
+
+    await auditLogService.log({
+      organizationId: input.organizationId,
+      actorUserId: input.actorUserId,
+      action: AuditAction.CREATE,
+      entityType: 'section_meeting',
+      entityId: row.id,
+    })
+    return row
+  }
+
   async updateMeeting(input: {
     organizationId: string
     meetingId: string
@@ -38,20 +131,43 @@ export class SlotAdminService {
       .where('id', input.meetingId)
       .firstOrFail()
 
+    const nextDay = input.patch.dayOfWeek !== undefined ? input.patch.dayOfWeek : row.dayOfWeek
+    const nextStart = input.patch.startMinute !== undefined ? input.patch.startMinute : row.startMinute
+    const nextEnd = input.patch.endMinute !== undefined ? input.patch.endMinute : row.endMinute
+    const nextRoom = input.patch.roomCode !== undefined ? input.patch.roomCode : row.roomCode
+    const nextFaculty =
+      input.patch.facultyUserId !== undefined ? input.patch.facultyUserId : row.facultyUserId
+    const slotConflict = await schedulingService.detectMeetingSlotConflicts({
+      organizationId: input.organizationId,
+      sectionId: row.sectionId,
+      dayOfWeek: nextDay,
+      startMinute: nextStart,
+      endMinute: nextEnd,
+      roomCode: nextRoom,
+      facultyUserId: nextFaculty,
+      excludeMeetingId: row.id,
+    })
+    if (!slotConflict.ok) {
+      throw new Error(slotConflict.conflicts[0]?.message ?? 'Schedule conflict on meeting slot')
+    }
+
     if (input.patch.dayOfWeek !== undefined) row.dayOfWeek = input.patch.dayOfWeek
     if (input.patch.startMinute !== undefined) row.startMinute = input.patch.startMinute
     if (input.patch.endMinute !== undefined) row.endMinute = input.patch.endMinute
     if (input.patch.roomCode !== undefined) row.roomCode = input.patch.roomCode
     if (input.patch.facultyUserId !== undefined) row.facultyUserId = input.patch.facultyUserId
+    if (row.endMinute <= row.startMinute) throw new Error('endMinute must be after startMinute')
     await row.save()
 
     const section = await Section.findOrFail(row.sectionId)
+    const studentIds = await this.enrolledStudentIds(input.organizationId, row.sectionId)
     await schedulingNotificationService.notifySectionStakeholders({
       organizationId: input.organizationId,
       sectionId: row.sectionId,
       eventType: 'schedule_updated',
       title: 'Class schedule updated',
       body: `Meeting times or room assignments changed for section ${section.code}.`,
+      studentIds,
     })
 
     await auditLogService.log({
@@ -72,6 +188,7 @@ export class SlotAdminService {
       .firstOrFail()
     const sectionId = row.sectionId
     const section = await Section.findOrFail(sectionId)
+    const studentIds = await this.enrolledStudentIds(input.organizationId, sectionId)
     await row.delete()
 
     await schedulingNotificationService.notifySectionStakeholders({
@@ -80,6 +197,7 @@ export class SlotAdminService {
       eventType: 'schedule_slot_removed',
       title: 'Class meeting removed',
       body: `A meeting slot was removed from section ${section.code}.`,
+      studentIds,
     })
 
     await auditLogService.log({
@@ -339,7 +457,14 @@ export class SlotAdminService {
         entityId: section.id,
       })
 
-      return { section, affectedStudents: studentIds.length, droppedLines: lines.length }
+      const enrollmentIds = [...new Set(lines.map((l) => l.enrollmentId).filter(Boolean))]
+
+      return {
+        section,
+        affectedStudents: studentIds.length,
+        droppedLines: lines.length,
+        enrollmentIds,
+      }
     })
   }
 }

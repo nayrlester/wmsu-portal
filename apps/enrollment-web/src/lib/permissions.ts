@@ -32,22 +32,13 @@ export function hasStudentPortalAccess(permissions: string[], roles: string[]): 
   if (permissions.includes('enrollments.read') || permissions.includes('enrollments.write')) {
     return false
   }
-  const studentRole = roleSlugs.some(
-    (r) => r === 'student' || r.endsWith('_student')
-  )
+  const studentRole = roleSlugs.some((r) => r === 'student' || r.endsWith('_student'))
   if (studentRole) return true
   return USIS_STUDENT_NAV_PERMISSIONS.some((code) => permissions.includes(code))
 }
 
 export type PortalId =
-  | 'student'
-  | 'faculty'
-  | 'registrar'
-  | 'admissions'
-  | 'osa'
-  | 'guidance'
-  | 'health'
-  | 'scholarship'
+  'student' | 'faculty' | 'registrar' | 'admissions' | 'osa' | 'guidance' | 'health' | 'scholarship'
 
 export function resolveHomePath(permissions: string[], roles: string[]): string {
   const roleSlugs = roles.map((r) => r.toLowerCase())

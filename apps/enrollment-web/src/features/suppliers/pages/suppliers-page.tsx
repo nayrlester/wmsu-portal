@@ -12,7 +12,12 @@ import { DataTable } from '@/components/ui/data-table'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { getApiErrorMessage } from '@/lib/api-client'
-import { fetchSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../api/suppliers-api'
+import {
+  fetchSuppliers,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
+} from '../api/suppliers-api'
 import type { Supplier, SupplierFormData } from '../types'
 import type { Column } from '@/components/ui/data-table'
 
@@ -42,7 +47,9 @@ const columns: Column<Supplier>[] = [
   {
     key: 'status',
     header: 'Status',
-    render: (s) => <Badge variant={s.status === 'active' ? 'success' : 'default'}>{s.status}</Badge>,
+    render: (s) => (
+      <Badge variant={s.status === 'active' ? 'success' : 'default'}>{s.status}</Badge>
+    ),
   },
 ]
 
@@ -157,10 +164,18 @@ function SupplierFormModal({
     onSuccess: onSaved,
   })
 
-  const { register, formState: { errors } } = form
+  const {
+    register,
+    formState: { errors },
+  } = form
 
   return (
-    <Modal open onClose={onClose} title={mode === 'create' ? 'Add Supplier' : 'Edit Supplier'} size="lg">
+    <Modal
+      open
+      onClose={onClose}
+      title={mode === 'create' ? 'Add Supplier' : 'Edit Supplier'}
+      size="lg"
+    >
       {mutation.isError && (
         <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           {getApiErrorMessage(mutation.error)}
@@ -181,7 +196,9 @@ function SupplierFormModal({
         </div>
         <Textarea label="Address" rows={2} {...register('address')} />
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             {mode === 'create' ? 'Create' : 'Save Changes'}
@@ -217,8 +234,14 @@ function DeleteModal({
         </div>
       )}
       <div className="mt-5 flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button variant="destructive" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          disabled={mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
           {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
           Delete
         </Button>

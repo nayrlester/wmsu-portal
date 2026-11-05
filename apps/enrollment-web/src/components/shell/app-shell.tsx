@@ -33,7 +33,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header onMenuToggle={() => setSidebarOpen((v) => !v)} />
-        <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto px-6 pb-8 pt-4 outline-none">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 overflow-y-auto px-6 pb-8 pt-4 outline-none"
+        >
           {children}
         </main>
       </div>

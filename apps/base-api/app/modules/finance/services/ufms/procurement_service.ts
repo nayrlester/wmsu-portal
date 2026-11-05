@@ -52,7 +52,23 @@ async function assertSupplier(organizationId: string, supplierId: string) {
     .where('id', supplierId)
     .first()
   if (!supplier) throw Object.assign(new Error('Supplier not found'), { status: 422 })
+  if (!supplier.active) {
+    throw Object.assign(new Error('Supplier is blacklisted or inactive'), { status: 422 })
+  }
+  const notes = String(supplier.eligibilityNotes ?? '')
+  if (notes.toUpperCase().includes('[BLACKLISTED]')) {
+    throw Object.assign(new Error('Supplier is blacklisted'), { status: 422 })
+  }
+  if (supplier.eligibilityValidUntil && supplier.eligibilityValidUntil < DateTime.now().startOf('day')) {
+    throw Object.assign(new Error('Supplier eligibility has expired'), { status: 422 })
+  }
   return supplier
+}
+
+function procurementMethodForAmount(amount: number) {
+  if (amount <= 50_000) return 'shopping'
+  if (amount <= 1_000_000) return 'small_value'
+  return 'public_bidding'
 }
 
 export class ProcurementService {
@@ -255,6 +271,10 @@ export class ProcurementService {
       amount: pr.estimatedAmount,
     })
 
+    if (check.enforcement === 'hard' && !check.sufficient) {
+      throw Object.assign(new Error('Insufficient budget allotment for this PR (hard stop)'), { status: 422 })
+    }
+
     pr.merge({
       status: 'submitted',
       submittedAt: DateTime.now(),
@@ -341,6 +361,14 @@ export class ProcurementService {
     if (!RFQ_METHODS.has(method)) {
       throw Object.assign(new Error('method must be quotation or bidding (TOR FIN-012)'), { status: 422 })
     }
+    const estimated = Number((pr as { estimatedAmount?: string | number }).estimatedAmount ?? 0)
+    const recommended = procurementMethodForAmount(estimated)
+    if (method === 'quotation' && recommended === 'public_bidding') {
+      throw Object.assign(
+        new Error(`Amount ₱${estimated.toLocaleString('en-PH')} requires public bidding under RA 9184 thresholds`),
+        { status: 422 }
+      )
+    }
 
     const rfq = await ProcurementRfq.create({
       organizationId: actor.organizationId,
@@ -359,7 +387,7 @@ export class ProcurementService {
       action: 'procurement.rfq.create',
       entityType: 'procurement_rfq',
       entityId: rfq.id,
-      metadata: { method, tor: ['FIN-012', 'FIN-026'] },
+      metadata: { method, recommended, estimated, tor: ['FIN-012', 'FIN-015', 'FIN-026'] },
     })
     return rfq
   }
@@ -698,7 +726,7 @@ export class ProcurementService {
           organizationId: actor.organizationId,
           purchaseOrderId: po.id,
           deliveryNumber: String(payload.deliveryNumber ?? '').trim() || seq('DLV'),
-          deliveredOn: toDateTime(payload.deliveredOn),
+          deliveredOn: payload.deliveredOn ? toDateTime(payload.deliveredOn) : DateTime.now(),
           status: 'recorded',
           notes: (payload.notes as string | null | undefined) ?? null,
           receivedBy: actor.id,

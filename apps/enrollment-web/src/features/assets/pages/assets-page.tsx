@@ -49,8 +49,7 @@ const assetSchema = z.object({
     .string()
     .min(1, 'Category is required')
     .refine(
-      (v) =>
-        ['equipment', 'furniture', 'vehicle', 'it_hardware', 'building', 'other'].includes(v),
+      (v) => ['equipment', 'furniture', 'vehicle', 'it_hardware', 'building', 'other'].includes(v),
       'Select a valid category'
     ),
   serialNumber: z.string(),
@@ -100,10 +99,23 @@ function statusBadge(status: string) {
 }
 
 const columns: Column<Asset>[] = [
-  { key: 'tagNumber', header: 'Tag No.', className: 'font-mono text-xs', render: (a) => a.tagNumber },
+  {
+    key: 'tagNumber',
+    header: 'Tag No.',
+    className: 'font-mono text-xs',
+    render: (a) => a.tagNumber,
+  },
   { key: 'name', header: 'Name', render: (a) => <span className="font-medium">{a.name}</span> },
-  { key: 'brand', header: 'Brand / Model', render: (a) => [a.brand, a.model].filter(Boolean).join(' ') || '—' },
-  { key: 'category', header: 'Category', render: (a) => <Badge>{assetTypeLabel(a.category)}</Badge> },
+  {
+    key: 'brand',
+    header: 'Brand / Model',
+    render: (a) => [a.brand, a.model].filter(Boolean).join(' ') || '—',
+  },
+  {
+    key: 'category',
+    header: 'Category',
+    render: (a) => <Badge>{assetTypeLabel(a.category)}</Badge>,
+  },
   { key: 'fundSource', header: 'Fund', render: (a) => a.fundSource || '—' },
   { key: 'location', header: 'Location' },
   {
@@ -139,7 +151,9 @@ export function AssetsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1>Assets</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Track property, plant, and equipment</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Track property, plant, and equipment
+          </p>
         </div>
         <Button onClick={() => setModal({ mode: 'create' })}>
           <Plus className="h-4 w-4" /> Add Asset
@@ -164,7 +178,9 @@ export function AssetsPage() {
         >
           <option value="">All Statuses</option>
           {statusOptions.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
       </div>
@@ -179,13 +195,28 @@ export function AssetsPage() {
         emptyDescription="Register your first asset to begin tracking property and equipment."
         actions={(item) => (
           <>
-            <Button variant="ghost" size="icon" title="Assign" onClick={() => setModal({ mode: 'assign', item })}>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Assign"
+              onClick={() => setModal({ mode: 'assign', item })}
+            >
               <UserPlus className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" title="Return" onClick={() => setModal({ mode: 'return', item })}>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Return"
+              onClick={() => setModal({ mode: 'return', item })}
+            >
               <Undo2 className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" title="Maintenance" onClick={() => setModal({ mode: 'maintenance', item })}>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Maintenance"
+              onClick={() => setModal({ mode: 'maintenance', item })}
+            >
               <Wrench className="h-3.5 w-3.5" />
             </Button>
             <Button
@@ -264,12 +295,19 @@ export function AssetsPage() {
       )}
 
       {modal.mode === 'qr' && (
-        <Modal open onClose={() => setModal({ mode: 'closed' })} title={`QR — ${modal.item.tagNumber}`} size="sm">
+        <Modal
+          open
+          onClose={() => setModal({ mode: 'closed' })}
+          title={`QR — ${modal.item.tagNumber}`}
+          size="sm"
+        >
           <div className="space-y-3 text-center">
             {modal.qrUrl ? (
               <img src={modal.qrUrl} alt="Asset QR" className="mx-auto h-48 w-48 object-contain" />
             ) : (
-              <p className="break-all rounded-xl bg-[var(--color-primary-soft)] p-4 font-mono text-xs">{modal.qrData || modal.item.tagNumber}</p>
+              <p className="break-all rounded-xl bg-[var(--color-primary-soft)] p-4 font-mono text-xs">
+                {modal.qrData || modal.item.tagNumber}
+              </p>
             )}
             <p className="text-sm text-muted-foreground">{modal.item.name}</p>
           </div>
@@ -318,10 +356,19 @@ function AssetFormModal({
   })
 
   const onSubmit = form.handleSubmit((v) => mutation.mutate(v))
-  const { register, control, formState: { errors } } = form
+  const {
+    register,
+    control,
+    formState: { errors },
+  } = form
 
   return (
-    <Modal open onClose={onClose} title={mode === 'create' ? 'Register Asset' : 'Edit Asset'} size="lg">
+    <Modal
+      open
+      onClose={onClose}
+      title={mode === 'create' ? 'Register Asset' : 'Edit Asset'}
+      size="lg"
+    >
       {mutation.isError && (
         <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           {getApiErrorMessage(mutation.error)}
@@ -329,12 +376,22 @@ function AssetFormModal({
       )}
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Property Tag No." error={errors.tagNumber?.message} {...register('tagNumber')} />
+          <Input
+            label="Property Tag No."
+            error={errors.tagNumber?.message}
+            {...register('tagNumber')}
+          />
           <Input label="Name" error={errors.name?.message} {...register('name')} />
         </div>
         <Textarea label="Description" rows={2} {...register('description')} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select label="Category" placeholder="Select…" options={categoryOptions} error={errors.category?.message} {...register('category')} />
+          <Select
+            label="Category"
+            placeholder="Select…"
+            options={categoryOptions}
+            error={errors.category?.message}
+            {...register('category')}
+          />
           <Input label="Serial Number" {...register('serialNumber')} />
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -358,7 +415,13 @@ function AssetFormModal({
               />
             )}
           />
-          <Input label="Acquisition Cost (₱)" type="number" min={0} step="0.01" {...register('acquisitionCost', { valueAsNumber: true })} />
+          <Input
+            label="Acquisition Cost (₱)"
+            type="number"
+            min={0}
+            step="0.01"
+            {...register('acquisitionCost', { valueAsNumber: true })}
+          />
           <Controller
             name="warrantyExpiry"
             control={control}
@@ -375,15 +438,27 @@ function AssetFormModal({
           />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select label="Fund Source" placeholder="Select…" options={fundSourceOptions} {...register('fundSource')} />
-          <Select label="Status" options={statusOptions} error={errors.status?.message} {...register('status')} />
+          <Select
+            label="Fund Source"
+            placeholder="Select…"
+            options={fundSourceOptions}
+            {...register('fundSource')}
+          />
+          <Select
+            label="Status"
+            options={statusOptions}
+            error={errors.status?.message}
+            {...register('status')}
+          />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Location" {...register('location')} />
           <Input label="Assigned To" {...register('assignedTo')} />
         </div>
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             {mode === 'create' ? 'Register' : 'Save Changes'}
@@ -411,8 +486,8 @@ function DeleteAssetModal({
   return (
     <Modal open onClose={onClose} title="Delete Asset" size="sm">
       <p className="text-sm text-muted-foreground">
-        Are you sure you want to delete asset <strong className="text-ink">{item.tagNumber}</strong> —{' '}
-        <strong className="text-ink">{item.name}</strong>? This cannot be undone.
+        Are you sure you want to delete asset <strong className="text-ink">{item.tagNumber}</strong>{' '}
+        — <strong className="text-ink">{item.name}</strong>? This cannot be undone.
       </p>
       {mutation.isError && (
         <div className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -420,8 +495,14 @@ function DeleteAssetModal({
         </div>
       )}
       <div className="mt-5 flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button variant="destructive" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          disabled={mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
           {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
           Delete
         </Button>
@@ -455,11 +536,18 @@ function AssignModal({
         </div>
       )}
       <div className="space-y-4">
-        <Input label="Assign To" value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} placeholder="Employee / office name" />
+        <Input
+          label="Assign To"
+          value={assignedTo}
+          onChange={(e) => setAssignedTo(e.target.value)}
+          placeholder="Employee / office name"
+        />
         <Input label="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
         <Textarea label="Notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button disabled={!assignedTo || mutation.isPending} onClick={() => mutation.mutate()}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             Assign
@@ -497,10 +585,16 @@ function ReturnModal({
         </div>
       )}
       <div className="space-y-4">
-        <Input label="Return Location" value={location} onChange={(e) => setLocation(e.target.value)} />
+        <Input
+          label="Return Location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
         <Textarea label="Notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             Return Asset
@@ -536,7 +630,12 @@ function MaintenanceModal({
         </div>
       )}
       <div className="space-y-4">
-        <Textarea label="Description" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <Textarea
+          label="Description"
+          rows={2}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
         <DatePicker
           label="Scheduled Date"
           value={scheduledDate}
@@ -545,7 +644,9 @@ function MaintenanceModal({
         />
         <Textarea label="Notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button disabled={!description || mutation.isPending} onClick={() => mutation.mutate()}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             Schedule

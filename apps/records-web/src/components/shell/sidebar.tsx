@@ -4,7 +4,6 @@ import {
   FileText,
   ScrollText,
   GraduationCap,
-  Settings,
   Shield,
   Users,
   Building2,
@@ -38,7 +37,6 @@ const navGroups = [
       { to: '/organization', icon: Building2, label: 'Organization' },
       { to: '/users', icon: Users, label: 'Users' },
       { to: '/roles', icon: Shield, label: 'Roles' },
-      { to: '/foundation', icon: Settings, label: 'Foundation' },
     ],
   },
 ] as const

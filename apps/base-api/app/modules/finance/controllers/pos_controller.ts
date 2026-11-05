@@ -132,6 +132,15 @@ export default class PosController {
     }
   }
 
+  async refundSale({ params, request, response, auth }: HttpContext) {
+    try {
+      const row = await posService.refundSale(actorOf(auth), params.id, request.body() as Record<string, unknown>)
+      return response.ok(ok(row, 'Sale refunded'))
+    } catch (error) {
+      return handleError(response, error)
+    }
+  }
+
   async closeEod({ request, response, auth }: HttpContext) {
     try {
       const payload = await request.validateUsing(eodValidator)

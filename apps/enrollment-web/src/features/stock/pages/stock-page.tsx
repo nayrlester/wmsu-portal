@@ -41,7 +41,14 @@ const movementSchema = z.object({
 type Tab = 'movements' | 'balances'
 
 function TypeBadge({ type }: { type: string }) {
-  const map: Record<string, { variant: 'success' | 'danger' | 'warning' | 'default'; icon: typeof ArrowDownRight; label: string }> = {
+  const map: Record<
+    string,
+    {
+      variant: 'success' | 'danger' | 'warning' | 'default'
+      icon: typeof ArrowDownRight
+      label: string
+    }
+  > = {
     IN: { variant: 'success', icon: ArrowDownRight, label: 'Receipt' },
     OUT: { variant: 'danger', icon: ArrowUpRight, label: 'Issue' },
     ADJUST: { variant: 'warning', icon: Minus, label: 'Adjust' },
@@ -93,14 +100,24 @@ const movementColumns: Column<StockMovement>[] = [
     header: 'Qty',
     className: 'text-right',
     render: (m) => {
-      const prefix = m.type === 'IN' || m.type === 'RETURN' || m.type === 'RELEASE' ? '+' : m.type === 'OUT' || m.type === 'DISPOSAL' || m.type === 'RESERVE' ? '-' : '±'
+      const prefix =
+        m.type === 'IN' || m.type === 'RETURN' || m.type === 'RELEASE'
+          ? '+'
+          : m.type === 'OUT' || m.type === 'DISPOSAL' || m.type === 'RESERVE'
+            ? '-'
+            : '±'
       const color =
         m.type === 'IN' || m.type === 'RETURN' || m.type === 'RELEASE'
           ? 'text-emerald-600'
           : m.type === 'OUT' || m.type === 'DISPOSAL' || m.type === 'RESERVE'
             ? 'text-red-600'
             : 'text-amber-600'
-      return <span className={`font-semibold ${color}`}>{prefix}{formatNumber(m.quantity)}</span>
+      return (
+        <span className={`font-semibold ${color}`}>
+          {prefix}
+          {formatNumber(m.quantity)}
+        </span>
+      )
     },
   },
   {
@@ -141,7 +158,11 @@ const balanceColumns: Column<StockBalance>[] = [
     header: 'Available',
     className: 'text-right',
     render: (b) => (
-      <span className={b.quantityAvailable <= b.reorderLevel ? 'font-semibold text-amber-600' : 'font-semibold'}>
+      <span
+        className={
+          b.quantityAvailable <= b.reorderLevel ? 'font-semibold text-amber-600' : 'font-semibold'
+        }
+      >
         {formatNumber(b.quantityAvailable)}
       </span>
     ),
@@ -174,7 +195,9 @@ export function StockPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1>Stock</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Track movements, balances, returns, and reserves</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Track movements, balances, returns, and reserves
+          </p>
         </div>
         {tab === 'movements' && (
           <Button onClick={() => setShowForm(true)}>
@@ -184,10 +207,10 @@ export function StockPage() {
       </div>
 
       <div className="flex gap-1 rounded-full bg-[var(--color-primary-soft)] p-1 w-fit">
-        {([
+        {[
           { id: 'movements' as const, label: 'Movements' },
           { id: 'balances' as const, label: 'Balances' },
-        ]).map((t) => (
+        ].map((t) => (
           <button
             key={t.id}
             type="button"
@@ -196,7 +219,7 @@ export function StockPage() {
               'rounded-full px-4 py-1.5 text-sm font-medium transition',
               tab === t.id
                 ? 'bg-white text-[var(--color-ink)] shadow-sm'
-                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-ink)]',
+                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-ink)]'
             )}
           >
             {t.label}
@@ -213,7 +236,9 @@ export function StockPage() {
               className="h-9 rounded-md border border-border bg-white px-3 text-sm text-ink shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {typeOptions.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
           </div>
@@ -281,7 +306,10 @@ function StockMovementFormModal({
   })
 
   const onSubmit = form.handleSubmit((v) => mutation.mutate(v))
-  const { register, formState: { errors } } = form
+  const {
+    register,
+    formState: { errors },
+  } = form
 
   return (
     <Modal open onClose={onClose} title="Record Stock Movement">
@@ -329,7 +357,9 @@ function StockMovementFormModal({
         <Input label="Reference No." placeholder="e.g. PO-2026-001" {...register('reference')} />
         <Textarea label="Notes" rows={2} {...register('notes')} />
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             Record Movement

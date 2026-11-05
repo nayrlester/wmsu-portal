@@ -97,6 +97,49 @@ export class WaitlistService {
       .orderBy('position', 'asc')
   }
 
+  async leave(input: {
+    organizationId: string
+    studentId: string
+    entryId: string
+    actorUserId?: string | null
+  }) {
+    const row = await UsisSectionWaitlistEntry.query()
+      .where('organization_id', input.organizationId)
+      .where('id', input.entryId)
+      .where('student_id', input.studentId)
+      .where('status', 'waiting')
+      .first()
+    if (!row) throw new Error('Waitlist entry not found')
+    row.status = 'cancelled'
+    await row.save()
+    await auditLogService.log({
+      organizationId: input.organizationId,
+      actorUserId: input.actorUserId ?? null,
+      action: AuditAction.UPDATE,
+      entityType: 'section_waitlist',
+      entityId: row.id,
+    })
+    return row
+  }
+
+  private async resolveEnrollmentId(
+    trx: TransactionClientContract,
+    organizationId: string,
+    studentId: string,
+    preferredEnrollmentId: string | null
+  ) {
+    if (preferredEnrollmentId) return preferredEnrollmentId
+    const row = await db
+      .from(t('enrollments'))
+      .useTransaction(trx)
+      .where('organization_id', organizationId)
+      .where('student_id', studentId)
+      .whereNotIn('status', ['cancelled', 'void', 'withdrawn'])
+      .orderBy('created_at', 'desc')
+      .first()
+    return (row?.id as string | undefined) ?? null
+  }
+
   async promoteNextIfSeatAvailable(input: {
     organizationId: string
     sectionId: string
@@ -123,7 +166,42 @@ export class WaitlistService {
         .orderBy('position', 'asc')
         .forUpdate()
         .first()
-      if (!next || !next.enrollmentId) return null
+      if (!next) return null
+
+      const enrollmentId = await this.resolveEnrollmentId(
+        trx,
+        input.organizationId,
+        next.studentId,
+        next.enrollmentId
+      )
+      if (!enrollmentId) {
+        await schedulingNotificationService.notifyStudent({
+          organizationId: input.organizationId,
+          studentId: next.studentId,
+          sectionId: section.id,
+          eventType: 'waitlist_seat_available',
+          title: 'Waitlist seat available',
+          body: `A seat opened in section ${section.code}, but no active enrollment was found to seat you automatically. Contact the registrar to complete registration.`,
+        })
+        return null
+      }
+
+      const conflict = await schedulingService.detectConflicts({
+        organizationId: input.organizationId,
+        studentId: next.studentId,
+        candidateSectionId: section.id,
+      })
+      if (!conflict.ok) {
+        await schedulingNotificationService.notifyStudent({
+          organizationId: input.organizationId,
+          studentId: next.studentId,
+          sectionId: section.id,
+          eventType: 'waitlist_conflict_blocked',
+          title: 'Waitlist promotion blocked',
+          body: `A seat opened in section ${section.code}, but a schedule conflict prevented automatic seating: ${conflict.conflicts[0]?.message ?? 'conflict'}. Registrar may seat the next waiter or resolve the conflict.`,
+        })
+        return null
+      }
 
       let subjectCode = 'TBD'
       let subjectTitle = 'TBD'
@@ -142,7 +220,7 @@ export class WaitlistService {
       await EnrollmentLine.create(
         {
           organizationId: input.organizationId,
-          enrollmentId: next.enrollmentId,
+          enrollmentId,
           subjectId,
           subjectCode,
           subjectTitle,
@@ -154,6 +232,7 @@ export class WaitlistService {
       )
 
       next.useTransaction(trx)
+      next.enrollmentId = enrollmentId
       next.status = 'promoted'
       await next.save()
 

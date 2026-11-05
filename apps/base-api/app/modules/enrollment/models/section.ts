@@ -40,6 +40,9 @@ export default class Section extends BaseModel {
   declare isBlockSection: boolean
 
   @column()
+  declare blockGroupCode: string | null
+
+  @column()
   declare subjectId: string | null
 
   @column()

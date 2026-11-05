@@ -9,7 +9,7 @@ import Role from '#modules/finance/models/role'
 import Permission from '#modules/finance/models/permission'
 import type { PlatformAccessClaims } from '#modules/finance/services/platform/platform_identity'
 import { UIMS_PERMISSIONS } from '#modules/finance/domain/enums/index'
-import { UFMS_PERMISSIONS } from '#modules/finance/domain/ufms_permissions'
+import { UFMS_PERMISSIONS, FINANCE_ACCOUNTING_PERMISSION_CODES } from '#modules/finance/domain/ufms_permissions'
 import env from '#start/env'
 
 /**
@@ -67,11 +67,38 @@ export default class PlatformUserLinkService {
       for (const code of [
         'budget.read',
         'accounting.read',
+        'accounting.write',
+        'accounting.post',
         'cashier.read',
         'cashier.write',
         'pos.read',
         'pos.sell',
+        'procurement.read',
+        'procurement.write',
+        'procurement.accept',
         'finance.read',
+      ]) {
+        mapped.add(code)
+      }
+    }
+
+    if (hasIdentityRole(roles, 'accounting', 'accountant', 'finance_officer')) {
+      for (const code of [
+        'budget.read',
+        'budget.write',
+        'budget.submit',
+        'budget.approve',
+        'accounting.read',
+        'accounting.write',
+        'accounting.post',
+        'cashier.read',
+        'procurement.read',
+        'procurement.write',
+        'procurement.approve',
+        'procurement.accept',
+        'finance.read',
+        'finance.write',
+        'audit.read',
       ]) {
         mapped.add(code)
       }
@@ -175,27 +202,54 @@ export default class PlatformUserLinkService {
 
   private async ensureRole(user: User, orgId: string, roles: string[]) {
     const wantAdmin = this.isIdentityAdmin(roles)
-    const slug = wantAdmin ? 'admin' : 'staff'
+    let slug = wantAdmin ? 'admin' : 'staff'
+    if (
+      !wantAdmin &&
+      hasIdentityRole(roles, 'cashier', 'accounting', 'accountant', 'finance_officer')
+    ) {
+      slug = 'finance_accounting'
+    }
 
     let role = await Role.query().where('organizationId', orgId).where('slug', slug).first()
     if (!role) {
-      // RBAC catalog may not be seeded yet — create a minimal role with catalog perms.
       for (const p of [...UFMS_PERMISSIONS, ...UIMS_PERMISSIONS]) {
         await Permission.updateOrCreate({ code: p.code }, { name: p.name, module: p.module })
       }
-      role = await Role.updateOrCreate(
-        { organizationId: orgId, slug },
-        {
-          organizationId: orgId,
-          slug,
-          name: slug === 'admin' ? 'Administrator' : 'Staff',
-        }
-      )
+      if (slug === 'finance_accounting') {
+        role = await Role.updateOrCreate(
+          { organizationId: orgId, slug: 'finance_accounting' },
+          { organizationId: orgId, slug: 'finance_accounting', name: 'Finance & Accounting' }
+        )
+        const all = await Permission.all()
+        await role.related('permissions').sync(
+          all
+            .filter((p) => FINANCE_ACCOUNTING_PERMISSION_CODES.includes(p.code as never))
+            .map((p) => p.id)
+        )
+      } else {
+        role = await Role.updateOrCreate(
+          { organizationId: orgId, slug },
+          {
+            organizationId: orgId,
+            slug,
+            name: slug === 'admin' ? 'Administrator' : 'Staff',
+          }
+        )
+      }
     }
 
     if (slug === 'admin') {
       const all = await Permission.all()
       await role.related('permissions').sync(all.map((p) => p.id))
+    }
+
+    if (slug === 'finance_accounting') {
+      const all = await Permission.all()
+      await role.related('permissions').sync(
+        all
+          .filter((p) => FINANCE_ACCOUNTING_PERMISSION_CODES.includes(p.code as never))
+          .map((p) => p.id)
+      )
     }
 
     const withRoles = await User.query()
@@ -207,7 +261,13 @@ export default class PlatformUserLinkService {
     if (hasDesired) return
 
     if (wantAdmin) {
-      // Upgrade prior staff/viewer attachment to admin for Identity admins.
+      await user.related('roles').sync({
+        [role.id]: { organization_id: orgId },
+      })
+      return
+    }
+
+    if (slug === 'finance_accounting') {
       await user.related('roles').sync({
         [role.id]: { organization_id: orgId },
       })

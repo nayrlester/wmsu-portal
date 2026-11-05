@@ -58,7 +58,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   })
   declare roles: ManyToMany<typeof Role>
 
-  static accessTokens = DbAccessTokensProvider.forModel(User)
+  static accessTokens = DbAccessTokensProvider.forModel(User, {
+    table: t('auth_access_tokens'),
+  })
 
   declare currentAccessToken?: AccessToken
 

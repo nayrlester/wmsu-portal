@@ -7,9 +7,18 @@ const audienceSchema = vine.object({
   roles: vine.array(vine.string()).optional(),
   programIds: vine.array(vine.string()).optional(),
   yearLevels: vine.array(vine.number()).optional(),
+  educationalLevels: vine.array(vine.string()).optional(),
   departmentCodes: vine.array(vine.string()).optional(),
   sectionCodes: vine.array(vine.string()).optional(),
 })
+
+function parseOptionalDate(value: unknown): Date | null | undefined {
+  if (value === undefined) return undefined
+  if (value === null || value === '') return null
+  const dt = new Date(String(value))
+  if (Number.isNaN(dt.getTime())) throw new Error('Invalid datetime value')
+  return dt
+}
 
 const createValidator = vine.compile(
   vine.object({
@@ -17,8 +26,8 @@ const createValidator = vine.compile(
     body: vine.string().trim().minLength(1),
     audience: audienceSchema.optional(),
     isPinned: vine.boolean().optional(),
-    publishAt: vine.date().optional(),
-    expiresAt: vine.date().optional(),
+    publishAt: vine.string().trim().optional(),
+    expiresAt: vine.string().trim().optional(),
     deliverPortal: vine.boolean().optional(),
     deliverEmail: vine.boolean().optional(),
     deliverSms: vine.boolean().optional(),
@@ -32,8 +41,8 @@ const updateValidator = vine.compile(
     body: vine.string().trim().minLength(1).optional(),
     audience: audienceSchema.optional(),
     isPinned: vine.boolean().optional(),
-    publishAt: vine.date().nullable().optional(),
-    expiresAt: vine.date().nullable().optional(),
+    publishAt: vine.string().trim().nullable().optional(),
+    expiresAt: vine.string().trim().nullable().optional(),
     deliverPortal: vine.boolean().optional(),
     deliverEmail: vine.boolean().optional(),
     deliverSms: vine.boolean().optional(),
@@ -51,6 +60,15 @@ const dispatchValidator = vine.compile(
   vine.object({
     channels: vine.array(vine.enum(['sms', 'email'] as const)).minLength(1),
     audience: audienceSchema.optional(),
+    recipientKinds: vine
+      .array(vine.enum(['student', 'parent', 'guardian', 'sponsor'] as const))
+      .optional(),
+  })
+)
+
+const commentValidator = vine.compile(
+  vine.object({
+    body: vine.string().trim().minLength(1).maxLength(2000),
   })
 )
 
@@ -89,40 +107,50 @@ export default class AnnouncementsController {
     const user = this.orgUser(ctx)
     if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
     const body = await ctx.request.validateUsing(createValidator)
-    const data = await announcementsService.create({
-      organizationId: user.organizationId,
-      userId: user.id,
-      title: body.title,
-      body: body.body,
-      audience: body.audience,
-      isPinned: body.isPinned,
-      publishAt: body.publishAt,
-      expiresAt: body.expiresAt,
-      deliverPortal: body.deliverPortal,
-      deliverEmail: body.deliverEmail,
-      deliverSms: body.deliverSms,
-      publishNow: body.publishNow,
-    })
-    return ctx.response.created({ data })
+    try {
+      const data = await announcementsService.create({
+        organizationId: user.organizationId,
+        userId: user.id,
+        title: body.title,
+        body: body.body,
+        audience: body.audience,
+        isPinned: body.isPinned,
+        publishAt: parseOptionalDate(body.publishAt) ?? undefined,
+        expiresAt: parseOptionalDate(body.expiresAt) ?? undefined,
+        deliverPortal: body.deliverPortal,
+        deliverEmail: body.deliverEmail,
+        deliverSms: body.deliverSms,
+        publishNow: body.publishNow,
+      })
+      return ctx.response.created({ data })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Create failed'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
   }
 
   async update(ctx: HttpContext) {
     const user = this.orgUser(ctx)
     if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
     const body = await ctx.request.validateUsing(updateValidator)
-    const data = await announcementsService.update(ctx.params.id, user.organizationId, user.id, {
-      title: body.title,
-      body: body.body,
-      audience: body.audience,
-      isPinned: body.isPinned,
-      publishAt: body.publishAt === undefined ? undefined : body.publishAt,
-      expiresAt: body.expiresAt === undefined ? undefined : body.expiresAt,
-      deliverPortal: body.deliverPortal,
-      deliverEmail: body.deliverEmail,
-      deliverSms: body.deliverSms,
-      status: body.status,
-    })
-    return ctx.response.ok({ data })
+    try {
+      const data = await announcementsService.update(ctx.params.id, user.organizationId, user.id, {
+        title: body.title,
+        body: body.body,
+        audience: body.audience,
+        isPinned: body.isPinned,
+        publishAt: parseOptionalDate(body.publishAt),
+        expiresAt: parseOptionalDate(body.expiresAt),
+        deliverPortal: body.deliverPortal,
+        deliverEmail: body.deliverEmail,
+        deliverSms: body.deliverSms,
+        status: body.status,
+      })
+      return ctx.response.ok({ data })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Update failed'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
   }
 
   async publish(ctx: HttpContext) {
@@ -146,17 +174,54 @@ export default class AnnouncementsController {
     const localRoles = await announcementsService.loadUserRoleSlugs(user)
     const student = await announcementsService.resolveStudentForUser(user.organizationId, user.email)
     const settings = await announcementsService.getSettings(user.organizationId)
-    const items = await announcementsService.feed(user.organizationId, {
-      identityRoles,
-      localRoleSlugs: localRoles,
-      student,
-    })
+    const items = await announcementsService.feed(
+      user.organizationId,
+      {
+        identityRoles,
+        localRoleSlugs: localRoles,
+        student,
+      },
+      20,
+      user.id
+    )
     return ctx.response.ok({
       data: {
         items,
         settings: { socialFeaturesEnabled: settings.socialFeaturesEnabled },
       },
     })
+  }
+
+  async toggleLike(ctx: HttpContext) {
+    const user = this.orgUser(ctx)
+    if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
+    try {
+      const data = await announcementsService.toggleLike(user.organizationId, ctx.params.id, user.id)
+      return ctx.response.ok({ data })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Like failed'
+      const status = (err as { status?: number })?.status ?? 422
+      return ctx.response.status(status).send({ error: message })
+    }
+  }
+
+  async addComment(ctx: HttpContext) {
+    const user = this.orgUser(ctx)
+    if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
+    const body = await ctx.request.validateUsing(commentValidator)
+    try {
+      const data = await announcementsService.addComment(
+        user.organizationId,
+        ctx.params.id,
+        user.id,
+        body.body
+      )
+      return ctx.response.created({ data })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Comment failed'
+      const status = (err as { status?: number })?.status ?? 422
+      return ctx.response.status(status).send({ error: message })
+    }
   }
 
   async dispatch(ctx: HttpContext) {
@@ -177,6 +242,7 @@ export default class AnnouncementsController {
           channel,
           requestedBy: user.id,
           filters: audience,
+          recipientKinds: body.recipientKinds,
         })
       )
     }

@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Pagination } from '@wmsu/ui'
 import { PageHeader, SectionCard, StatusBadge } from '@/components/ui/page-chrome'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { EmptyState } from '@/components/ui/empty-state'
+import { listTotalLabel, useListControls, usePaginatedQuery } from '@/lib/list-query'
 import {
   listTorRequests,
   submitTorRequest,
@@ -34,6 +36,7 @@ const STATUS_OPTIONS = [
 
 export function TorRequestsPage() {
   const qc = useQueryClient()
+  const controls = useListControls()
   const [status, setStatus] = useState('')
   const [studentNumber, setStudentNumber] = useState('')
   const [form, setForm] = useState({
@@ -48,14 +51,17 @@ export function TorRequestsPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitOk, setSubmitOk] = useState<string | null>(null)
 
-  const query = useQuery({
-    queryKey: ['tor-requests', status, studentNumber],
+  const query = usePaginatedQuery({
+    queryKey: ['tor-requests', status, studentNumber, controls.page],
     queryFn: () =>
       listTorRequests({
         status: status || undefined,
         studentNumber: studentNumber || undefined,
+        page: controls.page,
+        limit: controls.pageSize,
       }),
   })
+  const rows = query.data?.data ?? []
 
   const submit = useMutation({
     mutationFn: () =>
@@ -79,8 +85,6 @@ export function TorRequestsPage() {
       setSubmitError(ax.response?.data?.message ?? 'Submission failed')
     },
   })
-
-  const rows = useMemo(() => query.data ?? [], [query.data])
 
   return (
     <div className="space-y-6">
@@ -184,7 +188,10 @@ export function TorRequestsPage() {
               placeholder="All statuses"
               options={STATUS_OPTIONS}
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => {
+                controls.setPage(1)
+                setStatus(e.target.value)
+              }}
             />
           </div>
           <label className="text-sm flex-1">
@@ -192,7 +199,10 @@ export function TorRequestsPage() {
             <Input
               placeholder="Filter student number"
               value={studentNumber}
-              onChange={(e) => setStudentNumber(e.target.value)}
+              onChange={(e) => {
+                controls.setPage(1)
+                setStudentNumber(e.target.value)
+              }}
             />
           </label>
         </div>
@@ -203,40 +213,48 @@ export function TorRequestsPage() {
         ) : rows.length === 0 ? (
           <EmptyState title="No transcript requests" description="Submit a request to get started." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-slate-50/80 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="px-3 py-2">Reference</th>
-                  <th className="px-3 py-2">Student</th>
-                  <th className="px-3 py-2">Purpose</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Clearance</th>
-                  <th className="px-3 py-2">Payment</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {rows.map((r: TorRequest) => (
-                  <tr key={r.id} className="hover:bg-slate-50/60">
-                    <td className="px-3 py-2">
-                      <Link
-                        className="font-medium text-[var(--color-primary)] underline"
-                        to={`/tor/${r.request_number}`}
-                      >
-                        {r.request_number}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2">{r.student_number}</td>
-                    <td className="px-3 py-2">{r.purpose}</td>
-                    <td className="px-3 py-2">
-                      <StatusBadge status={r.status} />
-                    </td>
-                    <td className="px-3 py-2 text-xs">{r.clearance_status ?? '—'}</td>
-                    <td className="px-3 py-2 text-xs">{r.payment_status ?? '—'}</td>
+          <div className="space-y-3">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-slate-50/80 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                    <th className="px-3 py-2">Reference</th>
+                    <th className="px-3 py-2">Student</th>
+                    <th className="px-3 py-2">Purpose</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Clearance</th>
+                    <th className="px-3 py-2">Payment</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {rows.map((r: TorRequest) => (
+                    <tr key={r.id} className="hover:bg-slate-50/60">
+                      <td className="px-3 py-2">
+                        <Link
+                          className="font-medium text-[var(--color-primary)] underline"
+                          to={`/tor/${r.request_number}`}
+                        >
+                          {r.request_number}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2">{r.student_number}</td>
+                      <td className="px-3 py-2">{r.purpose}</td>
+                      <td className="px-3 py-2">
+                        <StatusBadge status={r.status} />
+                      </td>
+                      <td className="px-3 py-2 text-xs">{r.clearance_status ?? '—'}</td>
+                      <td className="px-3 py-2 text-xs">{r.payment_status ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              page={controls.page}
+              pageCount={Math.max(1, query.data?.meta.lastPage ?? 1)}
+              onPageChange={controls.setPage}
+              totalLabel={listTotalLabel(query.data?.meta, controls.page)}
+            />
           </div>
         )}
       </SectionCard>

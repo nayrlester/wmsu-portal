@@ -1,12 +1,9 @@
-import { useState } from 'react'
+import { useCallback } from 'react'
 import type { UseQueryResult } from '@tanstack/react-query'
-import {
-  EmptyState,
-  LoadingState,
-  PageHeader,
-  Pagination,
-  SearchInput,
-} from '@wmsu/ui'
+import { EmptyState, LoadingState, PageHeader, Pagination, SearchInput } from '@wmsu/ui'
+import { listTotalLabel, useLazyPageTrigger, useListControls } from '@/lib/list-query'
+
+export { useListControls }
 
 type Props<T> = {
   title: string
@@ -17,7 +14,9 @@ type Props<T> = {
   searchPlaceholder?: string
   page?: number
   lastPage?: number
+  totalLabel?: string
   onPageChange?: (page: number) => void
+  lazyLoad?: boolean
   actions?: React.ReactNode
   children: (data: T) => React.ReactNode
   emptyTitle?: string
@@ -34,13 +33,38 @@ export function QueryPage<T>({
   searchPlaceholder = 'Search…',
   page,
   lastPage,
+  totalLabel,
   onPageChange,
+  lazyLoad = false,
   actions,
   children,
   emptyTitle = 'No records',
   emptyDescription = 'Nothing matched the current filters.',
   isEmpty,
 }: Props<T>) {
+  const hasData = query.isSuccess || (query.isFetching && query.data !== undefined)
+  const showEmpty = query.isSuccess && !!isEmpty?.(query.data as T) && !query.isFetching
+  const showContent = hasData && query.data !== undefined && !isEmpty?.(query.data as T)
+  const pageCount = lastPage ?? 1
+  const currentPage = page ?? 1
+  const canLazyNext = lazyLoad && !!onPageChange && currentPage < pageCount && !query.isFetching
+
+  const loadNext = useCallback(() => {
+    if (!canLazyNext || !onPageChange) return
+    onPageChange(currentPage + 1)
+  }, [canLazyNext, onPageChange, currentPage])
+
+  const setSentinel = useLazyPageTrigger(canLazyNext, loadNext, [currentPage, pageCount])
+
+  const resolvedTotal =
+    totalLabel ??
+    (page
+      ? listTotalLabel(
+          (query.data as { meta?: Parameters<typeof listTotalLabel>[0] } | undefined)?.meta,
+          page
+        )
+      : undefined)
+
   return (
     <div className="space-y-4">
       <PageHeader title={title} description={description} actions={actions} />
@@ -53,31 +77,37 @@ export function QueryPage<T>({
         />
       ) : null}
 
-      {query.isLoading ? <LoadingState label={`Loading ${title}`} /> : null}
+      {query.isLoading && !query.data ? <LoadingState label={`Loading ${title}`} /> : null}
 
-      {query.isSuccess && isEmpty?.(query.data) ? (
-        <EmptyState title={emptyTitle} description={emptyDescription} />
+      {query.isFetching && query.data ? (
+        <p className="text-xs text-[var(--color-muted-foreground)]" aria-live="polite">
+          Updating results…
+        </p>
       ) : null}
 
-      {query.isSuccess && !isEmpty?.(query.data) ? children(query.data) : null}
+      {showEmpty ? <EmptyState title={emptyTitle} description={emptyDescription} /> : null}
 
-      {page && lastPage && onPageChange && lastPage > 1 ? (
-        <Pagination page={page} pageCount={lastPage} onPageChange={onPageChange} />
+      {showContent ? (
+        <div className="relative space-y-3">
+          {children(query.data as T)}
+          {lazyLoad && canLazyNext ? (
+            <div ref={setSentinel} className="flex h-8 items-center justify-center">
+              <span className="text-xs text-[var(--color-muted-foreground)]">Loading more…</span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {!lazyLoad && page && onPageChange ? (
+        <div className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 shadow-[var(--shadow-soft)]">
+          <Pagination
+            page={page}
+            pageCount={Math.max(pageCount, 1)}
+            onPageChange={onPageChange}
+            totalLabel={resolvedTotal}
+          />
+        </div>
       ) : null}
     </div>
   )
-}
-
-export function useListControls(initialSearch = '') {
-  const [search, setSearch] = useState(initialSearch)
-  const [page, setPage] = useState(1)
-  return {
-    search,
-    setSearch: (value: string) => {
-      setPage(1)
-      setSearch(value)
-    },
-    page,
-    setPage,
-  }
 }

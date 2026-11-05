@@ -2,11 +2,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { t } from '#modules/finance/helpers/db_schema'
 import { randomUUID } from 'node:crypto'
+import { receivablesService } from '#modules/finance/services/ufms/receivables_service'
+import { resolveFinanceOrganizationId } from '#modules/finance/services/ufms/resolve_organization_id'
 
 export default class InternalAssessmentsController {
   async upsert({ request, response }: HttpContext) {
     const payload = request.body() as Record<string, unknown>
-    const organizationId = String(payload.organizationId ?? '')
+    const organizationId = await resolveFinanceOrganizationId(String(payload.organizationId ?? ''))
     const studentNumber = String(payload.studentNumber ?? '')
     const assessmentNumber = String(payload.assessmentNumber ?? '')
     const idempotencyKey = String(
@@ -34,6 +36,7 @@ export default class InternalAssessmentsController {
         success: true,
         data: {
           id: byKey.id,
+          ufmsAssessmentId: byKey.id,
           assessmentNumber: byKey.assessment_number,
           paymentStatus: byKey.payment_status,
           deduplicated: true,
@@ -65,6 +68,7 @@ export default class InternalAssessmentsController {
         success: true,
         data: {
           id: existing.id,
+          ufmsAssessmentId: existing.id,
           assessmentNumber: existing.assessment_number,
           paymentStatus: existing.payment_status,
           deduplicated: true,
@@ -97,10 +101,22 @@ export default class InternalAssessmentsController {
       })
       .returning('*')
 
+    await receivablesService.openArFromAssessment({
+      organizationId,
+      assessmentId: row.id,
+      studentNumber,
+      assessmentNumber,
+      netAmount,
+      programId: payload.programId ? String(payload.programId) : null,
+      yearLevel: payload.yearLevel != null ? Number(payload.yearLevel) : null,
+      classification: payload.classification ? String(payload.classification) : null,
+    })
+
     return response.created({
       success: true,
       data: {
         id: row.id,
+        ufmsAssessmentId: row.id,
         assessmentNumber: row.assessment_number,
         paymentStatus: row.payment_status,
         deduplicated: false,
@@ -109,69 +125,17 @@ export default class InternalAssessmentsController {
   }
 
   async paymentStatus({ params, request, response }: HttpContext) {
-    const organizationId = String(request.input('organizationId') ?? '')
+    const organizationId = await resolveFinanceOrganizationId(String(request.input('organizationId') ?? ''))
     const assessmentNumber = String(params.assessmentNumber ?? '')
     if (!organizationId || !assessmentNumber) {
       return response.badRequest({ success: false, error: 'organizationId and assessmentNumber are required' })
     }
 
-    const assessment = await db
-      .from(t('student_assessments'))
-      .where({ organization_id: organizationId, assessment_number: assessmentNumber })
-      .first()
-
-    if (!assessment) {
+    const data = await receivablesService.getPaymentStatus(organizationId, assessmentNumber)
+    if (!data) {
       return response.notFound({ success: false, error: 'Assessment not found in UFMS' })
     }
 
-    const payments = await db
-      .from(t('student_payments'))
-      .where('organization_id', organizationId)
-      .where((q) => {
-        q.where('assessment_number', assessmentNumber).orWhere((inner) => {
-          inner.whereNull('assessment_number').where('student_number', assessment.student_number)
-        })
-      })
-      .orderBy('paid_at', 'asc')
-
-    const linked = payments.filter(
-      (p) => p.assessment_number === assessmentNumber || !p.assessment_number
-    )
-    const paidAmount = linked.reduce((s, p) => s + Number(p.amount), 0)
-    const net = Number(assessment.net_amount)
-    let paymentStatus = assessment.payment_status as string
-    if (paidAmount <= 0) paymentStatus = 'unpaid'
-    else if (paidAmount + 0.001 >= net) paymentStatus = 'paid'
-    else paymentStatus = 'partial'
-
-    if (paymentStatus !== assessment.payment_status || Number(assessment.paid_amount) !== paidAmount) {
-      await db
-        .from(t('student_assessments'))
-        .where('id', assessment.id)
-        .update({
-          paid_amount: paidAmount,
-          payment_status: paymentStatus,
-          updated_at: new Date(),
-        })
-    }
-
-    return response.ok({
-      success: true,
-      data: {
-        assessmentNumber,
-        ufmsAssessmentId: assessment.id,
-        paymentStatus,
-        assessedAmount: net,
-        paidAmount,
-        balanceAmount: Math.max(0, net - paidAmount),
-        payments: linked.map((p) => ({
-          id: p.id,
-          amount: Number(p.amount),
-          orNumber: p.or_id ?? null,
-          reference: p.reference,
-          paidAt: p.paid_at,
-        })),
-      },
-    })
+    return response.ok({ success: true, data })
   }
 }

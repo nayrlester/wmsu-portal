@@ -19,6 +19,7 @@ export default class GradesController {
     const query = GradeEntry.query()
       .where('organization_id', user.organizationId)
       .preload('enrollment')
+      .preload('student')
       .orderBy('created_at', 'desc')
 
     if (enrollmentId) query.where('enrollment_id', enrollmentId)

@@ -2,9 +2,11 @@ import { DateTime } from 'luxon'
 import { errors } from '@adonisjs/auth'
 import User from '#modules/finance/models/user'
 import RefreshToken from '#modules/finance/models/refresh_token'
-import { tokenService } from '#modules/finance/services/token_service'
+import { rbacService } from '#modules/finance/services/rbac_service'
 import { auditLogService } from '#modules/finance/services/audit_log_service'
+import { tokenService } from '#modules/finance/services/token_service'
 import { AuditAction } from '#modules/finance/domain/enums/index'
+import { tryFinanceLoginFromEnrollmentSatellite } from '#modules/finance/services/enrollment_satellite_login_bridge'
 
 export interface AuthTokens {
   accessToken: string
@@ -15,14 +17,26 @@ export interface AuthTokens {
 
 export class AuthService {
   async login(email: string, password: string): Promise<{ user: User; tokens: AuthTokens }> {
+    let user: User | null = null
     try {
-      const user = await User.verifyCredentials(email.toLowerCase(), password)
+      user = await User.verifyCredentials(email.toLowerCase(), password)
+    } catch {
+      user = await tryFinanceLoginFromEnrollmentSatellite(email, password)
+    }
+    if (!user) {
+      throw new errors.E_INVALID_CREDENTIALS('Invalid credentials')
+    }
 
+    try {
       if (user.status !== 'active') {
         throw new errors.E_INVALID_CREDENTIALS('Account is not active')
       }
 
       const tokens = await this.issueTokensForUser(user)
+
+      try {
+        await rbacService.ensureLocalFinancePersonaRole(user)
+      } catch {}
 
       await auditLogService.log({
         organizationId: user.organizationId,

@@ -1,5 +1,9 @@
 import env from '#start/env'
 import { randomUUID } from 'node:crypto'
+import {
+  financeInternalPath,
+  resolveFinanceOrganizationId,
+} from '#modules/enrollment/services/integrations/finance_api_paths'
 
 export class FinancePaymentClient {
   async postStudentPayment(input: {
@@ -21,9 +25,10 @@ export class FinancePaymentClient {
       }
     }
 
-    const base = (env.get('FINANCE_API_URL') ?? 'http://127.0.0.1:3342').replace(/\/$/, '')
+    const base = financeInternalPath('/cashier/payments')
     const key = env.get('SERVICE_API_KEY') ?? ''
-    const res = await fetch(`${base}/api/v1/internal/cashier/payments`, {
+    const organizationId = await resolveFinanceOrganizationId(input.organizationId)
+    const res = await fetch(base, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -32,7 +37,7 @@ export class FinancePaymentClient {
         ...(input.reference ? { 'Idempotency-Key': String(input.reference) } : {}),
       },
       body: JSON.stringify({
-        organizationId: input.organizationId,
+        organizationId,
         studentNumber: input.studentNumber,
         amount: input.amount,
         paymentType: input.paymentType ?? 'tuition',

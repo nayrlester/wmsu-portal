@@ -31,9 +31,26 @@ export async function listTorRequests(params?: {
   studentNumber?: string
   requestNumber?: string
   mineOnly?: boolean
+  page?: number
+  limit?: number
 }) {
   const { data } = await apiClient.get('/tor/requests', { params })
-  return (data.data ?? data) as TorRequest[]
+  const rows = (data.data ?? data) as TorRequest[]
+  const meta = (data.meta ?? {}) as {
+    total?: number
+    perPage?: number
+    currentPage?: number
+    lastPage?: number
+  }
+  return {
+    data: Array.isArray(rows) ? rows : [],
+    meta: {
+      total: meta.total,
+      perPage: meta.perPage,
+      currentPage: meta.currentPage,
+      lastPage: meta.lastPage,
+    },
+  }
 }
 
 export async function submitTorRequest(body: {

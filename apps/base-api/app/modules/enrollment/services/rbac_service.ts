@@ -1,6 +1,8 @@
 import Permission from '#modules/enrollment/models/permission'
 import Role from '#modules/enrollment/models/role'
 import User from '#modules/enrollment/models/user'
+import { mergePermissionSets } from '#modules/common-platform/services/platform_identity_rbac'
+import { enrollmentPackForIdentityRole } from '#modules/enrollment/services/platform/enrollment_role_packs'
 
 export class RbacService {
   async listPermissions(): Promise<Permission[]> {
@@ -68,20 +70,24 @@ export class RbacService {
       for (const perm of role.permissions ?? []) {
         codes.add(perm.code)
       }
+      for (const code of enrollmentPackForIdentityRole(role.slug)) {
+        codes.add(code)
+      }
     }
 
     return Array.from(codes)
   }
 
   async getEffectivePermissions(user: User, platformPermissions?: string[]): Promise<string[]> {
-    if (platformPermissions?.length) {
-      if (platformPermissions.includes('*')) {
-        const all = await Permission.all()
-        return all.map((p) => p.code)
-      }
-      return platformPermissions
+    const local = await this.getUserPermissions(user)
+    if (platformPermissions?.includes('*') || local.includes('*')) {
+      const all = await Permission.all()
+      return all.map((p) => p.code)
     }
-    return this.getUserPermissions(user)
+    if (platformPermissions?.length) {
+      return mergePermissionSets(platformPermissions, local)
+    }
+    return local
   }
 }
 

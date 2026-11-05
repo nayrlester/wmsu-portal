@@ -6,6 +6,7 @@ export type ScannedRoutes = {
   ALL: {
     'common_platform.jwks': { paramsTuple?: []; params?: {} }
     'health.live': { paramsTuple?: []; params?: {} }
+    'health.ready': { paramsTuple?: []; params?: {} }
     'health.show': { paramsTuple?: []; params?: {} }
     'health.ping': { paramsTuple?: []; params?: {} }
     'mdm.overview': { paramsTuple?: []; params?: {} }
@@ -68,34 +69,85 @@ export type ScannedRoutes = {
     'enrollment.applicants.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.applicants.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.applicants.admit': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.applicants.status_history': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.applicants.admission_results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.forms.list': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.forms.active': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.forms.store': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.forms.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.events.list': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.store': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.events.results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.events.assign': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.record_result': { paramsTuple?: []; params?: {} }
     'enrollment.students.me': { paramsTuple?: []; params?: {} }
+    'enrollment.students.me.profile': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.task_calendar': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.grade_feedback': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.enrollment_policy': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.enrollment_workflow': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.curriculum_plan': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.open_academic_years': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.start_enrollment': { paramsTuple?: []; params?: {} }
     'enrollment.students.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.classifications': { paramsTuple?: []; params?: {} }
+    'enrollment.students.merge_jobs.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.merge': { paramsTuple?: []; params?: {} }
+    'enrollment.students.import.batches.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.import.run': { paramsTuple?: []; params?: {} }
+    'enrollment.students.import.batches.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.import.batches.rejections_csv': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.students.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.profile': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.absences': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.violations.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.violations.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.violations.update': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'violationId': ParamValue} }
+    'enrollment.students.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.curriculum_evaluation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.index': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.auto_internal': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.external': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.apply_equivalencies': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.review': { paramsTuple: [ParamValue,ParamValue]; params: {'studentId': ParamValue,'creditId': ParamValue} }
+    'enrollment.academic.subject_equivalencies.index': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.subject_equivalencies.store': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.upsert_meeting': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.section_summary': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.check_conflicts': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.my_waitlist': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.join_waitlist': { paramsTuple?: []; params?: {} }
+    'enrollment.scheduling.waitlist.leave': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.scheduling.section_waitlist': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.waitlist.promote': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.meetings.conflicts': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.list_meetings': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.update_meeting': { paramsTuple: [ParamValue]; params: {'meetingId': ParamValue} }
     'enrollment.scheduling.delete_meeting': { paramsTuple: [ParamValue]; params: {'meetingId': ParamValue} }
     'enrollment.scheduling.drop_line': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.transfer_line': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.dissolve_section': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.my_schedule_notifications': { paramsTuple?: []; params?: {} }
+    'enrollment.scheduling.faculty_schedule_notifications': { paramsTuple?: []; params?: {} }
+    'enrollment.scheduling.mark_notification_read': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.scheduling.resolve_class_codes': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.search_alternate_sections': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.apply_class_codes': { paramsTuple?: []; params?: {} }
+    'enrollment.scheduling.encode_block_group': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_academic_years': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.create_academic_year': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_setup.update_academic_year': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_setup.delete_academic_year': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.academic_setup.list_programs': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.create_program': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_setup.update_program': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_setup.delete_program': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.academic_setup.list_sections': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.create_section': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.update_section': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_setup.delete_section': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.academic_facilities.list_categories': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_category': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_buildings': { paramsTuple?: []; params?: {} }
@@ -106,8 +158,42 @@ export type ScannedRoutes = {
     'enrollment.academic_policies.update': { paramsTuple?: []; params?: {} }
     'enrollment.institutional_profile.show': { paramsTuple?: []; params?: {} }
     'enrollment.institutional_profile.update': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_colleges': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_college': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.update_college': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.list_departments': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_department': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.update_department': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.list_positions': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_position': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.update_position': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.list_subject_areas': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_subject_area': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.update_subject_area': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.list_assignments': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_assignment': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.update_assignment': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.subjects.index': { paramsTuple?: []; params?: {} }
     'enrollment.subjects.store': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.subjects.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.prerequisites.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.prerequisites.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.prerequisites.destroy': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'linkId': ParamValue} }
+    'enrollment.academic.subjects.corequisites.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.corequisites.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.corequisites.destroy': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'linkId': ParamValue} }
+    'enrollment.academic.curricula.index': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.curricula.store': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.curricula.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curricula.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curricula.versions.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curricula.versions.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curriculum_versions.duplicate': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
+    'enrollment.academic.curriculum_versions.status': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
+    'enrollment.academic.curriculum_versions.subjects.index': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
+    'enrollment.academic.curriculum_versions.subjects.store': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
+    'enrollment.academic.curriculum_versions.subjects.destroy': { paramsTuple: [ParamValue,ParamValue]; params: {'versionId': ParamValue,'lineId': ParamValue} }
     'enrollment.enrollments.index': { paramsTuple?: []; params?: {} }
     'enrollment.enrollments.store': { paramsTuple?: []; params?: {} }
     'enrollment.enrollments.advise': { paramsTuple?: []; params?: {} }
@@ -123,6 +209,7 @@ export type ScannedRoutes = {
     'enrollment.enrollments.register': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.enrollments.reject': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.enrollments.incomplete': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.enrollments.workflow': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.enrollments.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.advising.assign_adviser': { paramsTuple?: []; params?: {} }
@@ -149,6 +236,7 @@ export type ScannedRoutes = {
     'enrollment.grade_records.list_class_records': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.open_class_record': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.class_master_list': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.grade_records.export_grade_report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.grade_records.grade_report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.grade_records.encode': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.submit': { paramsTuple?: []; params?: {} }
@@ -170,6 +258,7 @@ export type ScannedRoutes = {
     'enrollment.assessment_finance.list_documents': { paramsTuple?: []; params?: {} }
     'enrollment.assessment_finance.verify_document': { paramsTuple: [ParamValue]; params: {'qrToken': ParamValue} }
     'enrollment.assessment_finance.integration_history': { paramsTuple?: []; params?: {} }
+    'enrollment.assessments.me.monitor': { paramsTuple?: []; params?: {} }
     'enrollment.assessment_finance.student_monitor': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.assessment_finance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.assessment_finance.submit_to_ufms': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -177,28 +266,115 @@ export type ScannedRoutes = {
     'enrollment.payments.index': { paramsTuple?: []; params?: {} }
     'enrollment.payments.store': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.issue_report': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.list_reports': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.show_report': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.clearance.reports.pdf': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.clearance.office_requirements.index': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.office_requirements.store': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.students.office_sync': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.clearance.students.office': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.clearance.office_items.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
     'enrollment.scholarships.index': { paramsTuple?: []; params?: {} }
     'enrollment.scholarships.store': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.assign_staff': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.create_request': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.queue_ticket': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.tickets.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.display': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.reports.analytics': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.tickets.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.queue.tickets.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.queue.tickets.slip': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.office_report': { paramsTuple: [ParamValue]; params: {'office': ParamValue} }
     'enrollment.student_support.clearance_hints': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.cross_office_clearance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.unified_profile': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.referrals': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.alerts': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.referrals.store': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.sensitive_access_log': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.counseling_request': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling_requests.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling_requests.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.intake': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.assign': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.sessions.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.specialist_referral': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.resolve': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling.specialists': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling.reports.cases': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.write_case_note': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.read_case_notes': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.psych.batteries': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.schedules.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.schedules.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.schedules.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.psych.results.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.results.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.results.report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.psych.results.release': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.shifting.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.shifting.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.requirements': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.schedule': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.payment': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.result_ready': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.release': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.endorse': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.health_encounter': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.read_clinical_notes': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.health_clearance': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.programs.catalog': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.programs.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.programs.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.medical_assessments.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.enrollment_gate': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.health.statistics': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.ehr': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.health.conditions.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.alerts.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.prescriptions.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.hospital_referrals.store': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.discipline_complaint': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.discipline.cases.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.discipline.cases.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.discipline.cases.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.discipline.cases.sanctions.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.discipline.history': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.osa.discipline.reports.cases': { paramsTuple?: []; params?: {} }
+    'enrollment.student_support.list_org_applications': { paramsTuple?: []; params?: {} }
+    'enrollment.student_support.get_org_application': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.submit_org_application': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.org_applications.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.list_student_organizations': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.organizations.certificate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.list_student_id_requests': { paramsTuple?: []; params?: {} }
+    'enrollment.student_support.submit_student_id_request': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.id_requests.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.id_requests.digital_pdf': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.students.participation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.student_support.scholarship_program': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.scholarship_apply': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.applications.index': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.scholarship_decide': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.scholarships.awards.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.reports.assistance': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.sa.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.sa.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.sa.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.scholarships.sa.requirements': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.scholarships.sa.interview': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.scholarships.sa.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.deficiencies.index': { paramsTuple?: []; params?: {} }
+    'enrollment.deficiencies.compliance_report': { paramsTuple?: []; params?: {} }
     'enrollment.deficiencies.store': { paramsTuple?: []; params?: {} }
+    'enrollment.deficiencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.deficiencies.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.deficiencies.submit': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.deficiencies.approve': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.deficiencies.reject': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.deficiencies.clear': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.reports.catalog': { paramsTuple?: []; params?: {} }
     'enrollment.reports.definitions': { paramsTuple?: []; params?: {} }
@@ -215,6 +391,19 @@ export type ScannedRoutes = {
     'enrollment.announcements.publish': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.announcements.archive': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.announcements.dispatch': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.announcements.toggle_like': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.announcements.add_comment': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.mass_comms.preview_sms': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.queue_sms': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.campaigns_index': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.store_contact': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_pending': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_index': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_store': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_publish': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.mass_comms.surveys_close': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.mass_comms.surveys_results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.mass_comms.surveys_respond': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.faculty_eval.codes_index': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.codes_store': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.questions_index': { paramsTuple?: []; params?: {} }
@@ -222,10 +411,13 @@ export type ScannedRoutes = {
     'enrollment.faculty_eval.schedules_index': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.schedules_store': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.schedules_open': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.faculty_eval.schedules_close': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.faculty_eval.schedules_window': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.faculty_eval.assignment_options': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.pending': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.responses_store': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.report': { paramsTuple: [ParamValue]; params: {'scheduleId': ParamValue} }
+    'enrollment.faculty_eval.report_export': { paramsTuple: [ParamValue]; params: {'scheduleId': ParamValue} }
     'enrollment.graduation.graduate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.phase_2_records.index': { paramsTuple: [ParamValue]; params: {'moduleCode': ParamValue} }
     'enrollment.phase_2_records.store': { paramsTuple: [ParamValue]; params: {'moduleCode': ParamValue} }
@@ -236,6 +428,14 @@ export type ScannedRoutes = {
     'enrollment.auth.login': { paramsTuple?: []; params?: {} }
     'enrollment.auth.refresh': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.verify_report': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.sss.osa.id_requests.digital_verify': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.admissions.form.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.programs.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.apply.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.status.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.journey.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.exam.open.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.exam.submit.public': { paramsTuple?: []; params?: {} }
     'enrollment.auth.logout': { paramsTuple?: []; params?: {} }
     'enrollment.auth.me': { paramsTuple?: []; params?: {} }
     'enrollment.org.show': { paramsTuple?: []; params?: {} }
@@ -274,6 +474,7 @@ export type ScannedRoutes = {
     'finance.dashboard.summary': { paramsTuple?: []; params?: {} }
     'finance.ufms_reference.list_coa': { paramsTuple?: []; params?: {} }
     'finance.ufms_reference.store_coa': { paramsTuple?: []; params?: {} }
+    'finance.ufms_reference.seed_official_coa': { paramsTuple?: []; params?: {} }
     'finance.ufms_reference.update_coa': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.ufms_reference.list_funds': { paramsTuple?: []; params?: {} }
     'finance.ufms_reference.store_fund': { paramsTuple?: []; params?: {} }
@@ -328,8 +529,49 @@ export type ScannedRoutes = {
     'finance.accounting.list_reconciliations': { paramsTuple?: []; params?: {} }
     'finance.accounting.store_reconciliation': { paramsTuple?: []; params?: {} }
     'finance.accounting.complete_reconciliation': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
-    'finance.cashier.record_payment': { paramsTuple?: []; params?: {} }
-    'finance.cashier.list_payments': { paramsTuple?: []; params?: {} }
+    'finance.receivables.record_payment': { paramsTuple?: []; params?: {} }
+    'finance.receivables.list_payments': { paramsTuple?: []; params?: {} }
+    'finance.receivables.student_account': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'finance.receivables.daily_collection': { paramsTuple?: []; params?: {} }
+    'finance.receivables.create_deposit_slip': { paramsTuple?: []; params?: {} }
+    'finance.receivables.get_settings': { paramsTuple?: []; params?: {} }
+    'finance.receivables.update_settings': { paramsTuple?: []; params?: {} }
+    'finance.tuition.list_fee_schedule_scope': { paramsTuple?: []; params?: {} }
+    'finance.tuition.list_fee_schedules': { paramsTuple?: []; params?: {} }
+    'finance.tuition.upsert_fee_schedule': { paramsTuple?: []; params?: {} }
+    'finance.tuition.update_fee_schedule': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.tuition.deactivate_fee_schedule': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.tuition.get_payment_policy': { paramsTuple?: []; params?: {} }
+    'finance.tuition.upsert_payment_policy': { paramsTuple?: []; params?: {} }
+    'finance.payment_plans.list': { paramsTuple?: []; params?: {} }
+    'finance.payment_plans.upsert': { paramsTuple?: []; params?: {} }
+    'finance.payment_plans.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.payment_plans.deactivate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.disbursement.list_invoices': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.store_invoice': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.match_invoice': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.disbursement.list_dv': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.store_dv': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.approve_dv': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.disbursement.issue_cheque': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.disbursement.record_ada': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.disbursement.list_cheques': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.trial_balance': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.financial_position': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.budget_vs_actual': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.receivables_aging': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.saob': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.dashboard_metrics': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.audit_export': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.export_agency': { paramsTuple: [ParamValue]; params: {'agency': ParamValue} }
+    'finance.financial_reports.push_uims': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.decide_approval': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.official_receipt': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.disbursement_voucher': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.budget_plan': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.bfar_pack': { paramsTuple?: []; params?: {} }
+    'finance.official_forms.bir_withholding': { paramsTuple?: []; params?: {} }
+    'finance.official_forms.agency_csv': { paramsTuple: [ParamValue]; params: {'agency': ParamValue} }
     'finance.procurement.list_vendors': { paramsTuple?: []; params?: {} }
     'finance.procurement.store_vendor': { paramsTuple?: []; params?: {} }
     'finance.procurement.update_vendor': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -369,6 +611,7 @@ export type ScannedRoutes = {
     'finance.pos.show_sale': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.pos.complete_sale': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.pos.void_sale': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.pos.refund_sale': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.pos.close_eod': { paramsTuple?: []; params?: {} }
     'finance.pos.cashier_report': { paramsTuple?: []; params?: {} }
     'finance.pos.list_stock_snapshots': { paramsTuple?: []; params?: {} }
@@ -379,6 +622,10 @@ export type ScannedRoutes = {
     'finance.internal.internal_assessments.upsert': { paramsTuple?: []; params?: {} }
     'finance.internal.internal_assessments.payment_status': { paramsTuple: [ParamValue]; params: {'assessmentNumber': ParamValue} }
     'finance.internal.internal.procurement.createPurchaseOrder': { paramsTuple?: []; params?: {} }
+    'finance.internal.legacy.internal_clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'finance.internal.legacy.internal_cashier.record_payment': { paramsTuple?: []; params?: {} }
+    'finance.internal.legacy.internal_assessments.upsert': { paramsTuple?: []; params?: {} }
+    'finance.internal.legacy.internal_assessments.payment_status': { paramsTuple: [ParamValue]; params: {'assessmentNumber': ParamValue} }
     'document_issuance.verify_public': { paramsTuple?: []; params?: {} }
     'records.auth.login': { paramsTuple?: []; params?: {} }
     'records.auth.refresh': { paramsTuple?: []; params?: {} }
@@ -961,10 +1208,12 @@ export type ScannedRoutes = {
     'inventory.audit_logs.index': { paramsTuple?: []; params?: {} }
     'inventory.internal.internal_custodianships.index': { paramsTuple?: []; params?: {} }
     'inventory.internal.internal_clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'inventory.internal.internal_procurement_acceptance.accept': { paramsTuple?: []; params?: {} }
   }
   GET: {
     'common_platform.jwks': { paramsTuple?: []; params?: {} }
     'health.live': { paramsTuple?: []; params?: {} }
+    'health.ready': { paramsTuple?: []; params?: {} }
     'health.show': { paramsTuple?: []; params?: {} }
     'health.ping': { paramsTuple?: []; params?: {} }
     'mdm.overview': { paramsTuple?: []; params?: {} }
@@ -1014,16 +1263,40 @@ export type ScannedRoutes = {
     'inventory.health': { paramsTuple?: []; params?: {} }
     'enrollment.applicants.index': { paramsTuple?: []; params?: {} }
     'enrollment.applicants.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.applicants.status_history': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.applicants.admission_results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.forms.list': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.forms.active': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.list': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.students.me': { paramsTuple?: []; params?: {} }
+    'enrollment.students.me.profile': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.task_calendar': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.grade_feedback': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.enrollment_policy': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.enrollment_workflow': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.curriculum_plan': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.open_academic_years': { paramsTuple?: []; params?: {} }
     'enrollment.students.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.classifications': { paramsTuple?: []; params?: {} }
+    'enrollment.students.merge_jobs.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.import.batches.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.import.batches.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.import.batches.rejections_csv': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.students.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.profile': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.absences': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.violations.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.curriculum_evaluation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.index': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.academic.subject_equivalencies.index': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.section_summary': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.my_waitlist': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.section_waitlist': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.list_meetings': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.my_schedule_notifications': { paramsTuple?: []; params?: {} }
+    'enrollment.scheduling.faculty_schedule_notifications': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_academic_years': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_programs': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_sections': { paramsTuple?: []; params?: {} }
@@ -1032,9 +1305,20 @@ export type ScannedRoutes = {
     'enrollment.academic_facilities.list_rooms': { paramsTuple?: []; params?: {} }
     'enrollment.academic_policies.show': { paramsTuple?: []; params?: {} }
     'enrollment.institutional_profile.show': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_colleges': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_departments': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_positions': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_subject_areas': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.subjects.index': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.subjects.prerequisites.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.corequisites.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curricula.index': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.curricula.versions.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curriculum_versions.subjects.index': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
     'enrollment.enrollments.index': { paramsTuple?: []; params?: {} }
     'enrollment.enrollments.list_change_requests': { paramsTuple?: []; params?: {} }
+    'enrollment.enrollments.workflow': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.enrollments.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.advising.session_show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1048,6 +1332,7 @@ export type ScannedRoutes = {
     'enrollment.grade_records.my_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.list_class_records': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.class_master_list': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.grade_records.export_grade_report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.grade_records.grade_report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.grade_records.list_corrections': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.entry_history': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1058,18 +1343,64 @@ export type ScannedRoutes = {
     'enrollment.assessment_finance.list_documents': { paramsTuple?: []; params?: {} }
     'enrollment.assessment_finance.verify_document': { paramsTuple: [ParamValue]; params: {'qrToken': ParamValue} }
     'enrollment.assessment_finance.integration_history': { paramsTuple?: []; params?: {} }
+    'enrollment.assessments.me.monitor': { paramsTuple?: []; params?: {} }
     'enrollment.assessment_finance.student_monitor': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.assessment_finance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.payments.index': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.list_reports': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.show_report': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.clearance.reports.pdf': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.clearance.office_requirements.index': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.students.office': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
     'enrollment.scholarships.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.tickets.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.display': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.reports.analytics': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.tickets.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.queue.tickets.slip': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.office_report': { paramsTuple: [ParamValue]; params: {'office': ParamValue} }
     'enrollment.student_support.clearance_hints': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.cross_office_clearance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.unified_profile': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.referrals': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.alerts': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.student_support.sensitive_access_log': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling_requests.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling_requests.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling.specialists': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling.reports.cases': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.read_case_notes': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.psych.batteries': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.schedules.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.results.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.results.report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.shifting.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.read_clinical_notes': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.health.programs.catalog': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.programs.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.enrollment_gate': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.health.statistics': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.ehr': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.osa.discipline.cases.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.discipline.cases.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.discipline.history': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.osa.discipline.reports.cases': { paramsTuple?: []; params?: {} }
+    'enrollment.student_support.list_org_applications': { paramsTuple?: []; params?: {} }
+    'enrollment.student_support.get_org_application': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.list_student_organizations': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.organizations.certificate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.list_student_id_requests': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.id_requests.digital_pdf': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.students.participation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.scholarships.applications.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.awards.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.reports.assistance': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.sa.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.sa.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.deficiencies.index': { paramsTuple?: []; params?: {} }
+    'enrollment.deficiencies.compliance_report': { paramsTuple?: []; params?: {} }
     'enrollment.reports.catalog': { paramsTuple?: []; params?: {} }
     'enrollment.reports.definitions': { paramsTuple?: []; params?: {} }
     'enrollment.reports.dashboard': { paramsTuple?: []; params?: {} }
@@ -1079,18 +1410,26 @@ export type ScannedRoutes = {
     'enrollment.announcements.settings_index': { paramsTuple?: []; params?: {} }
     'enrollment.announcements.feed': { paramsTuple?: []; params?: {} }
     'enrollment.announcements.index': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.campaigns_index': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_pending': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_index': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.faculty_eval.codes_index': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.questions_index': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.schedules_index': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.assignment_options': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.pending': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.report': { paramsTuple: [ParamValue]; params: {'scheduleId': ParamValue} }
+    'enrollment.faculty_eval.report_export': { paramsTuple: [ParamValue]; params: {'scheduleId': ParamValue} }
     'enrollment.phase_2_records.index': { paramsTuple: [ParamValue]; params: {'moduleCode': ParamValue} }
     'enrollment.phase_2_modules.index': { paramsTuple?: []; params?: {} }
     'enrollment.internal.internal_grades.export_student_grades': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
     'enrollment.docs.swagger': { paramsTuple?: []; params?: {} }
     'enrollment.docs.openapi': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.verify_report': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.sss.osa.id_requests.digital_verify': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.admissions.form.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.programs.public': { paramsTuple?: []; params?: {} }
     'enrollment.auth.me': { paramsTuple?: []; params?: {} }
     'enrollment.org.show': { paramsTuple?: []; params?: {} }
     'enrollment.org.list_campuses': { paramsTuple?: []; params?: {} }
@@ -1129,7 +1468,30 @@ export type ScannedRoutes = {
     'finance.accounting.list_tax_rates': { paramsTuple?: []; params?: {} }
     'finance.accounting.remittance_report': { paramsTuple?: []; params?: {} }
     'finance.accounting.list_reconciliations': { paramsTuple?: []; params?: {} }
-    'finance.cashier.list_payments': { paramsTuple?: []; params?: {} }
+    'finance.receivables.list_payments': { paramsTuple?: []; params?: {} }
+    'finance.receivables.student_account': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'finance.receivables.daily_collection': { paramsTuple?: []; params?: {} }
+    'finance.receivables.get_settings': { paramsTuple?: []; params?: {} }
+    'finance.tuition.list_fee_schedule_scope': { paramsTuple?: []; params?: {} }
+    'finance.tuition.list_fee_schedules': { paramsTuple?: []; params?: {} }
+    'finance.tuition.get_payment_policy': { paramsTuple?: []; params?: {} }
+    'finance.payment_plans.list': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.list_invoices': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.list_dv': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.list_cheques': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.trial_balance': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.financial_position': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.budget_vs_actual': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.receivables_aging': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.saob': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.dashboard_metrics': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.audit_export': { paramsTuple?: []; params?: {} }
+    'finance.official_forms.official_receipt': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.disbursement_voucher': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.budget_plan': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.bfar_pack': { paramsTuple?: []; params?: {} }
+    'finance.official_forms.bir_withholding': { paramsTuple?: []; params?: {} }
+    'finance.official_forms.agency_csv': { paramsTuple: [ParamValue]; params: {'agency': ParamValue} }
     'finance.procurement.list_vendors': { paramsTuple?: []; params?: {} }
     'finance.procurement.list_requisitions': { paramsTuple?: []; params?: {} }
     'finance.procurement.show_requisition': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1147,6 +1509,8 @@ export type ScannedRoutes = {
     'finance.pos.list_stock_snapshots': { paramsTuple?: []; params?: {} }
     'finance.internal.internal_clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
     'finance.internal.internal_assessments.payment_status': { paramsTuple: [ParamValue]; params: {'assessmentNumber': ParamValue} }
+    'finance.internal.legacy.internal_clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'finance.internal.legacy.internal_assessments.payment_status': { paramsTuple: [ParamValue]; params: {'assessmentNumber': ParamValue} }
     'records.auth.me': { paramsTuple?: []; params?: {} }
     'records.tor.requests.index': { paramsTuple?: []; params?: {} }
     'records.tor.requests.show': { paramsTuple: [ParamValue]; params: {'idOrNumber': ParamValue} }
@@ -1421,6 +1785,7 @@ export type ScannedRoutes = {
   HEAD: {
     'common_platform.jwks': { paramsTuple?: []; params?: {} }
     'health.live': { paramsTuple?: []; params?: {} }
+    'health.ready': { paramsTuple?: []; params?: {} }
     'health.show': { paramsTuple?: []; params?: {} }
     'health.ping': { paramsTuple?: []; params?: {} }
     'mdm.overview': { paramsTuple?: []; params?: {} }
@@ -1470,16 +1835,40 @@ export type ScannedRoutes = {
     'inventory.health': { paramsTuple?: []; params?: {} }
     'enrollment.applicants.index': { paramsTuple?: []; params?: {} }
     'enrollment.applicants.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.applicants.status_history': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.applicants.admission_results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.forms.list': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.forms.active': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.list': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.students.me': { paramsTuple?: []; params?: {} }
+    'enrollment.students.me.profile': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.task_calendar': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.grade_feedback': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.enrollment_policy': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.enrollment_workflow': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.curriculum_plan': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.open_academic_years': { paramsTuple?: []; params?: {} }
     'enrollment.students.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.classifications': { paramsTuple?: []; params?: {} }
+    'enrollment.students.merge_jobs.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.import.batches.index': { paramsTuple?: []; params?: {} }
+    'enrollment.students.import.batches.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.import.batches.rejections_csv': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.students.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.profile': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.absences': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.violations.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.curriculum_evaluation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.index': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.academic.subject_equivalencies.index': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.section_summary': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.my_waitlist': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.section_waitlist': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.list_meetings': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.my_schedule_notifications': { paramsTuple?: []; params?: {} }
+    'enrollment.scheduling.faculty_schedule_notifications': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_academic_years': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_programs': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_sections': { paramsTuple?: []; params?: {} }
@@ -1488,9 +1877,20 @@ export type ScannedRoutes = {
     'enrollment.academic_facilities.list_rooms': { paramsTuple?: []; params?: {} }
     'enrollment.academic_policies.show': { paramsTuple?: []; params?: {} }
     'enrollment.institutional_profile.show': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_colleges': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_departments': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_positions': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_subject_areas': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.subjects.index': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.subjects.prerequisites.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.corequisites.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curricula.index': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.curricula.versions.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curriculum_versions.subjects.index': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
     'enrollment.enrollments.index': { paramsTuple?: []; params?: {} }
     'enrollment.enrollments.list_change_requests': { paramsTuple?: []; params?: {} }
+    'enrollment.enrollments.workflow': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.enrollments.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.advising.session_show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1504,6 +1904,7 @@ export type ScannedRoutes = {
     'enrollment.grade_records.my_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.list_class_records': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.class_master_list': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.grade_records.export_grade_report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.grade_records.grade_report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.grade_records.list_corrections': { paramsTuple?: []; params?: {} }
     'enrollment.grade_records.entry_history': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1514,18 +1915,64 @@ export type ScannedRoutes = {
     'enrollment.assessment_finance.list_documents': { paramsTuple?: []; params?: {} }
     'enrollment.assessment_finance.verify_document': { paramsTuple: [ParamValue]; params: {'qrToken': ParamValue} }
     'enrollment.assessment_finance.integration_history': { paramsTuple?: []; params?: {} }
+    'enrollment.assessments.me.monitor': { paramsTuple?: []; params?: {} }
     'enrollment.assessment_finance.student_monitor': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.assessment_finance.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.payments.index': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.list_reports': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.show_report': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.clearance.reports.pdf': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.clearance.office_requirements.index': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.students.office': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
     'enrollment.scholarships.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.tickets.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.display': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.reports.analytics': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.tickets.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.queue.tickets.slip': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.office_report': { paramsTuple: [ParamValue]; params: {'office': ParamValue} }
     'enrollment.student_support.clearance_hints': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.cross_office_clearance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.unified_profile': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.referrals': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.students.alerts': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.student_support.sensitive_access_log': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling_requests.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling_requests.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling.specialists': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling.reports.cases': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.read_case_notes': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.psych.batteries': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.schedules.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.results.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.results.report': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.shifting.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.read_clinical_notes': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.health.programs.catalog': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.programs.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.enrollment_gate': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.health.statistics': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.ehr': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.osa.discipline.cases.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.discipline.cases.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.discipline.history': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.osa.discipline.reports.cases': { paramsTuple?: []; params?: {} }
+    'enrollment.student_support.list_org_applications': { paramsTuple?: []; params?: {} }
+    'enrollment.student_support.get_org_application': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.list_student_organizations': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.organizations.certificate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.list_student_id_requests': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.id_requests.digital_pdf': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.students.participation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.sss.scholarships.applications.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.awards.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.reports.assistance': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.sa.index': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.sa.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.deficiencies.index': { paramsTuple?: []; params?: {} }
+    'enrollment.deficiencies.compliance_report': { paramsTuple?: []; params?: {} }
     'enrollment.reports.catalog': { paramsTuple?: []; params?: {} }
     'enrollment.reports.definitions': { paramsTuple?: []; params?: {} }
     'enrollment.reports.dashboard': { paramsTuple?: []; params?: {} }
@@ -1535,18 +1982,26 @@ export type ScannedRoutes = {
     'enrollment.announcements.settings_index': { paramsTuple?: []; params?: {} }
     'enrollment.announcements.feed': { paramsTuple?: []; params?: {} }
     'enrollment.announcements.index': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.campaigns_index': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_pending': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_index': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_results': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.faculty_eval.codes_index': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.questions_index': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.schedules_index': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.assignment_options': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.pending': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.report': { paramsTuple: [ParamValue]; params: {'scheduleId': ParamValue} }
+    'enrollment.faculty_eval.report_export': { paramsTuple: [ParamValue]; params: {'scheduleId': ParamValue} }
     'enrollment.phase_2_records.index': { paramsTuple: [ParamValue]; params: {'moduleCode': ParamValue} }
     'enrollment.phase_2_modules.index': { paramsTuple?: []; params?: {} }
     'enrollment.internal.internal_grades.export_student_grades': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
     'enrollment.docs.swagger': { paramsTuple?: []; params?: {} }
     'enrollment.docs.openapi': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.verify_report': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.sss.osa.id_requests.digital_verify': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'enrollment.admissions.form.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.programs.public': { paramsTuple?: []; params?: {} }
     'enrollment.auth.me': { paramsTuple?: []; params?: {} }
     'enrollment.org.show': { paramsTuple?: []; params?: {} }
     'enrollment.org.list_campuses': { paramsTuple?: []; params?: {} }
@@ -1585,7 +2040,30 @@ export type ScannedRoutes = {
     'finance.accounting.list_tax_rates': { paramsTuple?: []; params?: {} }
     'finance.accounting.remittance_report': { paramsTuple?: []; params?: {} }
     'finance.accounting.list_reconciliations': { paramsTuple?: []; params?: {} }
-    'finance.cashier.list_payments': { paramsTuple?: []; params?: {} }
+    'finance.receivables.list_payments': { paramsTuple?: []; params?: {} }
+    'finance.receivables.student_account': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'finance.receivables.daily_collection': { paramsTuple?: []; params?: {} }
+    'finance.receivables.get_settings': { paramsTuple?: []; params?: {} }
+    'finance.tuition.list_fee_schedule_scope': { paramsTuple?: []; params?: {} }
+    'finance.tuition.list_fee_schedules': { paramsTuple?: []; params?: {} }
+    'finance.tuition.get_payment_policy': { paramsTuple?: []; params?: {} }
+    'finance.payment_plans.list': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.list_invoices': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.list_dv': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.list_cheques': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.trial_balance': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.financial_position': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.budget_vs_actual': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.receivables_aging': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.saob': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.dashboard_metrics': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.audit_export': { paramsTuple?: []; params?: {} }
+    'finance.official_forms.official_receipt': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.disbursement_voucher': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.budget_plan': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.official_forms.bfar_pack': { paramsTuple?: []; params?: {} }
+    'finance.official_forms.bir_withholding': { paramsTuple?: []; params?: {} }
+    'finance.official_forms.agency_csv': { paramsTuple: [ParamValue]; params: {'agency': ParamValue} }
     'finance.procurement.list_vendors': { paramsTuple?: []; params?: {} }
     'finance.procurement.list_requisitions': { paramsTuple?: []; params?: {} }
     'finance.procurement.show_requisition': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1603,6 +2081,8 @@ export type ScannedRoutes = {
     'finance.pos.list_stock_snapshots': { paramsTuple?: []; params?: {} }
     'finance.internal.internal_clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
     'finance.internal.internal_assessments.payment_status': { paramsTuple: [ParamValue]; params: {'assessmentNumber': ParamValue} }
+    'finance.internal.legacy.internal_clearance.check_clearance': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'finance.internal.legacy.internal_assessments.payment_status': { paramsTuple: [ParamValue]; params: {'assessmentNumber': ParamValue} }
     'records.auth.me': { paramsTuple?: []; params?: {} }
     'records.tor.requests.index': { paramsTuple?: []; params?: {} }
     'records.tor.requests.show': { paramsTuple: [ParamValue]; params: {'idOrNumber': ParamValue} }
@@ -1891,22 +2371,50 @@ export type ScannedRoutes = {
     'common_platform.integrations': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'enrollment.applicants.store': { paramsTuple?: []; params?: {} }
     'enrollment.applicants.admit': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.forms.store': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.store': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.assign': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.events.record_result': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.start_enrollment': { paramsTuple?: []; params?: {} }
+    'enrollment.students.merge': { paramsTuple?: []; params?: {} }
+    'enrollment.students.import.run': { paramsTuple?: []; params?: {} }
+    'enrollment.students.violations.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.subject_credits.auto_internal': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.external': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.students.subject_credits.apply_equivalencies': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'enrollment.academic.subject_equivalencies.store': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.upsert_meeting': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.check_conflicts': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.join_waitlist': { paramsTuple?: []; params?: {} }
+    'enrollment.scheduling.waitlist.leave': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.scheduling.waitlist.promote': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.meetings.conflicts': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.drop_line': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.transfer_line': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.dissolve_section': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.mark_notification_read': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.scheduling.resolve_class_codes': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.search_alternate_sections': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.apply_class_codes': { paramsTuple?: []; params?: {} }
+    'enrollment.scheduling.encode_block_group': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.create_academic_year': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.create_program': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.create_section': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_category': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_building': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_room': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_college': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_department': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_position': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_subject_area': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.create_assignment': { paramsTuple?: []; params?: {} }
     'enrollment.subjects.store': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.subjects.prerequisites.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.corequisites.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curricula.store': { paramsTuple?: []; params?: {} }
+    'enrollment.academic.curricula.versions.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curriculum_versions.duplicate': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
+    'enrollment.academic.curriculum_versions.subjects.store': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
     'enrollment.enrollments.store': { paramsTuple?: []; params?: {} }
     'enrollment.enrollments.advise': { paramsTuple?: []; params?: {} }
     'enrollment.enrollments.assess': { paramsTuple?: []; params?: {} }
@@ -1947,33 +2455,83 @@ export type ScannedRoutes = {
     'enrollment.assessment_finance.sync_payment_status': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.payments.store': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.issue_report': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.office_requirements.store': { paramsTuple?: []; params?: {} }
+    'enrollment.clearance.students.office_sync': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.scholarships.store': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.assign_staff': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.create_request': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.queue_ticket': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.queue.tickets.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.referrals.store': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.counseling_request': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.counseling_requests.intake': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.assign': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.sessions.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.specialist_referral': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.counseling_requests.resolve': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.write_case_note': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.schedules.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.results.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.psych.results.release': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.guidance.shifting.schedule': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.payment': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.result_ready': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.release': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.endorse': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.student_support.health_encounter': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.health_clearance': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.programs.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.medical_assessments.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.conditions.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.alerts.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.prescriptions.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.health.hospital_referrals.store': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.discipline_complaint': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.discipline.cases.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.discipline.cases.sanctions.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.submit_org_application': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.osa.org_applications.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.student_support.submit_student_id_request': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.scholarship_program': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.scholarship_apply': { paramsTuple?: []; params?: {} }
     'enrollment.student_support.scholarship_decide': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.scholarships.sa.store': { paramsTuple?: []; params?: {} }
+    'enrollment.sss.scholarships.sa.interview': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.scholarships.sa.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.deficiencies.store': { paramsTuple?: []; params?: {} }
+    'enrollment.deficiencies.submit': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.deficiencies.approve': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.deficiencies.reject': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.deficiencies.clear': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.announcements.store': { paramsTuple?: []; params?: {} }
     'enrollment.announcements.publish': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.announcements.archive': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.announcements.dispatch': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.announcements.toggle_like': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.announcements.add_comment': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.mass_comms.preview_sms': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.queue_sms': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.store_contact': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_store': { paramsTuple?: []; params?: {} }
+    'enrollment.mass_comms.surveys_publish': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.mass_comms.surveys_close': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.mass_comms.surveys_respond': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.faculty_eval.codes_store': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.questions_store': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.schedules_store': { paramsTuple?: []; params?: {} }
     'enrollment.faculty_eval.schedules_open': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.faculty_eval.schedules_close': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.faculty_eval.responses_store': { paramsTuple?: []; params?: {} }
     'enrollment.graduation.graduate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.phase_2_records.store': { paramsTuple: [ParamValue]; params: {'moduleCode': ParamValue} }
     'enrollment.auth.login': { paramsTuple?: []; params?: {} }
     'enrollment.auth.refresh': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.apply.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.status.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.journey.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.exam.open.public': { paramsTuple?: []; params?: {} }
+    'enrollment.admissions.exam.submit.public': { paramsTuple?: []; params?: {} }
     'enrollment.auth.logout': { paramsTuple?: []; params?: {} }
     'enrollment.org.create_campus': { paramsTuple?: []; params?: {} }
     'enrollment.org.create_office': { paramsTuple?: []; params?: {} }
@@ -1984,6 +2542,7 @@ export type ScannedRoutes = {
     'finance.auth.refresh': { paramsTuple?: []; params?: {} }
     'finance.auth.logout': { paramsTuple?: []; params?: {} }
     'finance.ufms_reference.store_coa': { paramsTuple?: []; params?: {} }
+    'finance.ufms_reference.seed_official_coa': { paramsTuple?: []; params?: {} }
     'finance.ufms_reference.store_fund': { paramsTuple?: []; params?: {} }
     'finance.ufms_reference.store_bank': { paramsTuple?: []; params?: {} }
     'finance.ufms_reference.store_bank_account': { paramsTuple?: []; params?: {} }
@@ -2015,7 +2574,19 @@ export type ScannedRoutes = {
     'finance.accounting.mark_remitted': { paramsTuple?: []; params?: {} }
     'finance.accounting.store_reconciliation': { paramsTuple?: []; params?: {} }
     'finance.accounting.complete_reconciliation': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
-    'finance.cashier.record_payment': { paramsTuple?: []; params?: {} }
+    'finance.receivables.record_payment': { paramsTuple?: []; params?: {} }
+    'finance.receivables.create_deposit_slip': { paramsTuple?: []; params?: {} }
+    'finance.tuition.upsert_fee_schedule': { paramsTuple?: []; params?: {} }
+    'finance.payment_plans.upsert': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.store_invoice': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.match_invoice': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.disbursement.store_dv': { paramsTuple?: []; params?: {} }
+    'finance.disbursement.approve_dv': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.disbursement.issue_cheque': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.disbursement.record_ada': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.financial_reports.export_agency': { paramsTuple: [ParamValue]; params: {'agency': ParamValue} }
+    'finance.financial_reports.push_uims': { paramsTuple?: []; params?: {} }
+    'finance.financial_reports.decide_approval': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.procurement.store_vendor': { paramsTuple?: []; params?: {} }
     'finance.procurement.store_requisition': { paramsTuple?: []; params?: {} }
     'finance.procurement.submit_requisition': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -2039,11 +2610,14 @@ export type ScannedRoutes = {
     'finance.pos.store_sale': { paramsTuple?: []; params?: {} }
     'finance.pos.complete_sale': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.pos.void_sale': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.pos.refund_sale': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.pos.close_eod': { paramsTuple?: []; params?: {} }
     'finance.pos.record_sale': { paramsTuple?: []; params?: {} }
     'finance.internal.internal_cashier.record_payment': { paramsTuple?: []; params?: {} }
     'finance.internal.internal_assessments.upsert': { paramsTuple?: []; params?: {} }
     'finance.internal.internal.procurement.createPurchaseOrder': { paramsTuple?: []; params?: {} }
+    'finance.internal.legacy.internal_cashier.record_payment': { paramsTuple?: []; params?: {} }
+    'finance.internal.legacy.internal_assessments.upsert': { paramsTuple?: []; params?: {} }
     'document_issuance.verify_public': { paramsTuple?: []; params?: {} }
     'records.auth.login': { paramsTuple?: []; params?: {} }
     'records.auth.refresh': { paramsTuple?: []; params?: {} }
@@ -2279,6 +2853,7 @@ export type ScannedRoutes = {
     'inventory.assets.retire': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'inventory.assets.schedule_maintenance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'inventory.assets.generate_qr': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'inventory.internal.internal_procurement_acceptance.accept': { paramsTuple?: []; params?: {} }
   }
   OPTIONS: {
     'gateway.proxy': { paramsTuple: [ParamValue,...ParamValue[]]; params: {'system': ParamValue,'*': ParamValue[]} }
@@ -2293,6 +2868,10 @@ export type ScannedRoutes = {
     'common_platform.integrations': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'finance.ufms_reference.update_coa': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.budget.update_plan': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.receivables.update_settings': { paramsTuple?: []; params?: {} }
+    'finance.tuition.update_fee_schedule': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.tuition.upsert_payment_policy': { paramsTuple?: []; params?: {} }
+    'finance.payment_plans.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.procurement.update_vendor': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.pos.update_terminal': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'finance.pos.update_catalog_item': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -2327,12 +2906,34 @@ export type ScannedRoutes = {
     'common_platform.admin': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'common_platform.integrations': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'enrollment.applicants.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.forms.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.admissions.events.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.violations.update': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'violationId': ParamValue} }
+    'enrollment.students.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.subject_credits.review': { paramsTuple: [ParamValue,ParamValue]; params: {'studentId': ParamValue,'creditId': ParamValue} }
     'enrollment.scheduling.update_meeting': { paramsTuple: [ParamValue]; params: {'meetingId': ParamValue} }
+    'enrollment.academic_setup.update_academic_year': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_setup.update_program': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.academic_setup.update_section': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.academic_policies.update': { paramsTuple?: []; params?: {} }
     'enrollment.institutional_profile.update': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.update_college': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.update_department': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.update_position': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.update_subject_area': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.update_assignment': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curricula.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curriculum_versions.status': { paramsTuple: [ParamValue]; params: {'versionId': ParamValue} }
+    'enrollment.clearance.office_items.advance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.psych.schedules.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.guidance.shifting.requirements': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.osa.id_requests.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.sss.scholarships.sa.requirements': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.deficiencies.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.announcements.settings_update': { paramsTuple?: []; params?: {} }
     'enrollment.announcements.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.faculty_eval.schedules_window': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.org.update': { paramsTuple?: []; params?: {} }
     'enrollment.org.update_campus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.org.update_office': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -2369,12 +2970,23 @@ export type ScannedRoutes = {
     'common_platform.admin': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'common_platform.integrations': { paramsTuple: [...ParamValue[]]; params: {'*': ParamValue[]} }
     'enrollment.scheduling.delete_meeting': { paramsTuple: [ParamValue]; params: {'meetingId': ParamValue} }
+    'enrollment.academic_setup.delete_academic_year': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_setup.delete_program': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_setup.delete_section': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.subjects.prerequisites.destroy': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'linkId': ParamValue} }
+    'enrollment.academic.subjects.corequisites.destroy': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'linkId': ParamValue} }
+    'enrollment.academic.curricula.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic.curriculum_versions.subjects.destroy': { paramsTuple: [ParamValue,ParamValue]; params: {'versionId': ParamValue,'lineId': ParamValue} }
     'enrollment.advising.remove_recommendation': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'recommendationId': ParamValue} }
+    'enrollment.deficiencies.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.org.delete_campus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.org.delete_office': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.org.delete_department': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.users.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.roles.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.tuition.deactivate_fee_schedule': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'finance.payment_plans.deactivate': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'library.books.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'library.books.destroy_copy': { paramsTuple: [ParamValue,ParamValue]; params: {'bookId': ParamValue,'copyId': ParamValue} }
     'library.members.destroy': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

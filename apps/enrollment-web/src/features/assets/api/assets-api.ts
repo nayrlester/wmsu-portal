@@ -68,8 +68,7 @@ export function assetTypeLabel(value: string): string {
 
 function mapAsset(row: Record<string, unknown>): Asset {
   const assignment = (row.currentAssignment ?? row.current_assignment) as
-    | Record<string, unknown>
-    | undefined
+    Record<string, unknown> | undefined
   const assetType = normalizeAssetType(
     String(row.assetType ?? row.asset_type ?? row.category ?? '')
   )
@@ -176,9 +175,10 @@ export async function assignAsset(id: string, payload: AssetAssignPayload): Prom
 
 export async function returnAsset(id: string, payload: AssetReturnPayload = {}): Promise<Asset> {
   const { data } = await apiClient.post(`/assets/${id}/return`, {
-    returnNotes: [payload.location ? `Location: ${payload.location}` : null, payload.notes]
-      .filter(Boolean)
-      .join('\n') || undefined,
+    returnNotes:
+      [payload.location ? `Location: ${payload.location}` : null, payload.notes]
+        .filter(Boolean)
+        .join('\n') || undefined,
   })
   return mapAsset(data.data ?? data)
 }
@@ -214,8 +214,6 @@ export async function generateAssetQr(id: string): Promise<{ qrUrl: string; qrDa
   const payload = data.data ?? data
   return {
     qrUrl: String(payload.qrUrl ?? payload.qr_url ?? ''),
-    qrData: String(
-      payload.qrData ?? payload.qr_data ?? payload.qrPayload ?? payload.data ?? ''
-    ),
+    qrData: String(payload.qrData ?? payload.qr_data ?? payload.qrPayload ?? payload.data ?? ''),
   }
 }

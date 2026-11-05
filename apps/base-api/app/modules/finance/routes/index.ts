@@ -4,7 +4,6 @@ import { mw as middleware } from '#modules/finance/middleware_registry'
 const AuthController = () => import('#modules/finance/controllers/auth_controller')
 const UfmsController = () => import('#modules/finance/controllers/ufms_controller')
 const UfmsReferenceController = () => import('#modules/finance/controllers/ufms_reference_controller')
-const CashierController = () => import('#modules/finance/controllers/cashier_controller')
 const ProcurementController = () => import('#modules/finance/controllers/procurement_controller')
 const InternalClearanceController = () => import('#modules/finance/controllers/internal_clearance_controller')
 const InternalCashierController = () => import('#modules/finance/controllers/internal_cashier_controller')
@@ -13,6 +12,12 @@ const PosController = () => import('#modules/finance/controllers/pos_controller'
 const BudgetController = () => import('#modules/finance/controllers/budget_controller')
 const AccountingController = () => import('#modules/finance/controllers/accounting_controller')
 const DashboardController = () => import('#modules/finance/controllers/dashboard_controller')
+const ReceivablesController = () => import('#modules/finance/controllers/receivables_controller')
+const DisbursementController = () => import('#modules/finance/controllers/disbursement_controller')
+const FinancialReportsController = () => import('#modules/finance/controllers/financial_reports_controller')
+const OfficialFormsController = () => import('#modules/finance/controllers/official_forms_controller')
+const TuitionController = () => import('#modules/finance/controllers/tuition_controller')
+const PaymentPlansController = () => import('#modules/finance/controllers/payment_plans_controller')
 
 
 router
@@ -37,6 +42,9 @@ router
 
     router.get('/coa', [UfmsReferenceController, 'listCoa']).use(middleware.permission(['finance.read']))
     router.post('/coa', [UfmsReferenceController, 'storeCoa']).use(middleware.permission(['finance.write']))
+    router
+      .post('/coa/seed-official', [UfmsReferenceController, 'seedOfficialCoa'])
+      .use(middleware.permission(['finance.write']))
     router
       .put('/coa/:id', [UfmsReferenceController, 'updateCoa'])
       .use(middleware.permission(['finance.write']))
@@ -179,8 +187,131 @@ router
       .post('/accounting/bank-reconciliations/:id/complete', [AccountingController, 'completeReconciliation'])
       .use(middleware.permission(['accounting.post']))
 
-    router.post('/cashier/payments', [CashierController, 'recordPayment']).use(middleware.permission(['cashier.write']))
-    router.get('/cashier/payments', [CashierController, 'listPayments']).use(middleware.permission(['cashier.read']))
+    router.post('/cashier/payments', [ReceivablesController, 'recordPayment']).use(middleware.permission(['cashier.write']))
+    router.get('/cashier/payments', [ReceivablesController, 'listPayments']).use(middleware.permission(['cashier.read']))
+    router
+      .get('/cashier/students/:studentNumber', [ReceivablesController, 'studentAccount'])
+      .use(middleware.permission(['cashier.read']))
+    router
+      .get('/cashier/reports/daily-collection', [ReceivablesController, 'dailyCollection'])
+      .use(middleware.permission(['cashier.read']))
+    router
+      .post('/cashier/deposit-slips', [ReceivablesController, 'createDepositSlip'])
+      .use(middleware.permission(['cashier.write']))
+    router.get('/settings/ufms', [ReceivablesController, 'getSettings']).use(middleware.permission(['finance.read']))
+    router.put('/settings/ufms', [ReceivablesController, 'updateSettings']).use(middleware.permission(['finance.write']))
+
+    router.get('/tuition/fee-schedule-scope', [TuitionController, 'listFeeScheduleScope']).use(
+      middleware.permissionAny(['finance.read', 'accounting.read', 'budget.read'])
+    )
+    router.get('/tuition/fee-schedules', [TuitionController, 'listFeeSchedules']).use(
+      middleware.permissionAny(['finance.read', 'accounting.read', 'budget.read'])
+    )
+    router.post('/tuition/fee-schedules', [TuitionController, 'upsertFeeSchedule']).use(
+      middleware.permissionAny(['finance.write', 'accounting.write', 'budget.write'])
+    )
+    router.put('/tuition/fee-schedules/:id', [TuitionController, 'updateFeeSchedule']).use(
+      middleware.permissionAny(['finance.write', 'accounting.write', 'budget.write'])
+    )
+    router.delete('/tuition/fee-schedules/:id', [TuitionController, 'deactivateFeeSchedule']).use(
+      middleware.permissionAny(['finance.write', 'accounting.write', 'budget.write'])
+    )
+    router.get('/tuition/payment-policy', [TuitionController, 'getPaymentPolicy']).use(
+      middleware.permissionAny(['finance.read', 'accounting.read', 'budget.read'])
+    )
+    router.put('/tuition/payment-policy', [TuitionController, 'upsertPaymentPolicy']).use(
+      middleware.permissionAny(['finance.write', 'accounting.write', 'budget.write'])
+    )
+    router.get('/tuition/payment-plans', [PaymentPlansController, 'list']).use(
+      middleware.permissionAny(['finance.read', 'accounting.read', 'budget.read'])
+    )
+    router.post('/tuition/payment-plans', [PaymentPlansController, 'upsert']).use(
+      middleware.permissionAny(['finance.write', 'accounting.write', 'budget.write'])
+    )
+    router.put('/tuition/payment-plans/:id', [PaymentPlansController, 'update']).use(
+      middleware.permissionAny(['finance.write', 'accounting.write', 'budget.write'])
+    )
+    router.delete('/tuition/payment-plans/:id', [PaymentPlansController, 'deactivate']).use(
+      middleware.permissionAny(['finance.write', 'accounting.write', 'budget.write'])
+    )
+
+    router
+      .get('/disbursement/invoices', [DisbursementController, 'listInvoices'])
+      .use(middleware.permission(['accounting.read']))
+    router
+      .post('/disbursement/invoices', [DisbursementController, 'storeInvoice'])
+      .use(middleware.permission(['accounting.write']))
+    router
+      .post('/disbursement/invoices/:id/match', [DisbursementController, 'matchInvoice'])
+      .use(middleware.permission(['accounting.post']))
+    router
+      .get('/disbursement/vouchers', [DisbursementController, 'listDv'])
+      .use(middleware.permission(['accounting.read']))
+    router
+      .post('/disbursement/vouchers', [DisbursementController, 'storeDv'])
+      .use(middleware.permission(['accounting.write']))
+    router
+      .post('/disbursement/vouchers/:id/approve', [DisbursementController, 'approveDv'])
+      .use(middleware.permission(['accounting.post']))
+    router
+      .post('/disbursement/vouchers/:id/cheque', [DisbursementController, 'issueCheque'])
+      .use(middleware.permission(['accounting.post']))
+    router
+      .post('/disbursement/vouchers/:id/ada', [DisbursementController, 'recordAda'])
+      .use(middleware.permission(['accounting.post']))
+    router
+      .get('/disbursement/cheques', [DisbursementController, 'listCheques'])
+      .use(middleware.permission(['accounting.read']))
+
+    router
+      .get('/reports/trial-balance', [FinancialReportsController, 'trialBalance'])
+      .use(middleware.permission(['finance.read']))
+    router
+      .get('/reports/financial-position', [FinancialReportsController, 'financialPosition'])
+      .use(middleware.permission(['finance.read']))
+    router
+      .get('/reports/budget-vs-actual', [FinancialReportsController, 'budgetVsActual'])
+      .use(middleware.permission(['finance.read']))
+    router
+      .get('/reports/receivables-aging', [FinancialReportsController, 'receivablesAging'])
+      .use(middleware.permission(['finance.read']))
+    router
+      .get('/reports/saob', [FinancialReportsController, 'saob'])
+      .use(middleware.permission(['finance.read']))
+    router
+      .get('/reports/dashboard-metrics', [FinancialReportsController, 'dashboardMetrics'])
+      .use(middleware.permission(['finance.read']))
+    router
+      .get('/reports/audit-export', [FinancialReportsController, 'auditExport'])
+      .use(middleware.permission(['audit.read']))
+    router
+      .post('/reports/agency/:agency', [FinancialReportsController, 'exportAgency'])
+      .use(middleware.permission(['finance.write']))
+    router
+      .post('/integrations/uims/push', [FinancialReportsController, 'pushUims'])
+      .use(middleware.permission(['procurement.accept']))
+    router
+      .post('/approvals/:id/decide', [FinancialReportsController, 'decideApproval'])
+      .use(middleware.permission(['finance.write']))
+
+    router
+      .get('/official/receipts/:id', [OfficialFormsController, 'officialReceipt'])
+      .use(middleware.permission(['cashier.read']))
+    router
+      .get('/official/disbursement/vouchers/:id', [OfficialFormsController, 'disbursementVoucher'])
+      .use(middleware.permission(['accounting.read']))
+    router
+      .get('/official/budget/plans/:id', [OfficialFormsController, 'budgetPlan'])
+      .use(middleware.permission(['budget.read']))
+    router
+      .get('/official/bfar', [OfficialFormsController, 'bfarPack'])
+      .use(middleware.permission(['finance.read']))
+    router
+      .get('/official/bir/withholding', [OfficialFormsController, 'birWithholding'])
+      .use(middleware.permission(['accounting.read']))
+    router
+      .get('/reports/agency/:agency/csv', [OfficialFormsController, 'agencyCsv'])
+      .use(middleware.permission(['finance.write']))
 
     router
       .get('/procurement/vendors', [ProcurementController, 'listVendors'])
@@ -309,6 +440,9 @@ router
     router
       .post('/pos/sales/:id/void', [PosController, 'voidSale'])
       .use(middleware.permission(['pos.void']))
+    router
+      .post('/pos/sales/:id/refund', [PosController, 'refundSale'])
+      .use(middleware.permission(['pos.void']))
 
     router
       .post('/pos/eod', [PosController, 'closeEod'])
@@ -344,4 +478,14 @@ router
       .as('internal.procurement.createPurchaseOrder')
   })
   .prefix('/api/v1/finance/internal').as('finance.internal')
+  .use(middleware.serviceApiKey())
+
+router
+  .group(() => {
+    router.get('/clearance/:studentNumber', [InternalClearanceController, 'checkClearance'])
+    router.post('/cashier/payments', [InternalCashierController, 'recordPayment'])
+    router.post('/assessments', [InternalAssessmentsController, 'upsert'])
+    router.get('/assessments/:assessmentNumber/payment-status', [InternalAssessmentsController, 'paymentStatus'])
+  })
+  .prefix('/api/v1/internal').as('finance.internal.legacy')
   .use(middleware.serviceApiKey())

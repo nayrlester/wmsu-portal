@@ -40,7 +40,7 @@ export function UsersPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Users" description="Manage system users and access" />
+      <PageHeader title="Users" description="View provisioned users (create/update via Identity / Platform Access)" />
 
       <SectionCard padding="sm">
         <div className="relative">

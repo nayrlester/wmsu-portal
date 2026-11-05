@@ -1,9 +1,38 @@
+import { DateTime } from 'luxon'
 import UsisSchedulingNotification from '#modules/enrollment/models/usis_scheduling_notification'
 import FacultyClassAssignment from '#modules/enrollment/models/faculty_class_assignment'
 import UsisSectionMeeting from '#modules/enrollment/models/usis_section_meeting'
 import Section from '#modules/enrollment/models/section'
+import Student from '#modules/enrollment/models/student'
+import User from '#modules/enrollment/models/user'
+import { emailJsMailerService } from '#modules/common-platform/services/emailjs_mailer_service'
 
 export class SchedulingNotificationService {
+  private async sendEmailSafe(input: {
+    toEmail?: string | null
+    toName?: string | null
+    subject: string
+    message: string
+    eventType: string
+  }) {
+    const to = input.toEmail?.trim()
+    if (!to || !emailJsMailerService.isConfigured()) return
+    try {
+      await emailJsMailerService.send({
+        toEmail: to,
+        toName: input.toName,
+        subject: input.subject,
+        message: input.message,
+        extraParams: {
+          event_type: input.eventType,
+          channel: 'scheduling',
+        },
+      })
+    } catch {
+      return
+    }
+  }
+
   async notifyStudent(input: {
     organizationId: string
     studentId: string
@@ -12,7 +41,7 @@ export class SchedulingNotificationService {
     title: string
     body: string
   }) {
-    return UsisSchedulingNotification.create({
+    const row = await UsisSchedulingNotification.create({
       organizationId: input.organizationId,
       studentId: input.studentId,
       sectionId: input.sectionId,
@@ -21,6 +50,22 @@ export class SchedulingNotificationService {
       title: input.title,
       body: input.body,
     })
+
+    const student = await Student.query()
+      .where('organization_id', input.organizationId)
+      .where('id', input.studentId)
+      .first()
+    if (student?.email) {
+      await this.sendEmailSafe({
+        toEmail: student.email,
+        toName: `${student.firstName} ${student.lastName}`.trim(),
+        subject: input.title,
+        message: input.body,
+        eventType: input.eventType,
+      })
+    }
+
+    return row
   }
 
   async notifyFacultyUser(input: {
@@ -31,7 +76,7 @@ export class SchedulingNotificationService {
     title: string
     body: string
   }) {
-    return UsisSchedulingNotification.create({
+    const row = await UsisSchedulingNotification.create({
       organizationId: input.organizationId,
       studentId: null,
       sectionId: input.sectionId,
@@ -40,6 +85,22 @@ export class SchedulingNotificationService {
       title: input.title,
       body: input.body,
     })
+
+    const user = await User.query()
+      .where('organization_id', input.organizationId)
+      .where('id', input.facultyUserId)
+      .first()
+    if (user?.email) {
+      await this.sendEmailSafe({
+        toEmail: user.email,
+        toName: user.fullName,
+        subject: input.title,
+        message: input.body,
+        eventType: input.eventType,
+      })
+    }
+
+    return row
   }
 
   async notifySectionStakeholders(input: {
@@ -105,6 +166,36 @@ export class SchedulingNotificationService {
       .where('student_id', studentId)
       .orderBy('created_at', 'desc')
       .limit(limit)
+  }
+
+  listForFaculty(organizationId: string, facultyUserId: string, limit = 20) {
+    return UsisSchedulingNotification.query()
+      .where('organization_id', organizationId)
+      .where('faculty_user_id', facultyUserId)
+      .orderBy('created_at', 'desc')
+      .limit(limit)
+  }
+
+  async markRead(input: {
+    organizationId: string
+    notificationId: string
+    studentId?: string | null
+    facultyUserId: string
+  }) {
+    const row = await UsisSchedulingNotification.query()
+      .where('organization_id', input.organizationId)
+      .where('id', input.notificationId)
+      .firstOrFail()
+    const asStudent = Boolean(input.studentId && row.studentId === input.studentId)
+    const asFaculty = row.facultyUserId === input.facultyUserId
+    if (!asStudent && !asFaculty) {
+      throw new Error('Notification not found for this user')
+    }
+    if (!row.readAt) {
+      row.readAt = DateTime.now()
+      await row.save()
+    }
+    return row
   }
 }
 

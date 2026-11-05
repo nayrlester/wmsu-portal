@@ -10,6 +10,7 @@ import Fund from '#modules/finance/models/fund'
 import ChartOfAccount from '#modules/finance/models/chart_of_account'
 import { auditLogService } from '#modules/finance/services/audit_log_service'
 import { addMoney, cmpMoney, fromCents, subMoney, toCents } from '#modules/finance/helpers/money'
+import { t } from '#modules/finance/helpers/db_schema'
 
 type Actor = { id: string; organizationId: string }
 
@@ -659,6 +660,9 @@ export class BudgetService {
     const requested = fromCents(toCents(input.amount))
     const sufficient = cmpMoney(requested, available) <= 0
 
+    const settings = await db.from(t('ufms_system_settings')).where('organization_id', organizationId).first()
+    const hardStop = Boolean(settings?.hard_budget_stop)
+
     return {
       fundId: input.fundId,
       accountId: input.accountId,
@@ -669,8 +673,10 @@ export class BudgetService {
       availableAmount: available,
       requestedAmount: requested,
       sufficient,
-      enforcement: 'advisory',
-      note: 'Hard vs soft stop on insufficient allotment is For Clarification (FIN-021). This endpoint returns sufficiency only.',
+      enforcement: hardStop ? 'hard' : 'advisory',
+      note: hardStop
+        ? 'Hard budget stop enabled — insufficient allotment blocks PR submission.'
+        : 'Advisory mode — PR may proceed with budget warning.',
       calculation: 'available = allocated - (obligated + utilized)',
       tor: 'FIN-021',
     }

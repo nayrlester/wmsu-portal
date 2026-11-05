@@ -24,7 +24,11 @@ const columns: Column<Applicant>[] = [
     key: 'status',
     header: 'Status',
     render: (a) => (
-      <Badge variant={a.status === 'admitted' ? 'success' : a.status === 'pending' ? 'warning' : 'default'}>
+      <Badge
+        variant={
+          a.status === 'admitted' ? 'success' : a.status === 'pending' ? 'warning' : 'default'
+        }
+      >
         {a.status}
       </Badge>
     ),
@@ -59,7 +63,9 @@ export function ApplicantsPage() {
     <div className="space-y-4 animate-fade-up">
       <div>
         <h1>Applicants</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Admission pipeline and student number assignment</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Admission pipeline and student number assignment
+        </p>
       </div>
 
       <DataTable

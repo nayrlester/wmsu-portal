@@ -9,6 +9,7 @@ export type AnnouncementAudience = {
   roles?: string[]
   programIds?: string[]
   yearLevels?: number[]
+  educationalLevels?: string[]
   departmentCodes?: string[]
   sectionCodes?: string[]
 }

@@ -40,8 +40,17 @@ const profileSchema = z.object({
 })
 
 const profileColumns: Column<DepreciationProfile>[] = [
-  { key: 'assetCode', header: 'Asset', className: 'font-mono text-xs', render: (p) => p.assetCode || p.assetId.slice(0, 8) },
-  { key: 'assetName', header: 'Name', render: (p) => <span className="font-medium">{p.assetName || '—'}</span> },
+  {
+    key: 'assetCode',
+    header: 'Asset',
+    className: 'font-mono text-xs',
+    render: (p) => p.assetCode || p.assetId.slice(0, 8),
+  },
+  {
+    key: 'assetName',
+    header: 'Name',
+    render: (p) => <span className="font-medium">{p.assetName || '—'}</span>,
+  },
   {
     key: 'method',
     header: 'Method',
@@ -68,7 +77,9 @@ const profileColumns: Column<DepreciationProfile>[] = [
   {
     key: 'active',
     header: 'Status',
-    render: (p) => <Badge variant={p.active ? 'success' : 'default'}>{p.active ? 'active' : 'inactive'}</Badge>,
+    render: (p) => (
+      <Badge variant={p.active ? 'success' : 'default'}>{p.active ? 'active' : 'inactive'}</Badge>
+    ),
   },
 ]
 
@@ -99,7 +110,9 @@ const scheduleColumns: Column<LapsingScheduleRow>[] = [
   {
     key: 'posted',
     header: 'Posted',
-    render: (r) => <Badge variant={r.posted ? 'success' : 'default'}>{r.posted ? 'yes' : 'no'}</Badge>,
+    render: (r) => (
+      <Badge variant={r.posted ? 'success' : 'default'}>{r.posted ? 'yes' : 'no'}</Badge>
+    ),
   },
 ]
 
@@ -109,9 +122,18 @@ const ledgerColumns: Column<PropertyLedgerEntry>[] = [
     header: 'Date',
     render: (e) => (e.occurredAt ? new Date(e.occurredAt).toLocaleDateString() : '—'),
   },
-  { key: 'assetCode', header: 'Asset', className: 'font-mono text-xs', render: (e) => e.assetCode || e.assetId.slice(0, 8) },
+  {
+    key: 'assetCode',
+    header: 'Asset',
+    className: 'font-mono text-xs',
+    render: (e) => e.assetCode || e.assetId.slice(0, 8),
+  },
   { key: 'entryType', header: 'Type', render: (e) => <Badge>{e.entryType}</Badge> },
-  { key: 'narrative', header: 'Narrative', render: (e) => <span className="line-clamp-1 max-w-[200px]">{e.narrative || '—'}</span> },
+  {
+    key: 'narrative',
+    header: 'Narrative',
+    render: (e) => <span className="line-clamp-1 max-w-[200px]">{e.narrative || '—'}</span>,
+  },
   {
     key: 'debit',
     header: 'Debit',
@@ -186,11 +208,11 @@ export function DepreciationPage() {
       </div>
 
       <div className="flex flex-wrap gap-1 rounded-full bg-[var(--color-primary-soft)] p-1 w-fit">
-        {([
+        {[
           { id: 'ledger' as const, label: 'Property Ledger' },
           { id: 'profile' as const, label: 'Profile' },
           { id: 'schedule' as const, label: 'Lapsing Schedule' },
-        ]).map((t) => (
+        ].map((t) => (
           <button
             key={t.id}
             type="button"
@@ -199,7 +221,7 @@ export function DepreciationPage() {
               'rounded-full px-4 py-1.5 text-sm font-medium transition',
               tab === t.id
                 ? 'bg-white text-[var(--color-ink)] shadow-sm'
-                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-ink)]',
+                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-ink)]'
             )}
           >
             {t.label}
@@ -335,7 +357,11 @@ function CreateProfileModal({
     onSuccess: onSaved,
   })
 
-  const { register, control, formState: { errors } } = form
+  const {
+    register,
+    control,
+    formState: { errors },
+  } = form
 
   return (
     <Modal open onClose={onClose} title="Add Depreciation Profile" size="lg">
@@ -391,7 +417,9 @@ function CreateProfileModal({
         </div>
         <p className="text-xs text-muted-foreground">Method: straight-line (COA PPE standard).</p>
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             Create
@@ -430,7 +458,9 @@ function RunModal({ onClose, onDone }: { onClose: () => void; onDone: () => void
         </div>
       )}
       {resultMsg && (
-        <div className="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{resultMsg}</div>
+        <div className="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          {resultMsg}
+        </div>
       )}
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -458,7 +488,9 @@ function RunModal({ onClose, onDone }: { onClose: () => void; onDone: () => void
           placeholder="Leave blank to run all active profiles"
         />
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             Run

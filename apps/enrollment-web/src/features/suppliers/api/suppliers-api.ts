@@ -14,7 +14,9 @@ function mapSupplier(row: Record<string, unknown>): Supplier {
     id: String(row.id ?? ''),
     name: String(row.name ?? ''),
     code: String(row.code ?? ''),
-    contactPerson: String(row.contactPerson ?? row.contact_person ?? row.contactName ?? row.contact_name ?? ''),
+    contactPerson: String(
+      row.contactPerson ?? row.contact_person ?? row.contactName ?? row.contact_name ?? ''
+    ),
     email: String(row.email ?? ''),
     phone: String(row.phone ?? ''),
     address: String(row.address ?? ''),
@@ -38,7 +40,7 @@ function toApiPayload(payload: Partial<SupplierFormData>) {
 }
 
 export async function fetchSuppliers(
-  params: ListParams = {},
+  params: ListParams = {}
 ): Promise<{ data: Supplier[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/suppliers', { params })
   const rows = (data.data ?? []).map(mapSupplier)
@@ -50,7 +52,10 @@ export async function createSupplier(payload: SupplierFormData): Promise<Supplie
   return mapSupplier(data.data ?? data)
 }
 
-export async function updateSupplier(id: string, payload: Partial<SupplierFormData>): Promise<Supplier> {
+export async function updateSupplier(
+  id: string,
+  payload: Partial<SupplierFormData>
+): Promise<Supplier> {
   const { data } = await apiClient.patch(`/suppliers/${id}`, toApiPayload(payload))
   return mapSupplier(data.data ?? data)
 }

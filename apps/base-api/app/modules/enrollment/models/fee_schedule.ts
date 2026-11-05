@@ -5,6 +5,8 @@ import { DateTime } from 'luxon'
 import Organization from '#modules/enrollment/models/organization'
 import AcademicYear from '#modules/enrollment/models/academic_year'
 
+import Program from '#modules/enrollment/models/program'
+
 export default class FeeSchedule extends BaseModel {
   static table = t('fee_schedules')
 
@@ -30,6 +32,9 @@ export default class FeeSchedule extends BaseModel {
   declare classification: string | null
 
   @column()
+  declare programId: string | null
+
+  @column()
   declare isActive: boolean
 
   @column()
@@ -52,4 +57,7 @@ export default class FeeSchedule extends BaseModel {
 
   @belongsTo(() => AcademicYear)
   declare academicYear: BelongsTo<typeof AcademicYear>
+
+  @belongsTo(() => Program)
+  declare program: BelongsTo<typeof Program>
 }

@@ -18,11 +18,7 @@ export function saveFieldQueue(items: FieldQueueItem[]): void {
 }
 
 export function enqueueScan(item: Omit<FieldQueueItem, 'id' | 'synced'>): FieldQueueItem {
-  const entry: FieldQueueItem = {
-    ...item,
-    id: crypto.randomUUID(),
-    synced: false,
-  }
+  const entry: FieldQueueItem = { ...item, id: crypto.randomUUID(), synced: false }
   const queue = loadFieldQueue()
   queue.unshift(entry)
   saveFieldQueue(queue)

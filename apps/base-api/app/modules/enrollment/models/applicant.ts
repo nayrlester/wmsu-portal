@@ -41,6 +41,38 @@ export default class Applicant extends BaseModel {
   @column()
   declare status: string
 
+  @column()
+  declare classification: string | null
+
+  @column()
+  declare mdmCampusId: string | null
+
+  @column()
+  declare formConfigId: string | null
+
+  @column({
+    prepare: (value: Record<string, unknown>) => JSON.stringify(value ?? {}),
+    consume: (value: string | Record<string, unknown>) =>
+      typeof value === 'string' ? (JSON.parse(value) as Record<string, unknown>) : value ?? {},
+  })
+  declare formAnswers: Record<string, unknown>
+
+  @column({
+    prepare: (value: Record<string, unknown>) => JSON.stringify(value ?? {}),
+    consume: (value: string | Record<string, unknown>) =>
+      typeof value === 'string' ? (JSON.parse(value) as Record<string, unknown>) : value ?? {},
+  })
+  declare surveyAnswers: Record<string, unknown>
+
+  @column.dateTime()
+  declare termsAcceptedAt: DateTime | null
+
+  @column.dateTime()
+  declare privacyConsentAt: DateTime | null
+
+  @column()
+  declare privacyConsentVersion: string | null
+
   @column.dateTime()
   declare appliedAt: DateTime
 

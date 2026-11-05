@@ -259,7 +259,9 @@ export function DatePicker({
                     className={cn(
                       'flex h-8 w-full items-center justify-center rounded-full text-sm transition',
                       !inMonth && 'text-slate-300',
-                      inMonth && !selectedDay && 'text-slate-700 hover:bg-[var(--color-primary-soft)]',
+                      inMonth &&
+                        !selectedDay &&
+                        'text-slate-700 hover:bg-[var(--color-primary-soft)]',
                       selectedDay &&
                         'bg-[var(--color-primary)] font-semibold text-white shadow-sm hover:bg-[var(--color-primary-hover)]',
                       !selectedDay && isToday && inMonth && 'ring-1 ring-[var(--color-primary)]/35',

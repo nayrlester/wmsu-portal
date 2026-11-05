@@ -2,10 +2,13 @@ import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
 import { randomUUID } from 'node:crypto'
 import UsisAnnouncement, { type AnnouncementAudience } from '#modules/enrollment/models/usis_announcement'
+import UsisAnnouncementReaction from '#modules/enrollment/models/usis_announcement_reaction'
 import UsisCommunicationSettings from '#modules/enrollment/models/usis_communication_settings'
 import Student from '#modules/enrollment/models/student'
 import User from '#modules/enrollment/models/user'
+import { EnrollmentWorkflowError } from '#modules/enrollment/domain/enrollment_workflow'
 import { t } from '#modules/enrollment/helpers/db_schema'
+import { emailJsMailerService } from '#modules/common-platform/services/emailjs_mailer_service'
 
 export type FeedContext = {
   identityRoles: string[]
@@ -59,6 +62,7 @@ export class AnnouncementsService {
       row = await UsisCommunicationSettings.create({
         organizationId,
         socialFeaturesEnabled: false,
+        smsDeliveryMode: 'queue_only',
       })
     }
     return row
@@ -97,7 +101,7 @@ export class AnnouncementsService {
     const publishAt = input.publishAt ? DateTime.fromJSDate(input.publishAt) : input.publishNow ? now : null
     const status = input.publishNow || (publishAt && publishAt <= now) ? 'published' : publishAt ? 'scheduled' : 'draft'
 
-    return UsisAnnouncement.create({
+    const row = await UsisAnnouncement.create({
       organizationId: input.organizationId,
       title: input.title,
       body: input.body,
@@ -112,6 +116,12 @@ export class AnnouncementsService {
       createdBy: input.userId,
       updatedBy: input.userId,
     })
+
+    if (row.status === 'published' && row.deliverEmail) {
+      void this.deliverAnnouncementEmails(row).catch(() => undefined)
+    }
+
+    return row
   }
 
   async update(
@@ -152,15 +162,59 @@ export class AnnouncementsService {
   }
 
   async publish(id: string, organizationId: string, userId: string) {
-    return this.update(id, organizationId, userId, { status: 'published', publishAt: new Date() })
+    const row = await this.update(id, organizationId, userId, {
+      status: 'published',
+      publishAt: new Date(),
+    })
+    if (row.deliverEmail) {
+      void this.deliverAnnouncementEmails(row).catch(() => undefined)
+    }
+    return row
+  }
+
+  private async listEmailRecipients(organizationId: string, filters: AnnouncementAudience) {
+    let query = Student.query()
+      .where('organization_id', organizationId)
+      .where('status', 'active')
+      .whereNotNull('email')
+    if (filters.programIds?.length) query = query.whereIn('program_id', filters.programIds)
+    if (filters.yearLevels?.length) query = query.whereIn('year_level', filters.yearLevels)
+    return query.orderBy('created_at', 'asc').limit(200)
+  }
+
+  async deliverAnnouncementEmails(announcement: UsisAnnouncement) {
+    if (!emailJsMailerService.isConfigured()) return { sent: 0, skipped: true as const }
+
+    const students = await this.listEmailRecipients(
+      announcement.organizationId,
+      announcement.audience ?? {}
+    )
+    const payloads = students
+      .filter((s) => Boolean(s.email?.trim()))
+      .map((s) => ({
+        toEmail: s.email.trim(),
+        toName: `${s.firstName} ${s.lastName}`.trim(),
+        subject: announcement.title,
+        message: announcement.body,
+        extraParams: {
+          announcement_id: announcement.id,
+          channel: 'announcement',
+        },
+      }))
+
+    if (!payloads.length) return { sent: 0, skipped: false as const }
+
+    const results = await emailJsMailerService.sendMany(payloads)
+    return { sent: results.filter((r) => r.success).length, skipped: false as const }
   }
 
   async archive(id: string, organizationId: string, userId: string) {
     return this.update(id, organizationId, userId, { status: 'archived' })
   }
 
-  async feed(organizationId: string, ctx: FeedContext, limit = 20) {
+  async feed(organizationId: string, ctx: FeedContext, limit = 20, viewerUserId?: string) {
     const now = DateTime.now()
+    const settings = await this.getSettings(organizationId)
     const rows = await UsisAnnouncement.query()
       .where('organization_id', organizationId)
       .whereIn('status', ['published', 'scheduled'])
@@ -169,8 +223,104 @@ export class AnnouncementsService {
       .orderBy('publish_at', 'desc')
       .limit(100)
 
-    const visible = rows.filter((r) => isVisibleNow(r, now) && audienceMatches(r.audience ?? {}, ctx))
-    return visible.slice(0, limit)
+    const visible = rows
+      .filter((r) => isVisibleNow(r, now) && audienceMatches(r.audience ?? {}, ctx))
+      .slice(0, limit)
+
+    if (!settings.socialFeaturesEnabled || !visible.length) {
+      return visible.map((row) => ({
+        ...row.serialize(),
+        likeCount: 0,
+        commentCount: 0,
+        likedByMe: false,
+        comments: [] as Array<{ id: string; body: string | null; userId: string; createdAt: string | null }>,
+      }))
+    }
+
+    const ids = visible.map((r) => r.id)
+    const reactions = await UsisAnnouncementReaction.query()
+      .where('organization_id', organizationId)
+      .whereIn('announcement_id', ids)
+      .orderBy('created_at', 'asc')
+
+    return visible.map((row) => {
+      const forRow = reactions.filter((r) => r.announcementId === row.id)
+      const likes = forRow.filter((r) => r.kind === 'like')
+      const comments = forRow.filter((r) => r.kind === 'comment')
+      return {
+        ...row.serialize(),
+        likeCount: likes.length,
+        commentCount: comments.length,
+        likedByMe: viewerUserId ? likes.some((l) => l.userId === viewerUserId) : false,
+        comments: comments.slice(-5).map((c) => ({
+          id: c.id,
+          body: c.body,
+          userId: c.userId,
+          createdAt: c.createdAt?.toISO() ?? null,
+        })),
+      }
+    })
+  }
+
+  async assertSocialEnabled(organizationId: string) {
+    const settings = await this.getSettings(organizationId)
+    if (!settings.socialFeaturesEnabled) {
+      throw new EnrollmentWorkflowError(
+        'Social features are disabled for this organization (ENR-035)',
+        409,
+        'SOCIAL_DISABLED'
+      )
+    }
+    return settings
+  }
+
+  async toggleLike(organizationId: string, announcementId: string, userId: string) {
+    await this.assertSocialEnabled(organizationId)
+    const announcement = await UsisAnnouncement.query()
+      .where('id', announcementId)
+      .where('organization_id', organizationId)
+      .firstOrFail()
+
+    const existing = await UsisAnnouncementReaction.query()
+      .where('announcement_id', announcement.id)
+      .where('user_id', userId)
+      .where('kind', 'like')
+      .first()
+
+    if (existing) {
+      await existing.delete()
+      return { liked: false, announcementId: announcement.id }
+    }
+
+    await UsisAnnouncementReaction.create({
+      organizationId,
+      announcementId: announcement.id,
+      userId,
+      kind: 'like',
+      body: null,
+    })
+    return { liked: true, announcementId: announcement.id }
+  }
+
+  async addComment(organizationId: string, announcementId: string, userId: string, body: string) {
+    await this.assertSocialEnabled(organizationId)
+    const text = body.trim()
+    if (text.length < 1 || text.length > 2000) {
+      throw new EnrollmentWorkflowError('Comment must be 1–2000 characters', 422, 'INVALID_COMMENT')
+    }
+    const announcement = await UsisAnnouncement.query()
+      .where('id', announcementId)
+      .where('organization_id', organizationId)
+      .firstOrFail()
+
+    const row = await UsisAnnouncementReaction.create({
+      organizationId,
+      announcementId: announcement.id,
+      userId,
+      kind: 'comment',
+      body: text,
+    })
+    return row
   }
 
   async resolveStudentForUser(organizationId: string, email: string | undefined) {
@@ -182,11 +332,8 @@ export class AnnouncementsService {
   }
 
   async countSmsRecipients(organizationId: string, filters: AnnouncementAudience) {
-    let query = Student.query().where('organization_id', organizationId).where('status', 'active')
-    if (filters.programIds?.length) query = query.whereIn('program_id', filters.programIds)
-    if (filters.yearLevels?.length) query = query.whereIn('year_level', filters.yearLevels)
-    const result = await query.count('* as total')
-    return Number(result[0]?.$extras.total ?? 0)
+    const { countFilteredSmsRecipients } = await import('#modules/enrollment/services/mass_comms_service')
+    return countFilteredSmsRecipients(organizationId, filters, ['student'])
   }
 
   async queueMassDelivery(input: {
@@ -195,16 +342,25 @@ export class AnnouncementsService {
     channel: 'sms' | 'email'
     requestedBy: string
     filters: AnnouncementAudience
+    recipientKinds?: Array<'student' | 'parent' | 'guardian' | 'sponsor'>
   }) {
     const announcement = await UsisAnnouncement.query()
       .where('id', input.announcementId)
       .where('organization_id', input.organizationId)
       .firstOrFail()
 
+    const { countFilteredSmsRecipients, massCommsService } = await import(
+      '#modules/enrollment/services/mass_comms_service'
+    )
+
     const recipientCount =
-      input.channel === 'sms' || input.channel === 'email'
-        ? await this.countSmsRecipients(input.organizationId, input.filters)
-        : 0
+      input.channel === 'sms'
+        ? await countFilteredSmsRecipients(
+            input.organizationId,
+            input.filters,
+            input.recipientKinds ?? ['student']
+          )
+        : await this.countEmailRecipients(input.organizationId, input.filters)
 
     await db.table(t('usis_announcement_deliveries')).insert({
       id: randomUUID(),
@@ -214,13 +370,37 @@ export class AnnouncementsService {
       status: recipientCount > 0 ? 'queued' : 'skipped',
       recipient_count: recipientCount,
       filters: JSON.stringify(input.filters ?? {}),
-      last_error: recipientCount > 0 ? null : 'No matching enrolled students for filters',
+      last_error: recipientCount > 0 ? null : 'No matching recipients for filters',
       queued_at: new Date(),
       completed_at: null,
       requested_by: input.requestedBy,
     })
 
+    if (input.channel === 'sms' && recipientCount > 0) {
+      await massCommsService.queueFromAnnouncement({
+        organizationId: input.organizationId,
+        userId: input.requestedBy,
+        announcementId: announcement.id,
+        title: announcement.title,
+        message: announcement.body.slice(0, 640),
+        audience: input.filters,
+        recipientKinds: input.recipientKinds ?? ['student'],
+      })
+    }
+
+    if (input.channel === 'email' && recipientCount > 0) {
+      void this.deliverAnnouncementEmails(announcement).catch(() => undefined)
+    }
+
     return { recipientCount, status: recipientCount > 0 ? 'queued' : 'skipped' }
+  }
+
+  async countEmailRecipients(organizationId: string, filters: AnnouncementAudience) {
+    let query = Student.query().where('organization_id', organizationId).where('status', 'active')
+    if (filters.programIds?.length) query = query.whereIn('program_id', filters.programIds)
+    if (filters.yearLevels?.length) query = query.whereIn('year_level', filters.yearLevels)
+    const result = await query.count('* as total')
+    return Number(result[0]?.$extras.total ?? 0)
   }
 
   async linkDemoIdentityStudent(organizationId: string, email: string, studentNumber: string) {

@@ -68,9 +68,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                   <NavLink
                     to={item.to}
                     onClick={onClose}
-                    className={({ isActive }) =>
-                      cn('uims-nav-item', isActive && 'uims-nav-active')
-                    }
+                    className={({ isActive }) => cn('uims-nav-item', isActive && 'uims-nav-active')}
                   >
                     <item.icon className="h-[17px] w-[17px] shrink-0 opacity-90" />
                     {item.label}

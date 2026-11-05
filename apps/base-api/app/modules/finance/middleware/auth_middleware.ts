@@ -104,7 +104,7 @@ export default class AuthMiddleware {
       )
     }
 
-    await ctx.auth.authenticateUsing(options.guards)
+    await ctx.auth.authenticateUsing(options.guards ?? ['financeApi'])
     return next()
   }
 

@@ -52,6 +52,62 @@ async function statusHistory(
   })
 }
 
+const ENROLLMENT_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+export async function resolveEnrollmentId(organizationId: string, ref: string) {
+  const value = ref?.trim() ?? ''
+  if (!value) {
+    throw new EnrollmentWorkflowError(
+      'Enter a student name, student number, or enrollment ID',
+      422,
+      'ENROLLMENT_REF_REQUIRED'
+    )
+  }
+
+  if (ENROLLMENT_UUID.test(value)) {
+    const row = await Enrollment.query()
+      .where('organization_id', organizationId)
+      .where('id', value)
+      .first()
+    if (!row) {
+      throw new EnrollmentWorkflowError('Enrollment not found', 404, 'ENROLLMENT_NOT_FOUND')
+    }
+    return row.id
+  }
+
+  const student = await Student.query()
+    .where('organization_id', organizationId)
+    .whereRaw('LOWER(student_number) = ?', [value.toLowerCase()])
+    .whereNull('deleted_at')
+    .first()
+
+  if (!student) {
+    throw new EnrollmentWorkflowError(
+      `No student or enrollment matches "${value}". Search by student name or student number.`,
+      422,
+      'ENROLLMENT_REF_INVALID'
+    )
+  }
+
+  const enrollment = await Enrollment.query()
+    .where('organization_id', organizationId)
+    .where('student_id', student.id)
+    .orderByRaw("case when status = 'registered' then 1 else 0 end")
+    .orderBy('created_at', 'desc')
+    .first()
+
+  if (!enrollment) {
+    throw new EnrollmentWorkflowError(
+      `No enrollment found for student ${student.studentNumber}`,
+      404,
+      'ENROLLMENT_NOT_FOUND'
+    )
+  }
+
+  return enrollment.id
+}
+
 export class EnrollmentFlowService {
   private studentAccountService = new StudentAccountService()
 
@@ -64,13 +120,30 @@ export class EnrollmentFlowService {
       middleName: applicant.middleName,
       lastName: applicant.lastName,
       mobile: applicant.mobile,
-      birthDate: applicant.birthDate?.toJSDate() ?? null,
+      birthDate: applicant.birthDate ?? null,
       programId: applicant.programId,
       applicantId: applicant.id,
+      classification: applicant.classification ?? 'new',
+      mdmCampusId: applicant.mdmCampusId ?? null,
     })
+    const previousStatus = applicant.status
     applicant.status = 'admitted'
     applicant.admittedAt = DateTime.now()
     await applicant.save()
+    try {
+      const { admissionEventsService } = await import(
+        '#modules/enrollment/services/admission_events_service'
+      )
+      await admissionEventsService.recordStatusChange({
+        organizationId,
+        applicantId: applicant.id,
+        fromStatus: previousStatus,
+        toStatus: 'admitted',
+        note: 'Converted to student record (ENR-003)',
+      })
+    } catch {
+      /* status history is additive; admit must not fail if history table is unavailable */
+    }
     return { student, applicant }
   }
 
@@ -165,6 +238,7 @@ export class EnrollmentFlowService {
     fees: { tuitionFee: number; miscFees: number; discount?: number; feeScheduleId?: string | null }
   ): Promise<Assessment> {
     const { AssessmentService } = await import('#modules/enrollment/services/assessment_service')
+    const env = (await import('#start/env')).default
     const enrollment = await Enrollment.findOrFail(enrollmentId)
     const service = new AssessmentService()
     const prepared = await service.prepareAssessment({
@@ -177,6 +251,19 @@ export class EnrollmentFlowService {
       discount: fees.discount,
     })
     await statusHistory(prepared.enrollment, 'assessed', assessorId, 'Assessment prepared')
+
+    const financeLive =
+      Boolean(env.get('FINANCE_API_URL')?.trim()) &&
+      process.env.FINANCE_MOCK !== 'true' &&
+      env.get('FINANCE_MOCK') !== true
+    if (financeLive) {
+      const submitted = await service.submitToUfms({
+        organizationId: enrollment.organizationId,
+        assessmentId: prepared.assessment.id,
+      })
+      return submitted.assessment
+    }
+
     return prepared.assessment
   }
 

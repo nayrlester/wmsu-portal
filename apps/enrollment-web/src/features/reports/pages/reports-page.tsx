@@ -62,19 +62,19 @@ async function printReportPdf(type: ReportType, title: string) {
     .join('')
   win.document.write(`<!doctype html><html><head><title>${escapeHtml(title)}</title>
 <style>
-  @page { size: A4 landscape; margin: 12mm; }
-  body { font-family: system-ui, sans-serif; color: #12122a; }
-  h1 { font-size: 18px; margin: 0 0 4px; }
-  p { margin: 0 0 16px; color: #6b6f8c; font-size: 12px; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  th, td { border: 1px solid #dde1f5; padding: 6px 8px; text-align: left; }
-  th { background: #f3f4ff; }
-  @media print { button { display: none; } }
+ @page { size: A4 landscape; margin: 12mm; }
+ body { font-family: system-ui, sans-serif; color: #12122a; }
+ h1 { font-size: 18px; margin: 0 0 4px; }
+ p { margin: 0 0 16px; color: #6b6f8c; font-size: 12px; }
+ table { width: 100%; border-collapse: collapse; font-size: 11px; }
+ th, td { border: 1px solid #dde1f5; padding: 6px 8px; text-align: left; }
+ th { background: #f3f4ff; }
+ @media print { button { display: none; } }
 </style></head><body>
-  <button onclick="window.print()" style="margin-bottom:12px">Print / Save as PDF</button>
-  <h1>${escapeHtml(title)}</h1>
-  <p>Generated ${new Date().toLocaleString()} · Change page size/orientation in the print dialog</p>
-  <table><thead><tr>${tableHead}</tr></thead><tbody>${tableBody}</tbody></table>
+ <button onclick="window.print()" style="margin-bottom:12px">Print / Save as PDF</button>
+ <h1>${escapeHtml(title)}</h1>
+ <p>Generated ${new Date().toLocaleString()} · Change page size/orientation in the print dialog</p>
+ <table><thead><tr>${tableHead}</tr></thead><tbody>${tableBody}</tbody></table>
 </body></html>`)
   win.document.close()
 }

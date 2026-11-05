@@ -14,10 +14,12 @@ const badgeVariants = cva(
       },
     },
     defaultVariants: { variant: 'default' },
-  },
+  }
 )
 
-type BadgeProps = { className?: string; children: React.ReactNode } & VariantProps<typeof badgeVariants>
+type BadgeProps = { className?: string; children: React.ReactNode } & VariantProps<
+  typeof badgeVariants
+>
 
 export function Badge({ className, variant, children }: BadgeProps) {
   return <span className={cn(badgeVariants({ variant }), className)}>{children}</span>

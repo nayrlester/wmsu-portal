@@ -54,11 +54,13 @@ export type DashboardPayload = {
 function cleanParams(filters: ReportFilters) {
   const params: Record<string, string | number> = {}
   if (filters.academicYearId) params.academicYearId = filters.academicYearId
-  if (filters.semester !== '' && filters.semester != null) params.semester = Number(filters.semester)
+  if (filters.semester !== '' && filters.semester != null)
+    params.semester = Number(filters.semester)
   if (filters.campusId) params.campusId = filters.campusId
   if (filters.collegeCode) params.collegeCode = filters.collegeCode
   if (filters.programId) params.programId = filters.programId
-  if (filters.yearLevel !== '' && filters.yearLevel != null) params.yearLevel = Number(filters.yearLevel)
+  if (filters.yearLevel !== '' && filters.yearLevel != null)
+    params.yearLevel = Number(filters.yearLevel)
   if (filters.dateFrom) params.dateFrom = filters.dateFrom
   if (filters.dateTo) params.dateTo = filters.dateTo
   return params

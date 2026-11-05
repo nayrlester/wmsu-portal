@@ -56,7 +56,7 @@ export default class TorController {
     const user = auth.user!
     const filters = await request.validateUsing(listTorRequestsValidator)
     const staff = await isStaffUser(user)
-    const rows = await torRequestService.list({
+    const page = await torRequestService.list({
       organizationId: user.organizationId,
       actorUserId: user.id,
       isStaff: staff,
@@ -64,9 +64,10 @@ export default class TorController {
       studentNumber: filters.studentNumber,
       requestNumber: filters.requestNumber,
       mineOnly: filters.mineOnly,
+      page: filters.page,
       limit: filters.limit,
     })
-    return response.ok({ success: true, data: rows })
+    return response.ok({ success: true, data: page.data, meta: page.meta })
   }
 
   async show({ auth, params, response }: HttpContext) {

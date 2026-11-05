@@ -1,10 +1,5 @@
 export type RequisitionStatus =
-  | 'draft'
-  | 'submitted'
-  | 'approved'
-  | 'rejected'
-  | 'fulfilled'
-  | 'cancelled'
+  'draft' | 'submitted' | 'approved' | 'rejected' | 'fulfilled' | 'cancelled'
 
 export interface RequisitionLine {
   id?: string

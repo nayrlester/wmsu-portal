@@ -5,6 +5,7 @@ import { SearchPage } from '@/pages/search-page'
 import { BookDetailPage } from '@/pages/book-detail-page'
 import { QueueBoardPage } from '@/pages/queue-board-page'
 import { SsoCallbackPage } from '@/pages/sso-callback-page'
+import { SsoLogoutPage } from '@/pages/sso-logout-page'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,7 @@ export function App() {
         <BrowserRouter>
         <Routes>
           <Route path="/sso/callback" element={<SsoCallbackPage />} />
+          <Route path="/sso/logout" element={<SsoLogoutPage />} />
           <Route path="/" element={<SearchPage />} />
           <Route path="/books/:id" element={<BookDetailPage />} />
           <Route path="/queue" element={<QueueBoardPage />} />

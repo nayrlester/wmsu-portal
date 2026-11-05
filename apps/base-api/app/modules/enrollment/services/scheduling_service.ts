@@ -78,6 +78,108 @@ export class SchedulingService {
     return [...new Set(ids)]
   }
 
+  async detectMeetingSlotConflicts(input: {
+    organizationId: string
+    sectionId: string
+    dayOfWeek: number
+    startMinute: number
+    endMinute: number
+    roomCode?: string | null
+    facultyUserId?: string | null
+    excludeMeetingId?: string | null
+  }) {
+    const conflicts: ScheduleConflict[] = []
+    if (input.endMinute <= input.startMinute) {
+      return {
+        ok: false,
+        conflicts: [
+          {
+            kind: 'room' as const,
+            message: 'endMinute must be after startMinute',
+            sectionId: input.sectionId,
+            otherSectionId: input.sectionId,
+            dayOfWeek: input.dayOfWeek,
+            startMinute: input.startMinute,
+            endMinute: input.endMinute,
+          },
+        ],
+      }
+    }
+
+    if (input.roomCode?.trim()) {
+      const roomPeers = await UsisSectionMeeting.query()
+        .where('organization_id', input.organizationId)
+        .where('room_code', input.roomCode.trim())
+        .where('day_of_week', input.dayOfWeek)
+        .whereNot('section_id', input.sectionId)
+      for (const b of roomPeers) {
+        if (input.excludeMeetingId && b.id === input.excludeMeetingId) continue
+        if (!overlaps(input.startMinute, input.endMinute, b.startMinute, b.endMinute)) continue
+        conflicts.push({
+          kind: 'room',
+          message: `Room ${input.roomCode.trim()} conflict with section ${b.sectionId} on day ${input.dayOfWeek}`,
+          sectionId: input.sectionId,
+          otherSectionId: b.sectionId,
+          dayOfWeek: input.dayOfWeek,
+          startMinute: Math.max(input.startMinute, b.startMinute),
+          endMinute: Math.min(input.endMinute, b.endMinute),
+        })
+      }
+    }
+
+    const facultyIds = new Set<string>()
+    if (input.facultyUserId) facultyIds.add(input.facultyUserId)
+    const assignments = await FacultyClassAssignment.query()
+      .where('organization_id', input.organizationId)
+      .where('section_id', input.sectionId)
+      .where('is_active', true)
+    for (const a of assignments) facultyIds.add(a.facultyUserId)
+
+    for (const facultyUserId of facultyIds) {
+      const facultyMeetings = await UsisSectionMeeting.query()
+        .where('organization_id', input.organizationId)
+        .where('faculty_user_id', facultyUserId)
+        .where('day_of_week', input.dayOfWeek)
+        .whereNot('section_id', input.sectionId)
+      for (const b of facultyMeetings) {
+        if (input.excludeMeetingId && b.id === input.excludeMeetingId) continue
+        if (!overlaps(input.startMinute, input.endMinute, b.startMinute, b.endMinute)) continue
+        conflicts.push({
+          kind: 'faculty',
+          message: `Faculty schedule overlap on day ${input.dayOfWeek}`,
+          sectionId: input.sectionId,
+          otherSectionId: b.sectionId,
+          dayOfWeek: input.dayOfWeek,
+          startMinute: Math.max(input.startMinute, b.startMinute),
+          endMinute: Math.min(input.endMinute, b.endMinute),
+        })
+      }
+
+      const otherAssignments = await FacultyClassAssignment.query()
+        .where('organization_id', input.organizationId)
+        .where('faculty_user_id', facultyUserId)
+        .where('is_active', true)
+        .whereNot('section_id', input.sectionId)
+      const otherIds = otherAssignments.map((o) => o.sectionId)
+      const otherMeetings = await this.meetingsForSections(input.organizationId, otherIds)
+      for (const b of otherMeetings) {
+        if (b.dayOfWeek !== input.dayOfWeek) continue
+        if (!overlaps(input.startMinute, input.endMinute, b.startMinute, b.endMinute)) continue
+        conflicts.push({
+          kind: 'faculty',
+          message: `Faculty schedule overlap on day ${input.dayOfWeek}`,
+          sectionId: input.sectionId,
+          otherSectionId: b.sectionId,
+          dayOfWeek: input.dayOfWeek,
+          startMinute: Math.max(input.startMinute, b.startMinute),
+          endMinute: Math.min(input.endMinute, b.endMinute),
+        })
+      }
+    }
+
+    return { ok: conflicts.length === 0, conflicts }
+  }
+
   async detectConflicts(input: {
     organizationId: string
     studentId: string

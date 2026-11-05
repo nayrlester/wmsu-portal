@@ -23,6 +23,10 @@ import EnrollmentLine from '#modules/enrollment/models/enrollment_line'
 import Student from '#modules/enrollment/models/student'
 import { RecordsGradesClient } from '#modules/enrollment/services/integrations/records_grades_client'
 import { resolveStudentGradeStatuses } from '#modules/enrollment/services/academic_policy_runtime_service'
+import { academicPoliciesService } from '#modules/enrollment/services/academic_policies_service'
+import { rowsToCsv, rowsToExcelXml, rowsToSimplePdf } from '#modules/enrollment/services/report_export'
+import { auditLogService } from '#modules/enrollment/services/audit_log_service'
+import { AuditAction } from '#modules/enrollment/domain/enums/index'
 
 function round4(n: number) {
   return Math.round(n * 10000) / 10000
@@ -501,12 +505,20 @@ export class GradeRecordsService {
         )
       }
 
+      let signatories = input.signatories?.filter((s) => s.role?.trim() && s.name?.trim()) ?? []
+      if (!signatories.length) {
+        const policy = await academicPoliciesService.getOrCreate(input.organizationId)
+        signatories = (policy.gradeDocumentSignatories ?? [])
+          .filter((s) => !s.docType || s.docType === 'grade_sheet' || s.docType === 'class_record')
+          .map((s) => ({ role: s.role, name: s.name }))
+      }
+
       record.useTransaction(trx)
       record.status = 'locked'
       record.submittedAt = now
       record.submittedBy = input.facultyUserId
       record.lockedAt = now
-      if (input.signatories) record.signatoriesJson = input.signatories
+      if (signatories.length) record.signatoriesJson = signatories
       await record.save()
 
       const submission = await GradeSubmission.create(
@@ -814,6 +826,13 @@ export class GradeRecordsService {
 
   async gradeReport(organizationId: string, classRecordId: string) {
     const master = await this.getClassMasterList(organizationId, classRecordId)
+    let signatories = master.classRecord.signatoriesJson ?? []
+    if (!signatories.length) {
+      const policy = await academicPoliciesService.getOrCreate(organizationId)
+      signatories = (policy.gradeDocumentSignatories ?? [])
+        .filter((s) => !s.docType || s.docType === 'grade_sheet' || s.docType === 'class_record')
+        .map((s) => ({ role: s.role, name: s.name }))
+    }
     return {
       classRecord: master.classRecord,
       students: master.roster.map((r) => {
@@ -822,12 +841,122 @@ export class GradeRecordsService {
           ...r,
           markCode: entry?.markCode ?? null,
           numericGrade: entry?.numericGrade ?? null,
+          rawScore: entry?.rawScore ?? null,
+          enteredAt: entry?.enteredAt?.toISO?.() ?? entry?.enteredAt ?? null,
           remarks: entry?.autoRemark ?? entry?.remarks ?? null,
           status: entry?.status ?? 'missing',
           originalMarkCode: entry?.originalMarkCode ?? null,
         }
       }),
-      signatories: master.classRecord.signatoriesJson ?? [],
+      signatories,
+    }
+  }
+
+  async exportGradeReport(input: {
+    organizationId: string
+    classRecordId: string
+    format: 'csv' | 'xlsx' | 'pdf'
+    actorUserId: string
+  }) {
+    const report = await this.gradeReport(input.organizationId, input.classRecordId)
+    const record = report.classRecord as {
+      id: string
+      subjectCode?: string
+      subjectTitle?: string
+      status?: string
+    }
+    const rows = report.students.map((s) => ({
+      studentNumber: (s as { studentNumber?: string }).studentNumber ?? '',
+      lastName: (s as { lastName?: string }).lastName ?? '',
+      firstName: (s as { firstName?: string }).firstName ?? '',
+      rawScore: (s as { rawScore?: number | null }).rawScore ?? '',
+      markCode: (s as { markCode?: string | null }).markCode ?? '',
+      numericGrade: (s as { numericGrade?: number | null }).numericGrade ?? '',
+      remarks: (s as { remarks?: string | null }).remarks ?? '',
+      status: (s as { status?: string }).status ?? '',
+      enteredAt: (s as { enteredAt?: string | null }).enteredAt ?? '',
+    }))
+
+    const title = `Grade sheet ${record.subjectCode ?? ''} — ${record.subjectTitle ?? ''}`.trim()
+    const signatories = (report.signatories ?? []) as Array<{ role?: string; name?: string }>
+    const footer = [
+      `Class record: ${record.id}`,
+      `Status: ${record.status ?? ''}`,
+      'Signatories:',
+      ...(signatories.length
+        ? signatories.map((s) => `${s.role ?? 'Signatory'}: ${s.name ?? ''}`)
+        : ['(none recorded — configure ENR-008 grade document signatories or enter on submit)']),
+    ]
+
+    await auditLogService.log({
+      organizationId: input.organizationId,
+      actorUserId: input.actorUserId,
+      action: AuditAction.REPORT_EXPORT,
+      entityType: 'class_record_grade_sheet',
+      entityId: record.id,
+      metadata: { format: input.format, studentCount: rows.length },
+    })
+
+    const slug = (record.subjectCode ?? 'class').replace(/[^a-zA-Z0-9_-]+/g, '_')
+    if (input.format === 'csv') {
+      const withFooter = [
+        ...rows,
+        {},
+        { studentNumber: 'SIGNATORIES', lastName: '', firstName: '', rawScore: '', markCode: '', numericGrade: '', remarks: '', status: '', enteredAt: '' },
+        ...signatories.map((s) => ({
+          studentNumber: s.role ?? '',
+          lastName: s.name ?? '',
+          firstName: '',
+          rawScore: '',
+          markCode: '',
+          numericGrade: '',
+          remarks: '',
+          status: '',
+          enteredAt: '',
+        })),
+      ]
+      return {
+        contentType: 'text/csv; charset=utf-8',
+        filename: `grade-sheet-${slug}.csv`,
+        body: Buffer.from(rowsToCsv(withFooter), 'utf8'),
+      }
+    }
+    if (input.format === 'xlsx') {
+      const withFooter = [
+        ...rows,
+        {
+          studentNumber: 'SIGNATORIES',
+          lastName: '',
+          firstName: '',
+          rawScore: '',
+          markCode: '',
+          numericGrade: '',
+          remarks: '',
+          status: '',
+          enteredAt: '',
+        },
+        ...signatories.map((s) => ({
+          studentNumber: s.role ?? '',
+          lastName: s.name ?? '',
+          firstName: '',
+          rawScore: '',
+          markCode: '',
+          numericGrade: '',
+          remarks: '',
+          status: '',
+          enteredAt: '',
+        })),
+      ]
+      return {
+        contentType: 'application/vnd.ms-excel',
+        filename: `grade-sheet-${slug}.xls`,
+        body: Buffer.from(rowsToExcelXml(withFooter, 'GradeSheet'), 'utf8'),
+      }
+    }
+    return {
+      contentType: 'application/pdf',
+      filename: `grade-sheet-${slug}.pdf`,
+      body: rowsToSimplePdf(title, rows, footer),
     }
   }
 

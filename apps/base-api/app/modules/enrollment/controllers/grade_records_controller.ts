@@ -170,6 +170,31 @@ export default class GradeRecordsController {
     return response.ok({ data })
   }
 
+  async exportGradeReport(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const format = String(ctx.request.input('format', 'pdf')).toLowerCase()
+    if (!['csv', 'xlsx', 'pdf'].includes(format)) {
+      return ctx.response.badRequest({ error: 'format must be csv, xlsx, or pdf' })
+    }
+    try {
+      const service = new GradeRecordsService()
+      const file = await service.exportGradeReport({
+        organizationId: user.organizationId,
+        classRecordId: ctx.params.id,
+        format: format as 'csv' | 'xlsx' | 'pdf',
+        actorUserId: user.id,
+      })
+      ctx.response.header('Content-Type', file.contentType)
+      ctx.response.header('Content-Disposition', `attachment; filename="${file.filename}"`)
+      return ctx.response.send(file.body)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Export failed'
+      const status = (err as { status?: number })?.status
+      if (status === 404) return ctx.response.notFound({ error: message })
+      return ctx.response.unprocessableEntity({ error: message })
+    }
+  }
+
   async studentAcademicRecords(ctx: HttpContext) {
     const { params, response, auth } = ctx
     const user = auth.user!

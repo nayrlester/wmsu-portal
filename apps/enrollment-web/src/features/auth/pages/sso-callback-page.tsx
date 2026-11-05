@@ -96,8 +96,7 @@ export function SsoCallbackPage() {
 
 function portalBaseUrl() {
   return (
-    (import.meta.env.VITE_PORTAL_URL as string | undefined)?.trim() ||
-    'http://127.0.0.1:5173'
+    (import.meta.env.VITE_PORTAL_URL as string | undefined)?.trim() || 'http://127.0.0.1:5173'
   ).replace(/\/$/, '')
 }
 

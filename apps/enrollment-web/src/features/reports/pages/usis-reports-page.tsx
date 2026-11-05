@@ -42,7 +42,18 @@ const emptyFilters: ReportFilters = {
 
 export function UsisReportsPage() {
   return (
-    <RequirePermission anyOf={['reports.read', 'enrollments.read', 'applicants.read', 'grades.read', 'scholarships.read', 'guidance.read', 'health.read', 'osa.read']}>
+    <RequirePermission
+      anyOf={[
+        'reports.read',
+        'enrollments.read',
+        'applicants.read',
+        'grades.read',
+        'scholarships.read',
+        'guidance.read',
+        'health.read',
+        'osa.read',
+      ]}
+    >
       <UsisReportsInner />
     </RequirePermission>
   )
@@ -55,8 +66,16 @@ function UsisReportsInner() {
   const [selectedReport, setSelectedReport] = useState<string>('')
 
   const catalog = useQuery({ queryKey: ['reports', 'catalog'], queryFn: fetchReportCatalog })
-  const years = useQuery({ queryKey: ['reports', 'years'], queryFn: fetchAcademicYears })
-  const programs = useQuery({ queryKey: ['reports', 'programs'], queryFn: () => fetchPrograms({ limit: 200 }) })
+  const years = useQuery({
+    queryKey: ['reports', 'years'],
+    queryFn: () => fetchAcademicYears({ page: 1, limit: 100 }),
+  })
+  const programs = useQuery({
+    queryKey: ['reports', 'programs'],
+    queryFn: () => fetchPrograms({ page: 1, limit: 200 }),
+  })
+  const yearRows = years.data?.data ?? []
+  const programRows = programs.data?.data ?? []
   const dashboard = useQuery({
     queryKey: ['reports', 'dashboard', applied],
     queryFn: () => fetchReportsDashboard(applied),
@@ -68,13 +87,15 @@ function UsisReportsInner() {
   })
 
   const exportMutation = useMutation({
-    mutationFn: (format: 'csv' | 'xlsx' | 'pdf' | 'json') => exportReport(selectedReport, format, applied),
+    mutationFn: (format: 'csv' | 'xlsx' | 'pdf' | 'json') =>
+      exportReport(selectedReport, format, applied),
     onSuccess: (blob, format) => {
       const ext = format === 'xlsx' ? 'xls' : format
       downloadBlob(blob, `${selectedReport}.${ext}`)
       notify({ tone: 'success', title: `Exported ${format.toUpperCase()}` })
     },
-    onError: (err) => notify({ tone: 'danger', title: 'Export failed', description: getApiErrorMessage(err) }),
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Export failed', description: getApiErrorMessage(err) }),
   })
 
   const reportOptions = useMemo(() => catalog.data?.reports ?? [], [catalog.data])
@@ -90,10 +111,7 @@ function UsisReportsInner() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Reports & dashboards"
-        description={`Role: ${catalog.data?.role ?? '—'} · ENR-033 / ENR-034 / ENR-052`}
-      />
+      <PageHeader title="Reports & dashboards" description={`Role: ${catalog.data?.role ?? '—'}`} />
 
       <Card>
         <CardHeader>
@@ -107,7 +125,7 @@ function UsisReportsInner() {
               onChange={(e) => setFilters((f) => ({ ...f, academicYearId: e.target.value }))}
             >
               <option value="">All years</option>
-              {(years.data ?? []).map((y) => (
+              {yearRows.map((y) => (
                 <option key={y.id} value={y.id}>
                   {y.code} · {y.name}
                 </option>
@@ -117,7 +135,9 @@ function UsisReportsInner() {
           <FormField id="semester" label="Semester">
             <Select
               id="semester"
-              value={filters.semester === '' || filters.semester == null ? '' : String(filters.semester)}
+              value={
+                filters.semester === '' || filters.semester == null ? '' : String(filters.semester)
+              }
               onChange={(e) =>
                 setFilters((f) => ({
                   ...f,
@@ -154,7 +174,7 @@ function UsisReportsInner() {
               onChange={(e) => setFilters((f) => ({ ...f, programId: e.target.value }))}
             >
               <option value="">All programs</option>
-              {(programs.data ?? []).map((p) => (
+              {programRows.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.code} · {p.name}
                 </option>
@@ -164,7 +184,11 @@ function UsisReportsInner() {
           <FormField id="yearLevel" label="Year level">
             <Select
               id="yearLevel"
-              value={filters.yearLevel === '' || filters.yearLevel == null ? '' : String(filters.yearLevel)}
+              value={
+                filters.yearLevel === '' || filters.yearLevel == null
+                  ? ''
+                  : String(filters.yearLevel)
+              }
               onChange={(e) =>
                 setFilters((f) => ({
                   ...f,
@@ -273,11 +297,15 @@ function UsisReportsInner() {
           {report.data ? (
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-semibold text-[var(--color-ink)]">{report.data.title}</h2>
+                <h2 className="text-lg font-semibold text-[var(--color-ink)]">
+                  {report.data.title}
+                </h2>
                 {report.data.confidential ? <Badge>Confidential aggregates</Badge> : null}
                 <Badge>{report.data.validation.ok ? 'Totals OK' : 'Totals mismatch'}</Badge>
               </div>
-              <p className="text-sm text-[var(--color-muted-foreground)]">{report.data.calculation}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                {report.data.calculation}
+              </p>
               <Alert variant={report.data.validation.ok ? 'success' : 'warning'} title="Validation">
                 {report.data.validation.message}
                 {report.data.validation.expectedTotal != null
@@ -326,14 +354,13 @@ function UsisReportsInner() {
               </div>
               <DataTable
                 label={report.data.title}
-                columns={(report.data.columns.length
-                  ? report.data.columns
-                  : ['message']
-                ).map((key) => ({
-                  key,
-                  header: key,
-                  render: (row: Record<string, unknown>) => String(row[key] ?? '—'),
-                }))}
+                columns={(report.data.columns.length ? report.data.columns : ['message']).map(
+                  (key) => ({
+                    key,
+                    header: key,
+                    render: (row: Record<string, unknown>) => String(row[key] ?? '—'),
+                  })
+                )}
                 data={
                   report.data.rows.length
                     ? report.data.rows

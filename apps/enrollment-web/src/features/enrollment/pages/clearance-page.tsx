@@ -20,7 +20,9 @@ export function ClearancePage() {
     <div className="space-y-4 animate-fade-up">
       <div>
         <h1>Clearance</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Cross-system holds (finance, library, inventory)</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Cross-system holds (finance, library, inventory)
+        </p>
       </div>
 
       <div className="flex max-w-md flex-col gap-3 sm:flex-row sm:items-end">
@@ -30,7 +32,11 @@ export function ClearancePage() {
           onChange={(e) => setStudentNumber(e.target.value)}
           placeholder="2026-00042"
         />
-        <Button type="button" onClick={() => setLookup(studentNumber.trim())} disabled={!studentNumber.trim()}>
+        <Button
+          type="button"
+          onClick={() => setLookup(studentNumber.trim())}
+          disabled={!studentNumber.trim()}
+        >
           Check
         </Button>
       </div>

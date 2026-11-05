@@ -1,7 +1,7 @@
 import { LogOut, Menu, Package } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth-store'
 import { clearQueryCache } from '@/lib/query-client'
-import { redirectToPortalSignIn } from '@/lib/portal'
+import { redirectToPortalLogout } from '@/lib/portal'
 
 export function AppHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const user = useAuthStore((s) => s.user)
@@ -10,7 +10,7 @@ export function AppHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const handleLogout = () => {
     logout()
     clearQueryCache()
-    redirectToPortalSignIn()
+    redirectToPortalLogout()
   }
 
   return (

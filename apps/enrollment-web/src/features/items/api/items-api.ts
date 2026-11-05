@@ -20,10 +20,12 @@ function mapItem(row: Record<string, unknown>): Item {
       (row.category as { name?: string } | undefined)?.name ??
         row.categoryId ??
         row.category_id ??
-        '',
+        ''
     ),
     unit: String(row.uom ?? row.unit ?? ''),
-    reorderLevel: Number(row.reorderPoint ?? row.reorder_point ?? row.minStock ?? row.min_stock ?? 0),
+    reorderLevel: Number(
+      row.reorderPoint ?? row.reorder_point ?? row.minStock ?? row.min_stock ?? 0
+    ),
     currentStock: Number(row.currentStock ?? 0),
     unitCost: Number(row.unitCost ?? 0),
     brand: String(row.brand ?? ''),
@@ -55,7 +57,9 @@ function toApiPayload(payload: Partial<ItemFormData>) {
   }
 }
 
-export async function fetchItems(params: ListParams = {}): Promise<{ data: Item[]; meta: { total: number } }> {
+export async function fetchItems(
+  params: ListParams = {}
+): Promise<{ data: Item[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/items', { params })
   const rows = (data.data ?? []).map(mapItem)
   return { data: rows, meta: data.meta ?? { total: rows.length } }

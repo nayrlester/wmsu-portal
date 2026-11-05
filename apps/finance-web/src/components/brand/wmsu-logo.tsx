@@ -37,7 +37,12 @@ export function WmsuLogo({
 
   if (isAuth) {
     return (
-      <div className={cx('flex flex-col items-center gap-3 text-center sm:items-start sm:text-left', className)}>
+      <div
+        className={cx(
+          'flex flex-col items-center gap-3 text-center sm:items-start sm:text-left',
+          className
+        )}
+      >
         <img
           src={SEAL_SRC}
           alt="Western Mindanao State University"
@@ -77,7 +82,12 @@ export function WmsuLogo({
         >
           WMSU
         </div>
-        <div className={cx('truncate text-sm font-bold sm:text-base', invert ? 'text-white' : textPrimary)}>
+        <div
+          className={cx(
+            'truncate text-sm font-bold sm:text-base',
+            invert ? 'text-white' : textPrimary
+          )}
+        >
           {productName}
         </div>
         {productTagline ? (

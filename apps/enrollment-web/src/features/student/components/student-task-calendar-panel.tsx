@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle, LoadingState } from '@wmsu/ui'
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  LoadingState,
+} from '@wmsu/ui'
 import { fetchStudentTaskCalendar, type StudentTaskCalendarItem } from '@/lib/usis-api'
 
 function formatCountdown(targetIso: string, nowMs: number) {
@@ -63,13 +72,18 @@ export function StudentTaskCalendarPanel() {
         <div>
           <CardTitle>Task calendar</CardTitle>
           <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            ENR-048 · deadlines, evaluations, and recent grade postings
+            Deadlines, evaluations, and recent grade postings
           </p>
         </div>
         {nearestDueAt && countdown ? (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] px-4 py-2 text-right">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">Next deadline</p>
-            <p className="font-mono text-lg font-semibold text-[var(--color-ink)]" data-testid="task-calendar-countdown">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted-foreground)]">
+              Next deadline
+            </p>
+            <p
+              className="font-mono text-lg font-semibold text-[var(--color-ink)]"
+              data-testid="task-calendar-countdown"
+            >
               {countdown}
             </p>
           </div>
@@ -78,32 +92,48 @@ export function StudentTaskCalendarPanel() {
       <CardContent className="space-y-3">
         {pendingEval > 0 ? (
           <div className="flex flex-wrap items-center gap-2">
-            <Badge>{pendingEval} faculty evaluation{pendingEval === 1 ? '' : 's'} pending</Badge>
+            <Badge>
+              {pendingEval} faculty evaluation{pendingEval === 1 ? '' : 's'} pending
+            </Badge>
             <Button asChild size="sm" variant="outline">
               <Link to="/student/faculty-eval">Open evaluations</Link>
             </Button>
           </div>
         ) : null}
         {items.length === 0 ? (
-          <p className="text-sm text-[var(--color-muted-foreground)]">No upcoming tasks or recent grade activity for your account.</p>
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            No upcoming tasks or recent grade activity for your account.
+          </p>
         ) : (
           <ul className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)]">
             {items.slice(0, 12).map((item) => (
-              <li key={item.id} className="flex flex-wrap items-start justify-between gap-2 px-3 py-3">
+              <li
+                key={item.id}
+                className="flex flex-wrap items-start justify-between gap-2 px-3 py-3"
+              >
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-[var(--color-ink)]">{item.title}</p>
                   <p className="text-sm text-[var(--color-muted-foreground)]">{item.detail}</p>
-                  <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">{kindLabel(item.kind)}</p>
+                  <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+                    {kindLabel(item.kind)}
+                  </p>
                 </div>
                 <div className="text-right text-sm">
                   {item.dueAt ? (
-                    <p className="font-mono text-[var(--color-ink)]">{formatCountdown(item.dueAt, nowMs)}</p>
+                    <p className="font-mono text-[var(--color-ink)]">
+                      {formatCountdown(item.dueAt, nowMs)}
+                    </p>
                   ) : item.occurredAt ? (
-                    <p className="text-[var(--color-muted-foreground)]">{new Date(item.occurredAt).toLocaleString()}</p>
+                    <p className="text-[var(--color-muted-foreground)]">
+                      {new Date(item.occurredAt).toLocaleString()}
+                    </p>
                   ) : (
                     <Badge>Open</Badge>
                   )}
-                  <Link className="mt-1 block text-xs font-medium text-[var(--color-primary)]" to={item.actionPath}>
+                  <Link
+                    className="mt-1 block text-xs font-medium text-[var(--color-primary)]"
+                    to={item.actionPath}
+                  >
                     View
                   </Link>
                 </div>

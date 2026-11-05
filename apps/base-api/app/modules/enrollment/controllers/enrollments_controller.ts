@@ -6,7 +6,7 @@ import EnrollmentLine from '#modules/enrollment/models/enrollment_line'
 import EnrollmentOverride from '#modules/enrollment/models/enrollment_override'
 import EnrollmentChangeRequest from '#modules/enrollment/models/enrollment_change_request'
 import UnitLoadPolicy from '#modules/enrollment/models/unit_load_policy'
-import { EnrollmentFlowService } from '#modules/enrollment/services/enrollment_flow_service'
+import { EnrollmentFlowService, resolveEnrollmentId } from '#modules/enrollment/services/enrollment_flow_service'
 import {
   createEnrollmentValidator,
   advisingApproveValidator,
@@ -29,6 +29,7 @@ import {
   hasStaffEnrollmentAccess,
   resolveSelfStudent,
 } from '#modules/enrollment/services/enrollment_access_service'
+import { enrollmentPortalWorkflowService } from '#modules/enrollment/services/enrollment_portal_workflow_service'
 
 export default class EnrollmentsController {
   async index(ctx: HttpContext) {
@@ -52,6 +53,7 @@ export default class EnrollmentsController {
       .preload('student')
       .preload('academicYear')
       .preload('section')
+      .preload('assessments', (q) => q.orderBy('created_at', 'desc'))
       .orderBy('created_at', 'desc')
 
     if (studentId) query.where('student_id', studentId)
@@ -93,8 +95,9 @@ export default class EnrollmentsController {
 
   async show(ctx: HttpContext) {
     const user = ctx.auth.user!
+    const enrollmentId = await resolveEnrollmentId(user.organizationId, ctx.params.id)
     const enrollment = await Enrollment.query()
-      .where('id', ctx.params.id)
+      .where('id', enrollmentId)
       .where('organization_id', user.organizationId)
       .preload('student')
       .preload('academicYear')
@@ -109,7 +112,34 @@ export default class EnrollmentsController {
 
     const lines = await EnrollmentLine.query().where('enrollment_id', enrollment.id)
     const overrides = await EnrollmentOverride.query().where('enrollment_id', enrollment.id)
-    return ctx.response.ok({ data: { ...enrollment.serialize(), lines, overrides } })
+    const payload: Record<string, unknown> = { ...enrollment.serialize(), lines, overrides }
+    const include = String(ctx.request.input('include', ''))
+    if (include.split(',').includes('schedule')) {
+      payload.scheduleRows = await enrollmentPortalWorkflowService.buildScheduleRows(
+        user.organizationId,
+        enrollment.id
+      )
+    }
+    return ctx.response.ok({ data: payload })
+  }
+
+  async workflow(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const enrollmentId = await resolveEnrollmentId(user.organizationId, ctx.params.id)
+    const enrollment = await Enrollment.query()
+      .where('id', enrollmentId)
+      .where('organization_id', user.organizationId)
+      .firstOrFail()
+    try {
+      await assertEnrollmentVisible(ctx, enrollment)
+    } catch {
+      return ctx.response.forbidden({ error: 'Forbidden' })
+    }
+    const data = await enrollmentPortalWorkflowService.buildWorkflowForEnrollment(
+      user.organizationId,
+      enrollment.id
+    )
+    return ctx.response.ok({ data })
   }
 
   async advise({ request, response, auth }: HttpContext) {
@@ -125,6 +155,7 @@ export default class EnrollmentsController {
     const payload = await request.validateUsing(assessEnrollmentValidator)
     const service = new EnrollmentFlowService()
     const assessment = await service.assess(payload.enrollmentId, user.id, {
+      feeScheduleId: payload.feeScheduleId,
       tuitionFee: payload.tuitionFee,
       miscFees: payload.miscFees,
       discount: payload.discount,
@@ -135,21 +166,24 @@ export default class EnrollmentsController {
   async verifyPayment({ params, response, auth }: HttpContext) {
     const user = auth.user!
     const service = new EnrollmentFlowService()
-    const enrollment = await service.verifyPayment(params.id, user.id)
+    const enrollmentId = await resolveEnrollmentId(user.organizationId, params.id)
+    const enrollment = await service.verifyPayment(enrollmentId, user.id)
     return response.ok({ data: enrollment })
   }
 
   async registrarApprove({ params, response, auth }: HttpContext) {
     const user = auth.user!
     const service = new EnrollmentFlowService()
-    const enrollment = await service.approveRegistrar(params.id, user.id)
+    const enrollmentId = await resolveEnrollmentId(user.organizationId, params.id)
+    const enrollment = await service.approveRegistrar(enrollmentId, user.id)
     return response.ok({ data: enrollment })
   }
 
   async register({ params, response, auth }: HttpContext) {
     const user = auth.user!
     const service = new EnrollmentFlowService()
-    const enrollment = await service.register(params.id, user.id)
+    const enrollmentId = await resolveEnrollmentId(user.organizationId, params.id)
+    const enrollment = await service.register(enrollmentId, user.id)
     return response.ok({ data: enrollment })
   }
 

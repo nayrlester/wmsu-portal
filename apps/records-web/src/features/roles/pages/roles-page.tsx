@@ -35,7 +35,7 @@ export function RolesPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Roles" description="View and manage system roles" />
+      <PageHeader title="Roles" description="View roles and permissions (assignment via Identity / Platform Access)" />
 
       {isLoading ? (
         <div className="space-y-2">

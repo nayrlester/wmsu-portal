@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { SkipLink } from '@/components/shared/skip-link'
 import { useAuthStore } from '@/stores/auth-store'
-import { redirectToPortalSignIn } from '@/shared/lib/portal'
+import { redirectToPortalLogout } from '@/shared/lib/portal'
 import { cn } from '@/lib/utils'
 import { APP_LOGO_URL } from '@/shared/constants/branding'
 
@@ -135,7 +135,7 @@ export function AdminLayout() {
             size="icon"
             onClick={() => {
               logout()
-              redirectToPortalSignIn()
+              redirectToPortalLogout()
             }}
             aria-label="Sign out"
           >

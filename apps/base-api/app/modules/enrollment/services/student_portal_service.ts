@@ -58,7 +58,7 @@ export class StudentPortalService {
         detail: `${row.scheduleTitle} · ${row.sectionLabel}${row.subjectCode ? ` · ${row.subjectCode}` : ''}`,
         dueAt: iso(due),
         occurredAt: null,
-        actionPath: '/student/faculty-eval',
+        actionPath: `/student/faculty-eval?target=${encodeURIComponent(row.targetId)}`,
         status: itemStatus(due, now),
       })
     }
@@ -139,6 +139,44 @@ export class StudentPortalService {
       pendingFacultyEvalCount: pending.items.length,
       nearestDueAt: dueCandidates[0] ? iso(dueCandidates[0]) : null,
       items,
+    }
+  }
+
+  async gradeFeedback(organizationId: string, student: Student, sinceMinutes = 60) {
+    const now = DateTime.now()
+    const windowMinutes = Math.min(Math.max(Number(sinceMinutes) || 60, 5), 24 * 60)
+    const since = now.minus({ minutes: windowMinutes })
+
+    const rows = await GradeEntry.query()
+      .where('organization_id', organizationId)
+      .where('student_id', student.id)
+      .whereNotNull('submitted_at')
+      .where('submitted_at', '>=', since.toJSDate())
+      .orderBy('submitted_at', 'desc')
+      .limit(30)
+
+    return {
+      generatedAt: now.toISO()!,
+      sinceMinutes: windowMinutes,
+      items: rows.map((grade) => {
+        const mark =
+          grade.markCode ??
+          (grade.numericGrade != null
+            ? String(grade.numericGrade)
+            : grade.grade != null
+              ? String(grade.grade)
+              : '—')
+        return {
+          id: grade.id,
+          courseCode: grade.courseCode,
+          courseTitle: grade.courseTitle,
+          markCode: mark,
+          remarks: grade.autoRemark ?? grade.remarks ?? null,
+          status: grade.status,
+          submittedAt: iso(grade.submittedAt),
+          justPosted: Boolean(grade.submittedAt && grade.submittedAt >= now.minus({ minutes: 15 })),
+        }
+      }),
     }
   }
 }

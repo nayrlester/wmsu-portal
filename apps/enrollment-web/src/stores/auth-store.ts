@@ -37,8 +37,7 @@ export const useAuthStore = create<AuthState>()(
           tokenKind: tokenKind ?? state.tokenKind,
         })),
       setUser: (user) => set({ user }),
-      logout: () =>
-        set({ user: null, accessToken: null, refreshToken: null, tokenKind: 'local' }),
+      logout: () => set({ user: null, accessToken: null, refreshToken: null, tokenKind: 'local' }),
       isAuthenticated: () => !!get().accessToken,
     }),
     { name: 'usis-auth' }

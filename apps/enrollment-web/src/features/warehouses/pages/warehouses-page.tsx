@@ -90,7 +90,9 @@ export function WarehousesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1>Warehouses</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Manage storage locations, facilities, and bins</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Manage storage locations, facilities, and bins
+          </p>
         </div>
         <Button onClick={() => setModal({ mode: 'create' })}>
           <Plus className="h-4 w-4" /> Add Warehouse
@@ -120,7 +122,12 @@ export function WarehousesPage() {
         emptyDescription="Add your first warehouse to begin tracking storage locations."
         actions={(item) => (
           <>
-            <Button variant="ghost" size="icon" title="Manage bins" onClick={() => setModal({ mode: 'bins', item })}>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Manage bins"
+              onClick={() => setModal({ mode: 'bins', item })}
+            >
               <Boxes className="h-3.5 w-3.5" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => setModal({ mode: 'edit', item })}>
@@ -157,10 +164,7 @@ export function WarehousesPage() {
       )}
 
       {modal.mode === 'bins' && (
-        <BinsModal
-          warehouse={modal.item}
-          onClose={() => setModal({ mode: 'closed' })}
-        />
+        <BinsModal warehouse={modal.item} onClose={() => setModal({ mode: 'closed' })} />
       )}
     </div>
   )
@@ -195,7 +199,10 @@ function WarehouseFormModal({
   })
 
   const onSubmit = form.handleSubmit((v) => mutation.mutate(v))
-  const { register, formState: { errors } } = form
+  const {
+    register,
+    formState: { errors },
+  } = form
 
   return (
     <Modal open onClose={onClose} title={mode === 'create' ? 'Add Warehouse' : 'Edit Warehouse'}>
@@ -207,7 +214,12 @@ function WarehouseFormModal({
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Name" error={errors.name?.message} {...register('name')} />
-          <Input label="Code" placeholder="e.g. WH-001" error={errors.code?.message} {...register('code')} />
+          <Input
+            label="Code"
+            placeholder="e.g. WH-001"
+            error={errors.code?.message}
+            {...register('code')}
+          />
         </div>
         <Input label="Address" {...register('address')} />
         <div className="grid gap-4 sm:grid-cols-2">
@@ -215,7 +227,9 @@ function WarehouseFormModal({
           <Input label="Province" {...register('province')} />
         </div>
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             {mode === 'create' ? 'Create' : 'Save Changes'}
@@ -243,8 +257,8 @@ function DeleteWarehouseModal({
   return (
     <Modal open onClose={onClose} title="Delete Warehouse" size="sm">
       <p className="text-sm text-muted-foreground">
-        Are you sure you want to delete <strong className="text-ink">{item.name}</strong>?
-        All associated stock records may be affected.
+        Are you sure you want to delete <strong className="text-ink">{item.name}</strong>? All
+        associated stock records may be affected.
       </p>
       {mutation.isError && (
         <div className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -252,8 +266,14 @@ function DeleteWarehouseModal({
         </div>
       )}
       <div className="mt-5 flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button variant="destructive" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          disabled={mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
           {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
           Delete
         </Button>
@@ -303,7 +323,9 @@ function BinsModal({ warehouse, onClose }: { warehouse: WarehouseRecord; onClose
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-8"><Spinner /></div>
+        <div className="flex justify-center py-8">
+          <Spinner />
+        </div>
       ) : bins.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted-foreground">No bins yet.</p>
       ) : (
@@ -355,16 +377,31 @@ function BinsModal({ warehouse, onClose }: { warehouse: WarehouseRecord; onClose
             </div>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input label="Code" error={form.formState.errors.code?.message} {...form.register('code')} />
-            <Input label="Name" error={form.formState.errors.name?.message} {...form.register('name')} />
+            <Input
+              label="Code"
+              error={form.formState.errors.code?.message}
+              {...form.register('code')}
+            />
+            <Input
+              label="Name"
+              error={form.formState.errors.name?.message}
+              {...form.register('name')}
+            />
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <Input label="Aisle" {...form.register('aisle')} />
             <Input label="Shelf" {...form.register('shelf')} />
-            <Input label="Capacity" type="number" min={0} {...form.register('capacity', { valueAsNumber: true })} />
+            <Input
+              label="Capacity"
+              type="number"
+              min={0}
+              {...form.register('capacity', { valueAsNumber: true })}
+            />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending ? <Spinner className="h-4 w-4" /> : null}
               Save Bin

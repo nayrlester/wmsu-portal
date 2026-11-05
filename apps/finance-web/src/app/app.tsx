@@ -13,46 +13,15 @@ const LoginPage = lazy(() =>
 const SsoCallbackPage = lazy(() =>
   import('@/features/auth/pages/sso-callback-page').then((m) => ({ default: m.SsoCallbackPage }))
 )
+const SsoLogoutPage = lazy(() =>
+  import('@/features/auth/pages/sso-logout-page').then((m) => ({ default: m.SsoLogoutPage }))
+)
 const DashboardPage = lazy(() =>
   import('@/features/dashboard/pages/dashboard-page').then((m) => ({ default: m.DashboardPage }))
-)
-const ItemsPage = lazy(() =>
-  import('@/features/items/pages/items-page').then((m) => ({ default: m.ItemsPage }))
-)
-const WarehousesPage = lazy(() =>
-  import('@/features/warehouses/pages/warehouses-page').then((m) => ({ default: m.WarehousesPage }))
-)
-const StockPage = lazy(() =>
-  import('@/features/stock/pages/stock-page').then((m) => ({ default: m.StockPage }))
-)
-const AssetsPage = lazy(() =>
-  import('@/features/assets/pages/assets-page').then((m) => ({ default: m.AssetsPage }))
 )
 const OrganizationPage = lazy(() =>
   import('@/features/organization/pages/organization-page').then((m) => ({
     default: m.OrganizationPage,
-  }))
-)
-const SuppliersPage = lazy(() =>
-  import('@/features/suppliers/pages/suppliers-page').then((m) => ({ default: m.SuppliersPage }))
-)
-const RequisitionsPage = lazy(() =>
-  import('@/features/requisitions/pages/requisitions-page').then((m) => ({
-    default: m.RequisitionsPage,
-  }))
-)
-const CoaPage = lazy(() =>
-  import('@/features/coa/pages/coa-page').then((m) => ({ default: m.CoaPage }))
-)
-const CountsPage = lazy(() =>
-  import('@/features/counts/pages/counts-page').then((m) => ({ default: m.CountsPage }))
-)
-const FieldPage = lazy(() =>
-  import('@/features/field/pages/field-page').then((m) => ({ default: m.FieldPage }))
-)
-const DepreciationPage = lazy(() =>
-  import('@/features/depreciation/pages/depreciation-page').then((m) => ({
-    default: m.DepreciationPage,
   }))
 )
 const ReportsPage = lazy(() =>
@@ -71,10 +40,26 @@ const AccountingPage = lazy(() =>
   import('@/features/accounting/pages/accounting-page').then((m) => ({ default: m.AccountingPage }))
 )
 const ProcurementPage = lazy(() =>
-  import('@/features/procurement/pages/procurement-page').then((m) => ({ default: m.ProcurementPage }))
+  import('@/features/procurement/pages/procurement-page').then((m) => ({
+    default: m.ProcurementPage,
+  }))
 )
 const PosPage = lazy(() =>
   import('@/features/pos/pages/pos-page').then((m) => ({ default: m.PosPage }))
+)
+const CashierPage = lazy(() =>
+  import('@/features/cashier/pages/cashier-page').then((m) => ({ default: m.CashierPage }))
+)
+const DisbursementPage = lazy(() =>
+  import('@/features/disbursement/pages/disbursement-page').then((m) => ({
+    default: m.DisbursementPage,
+  }))
+)
+const ConfigPage = lazy(() =>
+  import('@/features/config/pages/config-page').then((m) => ({ default: m.ConfigPage }))
+)
+const TuitionPage = lazy(() =>
+  import('@/features/tuition/pages/tuition-page').then((m) => ({ default: m.TuitionPage }))
 )
 
 function PageFallback() {
@@ -109,6 +94,10 @@ function GuestOnly({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageFallback />}>{children}</Suspense>
 }
 
+function RedirectLegacyInventory() {
+  return <Navigate to="/dashboard" replace />
+}
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -123,28 +112,47 @@ export function App() {
               </GuestOnly>
             }
           />
-          <Route path="/sso/callback" element={<Suspense fallback={<PageFallback />}><SsoCallbackPage /></Suspense>} />
+          <Route
+            path="/sso/callback"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <SsoCallbackPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/sso/logout"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <SsoLogoutPage />
+              </Suspense>
+            }
+          />
           <Route element={<ProtectedLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="budget" element={<BudgetPage />} />
             <Route path="accounting" element={<AccountingPage />} />
+            <Route path="tuition" element={<TuitionPage />} />
+            <Route path="cashier" element={<CashierPage />} />
+            <Route path="disbursement" element={<DisbursementPage />} />
             <Route path="procurement" element={<ProcurementPage />} />
             <Route path="pos" element={<PosPage />} />
-            <Route path="items" element={<ItemsPage />} />
-            <Route path="warehouses" element={<WarehousesPage />} />
-            <Route path="stock" element={<StockPage />} />
-            <Route path="suppliers" element={<SuppliersPage />} />
-            <Route path="requisitions" element={<RequisitionsPage />} />
-            <Route path="coa" element={<CoaPage />} />
-            <Route path="counts" element={<CountsPage />} />
-            <Route path="field" element={<FieldPage />} />
-            <Route path="assets" element={<AssetsPage />} />
-            <Route path="depreciation" element={<DepreciationPage />} />
+            <Route path="config" element={<ConfigPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="organization" element={<OrganizationPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="roles" element={<RolesPage />} />
+            <Route path="items" element={<RedirectLegacyInventory />} />
+            <Route path="warehouses" element={<RedirectLegacyInventory />} />
+            <Route path="stock" element={<RedirectLegacyInventory />} />
+            <Route path="suppliers" element={<RedirectLegacyInventory />} />
+            <Route path="requisitions" element={<RedirectLegacyInventory />} />
+            <Route path="coa" element={<RedirectLegacyInventory />} />
+            <Route path="counts" element={<RedirectLegacyInventory />} />
+            <Route path="field" element={<RedirectLegacyInventory />} />
+            <Route path="assets" element={<RedirectLegacyInventory />} />
+            <Route path="depreciation" element={<RedirectLegacyInventory />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

@@ -45,9 +45,9 @@ export function PosPage() {
 
   const [tab, setTab] = useState<Tab>('sell')
   const [error, setError] = useState<string | null>(null)
-  const [cart, setCart] = useState<Array<{ catalogItemId: string; description: string; unitPrice: number; quantity: number }>>(
-    []
-  )
+  const [cart, setCart] = useState<
+    Array<{ catalogItemId: string; description: string; unitPrice: number; quantity: number }>
+  >([])
   const [tenderCash, setTenderCash] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [lastReceipt, setLastReceipt] = useState<any>(null)
@@ -132,9 +132,7 @@ export function PosPage() {
           })),
         })
         const cash = Number(tenderCash || draft.totalAmount)
-        const completed = await completeSale(draft.id, [
-          { paymentMethod: 'cash', amount: cash },
-        ])
+        const completed = await completeSale(draft.id, [{ paymentMethod: 'cash', amount: cash }])
         setLastReceipt(completed.receiptSnapshot || completed)
         setCart([])
         setTenderCash('')
@@ -156,7 +154,7 @@ export function PosPage() {
     <div className="space-y-4 animate-fade-up">
       <PageHeader
         title="Point of Sale"
-        description="Catalog, multi-tender sales, receipts, EOD, and UIMS-sourced stock cache (FIN-017/018/019/030). No parallel UFMS inventory."
+        description="Catalog, multi-tender sales, receipts, EOD, and UIMS-sourced stock cache. No parallel UFMS inventory."
         actions={
           tab === 'catalog' && canWrite ? (
             <Button onClick={() => setShowCatalog(true)}>
@@ -174,7 +172,9 @@ export function PosPage() {
             onClick={() => setTab(item.id)}
             className={cn(
               'rounded-lg px-3 py-1.5 text-sm font-medium',
-              tab === item.id ? 'bg-[var(--color-brand)] text-white' : 'text-slate-600 hover:bg-slate-100'
+              tab === item.id
+                ? 'bg-[var(--color-brand)] text-white'
+                : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             {item.label}
@@ -183,7 +183,10 @@ export function PosPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <div
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          role="alert"
+        >
           {error}
         </div>
       )}
@@ -203,7 +206,9 @@ export function PosPage() {
                 >
                   <div className="font-mono text-xs text-slate-500">{item.itemCode}</div>
                   <div className="text-sm font-medium text-slate-900">{item.description}</div>
-                  <div className="mt-1 text-sm text-slate-700">{formatCurrency(item.unitPrice)}</div>
+                  <div className="mt-1 text-sm text-slate-700">
+                    {formatCurrency(item.unitPrice)}
+                  </div>
                 </button>
               ))}
               {!catalogQuery.data?.length && (
@@ -232,7 +237,11 @@ export function PosPage() {
               onChange={(e) => setTenderCash(e.target.value)}
               aria-label="Cash tendered"
             />
-            <Button className="w-full" disabled={!canSell || !cart.length || submitting} onClick={checkout}>
+            <Button
+              className="w-full"
+              disabled={!canSell || !cart.length || submitting}
+              onClick={checkout}
+            >
               {submitting ? 'Processing…' : 'Complete sale'}
             </Button>
             {lastReceipt && (
@@ -244,7 +253,8 @@ export function PosPage() {
             )}
             {reportQuery.data && (
               <p className="text-xs text-slate-500">
-                Today: {reportQuery.data.completedSales} sales / {formatCurrency(reportQuery.data.grossSales)}
+                Today: {reportQuery.data.completedSales} sales /{' '}
+                {formatCurrency(reportQuery.data.grossSales)}
               </p>
             )}
           </div>
@@ -255,7 +265,12 @@ export function PosPage() {
         <DataTable
           label="Catalog"
           columns={[
-            { key: 'code', header: 'Code', className: 'font-mono text-xs', render: (r: any) => r.itemCode },
+            {
+              key: 'code',
+              header: 'Code',
+              className: 'font-mono text-xs',
+              render: (r: any) => r.itemCode,
+            },
             { key: 'desc', header: 'Description', render: (r: any) => r.description },
             { key: 'cat', header: 'Category', render: (r: any) => r.category || '—' },
             { key: 'price', header: 'Price', render: (r: any) => formatCurrency(r.unitPrice) },
@@ -276,7 +291,12 @@ export function PosPage() {
         <DataTable
           label="Sales history"
           columns={[
-            { key: 'sale', header: 'Sale#', className: 'font-mono text-xs', render: (r: any) => r.saleNumber },
+            {
+              key: 'sale',
+              header: 'Sale#',
+              className: 'font-mono text-xs',
+              render: (r: any) => r.saleNumber,
+            },
             { key: 'receipt', header: 'Receipt', render: (r: any) => r.receiptNumber || '—' },
             { key: 'total', header: 'Total', render: (r: any) => formatCurrency(r.totalAmount) },
             {
@@ -305,12 +325,17 @@ export function PosPage() {
       {tab === 'stock' && (
         <div className="space-y-2">
           <p className="text-sm text-slate-600">
-            Snapshots are a UIMS cache only (FIN-019). UFMS does not maintain a parallel inventory master.
+            Snapshots are a UIMS cache only. UFMS does not maintain a parallel inventory master.
           </p>
           <DataTable
             label="UIMS stock snapshots"
             columns={[
-              { key: 'ref', header: 'UIMS ref', className: 'font-mono text-xs', render: (r: any) => r.uimsItemRef },
+              {
+                key: 'ref',
+                header: 'UIMS ref',
+                className: 'font-mono text-xs',
+                render: (r: any) => r.uimsItemRef,
+              },
               { key: 'qty', header: 'Qty on hand', render: (r: any) => r.quantityOnHand },
               { key: 'uom', header: 'UOM', render: (r: any) => r.uom || '—' },
               {

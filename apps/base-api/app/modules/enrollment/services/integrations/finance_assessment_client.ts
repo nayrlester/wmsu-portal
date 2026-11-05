@@ -1,4 +1,8 @@
 import env from '#start/env'
+import {
+  financeInternalPath,
+  resolveFinanceOrganizationId,
+} from '#modules/enrollment/services/integrations/finance_api_paths'
 
 export type UfmsAssessmentSubmitInput = {
   organizationId: string
@@ -14,6 +18,9 @@ export type UfmsAssessmentSubmitInput = {
   breakdown: Record<string, unknown>
   assessedAt: string
   idempotencyKey: string
+  programId?: string | null
+  yearLevel?: number | null
+  classification?: string | null
 }
 
 export type UfmsPaymentStatus = {
@@ -23,6 +30,15 @@ export type UfmsPaymentStatus = {
   assessedAmount: number
   paidAmount: number
   balanceAmount: number
+  minimumDueRequired?: number
+  installments?: Array<{
+    sequence: number
+    label: string
+    amount: number
+    paidAmount: number
+    dueDate: string | null
+    status: string
+  }>
   payments: Array<{
     id: string
     amount: number
@@ -142,10 +158,6 @@ export class MockFinanceAssessmentClient implements FinanceAssessmentGateway {
 }
 
 export class HttpFinanceAssessmentClient implements FinanceAssessmentGateway {
-  private base() {
-    return (env.get('FINANCE_API_URL') ?? 'http://127.0.0.1:3342').replace(/\/$/, '')
-  }
-
   private headers(idempotencyKey?: string) {
     const h: Record<string, string> = {
       Accept: 'application/json',
@@ -158,10 +170,11 @@ export class HttpFinanceAssessmentClient implements FinanceAssessmentGateway {
   }
 
   async submitAssessment(input: UfmsAssessmentSubmitInput) {
-    const res = await fetch(`${this.base()}/api/v1/internal/assessments`, {
+    const organizationId = await resolveFinanceOrganizationId(input.organizationId)
+    const res = await fetch(financeInternalPath('/assessments'), {
       method: 'POST',
       headers: this.headers(input.idempotencyKey),
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, organizationId }),
     })
     const raw = (await res.json().catch(() => ({}))) as Record<string, unknown>
     if (!res.ok) {
@@ -182,10 +195,11 @@ export class HttpFinanceAssessmentClient implements FinanceAssessmentGateway {
   }
 
   async getPaymentStatus(input: { organizationId: string; assessmentNumber: string }) {
+    const organizationId = await resolveFinanceOrganizationId(input.organizationId)
     const url = new URL(
-      `${this.base()}/api/v1/internal/assessments/${encodeURIComponent(input.assessmentNumber)}/payment-status`
+      financeInternalPath(`/assessments/${encodeURIComponent(input.assessmentNumber)}/payment-status`)
     )
-    url.searchParams.set('organizationId', input.organizationId)
+    url.searchParams.set('organizationId', organizationId)
     const res = await fetch(url, { headers: this.headers() })
     const raw = (await res.json().catch(() => ({}))) as Record<string, unknown>
     if (!res.ok) {
@@ -199,10 +213,15 @@ export class HttpFinanceAssessmentClient implements FinanceAssessmentGateway {
 }
 
 export function createFinanceAssessmentClient(): FinanceAssessmentGateway {
-  if (process.env.FINANCE_MOCK === 'true' || env.get('FINANCE_MOCK') === true) {
+  const mockFlag = process.env.FINANCE_MOCK ?? String(env.get('FINANCE_MOCK') ?? '')
+  if (mockFlag === 'true') {
     return new MockFinanceAssessmentClient()
   }
-  if ((env.get('FINANCE_API_URL') ?? '').trim() === '') {
+  const financeUrl = (env.get('FINANCE_API_URL') ?? '').trim()
+  if (!financeUrl) {
+    if (mockFlag === 'false') {
+      throw new Error('FINANCE_API_URL is required when FINANCE_MOCK=false')
+    }
     return new MockFinanceAssessmentClient()
   }
   return new HttpFinanceAssessmentClient()

@@ -101,7 +101,11 @@ export async function fetchRecentMovements(): Promise<RecentMovement[]> {
       id: String(row.id ?? ''),
       itemName: String(row.itemName ?? item?.name ?? row.item_id ?? '—'),
       warehouseName: String(
-        row.warehouseName ?? (inbound ? toWh?.name : fromWh?.name) ?? toWh?.name ?? fromWh?.name ?? '—'
+        row.warehouseName ??
+          (inbound ? toWh?.name : fromWh?.name) ??
+          toWh?.name ??
+          fromWh?.name ??
+          '—'
       ),
       type: inbound ? 'IN' : type === 'transfer' ? 'TRANSFER' : 'OUT',
       quantity: Number(row.quantity ?? 0),

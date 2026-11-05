@@ -37,7 +37,7 @@ function mapWarehouse(row: Record<string, unknown>): WarehouseRecord {
 }
 
 export async function fetchWarehouses(
-  params: ListParams = {},
+  params: ListParams = {}
 ): Promise<{ data: WarehouseRecord[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/warehouses', { params })
   const rows = (data.data ?? []).map(mapWarehouse)
@@ -64,7 +64,7 @@ export async function createWarehouse(payload: WarehouseFormData): Promise<Wareh
 
 export async function updateWarehouse(
   id: string,
-  payload: Partial<WarehouseFormData>,
+  payload: Partial<WarehouseFormData>
 ): Promise<WarehouseRecord> {
   const { data } = await apiClient.patch(`/warehouses/${id}`, {
     name: payload.name,
@@ -88,7 +88,7 @@ export async function fetchWarehouseBins(warehouseId: string): Promise<Warehouse
 
 export async function createWarehouseBin(
   warehouseId: string,
-  payload: BinFormData,
+  payload: BinFormData
 ): Promise<WarehouseBin> {
   const { data } = await apiClient.post(`/warehouses/${warehouseId}/bins`, payload)
   return mapBin(data.data ?? data)
@@ -97,7 +97,7 @@ export async function createWarehouseBin(
 export async function updateWarehouseBin(
   warehouseId: string,
   binId: string,
-  payload: Partial<BinFormData>,
+  payload: Partial<BinFormData>
 ): Promise<WarehouseBin> {
   const { data } = await apiClient.patch(`/warehouses/${warehouseId}/bins/${binId}`, payload)
   return mapBin(data.data ?? data)

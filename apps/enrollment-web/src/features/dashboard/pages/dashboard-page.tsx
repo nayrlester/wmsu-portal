@@ -50,10 +50,18 @@ export function DashboardPage() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Pending applicants" value={summary?.pendingApplicants} icon={ClipboardList} />
+            <StatCard
+              label="Pending applicants"
+              value={summary?.pendingApplicants}
+              icon={ClipboardList}
+            />
             <StatCard label="Students" value={summary?.totalStudents} icon={Users} />
             <StatCard label="Enrollments" value={summary?.activeEnrollments} icon={GraduationCap} />
-            <StatCard label="Recent payments" value={summary?.recentPayments.length} icon={Wallet} />
+            <StatCard
+              label="Recent payments"
+              value={summary?.recentPayments.length}
+              icon={Wallet}
+            />
           </div>
 
           <div className="uims-card">

@@ -63,7 +63,7 @@ export async function fetchDepreciationProfile(assetId: string): Promise<Depreci
 }
 
 export async function createDepreciationProfile(
-  payload: DepreciationProfileFormData,
+  payload: DepreciationProfileFormData
 ): Promise<DepreciationProfile> {
   const body = {
     assetId: payload.assetId,
@@ -78,7 +78,7 @@ export async function createDepreciationProfile(
 }
 
 export async function runDepreciation(
-  payload: DepreciationRunPayload,
+  payload: DepreciationRunPayload
 ): Promise<{ processed: number }> {
   const { data } = await apiClient.post('/depreciation/run', {
     periodYear: payload.periodYear,
@@ -86,7 +86,9 @@ export async function runDepreciation(
     assetId: payload.assetId || undefined,
   })
   const result = data.data ?? data
-  const processed = Array.isArray(result) ? result.length : Number(result.processed ?? result.count ?? 0)
+  const processed = Array.isArray(result)
+    ? result.length
+    : Number(result.processed ?? result.count ?? 0)
   return { processed }
 }
 
@@ -103,11 +105,13 @@ export async function fetchLapsingSchedule(assetId: string): Promise<LapsingSche
   }
 }
 
-export async function fetchPropertyLedger(params: {
-  assetId?: string
-  page?: number
-  limit?: number
-} = {}): Promise<{ data: PropertyLedgerEntry[]; meta: { total: number } }> {
+export async function fetchPropertyLedger(
+  params: {
+    assetId?: string
+    page?: number
+    limit?: number
+  } = {}
+): Promise<{ data: PropertyLedgerEntry[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/depreciation/property-ledger', { params })
   const rows = (data.data ?? []).map(mapLedger)
   return { data: rows, meta: data.meta ?? { total: rows.length } }

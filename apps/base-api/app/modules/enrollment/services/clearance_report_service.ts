@@ -97,6 +97,70 @@ export class ClearanceReportService {
       snapshot: row.snapshotJson,
     }
   }
+
+  async listRecent(organizationId: string, input?: { studentId?: string | null; limit?: number }) {
+    let query = UsisClearanceReport.query()
+      .where('organization_id', organizationId)
+      .whereNull('revoked_at')
+      .orderBy('issued_at', 'desc')
+      .limit(input?.limit ?? 30)
+    if (input?.studentId) query = query.where('student_id', input.studentId)
+    const rows = await query
+    return rows.map((row) => ({
+      reportId: row.id,
+      documentToken: row.documentToken,
+      studentNumber: row.studentNumber,
+      studentName: row.snapshotJson?.studentName ?? '',
+      cleared: row.cleared,
+      issuedAt: row.issuedAt.toISO(),
+      verifyUrl: this.verifyUrl(row.documentToken),
+      snapshotChecksum: row.snapshotChecksum,
+    }))
+  }
+
+  async pdfPackage(documentToken: string, organizationId: string) {
+    const row = await UsisClearanceReport.query()
+      .where('document_token', documentToken)
+      .where('organization_id', organizationId)
+      .first()
+    if (!row || row.revokedAt) return null
+
+    const { rowsToSimplePdf } = await import('#modules/enrollment/services/report_export')
+    const checks = row.snapshotJson?.checks ?? {}
+    const officeRows = Object.entries(checks).map(([office, check]) => ({
+      office,
+      status: check?.cleared ? 'cleared' : check?.error ? 'unavailable' : 'hold',
+      openItems: check?.openItems ?? '',
+    }))
+    if (!officeRows.length) {
+      officeRows.push({ office: 'snapshot', status: row.cleared ? 'cleared' : 'hold', openItems: '' })
+    }
+
+    const verifyUrl = this.verifyUrl(row.documentToken)
+    const body = rowsToSimplePdf(
+      'WMSU USiS — Clearance certificate (ENR-025)',
+      officeRows,
+      [
+        `Student: ${row.snapshotJson?.studentName ?? ''} (${row.studentNumber})`,
+        `Overall: ${row.cleared ? 'CLEARED' : 'WITH HOLDS'}`,
+        `Issued: ${row.issuedAt.toISO()}`,
+        `Checksum: ${row.snapshotChecksum}`,
+        `QR validation URL: ${verifyUrl}`,
+        'Print this PDF or the on-screen certificate; open the URL to validate the immutable snapshot.',
+      ]
+    )
+    const slug = String(row.studentNumber || 'student').replace(/[^a-zA-Z0-9_-]+/g, '_')
+    return {
+      contentType: 'application/pdf',
+      filename: `clearance-${slug}-${row.documentToken.slice(0, 8)}.pdf`,
+      body,
+      meta: {
+        documentToken: row.documentToken,
+        verifyUrl,
+        cleared: row.cleared,
+      },
+    }
+  }
 }
 
 export const clearanceReportService = new ClearanceReportService()

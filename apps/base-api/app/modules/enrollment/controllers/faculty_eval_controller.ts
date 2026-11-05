@@ -2,6 +2,14 @@ import type { HttpContext } from '@adonisjs/core/http'
 import vine from '@vinejs/vine'
 import { facultyEvalService } from '#modules/enrollment/services/faculty_eval_service'
 
+function parseOptionalDate(value: unknown): Date | null | undefined {
+  if (value === undefined) return undefined
+  if (value === null || value === '') return null
+  const dt = new Date(String(value))
+  if (Number.isNaN(dt.getTime())) throw new Error('Invalid datetime value')
+  return dt
+}
+
 const codeValidator = vine.compile(
   vine.object({
     code: vine.string().trim().minLength(2).maxLength(32),
@@ -24,8 +32,8 @@ const scheduleValidator = vine.compile(
     evalCodeId: vine.string().uuid(),
     title: vine.string().trim().minLength(3).maxLength(500),
     questionIds: vine.array(vine.string().uuid()).minLength(1),
-    opensAt: vine.date().optional(),
-    closesAt: vine.date().optional(),
+    opensAt: vine.string().trim().optional(),
+    closesAt: vine.string().trim().optional(),
     openNow: vine.boolean().optional(),
     targets: vine
       .array(
@@ -37,6 +45,14 @@ const scheduleValidator = vine.compile(
         })
       )
       .minLength(1),
+  })
+)
+
+const scheduleWindowValidator = vine.compile(
+  vine.object({
+    opensAt: vine.string().trim().optional(),
+    closesAt: vine.string().trim().optional(),
+    status: vine.enum(['draft', 'open', 'closed'] as const).optional(),
   })
 )
 
@@ -106,18 +122,23 @@ export default class FacultyEvalController {
     const user = this.orgUser(ctx)
     if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
     const body = await ctx.request.validateUsing(scheduleValidator)
-    const data = await facultyEvalService.createSchedule({
-      organizationId: user.organizationId,
-      userId: user.id,
-      evalCodeId: body.evalCodeId,
-      title: body.title,
-      questionIds: body.questionIds,
-      opensAt: body.opensAt,
-      closesAt: body.closesAt,
-      openNow: body.openNow,
-      targets: body.targets,
-    })
-    return ctx.response.created({ data })
+    try {
+      const data = await facultyEvalService.createSchedule({
+        organizationId: user.organizationId,
+        userId: user.id,
+        evalCodeId: body.evalCodeId,
+        title: body.title,
+        questionIds: body.questionIds,
+        opensAt: parseOptionalDate(body.opensAt) ?? null,
+        closesAt: parseOptionalDate(body.closesAt) ?? null,
+        openNow: body.openNow,
+        targets: body.targets,
+      })
+      return ctx.response.created({ data })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not create schedule'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
   }
 
   async schedulesOpen(ctx: HttpContext) {
@@ -125,6 +146,43 @@ export default class FacultyEvalController {
     if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
     const data = await facultyEvalService.openSchedule(ctx.params.id, user.organizationId, user.id)
     return ctx.response.ok({ data })
+  }
+
+  async schedulesClose(ctx: HttpContext) {
+    const user = this.orgUser(ctx)
+    if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
+    try {
+      const closesAtRaw = ctx.request.input('closesAt')
+      const data = await facultyEvalService.closeSchedule(
+        ctx.params.id,
+        user.organizationId,
+        user.id,
+        parseOptionalDate(closesAtRaw) ?? null
+      )
+      return ctx.response.ok({ data })
+    } catch (err) {
+      const status = (err as { status?: number })?.status
+      const message = err instanceof Error ? err.message : 'Could not close schedule'
+      if (status === 409) return ctx.response.conflict({ error: message })
+      return ctx.response.unprocessableEntity({ error: message })
+    }
+  }
+
+  async schedulesWindow(ctx: HttpContext) {
+    const user = this.orgUser(ctx)
+    if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
+    const body = await ctx.request.validateUsing(scheduleWindowValidator)
+    try {
+      const data = await facultyEvalService.setScheduleWindow(ctx.params.id, user.organizationId, user.id, {
+        opensAt: parseOptionalDate(body.opensAt),
+        closesAt: parseOptionalDate(body.closesAt),
+        status: body.status,
+      })
+      return ctx.response.ok({ data })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not update schedule window'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
   }
 
   async assignmentOptions(ctx: HttpContext) {
@@ -176,5 +234,30 @@ export default class FacultyEvalController {
     if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
     const data = await facultyEvalService.reportForSchedule(ctx.params.scheduleId, user.organizationId)
     return ctx.response.ok({ data })
+  }
+
+  async reportExport(ctx: HttpContext) {
+    const user = this.orgUser(ctx)
+    if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
+    const format = String(ctx.request.input('format', 'pdf')).toLowerCase()
+    if (!['csv', 'xlsx', 'pdf'].includes(format)) {
+      return ctx.response.badRequest({ error: 'format must be csv, xlsx, or pdf' })
+    }
+    try {
+      const file = await facultyEvalService.exportReport({
+        organizationId: user.organizationId,
+        scheduleId: ctx.params.scheduleId,
+        format: format as 'csv' | 'xlsx' | 'pdf',
+        actorUserId: user.id,
+      })
+      ctx.response.header('Content-Type', file.contentType)
+      ctx.response.header('Content-Disposition', `attachment; filename="${file.filename}"`)
+      return ctx.response.send(file.body)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Export failed'
+      const status = (err as { status?: number })?.status
+      if (status === 404) return ctx.response.notFound({ error: message })
+      return ctx.response.unprocessableEntity({ error: message })
+    }
   }
 }

@@ -26,7 +26,9 @@ export function EnrollmentsPage() {
     <div className="space-y-4 animate-fade-up">
       <div>
         <h1>Enrollments</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Advising, assessment, and registration status</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          Advising, assessment, and registration status
+        </p>
       </div>
       <DataTable
         columns={columns}

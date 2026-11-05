@@ -52,7 +52,9 @@ async function allocateReceiptNumber(organizationId: string, orSeriesId: string 
     .where('isActive', true)
     .forUpdate()
     .first()
-  if (!series) return seq('POS')
+  if (!series) {
+    throw Object.assign(new Error('OR series not found or inactive for POS terminal'), { status: 422 })
+  }
   const n = Number(series.nextNumber)
   const padded = String(n).padStart(series.padding || 6, '0')
   series.nextNumber = n + 1
@@ -601,7 +603,58 @@ export class PosService {
       action: 'pos.sale.void',
       entityType: 'pos_sale',
       entityId: sale.id,
-      metadata: { reason, tor: 'FIN-018', note: 'Refund policy For Clarification — void only' },
+      metadata: { reason, tor: 'FIN-018' },
+    })
+    return sale
+  }
+
+  async refundSale(actor: Actor, id: string, payload: Record<string, unknown>) {
+    const sale = await this.getSale(actor.organizationId, id)
+    if (sale.status !== 'completed') {
+      throw Object.assign(new Error('Only completed sales can be refunded'), { status: 422 })
+    }
+    if (sale.eodSessionId) {
+      throw Object.assign(new Error('Sale already included in an EOD session — use next-day credit note process'), {
+        status: 422,
+      })
+    }
+    const reason = String(payload.reason ?? 'Customer refund')
+    const refundAmountRaw = payload.amount !== undefined ? Number(payload.amount) : Number(sale.totalAmount)
+    if (!Number.isFinite(refundAmountRaw) || refundAmountRaw <= 0) {
+      throw Object.assign(new Error('Refund amount must be positive'), { status: 422 })
+    }
+    if (refundAmountRaw > Number(sale.totalAmount) + 0.001) {
+      throw Object.assign(new Error('Refund cannot exceed original sale amount'), { status: 422 })
+    }
+    const full = Math.abs(refundAmountRaw - Number(sale.totalAmount)) < 0.01
+    if (full) {
+      return this.voidSale(actor, id, reason)
+    }
+    sale.merge({
+      status: 'voided',
+      voidedAt: DateTime.now(),
+      voidedBy: actor.id,
+      voidReason: `Partial refund ₱${refundAmountRaw.toFixed(2)}: ${reason}`,
+      updatedBy: actor.id,
+      receiptSnapshot: {
+        ...(typeof sale.receiptSnapshot === 'object' && sale.receiptSnapshot ? sale.receiptSnapshot : {}),
+        refund: {
+          amount: refundAmountRaw,
+          reason,
+          partial: true,
+          refundedAt: DateTime.now().toISO(),
+          refundedBy: actor.id,
+        },
+      },
+    })
+    await sale.save()
+    await auditLogService.log({
+      organizationId: actor.organizationId,
+      actorUserId: actor.id,
+      action: 'pos.sale.refund',
+      entityType: 'pos_sale',
+      entityId: sale.id,
+      metadata: { reason, amount: refundAmountRaw, partial: true, tor: 'FIN-018' },
     })
     return sale
   }

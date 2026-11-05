@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Search, Plus, Pencil, Trash2, Package, Upload } from 'lucide-react'
+import { Pagination } from '@wmsu/ui'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -13,6 +14,7 @@ import { DataTable } from '@/components/ui/data-table'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { listTotalLabel, useListControls, usePaginatedQuery } from '@/lib/list-query'
 import { formatCurrency, formatNumber } from '@/lib/utils'
 import { fetchItems, createItem, updateItem, deleteItem, importItemsCsv } from '../api/items-api'
 import type { Item, ItemFormData } from '../types'
@@ -104,13 +106,32 @@ const columns: Column<Item>[] = [
 
 export function ItemsPage() {
   const queryClient = useQueryClient()
-  const [search, setSearch] = useState('')
+  const controls = useListControls()
   const [categoryFilter, setCategoryFilter] = useState('')
   const [modal, setModal] = useState<ModalState>({ mode: 'closed' })
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['items', { search, category: categoryFilter }],
-    queryFn: () => fetchItems({ search: search || undefined, category: categoryFilter || undefined }),
+  const { data, isLoading } = usePaginatedQuery({
+    queryKey: ['items', { search: controls.debouncedSearch, category: categoryFilter, page: controls.page }],
+    queryFn: async () => {
+      const result = await fetchItems({
+        search: controls.debouncedSearch || undefined,
+        category: categoryFilter || undefined,
+        page: controls.page,
+        limit: controls.pageSize,
+      })
+      const total = result.meta.total ?? result.data.length
+      const perPage = controls.pageSize
+      const lastPage = Math.max(1, Math.ceil(total / perPage) || 1)
+      return {
+        data: result.data,
+        meta: {
+          total,
+          perPage,
+          currentPage: controls.page,
+          lastPage,
+        },
+      }
+    },
   })
 
   const items = data?.data ?? []
@@ -138,14 +159,17 @@ export function ItemsPage() {
           <input
             type="text"
             placeholder="Search items…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={controls.search}
+            onChange={(e) => controls.setSearch(e.target.value)}
             className="h-9 w-full rounded-md border border-border bg-white pl-9 pr-3 text-sm text-ink shadow-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
         <select
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+          onChange={(e) => {
+            controls.setPage(1)
+            setCategoryFilter(e.target.value)
+          }}
           className="h-9 rounded-md border border-border bg-white px-3 text-sm text-ink shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         >
           <option value="">All Categories</option>
@@ -175,6 +199,14 @@ export function ItemsPage() {
           </>
         )}
       />
+      <div className="rounded-xl border border-border bg-white px-4 py-3">
+        <Pagination
+          page={controls.page}
+          pageCount={Math.max(1, data?.meta.lastPage ?? 1)}
+          onPageChange={controls.setPage}
+          totalLabel={listTotalLabel(data?.meta, controls.page)}
+        />
+      </div>
 
       {modal.mode === 'import' && (
         <ImportItemsModal

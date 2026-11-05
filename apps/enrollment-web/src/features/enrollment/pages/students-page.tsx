@@ -19,7 +19,9 @@ const columns: Column<Student>[] = [
   {
     key: 'status',
     header: 'Status',
-    render: (s) => <Badge variant={s.status === 'active' ? 'success' : 'default'}>{s.status}</Badge>,
+    render: (s) => (
+      <Badge variant={s.status === 'active' ? 'success' : 'default'}>{s.status}</Badge>
+    ),
   },
 ]
 

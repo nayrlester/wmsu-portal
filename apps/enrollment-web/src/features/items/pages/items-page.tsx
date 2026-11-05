@@ -72,8 +72,17 @@ const fundSourceOptions = [
 const columns: Column<Item>[] = [
   { key: 'sku', header: 'SKU', className: 'font-mono text-xs', render: (i) => i.sku },
   { key: 'name', header: 'Name', render: (i) => <span className="font-medium">{i.name}</span> },
-  { key: 'brand', header: 'Brand / Model', render: (i) => [i.brand, i.model].filter(Boolean).join(' ') || '—' },
-  { key: 'barcode', header: 'Barcode', className: 'font-mono text-xs', render: (i) => i.barcode || '—' },
+  {
+    key: 'brand',
+    header: 'Brand / Model',
+    render: (i) => [i.brand, i.model].filter(Boolean).join(' ') || '—',
+  },
+  {
+    key: 'barcode',
+    header: 'Barcode',
+    className: 'font-mono text-xs',
+    render: (i) => i.barcode || '—',
+  },
   { key: 'category', header: 'Category', render: (i) => <Badge>{i.category}</Badge> },
   { key: 'fundSource', header: 'Fund', render: (i) => i.fundSource || '—' },
   { key: 'unit', header: 'Unit' },
@@ -110,7 +119,8 @@ export function ItemsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['items', { search, category: categoryFilter }],
-    queryFn: () => fetchItems({ search: search || undefined, category: categoryFilter || undefined }),
+    queryFn: () =>
+      fetchItems({ search: search || undefined, category: categoryFilter || undefined }),
   })
 
   const items = data?.data ?? []
@@ -120,7 +130,9 @@ export function ItemsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1>Items</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Manage inventory items and supplies</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Manage inventory items and supplies
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setModal({ mode: 'import' })}>
@@ -150,7 +162,9 @@ export function ItemsPage() {
         >
           <option value="">All Categories</option>
           {categoryOptions.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
       </div>
@@ -248,7 +262,10 @@ function ItemFormModal({
   })
 
   const onSubmit = form.handleSubmit((values) => mutation.mutate(values))
-  const { register, formState: { errors } } = form
+  const {
+    register,
+    formState: { errors },
+  } = form
 
   return (
     <Modal open onClose={onClose} title={mode === 'create' ? 'Add Item' : 'Edit Item'} size="lg">
@@ -264,8 +281,20 @@ function ItemFormModal({
         </div>
         <Textarea label="Description" rows={2} {...register('description')} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select label="Category" placeholder="Select…" options={categoryOptions} error={errors.category?.message} {...register('category')} />
-          <Select label="Unit" placeholder="Select…" options={unitOptions} error={errors.unit?.message} {...register('unit')} />
+          <Select
+            label="Category"
+            placeholder="Select…"
+            options={categoryOptions}
+            error={errors.category?.message}
+            {...register('category')}
+          />
+          <Select
+            label="Unit"
+            placeholder="Select…"
+            options={unitOptions}
+            error={errors.unit?.message}
+            {...register('unit')}
+          />
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Input label="Brand" {...register('brand')} />
@@ -273,15 +302,35 @@ function ItemFormModal({
           <Input label="Manufacturer" {...register('manufacturer')} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select label="Fund Source" placeholder="Select…" options={fundSourceOptions} {...register('fundSource')} />
+          <Select
+            label="Fund Source"
+            placeholder="Select…"
+            options={fundSourceOptions}
+            {...register('fundSource')}
+          />
           <Input label="Barcode" {...register('barcode')} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Reorder Level" type="number" min={0} error={errors.reorderLevel?.message} {...register('reorderLevel', { valueAsNumber: true })} />
-          <Input label="Unit Cost (₱)" type="number" min={0} step="0.01" error={errors.unitCost?.message} {...register('unitCost', { valueAsNumber: true })} />
+          <Input
+            label="Reorder Level"
+            type="number"
+            min={0}
+            error={errors.reorderLevel?.message}
+            {...register('reorderLevel', { valueAsNumber: true })}
+          />
+          <Input
+            label="Unit Cost (₱)"
+            type="number"
+            min={0}
+            step="0.01"
+            error={errors.unitCost?.message}
+            {...register('unitCost', { valueAsNumber: true })}
+          />
         </div>
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             {mode === 'create' ? 'Create' : 'Save Changes'}
@@ -309,7 +358,8 @@ function DeleteItemModal({
   return (
     <Modal open onClose={onClose} title="Delete Item" size="sm">
       <p className="text-sm text-muted-foreground">
-        Are you sure you want to delete <strong className="text-ink">{item.name}</strong>? This action cannot be undone.
+        Are you sure you want to delete <strong className="text-ink">{item.name}</strong>? This
+        action cannot be undone.
       </p>
       {mutation.isError && (
         <div className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -317,8 +367,14 @@ function DeleteItemModal({
         </div>
       )}
       <div className="mt-5 flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button variant="destructive" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          disabled={mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
           {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
           Delete
         </Button>
@@ -327,13 +383,21 @@ function DeleteItemModal({
   )
 }
 
-function ImportItemsModal({ onClose, onImported }: { onClose: () => void; onImported: () => void }) {
+function ImportItemsModal({
+  onClose,
+  onImported,
+}: {
+  onClose: () => void
+  onImported: () => void
+}) {
   const [csv, setCsv] = useState(
     'sku,name,uom,barcode,fundSource,brand,model,manufacturer,minStock,reorderPoint,description\n'
   )
-  const [result, setResult] = useState<{ created: number; updated: number; errors: string[] } | null>(
-    null
-  )
+  const [result, setResult] = useState<{
+    created: number
+    updated: number
+    errors: string[]
+  } | null>(null)
 
   const mutation = useMutation({
     mutationFn: () => importItemsCsv(csv),
@@ -346,8 +410,8 @@ function ImportItemsModal({ onClose, onImported }: { onClose: () => void; onImpo
   return (
     <Modal open onClose={onClose} title="Import Items (CSV)" size="lg">
       <p className="mb-3 text-sm text-muted-foreground">
-        Upload or paste CSV with headers: <code className="text-xs">sku,name,uom,...</code>. Existing SKUs are
-        updated.
+        Upload or paste CSV with headers: <code className="text-xs">sku,name,uom,...</code>.
+        Existing SKUs are updated.
       </p>
       <textarea
         className="h-48 w-full rounded-2xl border border-transparent bg-[var(--color-primary-soft)] px-4 py-3 font-mono text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/35"
@@ -373,7 +437,11 @@ function ImportItemsModal({ onClose, onImported }: { onClose: () => void; onImpo
         </div>
       )}
       {result && (
-        <div className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status" aria-live="polite">
+        <div
+          className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
+          role="status"
+          aria-live="polite"
+        >
           Created {result.created}, updated {result.updated}
           {result.errors.length > 0 && (
             <ul className="mt-2 list-disc pl-5 text-rose-700">
@@ -388,7 +456,10 @@ function ImportItemsModal({ onClose, onImported }: { onClose: () => void; onImpo
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button disabled={mutation.isPending || csv.trim().length < 8} onClick={() => mutation.mutate()}>
+        <Button
+          disabled={mutation.isPending || csv.trim().length < 8}
+          onClick={() => mutation.mutate()}
+        >
           {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
           Import
         </Button>

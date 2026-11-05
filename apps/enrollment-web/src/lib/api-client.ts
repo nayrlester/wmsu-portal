@@ -11,7 +11,8 @@ function isProdWebHost(hostname: string): boolean {
 }
 
 function resolveApiBase(): string {
-  const configured = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '/api/v1/enrollment'
+  const configured =
+    (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '/api/v1/enrollment'
   if (typeof window === 'undefined') return configured
   if (!configured.startsWith('/') || !isProdWebHost(window.location.hostname)) return configured
   return `${PROD_BASE_API}/api/v1/enrollment`

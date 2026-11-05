@@ -13,6 +13,9 @@ export default class UsisCommunicationSettings extends BaseModel {
   @column()
   declare socialFeaturesEnabled: boolean
 
+  @column()
+  declare smsDeliveryMode: string
+
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 

@@ -215,8 +215,12 @@ export class TorRequestService {
     studentNumber?: string
     requestNumber?: string
     mineOnly?: boolean
+    page?: number
     limit?: number
   }) {
+    const limit = Math.min(200, Math.max(1, input.limit ?? 20))
+    const page = Math.max(1, input.page ?? 1)
+    const offset = (page - 1) * limit
     const q = db.from(t('tor_requests')).where('organization_id', input.organizationId)
     if (!input.isStaff || input.mineOnly) {
       q.andWhere('requester_user_id', input.actorUserId)
@@ -224,7 +228,14 @@ export class TorRequestService {
     if (input.status) q.andWhere('status', input.status)
     if (input.studentNumber) q.andWhere('student_number', input.studentNumber)
     if (input.requestNumber) q.andWhere('request_number', input.requestNumber)
-    return q.orderBy('requested_at', 'desc').limit(Math.min(200, input.limit ?? 50))
+    const countRow = await q.clone().count('* as total').first()
+    const total = Number((countRow as { total?: number | string } | null)?.total ?? 0)
+    const data = await q.clone().orderBy('requested_at', 'desc').limit(limit).offset(offset)
+    const lastPage = Math.max(1, Math.ceil(total / limit) || 1)
+    return {
+      data,
+      meta: { total, perPage: limit, currentPage: page, lastPage },
+    }
   }
 
   async getByIdOrNumber(input: {

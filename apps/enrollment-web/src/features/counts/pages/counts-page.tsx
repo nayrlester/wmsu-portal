@@ -32,7 +32,12 @@ function statusVariant(status: string): 'success' | 'danger' | 'warning' | 'defa
 }
 
 const columns: Column<PhysicalCount>[] = [
-  { key: 'number', header: 'No.', className: 'font-mono text-xs', render: (c) => c.number || c.id.slice(0, 8) },
+  {
+    key: 'number',
+    header: 'No.',
+    className: 'font-mono text-xs',
+    render: (c) => c.number || c.id.slice(0, 8),
+  },
   { key: 'warehouseName', header: 'Warehouse' },
   {
     key: 'scheduledDate',
@@ -84,7 +89,9 @@ export function CountsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1>Physical Count</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Schedule, scan, reconcile, and close inventory counts</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Schedule, scan, reconcile, and close inventory counts
+          </p>
         </div>
         <div className="flex gap-2">
           <Link
@@ -106,7 +113,9 @@ export function CountsPage() {
       >
         <option value="">All Statuses</option>
         {['draft', 'in_progress', 'reconciling', 'closed'].map((s) => (
-          <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+          <option key={s} value={s}>
+            {s.replace(/_/g, ' ')}
+          </option>
         ))}
       </select>
 
@@ -186,7 +195,11 @@ function CreateCountModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
     onSuccess: onSaved,
   })
 
-  const { register, control, formState: { errors } } = form
+  const {
+    register,
+    control,
+    formState: { errors },
+  } = form
 
   return (
     <Modal open onClose={onClose} title="New Physical Count">
@@ -196,7 +209,11 @@ function CreateCountModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
         </div>
       )}
       <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
-        <Input label="Warehouse ID" error={errors.warehouseId?.message} {...register('warehouseId')} />
+        <Input
+          label="Warehouse ID"
+          error={errors.warehouseId?.message}
+          {...register('warehouseId')}
+        />
         <Controller
           name="scheduledDate"
           control={control}
@@ -214,7 +231,9 @@ function CreateCountModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
         />
         <Input label="Notes" {...register('notes')} />
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             Create

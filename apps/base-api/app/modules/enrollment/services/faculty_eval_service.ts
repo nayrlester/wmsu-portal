@@ -11,6 +11,8 @@ import UsisFacultyEvalResponse from '#modules/enrollment/models/usis_faculty_eva
 import { t } from '#modules/enrollment/helpers/db_schema'
 import { auditLogService } from '#modules/enrollment/services/audit_log_service'
 import { AuditAction } from '#modules/enrollment/domain/enums/index'
+import { rowsToCsv, rowsToExcelXml, rowsToSimplePdf } from '#modules/enrollment/services/report_export'
+import { EnrollmentWorkflowError } from '#modules/enrollment/domain/enrollment_workflow'
 
 function scheduleIsOpen(row: UsisFacultyEvalSchedule, now: DateTime) {
   if (row.status !== 'open') return false
@@ -140,8 +142,10 @@ export class FacultyEvalService {
       .where('id', id)
       .where('organization_id', organizationId)
       .firstOrFail()
+    const now = DateTime.now()
     schedule.status = 'open'
-    if (!schedule.opensAt) schedule.opensAt = DateTime.now()
+    if (!schedule.opensAt || schedule.opensAt > now) schedule.opensAt = now
+    if (schedule.closesAt && schedule.closesAt <= now) schedule.closesAt = null
     await schedule.save()
     await auditLogService.log({
       organizationId,
@@ -149,7 +153,67 @@ export class FacultyEvalService {
       action: AuditAction.UPDATE,
       entityType: 'faculty_eval_schedule',
       entityId: schedule.id,
-      metadata: { status: 'open' },
+      metadata: { status: 'open', closesAtCleared: schedule.closesAt === null },
+    })
+    return schedule
+  }
+
+  async closeSchedule(
+    id: string,
+    organizationId: string,
+    userId: string,
+    closesAt?: Date | null
+  ) {
+    const schedule = await UsisFacultyEvalSchedule.query()
+      .where('id', id)
+      .where('organization_id', organizationId)
+      .firstOrFail()
+    if (schedule.status === 'closed') {
+      throw new EnrollmentWorkflowError('Schedule already closed', 409, 'SCHEDULE_CLOSED')
+    }
+    schedule.status = 'closed'
+    schedule.closesAt = closesAt ? DateTime.fromJSDate(closesAt) : DateTime.now()
+    await schedule.save()
+    await auditLogService.log({
+      organizationId,
+      actorUserId: userId,
+      action: AuditAction.UPDATE,
+      entityType: 'faculty_eval_schedule',
+      entityId: schedule.id,
+      metadata: { status: 'closed', closesAt: schedule.closesAt?.toISO() ?? null },
+    })
+    return schedule
+  }
+
+  async setScheduleWindow(
+    id: string,
+    organizationId: string,
+    userId: string,
+    patch: { opensAt?: Date | null; closesAt?: Date | null; status?: 'draft' | 'open' | 'closed' }
+  ) {
+    const schedule = await UsisFacultyEvalSchedule.query()
+      .where('id', id)
+      .where('organization_id', organizationId)
+      .firstOrFail()
+    if (patch.opensAt !== undefined) {
+      schedule.opensAt = patch.opensAt ? DateTime.fromJSDate(patch.opensAt) : null
+    }
+    if (patch.closesAt !== undefined) {
+      schedule.closesAt = patch.closesAt ? DateTime.fromJSDate(patch.closesAt) : null
+    }
+    if (patch.status !== undefined) schedule.status = patch.status
+    await schedule.save()
+    await auditLogService.log({
+      organizationId,
+      actorUserId: userId,
+      action: AuditAction.UPDATE,
+      entityType: 'faculty_eval_schedule',
+      entityId: schedule.id,
+      metadata: {
+        opensAt: schedule.opensAt?.toISO() ?? null,
+        closesAt: schedule.closesAt?.toISO() ?? null,
+        status: schedule.status,
+      },
     })
     return schedule
   }
@@ -359,10 +423,91 @@ export class FacultyEvalService {
         title: schedule.title,
         status: schedule.status,
         evalCode: schedule.evalCode?.code ?? null,
+        opensAt: schedule.opensAt?.toISO() ?? null,
+        closesAt: schedule.closesAt?.toISO() ?? null,
       },
       questions: questions.map((q) => ({ id: q.id, prompt: q.prompt, questionType: q.questionType })),
       targets,
       totalResponses: responses.length,
+      anonymity: 'Aggregates only — student identities are not included in faculty evaluation reports (ENR-050)',
+    }
+  }
+
+  async exportReport(input: {
+    organizationId: string
+    scheduleId: string
+    format: 'csv' | 'xlsx' | 'pdf'
+    actorUserId: string
+  }) {
+    const report = await this.reportForSchedule(input.scheduleId, input.organizationId)
+    const rows: Record<string, unknown>[] = []
+    for (const target of report.targets) {
+      for (const question of report.questions) {
+        const stats = target.questionStats[question.id]
+        rows.push({
+          schedule: report.schedule.title,
+          evalCode: report.schedule.evalCode ?? '',
+          faculty: target.facultyName,
+          section: target.sectionLabel ?? '',
+          subjectCode: target.subjectCode ?? '',
+          responses: target.responseCount,
+          question: question.prompt,
+          average: stats ? Math.round(stats.average * 100) / 100 : '',
+          ratingCount: stats?.count ?? 0,
+        })
+      }
+      if (!report.questions.length) {
+        rows.push({
+          schedule: report.schedule.title,
+          evalCode: report.schedule.evalCode ?? '',
+          faculty: target.facultyName,
+          section: target.sectionLabel ?? '',
+          subjectCode: target.subjectCode ?? '',
+          responses: target.responseCount,
+          question: '',
+          average: '',
+          ratingCount: 0,
+        })
+      }
+    }
+
+    await auditLogService.log({
+      organizationId: input.organizationId,
+      actorUserId: input.actorUserId,
+      action: AuditAction.REPORT_EXPORT,
+      entityType: 'faculty_eval_report',
+      entityId: input.scheduleId,
+      metadata: { format: input.format, totalResponses: report.totalResponses },
+    })
+
+    const slug = report.schedule.title.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 40) || 'faculty-eval'
+    const title = `Faculty evaluation report — ${report.schedule.title}`
+    const footer = [
+      report.anonymity,
+      `Schedule status: ${report.schedule.status}`,
+      `Total responses: ${report.totalResponses}`,
+      `Opens: ${report.schedule.opensAt ?? '—'}`,
+      `Closes: ${report.schedule.closesAt ?? '—'}`,
+    ]
+
+    if (input.format === 'csv') {
+      return {
+        contentType: 'text/csv; charset=utf-8',
+        filename: `faculty-eval-${slug}.csv`,
+        body: Buffer.from(rowsToCsv(rows), 'utf8'),
+      }
+    }
+    if (input.format === 'xlsx') {
+      return {
+        contentType: 'application/vnd.ms-excel',
+        filename: `faculty-eval-${slug}.xls`,
+        body: Buffer.from(rowsToExcelXml(rows, 'FacultyEval'), 'utf8'),
+      }
+    }
+    return {
+      contentType: 'application/pdf',
+      filename: `faculty-eval-${slug}.pdf`,
+      body: rowsToSimplePdf(title, rows, footer),
     }
   }
 }

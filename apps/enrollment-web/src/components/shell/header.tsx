@@ -2,7 +2,7 @@ import { useLocation } from 'react-router-dom'
 import { Menu, LogOut, User } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth-store'
 import { clearQueryCache } from '@/lib/query-client'
-import { redirectToPortalSignIn } from '@/lib/portal'
+import { redirectToPortalLogout } from '@/lib/portal'
 import { useState, useRef, useEffect } from 'react'
 
 const pageTitles: Record<string, string> = {
@@ -41,7 +41,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   function handleLogout() {
     logout()
     clearQueryCache()
-    redirectToPortalSignIn()
+    redirectToPortalLogout()
   }
 
   const initials =
@@ -88,7 +88,9 @@ export function Header({ onMenuToggle }: HeaderProps) {
                 <p className="text-sm font-medium text-[var(--color-ink)]">
                   {user?.fullName ?? 'User'}
                 </p>
-                <p className="truncate text-xs text-[var(--color-muted-foreground)]">{user?.email}</p>
+                <p className="truncate text-xs text-[var(--color-muted-foreground)]">
+                  {user?.email}
+                </p>
               </div>
               <button
                 type="button"

@@ -1,24 +1,18 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
-  Package,
-  Warehouse,
-  ArrowLeftRight,
-  HardDrive,
   Building2,
-  Truck,
-  ClipboardList,
-  FileText,
-  ClipboardCheck,
-  Smartphone,
-  TrendingDown,
   FileSpreadsheet,
   Users,
   Shield,
   Wallet,
   BookOpen,
+  GraduationCap,
   ShoppingCart,
   Store,
+  Banknote,
+  FileText,
+  Settings,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -34,28 +28,11 @@ const navGroups = [
     items: [
       { to: '/budget', icon: Wallet, label: 'Budget' },
       { to: '/accounting', icon: BookOpen, label: 'Accounting' },
+      { to: '/tuition', icon: GraduationCap, label: 'Tuition & plans' },
+      { to: '/cashier', icon: Banknote, label: 'Cashier & AR' },
+      { to: '/disbursement', icon: FileText, label: 'AP & Disbursement' },
       { to: '/procurement', icon: ShoppingCart, label: 'Procurement' },
       { to: '/pos', icon: Store, label: 'POS' },
-    ],
-  },
-  {
-    label: 'Inventory',
-    items: [
-      { to: '/items', icon: Package, label: 'Items' },
-      { to: '/warehouses', icon: Warehouse, label: 'Warehouses' },
-      { to: '/stock', icon: ArrowLeftRight, label: 'Stock' },
-      { to: '/suppliers', icon: Truck, label: 'Suppliers' },
-      { to: '/requisitions', icon: ClipboardList, label: 'Requisitions' },
-      { to: '/counts', icon: ClipboardCheck, label: 'Physical Count' },
-      { to: '/field', icon: Smartphone, label: 'Field Mode' },
-    ],
-  },
-  {
-    label: 'Property',
-    items: [
-      { to: '/assets', icon: HardDrive, label: 'Assets' },
-      { to: '/coa', icon: FileText, label: 'COA Forms' },
-      { to: '/depreciation', icon: TrendingDown, label: 'Depreciation' },
     ],
   },
   {
@@ -65,6 +42,7 @@ const navGroups = [
   {
     label: 'Settings',
     items: [
+      { to: '/config', icon: Settings, label: 'Finance Config' },
       { to: '/organization', icon: Building2, label: 'Organization' },
       { to: '/users', icon: Users, label: 'Users' },
       { to: '/roles', icon: Shield, label: 'Roles' },
@@ -101,9 +79,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                   <NavLink
                     to={item.to}
                     onClick={onClose}
-                    className={({ isActive }) =>
-                      cn('uims-nav-item', isActive && 'uims-nav-active')
-                    }
+                    className={({ isActive }) => cn('uims-nav-item', isActive && 'uims-nav-active')}
                   >
                     <item.icon className="h-[17px] w-[17px] shrink-0 opacity-90" />
                     {item.label}

@@ -44,9 +44,10 @@ router.get('/.well-known/jwks.json', [CommonPlatformController, 'jwks'])
 
 router
   .group(() => {
-    router.get('/health/live', [HealthController, 'live'])
-    router.get('/health', [HealthController, 'show'])
-    router.get('/ping', [HealthController, 'ping'])
+    router.get('/health/live', [HealthController, 'live']).as('health.live')
+    router.get('/health/ready', [HealthController, 'show']).as('health.ready')
+    router.get('/health', [HealthController, 'show']).as('health.show')
+    router.get('/ping', [HealthController, 'ping']).as('health.ping')
     router.get('/openapi.json', async ({ response }) => {
       const { openApiDocument } = await import('#services/openapi_document')
       return response.ok(openApiDocument)

@@ -21,6 +21,12 @@ export default class Subject extends BaseModel {
   declare units: number
 
   @column()
+  declare lectureHours: number | null
+
+  @column()
+  declare laboratoryHours: number | null
+
+  @column()
   declare programId: string | null
 
   @column()

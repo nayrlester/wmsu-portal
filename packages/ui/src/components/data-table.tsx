@@ -27,23 +27,46 @@ export function DataTable<T>({
   data,
   keyExtractor,
   loading,
-  emptyTitle = 'No records found',
+  emptyTitle,
   emptyDescription,
   actions,
   label = 'Data table',
   className,
 }: DataTableProps<T>) {
+  const resolvedEmptyTitle = emptyTitle ?? `No ${label.toLowerCase()}`
+  const resolvedEmptyDescription =
+    emptyDescription ?? `There are no ${label.toLowerCase()} to show yet.`
+
   if (loading) {
     return <LoadingState label={`Loading ${label}`} />
   }
 
   if (data.length === 0) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} />
+    return (
+      <div
+        className={cn(
+          'overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-[var(--shadow-soft)]',
+          className
+        )}
+      >
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]/40 px-4 py-3">
+          <h3 className="text-sm font-semibold text-[var(--color-ink)]">{label}</h3>
+        </div>
+        <EmptyState
+          className="rounded-none border-0 shadow-none"
+          title={resolvedEmptyTitle}
+          description={resolvedEmptyDescription}
+        />
+      </div>
+    )
   }
 
   return (
     <div className={cn('overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-white shadow-[var(--shadow-soft)]', className)}>
-      <table className="w-full min-w-[640px] text-sm" aria-label={label}>
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]/40 px-4 py-3">
+        <h3 className="text-sm font-semibold text-[var(--color-ink)]">{label}</h3>
+      </div>
+      <table className="w-full min-w-[720px] text-sm" aria-label={label}>
         <caption className="sr-only">{label}</caption>
         <thead>
           <tr className="border-b border-[var(--color-border)] bg-[var(--color-primary-soft)]/60">
@@ -60,7 +83,10 @@ export function DataTable<T>({
               </th>
             ))}
             {actions ? (
-              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]">
+              <th
+                scope="col"
+                className="sticky right-0 bg-[var(--color-primary-soft)] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]"
+              >
                 Actions
               </th>
             ) : null}
@@ -77,7 +103,7 @@ export function DataTable<T>({
                 </td>
               ))}
               {actions ? (
-                <td className="px-4 py-3 text-right">
+                <td className="sticky right-0 bg-white px-4 py-3 text-right whitespace-nowrap">
                   <div className="flex justify-end gap-1">{actions(row)}</div>
                 </td>
               ) : null}

@@ -17,7 +17,7 @@ function mapCoa(row: Record<string, unknown>): CoaForm {
     number: String(row.documentNo ?? row.document_no ?? row.number ?? row.formNumber ?? ''),
     title: String(payload.title ?? row.title ?? row.formType ?? row.form_type ?? ''),
     custodian: String(
-      row.custodianName ?? row.custodian_name ?? row.custodian ?? payload.custodian ?? '',
+      row.custodianName ?? row.custodian_name ?? row.custodian ?? payload.custodian ?? ''
     ),
     office: String(row.officeId ?? row.office_id ?? row.office ?? payload.office ?? ''),
     status: String(row.status ?? 'draft') as CoaForm['status'],
@@ -45,7 +45,7 @@ function mapDetail(row: Record<string, unknown>): CoaFormDetail {
 }
 
 export async function fetchCoaForms(
-  params: ListParams = {},
+  params: ListParams = {}
 ): Promise<{ data: CoaForm[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/coa', { params })
   const rows = (data.data ?? []).map(mapCoa)

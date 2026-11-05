@@ -10,6 +10,19 @@ export function portalLoginUrl() {
   return `${PORTAL_HOME}/login`
 }
 
+export function portalLogoutUrl() {
+  return `${PORTAL_HOME}/logout`
+}
+
+export function portalApplyUrl(path = '/apply') {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  return `${PORTAL_HOME}${normalized}`
+}
+
 export function redirectToPortalSignIn() {
   window.location.assign(portalLoginUrl())
+}
+
+export function redirectToPortalLogout() {
+  window.location.assign(portalLogoutUrl())
 }

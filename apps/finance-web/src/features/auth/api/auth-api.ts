@@ -20,7 +20,11 @@ function mapUser(raw: Record<string, unknown>, permissions: string[] = []): Auth
 }
 
 export async function login(email: string, password: string) {
-  const { data } = await apiClient.post('/auth/login', { email, password }, { skipHttpErrorToast: true })
+  const { data } = await apiClient.post(
+    '/auth/login',
+    { email, password },
+    { skipHttpErrorToast: true }
+  )
   return data
 }
 

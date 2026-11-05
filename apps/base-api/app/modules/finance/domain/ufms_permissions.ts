@@ -24,3 +24,22 @@ export const UFMS_PERMISSIONS = [
 ] as const
 
 export type UfmsPermissionCode = (typeof UFMS_PERMISSIONS)[number]['code']
+
+export const FINANCE_ACCOUNTING_PERMISSION_CODES: UfmsPermissionCode[] = [
+  'budget.read',
+  'budget.write',
+  'budget.submit',
+  'budget.approve',
+  'accounting.read',
+  'accounting.write',
+  'accounting.post',
+  'cashier.read',
+  'cashier.write',
+  'procurement.read',
+  'procurement.write',
+  'procurement.approve',
+  'procurement.accept',
+  'finance.read',
+  'finance.write',
+  'audit.read',
+]

@@ -37,7 +37,7 @@ function mapRequisition(row: Record<string, unknown>): Requisition {
 }
 
 export async function fetchRequisitions(
-  params: ListParams = {},
+  params: ListParams = {}
 ): Promise<{ data: Requisition[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/requisitions', { params })
   const rows = (data.data ?? []).map(mapRequisition)
@@ -46,9 +46,7 @@ export async function fetchRequisitions(
 
 export async function createRequisition(payload: RequisitionFormData): Promise<Requisition> {
   const { data } = await apiClient.post('/requisitions', {
-    purpose: payload.department
-      ? `[${payload.department}] ${payload.purpose}`
-      : payload.purpose,
+    purpose: payload.department ? `[${payload.department}] ${payload.purpose}` : payload.purpose,
     lines: payload.lines.map((l) => ({
       itemId: l.itemId,
       quantityRequested: l.quantity,
@@ -78,7 +76,7 @@ export async function fulfillRequisition(
   payload: {
     warehouseId: string
     lines: Array<{ lineId: string; quantityIssued: number; binId?: string }>
-  },
+  }
 ): Promise<Requisition> {
   const { data } = await apiClient.post(`/requisitions/${id}/fulfill`, payload)
   return mapRequisition(data.data ?? data)

@@ -11,8 +11,18 @@ export async function fetchJournals(params?: Record<string, string>) {
   return unwrapList<any>(data)
 }
 
+export async function fetchJournal(id: string) {
+  const { data } = await apiClient.get(`/accounting/journals/${id}`)
+  return data.data
+}
+
 export async function createJournal(body: Record<string, unknown>) {
   const { data } = await apiClient.post('/accounting/journals', body)
+  return data.data
+}
+
+export async function submitJournal(id: string) {
+  const { data } = await apiClient.post(`/accounting/journals/${id}/submit`)
   return data.data
 }
 

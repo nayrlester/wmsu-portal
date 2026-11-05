@@ -7,16 +7,13 @@ const PROD_API_URL = 'https://wmsubase-api-production.up.railway.app/api/v1/fina
 const PROD_IDENTITY_URL = 'https://wmsu-api-production.up.railway.app'
 
 function isProdWebHost(hostname: string): boolean {
-  return (
-    hostname === 'uims-inventory-pro.vercel.app' ||
-    hostname.endsWith('.vercel.app') ||
-    hostname.endsWith('arzaitsolutions.site')
-  )
+  return hostname.endsWith('.vercel.app') || hostname.endsWith('arzaitsolutions.site')
 }
 
 /** Absolute API base. Relative `/api/v1` only works with Vite proxy or Vercel rewrite. */
 function resolveApiBase(): string {
-  const configured = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '/api/v1/finance'
+  const configured =
+    (import.meta.env.VITE_API_URL as string | undefined)?.trim() || '/api/v1/finance'
   if (typeof window === 'undefined') return configured
   if (!configured.startsWith('/') || !isProdWebHost(window.location.hostname)) return configured
   // Misconfigured Vercel build baked relative URL — talk to Railway API directly.
@@ -25,15 +22,11 @@ function resolveApiBase(): string {
 
 function resolveIdentityUrl(): string {
   const configured = (
-    (import.meta.env.VITE_PLATFORM_IDENTITY_URL as string | undefined) ||
-    'http://127.0.0.1:3411'
+    (import.meta.env.VITE_PLATFORM_IDENTITY_URL as string | undefined) || 'http://127.0.0.1:3411'
   ).replace(/\/$/, '')
   if (typeof window === 'undefined') return configured
   if (!isProdWebHost(window.location.hostname)) return configured
-  if (
-    /localhost|127\.0\.0\.1/i.test(configured) ||
-    /inventory-pro-api/i.test(configured)
-  ) {
+  if (/localhost|127\.0\.0\.1/i.test(configured) || /inventory-pro-api/i.test(configured)) {
     // Local default or swapped UIMS API host — Identity refresh must hit Identity.
     return PROD_IDENTITY_URL
   }
@@ -47,7 +40,6 @@ export const apiClient = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 })
-
 
 apiClient.interceptors.request.use((config) => {
   const { accessToken } = useAuthStore.getState()

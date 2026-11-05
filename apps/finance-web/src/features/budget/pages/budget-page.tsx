@@ -58,7 +58,9 @@ export function BudgetPage() {
   const [showPlan, setShowPlan] = useState(false)
   const [showDoc, setShowDoc] = useState(false)
   const [showObl, setShowObl] = useState(false)
-  const [rejectTarget, setRejectTarget] = useState<{ kind: 'plan' | 'doc'; id: string } | null>(null)
+  const [rejectTarget, setRejectTarget] = useState<{ kind: 'plan' | 'doc'; id: string } | null>(
+    null
+  )
   const [rejectReason, setRejectReason] = useState('')
 
   const [planForm, setPlanForm] = useState({
@@ -187,10 +189,16 @@ export function BudgetPage() {
   const fundOptions = fundsQuery.data ?? []
   const accountOptions = accountsQuery.data ?? []
 
-  const planColumns = useMemo<Column<(typeof plansQuery.data extends (infer T)[] | undefined ? T : never)>[]>(
+  const planColumns = useMemo<
+    Column<typeof plansQuery.data extends (infer T)[] | undefined ? T : never>[]
+  >(
     () => [
       { key: 'planType', header: 'Type', render: (r) => r.planType.toUpperCase() },
-      { key: 'title', header: 'Title', render: (r) => <span className="font-medium">{r.title}</span> },
+      {
+        key: 'title',
+        header: 'Title',
+        render: (r) => <span className="font-medium">{r.title}</span>,
+      },
       { key: 'fiscalYear', header: 'FY' },
       {
         key: 'status',
@@ -203,7 +211,11 @@ export function BudgetPage() {
         render: (r) => (
           <div className="flex flex-wrap gap-1">
             {r.status === 'draft' && canSubmit && (
-              <Button size="sm" variant="outline" onClick={() => wrap(() => submitBudgetPlan(r.id))}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => wrap(() => submitBudgetPlan(r.id))}
+              >
                 Submit
               </Button>
             )}
@@ -212,7 +224,11 @@ export function BudgetPage() {
                 <Button size="sm" onClick={() => wrap(() => approveBudgetPlan(r.id))}>
                   Approve
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setRejectTarget({ kind: 'plan', id: r.id })}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setRejectTarget({ kind: 'plan', id: r.id })}
+                >
                   Reject
                 </Button>
               </>
@@ -227,7 +243,11 @@ export function BudgetPage() {
   const docColumns = useMemo(
     () => [
       { key: 'documentType', header: 'Type', render: (r: any) => r.documentType },
-      { key: 'title', header: 'Title', render: (r: any) => <span className="font-medium">{r.title}</span> },
+      {
+        key: 'title',
+        header: 'Title',
+        render: (r: any) => <span className="font-medium">{r.title}</span>,
+      },
       { key: 'fiscalYear', header: 'FY' },
       {
         key: 'status',
@@ -240,7 +260,11 @@ export function BudgetPage() {
         render: (r: any) => (
           <div className="flex flex-wrap gap-1">
             {r.status === 'draft' && canSubmit && (
-              <Button size="sm" variant="outline" onClick={() => wrap(() => submitBudgetDocument(r.id))}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => wrap(() => submitBudgetDocument(r.id))}
+              >
                 Submit
               </Button>
             )}
@@ -249,7 +273,11 @@ export function BudgetPage() {
                 <Button size="sm" onClick={() => wrap(() => approveBudgetDocument(r.id))}>
                   Approve
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setRejectTarget({ kind: 'doc', id: r.id })}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setRejectTarget({ kind: 'doc', id: r.id })}
+                >
                   Reject
                 </Button>
               </>
@@ -328,7 +356,7 @@ export function BudgetPage() {
     <div className="space-y-4 animate-fade-up">
       <PageHeader
         title="Budget Management"
-        description="APP/WFP preparation, budget encoding, allotment obligations, and utilization monitoring (FIN-001–004, FIN-021)."
+        description="APP/WFP preparation, budget encoding, allotment obligations, and utilization monitoring."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Input
@@ -364,7 +392,9 @@ export function BudgetPage() {
             onClick={() => setTab(item.id)}
             className={cn(
               'rounded-lg px-3 py-1.5 text-sm font-medium',
-              tab === item.id ? 'bg-[var(--color-brand)] text-white' : 'text-slate-600 hover:bg-slate-100'
+              tab === item.id
+                ? 'bg-[var(--color-brand)] text-white'
+                : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             {item.label}
@@ -373,7 +403,10 @@ export function BudgetPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <div
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          role="alert"
+        >
           {error}
         </div>
       )}
@@ -417,7 +450,7 @@ export function BudgetPage() {
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-slate-500">
-              Available = allocated − (obligated + utilized). Source: `budget_lines`. TOR: FIN-002, FIN-003, FIN-021.
+              Available = allocated − (obligated + utilized). Source: `budget_lines`. TOR:.
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
@@ -550,7 +583,9 @@ export function BudgetPage() {
             onChange={(e) => setDocForm((s) => ({ ...s, amount: e.target.value }))}
           />
           <Button
-            disabled={!docForm.title || !docForm.fundId || !docForm.accountId || createDocMut.isPending}
+            disabled={
+              !docForm.title || !docForm.fundId || !docForm.accountId || createDocMut.isPending
+            }
             onClick={() => createDocMut.mutate()}
           >
             Save draft
@@ -607,7 +642,10 @@ export function BudgetPage() {
           />
           <Button
             disabled={
-              !oblForm.documentNumber || !oblForm.fundId || !oblForm.accountId || createOblMut.isPending
+              !oblForm.documentNumber ||
+              !oblForm.fundId ||
+              !oblForm.accountId ||
+              createOblMut.isPending
             }
             onClick={() => createOblMut.mutate()}
           >
@@ -616,7 +654,11 @@ export function BudgetPage() {
         </div>
       </Modal>
 
-      <Modal open={!!rejectTarget} onClose={() => setRejectTarget(null)} title="Reject budget record">
+      <Modal
+        open={!!rejectTarget}
+        onClose={() => setRejectTarget(null)}
+        title="Reject budget record"
+      >
         <div className="space-y-3">
           <Input
             placeholder="Rejection reason"

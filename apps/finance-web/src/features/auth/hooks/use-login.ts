@@ -35,10 +35,7 @@ export function useLogin() {
       navigate('/dashboard')
     },
     onError: (err) => {
-      notifySignInError(
-        notify,
-        getApiErrorMessage(err, 'Login failed. Check your credentials.')
-      )
+      notifySignInError(notify, getApiErrorMessage(err, 'Login failed. Check your credentials.'))
     },
   })
 

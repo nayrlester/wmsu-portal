@@ -48,7 +48,12 @@ function statusVariant(status: string): 'success' | 'danger' | 'warning' | 'defa
 }
 
 const columns: Column<CoaForm>[] = [
-  { key: 'number', header: 'No.', className: 'font-mono text-xs', render: (f) => f.number || f.id.slice(0, 8) },
+  {
+    key: 'number',
+    header: 'No.',
+    className: 'font-mono text-xs',
+    render: (f) => f.number || f.id.slice(0, 8),
+  },
   { key: 'title', header: 'Title', render: (f) => <span className="font-medium">{f.title}</span> },
   { key: 'custodian', header: 'Custodian' },
   { key: 'office', header: 'Office' },
@@ -131,7 +136,7 @@ export function CoaPage() {
               'rounded-full px-3 py-1.5 text-sm font-medium transition',
               tab === t
                 ? 'bg-white text-[var(--color-ink)] shadow-sm'
-                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-ink)]',
+                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-ink)]'
             )}
           >
             {TAB_LABELS[t]}
@@ -233,7 +238,10 @@ function CreateCoaModal({
     onSuccess: onSaved,
   })
 
-  const { register, formState: { errors } } = form
+  const {
+    register,
+    formState: { errors },
+  } = form
 
   return (
     <Modal open onClose={onClose} title={`New ${formType}`} size="lg">
@@ -250,16 +258,35 @@ function CreateCoaModal({
         </div>
         <Textarea label="Remarks" rows={2} {...register('remarks')} />
         <div className="rounded-xl border border-border p-4 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Line Item</p>
-          <Input label="Description" error={errors.description?.message} {...register('description')} />
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Line Item
+          </p>
+          <Input
+            label="Description"
+            error={errors.description?.message}
+            {...register('description')}
+          />
           <div className="grid gap-4 sm:grid-cols-3">
-            <Input label="Qty" type="number" min={1} {...register('quantity', { valueAsNumber: true })} />
-            <Input label="Unit Cost" type="number" min={0} step="0.01" {...register('unitCost', { valueAsNumber: true })} />
+            <Input
+              label="Qty"
+              type="number"
+              min={1}
+              {...register('quantity', { valueAsNumber: true })}
+            />
+            <Input
+              label="Unit Cost"
+              type="number"
+              min={0}
+              step="0.01"
+              {...register('unitCost', { valueAsNumber: true })}
+            />
             <Input label="Property No." {...register('propertyNumber')} />
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             Create

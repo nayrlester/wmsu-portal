@@ -62,7 +62,10 @@ export function clearSsoHandoffTokens() {
   }
 }
 
-export function ssoErrorMessage(err: unknown, fallback = 'SSO sign-in failed. Return to Platforms and try again.') {
+export function ssoErrorMessage(
+  err: unknown,
+  fallback = 'SSO sign-in failed. Return to Platforms and try again.'
+) {
   if (err && typeof err === 'object' && 'response' in err) {
     const axiosErr = err as {
       response?: { status?: number; data?: Record<string, unknown> }

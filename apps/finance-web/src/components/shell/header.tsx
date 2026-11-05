@@ -2,16 +2,23 @@ import { useLocation } from 'react-router-dom'
 import { Menu, LogOut, User } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth-store'
 import { clearQueryCache } from '@/lib/query-client'
-import { redirectToPortalSignIn } from '@/lib/portal'
+import { redirectToPortalLogout } from '@/lib/portal'
 import { useState, useRef, useEffect } from 'react'
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
-  '/items': 'Items',
-  '/warehouses': 'Warehouses',
-  '/stock': 'Stock Movements',
-  '/assets': 'Assets',
+  '/budget': 'Budget',
+  '/accounting': 'Accounting',
+  '/cashier': 'Cashier & AR',
+  '/disbursement': 'AP & Disbursement',
+  '/procurement': 'Procurement',
+  '/pos': 'POS',
+  '/reports': 'Reports',
+  '/config': 'Finance Config',
+  '/tuition': 'Tuition & plans',
   '/organization': 'Organization',
+  '/users': 'Users',
+  '/roles': 'Roles',
 }
 
 interface HeaderProps {
@@ -22,7 +29,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const { pathname } = useLocation()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const title = pageTitles[pathname] ?? 'UIMS'
+  const title = pageTitles[pathname] ?? 'UFMS'
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -41,7 +48,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   function handleLogout() {
     logout()
     clearQueryCache()
-    redirectToPortalSignIn()
+    redirectToPortalLogout()
   }
 
   const initials =
@@ -88,7 +95,9 @@ export function Header({ onMenuToggle }: HeaderProps) {
                 <p className="text-sm font-medium text-[var(--color-ink)]">
                   {user?.fullName ?? 'User'}
                 </p>
-                <p className="truncate text-xs text-[var(--color-muted-foreground)]">{user?.email}</p>
+                <p className="truncate text-xs text-[var(--color-muted-foreground)]">
+                  {user?.email}
+                </p>
               </div>
               <button
                 type="button"

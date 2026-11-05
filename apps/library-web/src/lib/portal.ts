@@ -6,6 +6,14 @@ export function portalLoginUrl() {
   return `${PORTAL_HOME}/login`
 }
 
+export function portalLogoutUrl() {
+  return `${PORTAL_HOME}/logout`
+}
+
 export function redirectToPortalSignIn() {
   window.location.assign(portalLoginUrl())
+}
+
+export function redirectToPortalLogout() {
+  window.location.assign(portalLogoutUrl())
 }

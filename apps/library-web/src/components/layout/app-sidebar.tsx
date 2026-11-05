@@ -26,7 +26,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { getAppName } from '@/lib/deployment'
 import { logout } from '@/lib/auth-api'
 import { isStudentLimitedAccess } from '@/lib/student-access'
-import { redirectToPortalSignIn } from '@/lib/portal'
+import { redirectToPortalLogout } from '@/lib/portal'
 
 type NavItem = {
   to: string
@@ -149,7 +149,7 @@ export function AppSidebar() {
       if (tokens?.refreshToken) await logout(tokens.refreshToken)
     } finally {
       logoutStore()
-      redirectToPortalSignIn()
+      redirectToPortalLogout()
     }
   }
 

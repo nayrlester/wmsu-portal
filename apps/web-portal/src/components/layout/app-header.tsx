@@ -1,25 +1,20 @@
 import { Link, useLocation } from 'react-router-dom'
 import { LogOut, Shield, LayoutGrid } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth-store'
-import { logoutApi } from '@/lib/auth-api'
 import clsx from 'clsx'
 import { WmsuLogo } from '@/components/brand/wmsu-logo'
+import { useState } from 'react'
 
 export function AppHeader() {
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
-  const refreshToken = useAuthStore((s) => s.refreshToken)
-  const logout = useAuthStore((s) => s.logout)
   const isAdmin = useAuthStore((s) => s.isAdmin())
+  const [signingOut, setSigningOut] = useState(false)
 
-  async function handleLogout() {
-    try {
-      await logoutApi(refreshToken ?? undefined)
-    } catch {
-      // ignore logout API errors
-    }
-    logout()
-    window.location.assign('/login')
+  function handleLogout() {
+    if (signingOut) return
+    setSigningOut(true)
+    window.location.assign('/logout')
   }
 
   return (
@@ -66,9 +61,10 @@ export function AppHeader() {
             </div>
             <button
               type="button"
-              onClick={handleLogout}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f3f4ff] text-[#6b6f8c] transition hover:bg-[#635bff] hover:text-white"
-              title="Sign out"
+              onClick={() => void handleLogout()}
+              disabled={signingOut}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f3f4ff] text-[#6b6f8c] transition hover:bg-[#635bff] hover:text-white disabled:opacity-60"
+              title={signingOut ? 'Signing out…' : 'Sign out of all platforms'}
             >
               <LogOut className="h-4 w-4" />
             </button>

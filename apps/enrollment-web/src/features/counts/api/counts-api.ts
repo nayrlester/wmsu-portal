@@ -48,14 +48,11 @@ function mapCount(row: Record<string, unknown>): PhysicalCount {
 
 function mapDetail(row: Record<string, unknown>): PhysicalCountDetail {
   const linesRaw = (row.lines as Record<string, unknown>[] | undefined) ?? []
-  return {
-    ...mapCount(row),
-    lines: linesRaw.map(mapLine),
-  }
+  return { ...mapCount(row), lines: linesRaw.map(mapLine) }
 }
 
 export async function fetchCounts(
-  params: ListParams = {},
+  params: ListParams = {}
 ): Promise<{ data: PhysicalCount[]; meta: { total: number } }> {
   const { data } = await apiClient.get('/counts', { params })
   const rows = (data.data ?? []).map(mapCount)
@@ -81,12 +78,13 @@ export async function scanCount(id: string, payload: CountScanPayload): Promise<
     gpsLat: payload.latitude,
     gpsLng: payload.longitude,
     photoUrl,
-    notes: [
-      payload.scannedAt ? `scannedAt=${payload.scannedAt}` : '',
-      payload.photoDataUrl && !photoUrl ? 'photo=queued-locally' : '',
-    ]
-      .filter(Boolean)
-      .join('; ') || undefined,
+    notes:
+      [
+        payload.scannedAt ? `scannedAt=${payload.scannedAt}` : '',
+        payload.photoDataUrl && !photoUrl ? 'photo=queued-locally' : '',
+      ]
+        .filter(Boolean)
+        .join('; ') || undefined,
   })
   return mapLine(data.data ?? data)
 }

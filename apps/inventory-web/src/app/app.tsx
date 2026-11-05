@@ -13,6 +13,9 @@ const LoginPage = lazy(() =>
 const SsoCallbackPage = lazy(() =>
   import('@/features/auth/pages/sso-callback-page').then((m) => ({ default: m.SsoCallbackPage }))
 )
+const SsoLogoutPage = lazy(() =>
+  import('@/features/auth/pages/sso-logout-page').then((m) => ({ default: m.SsoLogoutPage }))
+)
 const DashboardPage = lazy(() =>
   import('@/features/dashboard/pages/dashboard-page').then((m) => ({ default: m.DashboardPage }))
 )
@@ -112,6 +115,7 @@ export function App() {
             }
           />
           <Route path="/sso/callback" element={<Suspense fallback={<PageFallback />}><SsoCallbackPage /></Suspense>} />
+          <Route path="/sso/logout" element={<Suspense fallback={<PageFallback />}><SsoLogoutPage /></Suspense>} />
           <Route element={<ProtectedLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />

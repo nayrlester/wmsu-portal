@@ -21,6 +21,7 @@ export const listCertRequestsValidator = vine.compile(
     certificationType: vine.string().trim().maxLength(64).optional(),
     locality: vine.enum(['local', 'foreign'] as const).optional(),
     mineOnly: vine.boolean().optional(),
+    page: vine.number().min(1).optional(),
     limit: vine.number().min(1).max(200).optional(),
   })
 )

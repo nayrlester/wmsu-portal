@@ -1,5 +1,5 @@
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import { t } from '#modules/enrollment/helpers/db_schema'
 import { DateTime } from 'luxon'
 import Organization from '#modules/enrollment/models/organization'
@@ -7,6 +7,7 @@ import Student from '#modules/enrollment/models/student'
 import AcademicYear from '#modules/enrollment/models/academic_year'
 import Section from '#modules/enrollment/models/section'
 import User from '#modules/enrollment/models/user'
+import Assessment from '#modules/enrollment/models/assessment'
 
 export default class Enrollment extends BaseModel {
   static table = t('enrollments')
@@ -109,4 +110,7 @@ export default class Enrollment extends BaseModel {
 
   @belongsTo(() => User, { foreignKey: 'advisedBy' })
   declare adviser: BelongsTo<typeof User>
+
+  @hasMany(() => Assessment)
+  declare assessments: HasMany<typeof Assessment>
 }

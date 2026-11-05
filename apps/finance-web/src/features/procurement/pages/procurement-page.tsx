@@ -184,7 +184,14 @@ export function ProcurementPage() {
       ),
     onSuccess: () => {
       setShowPr(false)
-      setPrForm({ purpose: '', fundId: '', accountId: '', description: '', quantity: '1', unitCost: '' })
+      setPrForm({
+        purpose: '',
+        fundId: '',
+        accountId: '',
+        description: '',
+        quantity: '1',
+        unitCost: '',
+      })
     },
   })
 
@@ -198,7 +205,11 @@ export function ProcurementPage() {
   ]
 
   const fundOptions = useMemo(
-    () => (fundsQuery.data ?? []).map((f: any) => ({ value: f.id, label: `${f.fundCode} — ${f.fundName}` })),
+    () =>
+      (fundsQuery.data ?? []).map((f: any) => ({
+        value: f.id,
+        label: `${f.fundCode} — ${f.fundName}`,
+      })),
     [fundsQuery.data]
   )
   const accountOptions = useMemo(
@@ -217,7 +228,8 @@ export function ProcurementPage() {
     [prsQuery.data]
   )
   const vendorOptions = useMemo(
-    () => (vendorsQuery.data ?? []).map((v: any) => ({ value: v.id, label: `${v.code} — ${v.name}` })),
+    () =>
+      (vendorsQuery.data ?? []).map((v: any) => ({ value: v.id, label: `${v.code} — ${v.name}` })),
     [vendorsQuery.data]
   )
   const issuedRfqOptions = useMemo(
@@ -231,7 +243,10 @@ export function ProcurementPage() {
     () =>
       (ordersQuery.data ?? [])
         .filter((o: any) => o.status === 'issued' || o.status === 'partially_received')
-        .map((o: any) => ({ value: o.id, label: `${o.poNumber} — ${formatCurrency(o.totalAmount)}` })),
+        .map((o: any) => ({
+          value: o.id,
+          label: `${o.poNumber} — ${formatCurrency(o.totalAmount)}`,
+        })),
     [ordersQuery.data]
   )
 
@@ -239,7 +254,7 @@ export function ProcurementPage() {
     <div className="space-y-4 animate-fade-up">
       <PageHeader
         title="Procurement Management"
-        description="APP-linked PR, RFQ/bidding, abstract/award, PO, delivery, and IAR with PhilGEPS refs and budget advisory checks (FIN-012/013/014/015/021/026)."
+        description="APP-linked PR, RFQ/bidding, abstract/award, PO, delivery, and IAR with PhilGEPS refs and budget advisory checks."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Input
@@ -291,7 +306,9 @@ export function ProcurementPage() {
             onClick={() => setTab(item.id)}
             className={cn(
               'rounded-lg px-3 py-1.5 text-sm font-medium',
-              tab === item.id ? 'bg-[var(--color-brand)] text-white' : 'text-slate-600 hover:bg-slate-100'
+              tab === item.id
+                ? 'bg-[var(--color-brand)] text-white'
+                : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             {item.label}
@@ -300,7 +317,10 @@ export function ProcurementPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <div
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          role="alert"
+        >
           {error}
         </div>
       )}
@@ -320,8 +340,8 @@ export function ProcurementPage() {
             </div>
           ))}
           <p className="sm:col-span-2 lg:col-span-5 text-sm text-slate-600">
-            Payment / three-way AP (FIN-016) is deferred. Budget check on PR submit is advisory until hard-stop policy is
-            clarified (FIN-021).
+            Payment / three-way AP is deferred. Budget check on PR submit is advisory until
+            hard-stop policy is clarified.
           </p>
         </div>
       )}
@@ -330,18 +350,28 @@ export function ProcurementPage() {
         <DataTable
           label="Vendors"
           columns={[
-            { key: 'code', header: 'Code', className: 'font-mono text-xs', render: (r: any) => r.code },
+            {
+              key: 'code',
+              header: 'Code',
+              className: 'font-mono text-xs',
+              render: (r: any) => r.code,
+            },
             { key: 'name', header: 'Name', render: (r: any) => r.name },
             { key: 'terms', header: 'Payment terms', render: (r: any) => r.paymentTerms || '—' },
             {
               key: 'elig',
               header: 'Eligibility until',
-              render: (r: any) => (r.eligibilityValidUntil ? String(r.eligibilityValidUntil).slice(0, 10) : '—'),
+              render: (r: any) =>
+                r.eligibilityValidUntil ? String(r.eligibilityValidUntil).slice(0, 10) : '—',
             },
             {
               key: 'active',
               header: 'Status',
-              render: (r: any) => <Badge variant={r.active ? 'success' : 'default'}>{r.active ? 'Active' : 'Inactive'}</Badge>,
+              render: (r: any) => (
+                <Badge variant={r.active ? 'success' : 'default'}>
+                  {r.active ? 'Active' : 'Inactive'}
+                </Badge>
+              ),
             },
           ]}
           data={vendorsQuery.data ?? []}
@@ -355,7 +385,12 @@ export function ProcurementPage() {
         <DataTable
           label="Purchase requests"
           columns={[
-            { key: 'prNumber', header: 'PR#', className: 'font-mono text-xs', render: (r: any) => r.prNumber },
+            {
+              key: 'prNumber',
+              header: 'PR#',
+              className: 'font-mono text-xs',
+              render: (r: any) => r.prNumber,
+            },
             { key: 'purpose', header: 'Purpose', render: (r: any) => r.purpose || '—' },
             {
               key: 'amount',
@@ -366,7 +401,11 @@ export function ProcurementPage() {
               key: 'budget',
               header: 'Budget check',
               render: (r: any) =>
-                r.budgetCheckSufficient == null ? '—' : r.budgetCheckSufficient ? 'Sufficient' : 'Insufficient',
+                r.budgetCheckSufficient == null
+                  ? '—'
+                  : r.budgetCheckSufficient
+                    ? 'Sufficient'
+                    : 'Insufficient',
             },
             {
               key: 'status',
@@ -408,7 +447,12 @@ export function ProcurementPage() {
         <DataTable
           label="RFQ / bidding"
           columns={[
-            { key: 'rfqNumber', header: 'RFQ#', className: 'font-mono text-xs', render: (r: any) => r.rfqNumber },
+            {
+              key: 'rfqNumber',
+              header: 'RFQ#',
+              className: 'font-mono text-xs',
+              render: (r: any) => r.rfqNumber,
+            },
             { key: 'method', header: 'Method', render: (r: any) => r.method },
             { key: 'philgeps', header: 'PhilGEPS', render: (r: any) => r.philgepsReference || '—' },
             {
@@ -438,7 +482,12 @@ export function ProcurementPage() {
         <DataTable
           label="Purchase orders"
           columns={[
-            { key: 'poNumber', header: 'PO#', className: 'font-mono text-xs', render: (r: any) => r.poNumber },
+            {
+              key: 'poNumber',
+              header: 'PO#',
+              className: 'font-mono text-xs',
+              render: (r: any) => r.poNumber,
+            },
             { key: 'supplier', header: 'Supplier', render: (r: any) => r.supplierName || '—' },
             { key: 'amount', header: 'Total', render: (r: any) => formatCurrency(r.totalAmount) },
             { key: 'philgeps', header: 'PhilGEPS', render: (r: any) => r.philgepsReference || '—' },
@@ -477,12 +526,19 @@ export function ProcurementPage() {
         <DataTable
           label="Inspection and acceptance"
           columns={[
-            { key: 'iarNumber', header: 'IAR#', className: 'font-mono text-xs', render: (r: any) => r.iarNumber },
+            {
+              key: 'iarNumber',
+              header: 'IAR#',
+              className: 'font-mono text-xs',
+              render: (r: any) => r.iarNumber,
+            },
             { key: 'result', header: 'Result', render: (r: any) => r.result },
             {
               key: 'uims',
               header: 'UIMS sync',
-              render: (r: any) => <Badge variant={statusVariant(r.uimsSyncStatus)}>{r.uimsSyncStatus}</Badge>,
+              render: (r: any) => (
+                <Badge variant={statusVariant(r.uimsSyncStatus)}>{r.uimsSyncStatus}</Badge>
+              ),
             },
             {
               key: 'status',
@@ -499,8 +555,16 @@ export function ProcurementPage() {
 
       <Modal open={showVendor} onClose={() => setShowVendor(false)} title="Register vendor">
         <div className="space-y-3">
-          <Input placeholder="Code" value={vendorForm.code} onChange={(e) => setVendorForm({ ...vendorForm, code: e.target.value })} />
-          <Input placeholder="Name" value={vendorForm.name} onChange={(e) => setVendorForm({ ...vendorForm, name: e.target.value })} />
+          <Input
+            placeholder="Code"
+            value={vendorForm.code}
+            onChange={(e) => setVendorForm({ ...vendorForm, code: e.target.value })}
+          />
+          <Input
+            placeholder="Name"
+            value={vendorForm.name}
+            onChange={(e) => setVendorForm({ ...vendorForm, name: e.target.value })}
+          />
           <Input
             placeholder="Payment terms"
             value={vendorForm.paymentTerms}
@@ -510,9 +574,15 @@ export function ProcurementPage() {
             type="date"
             aria-label="Eligibility valid until"
             value={vendorForm.eligibilityValidUntil}
-            onChange={(e) => setVendorForm({ ...vendorForm, eligibilityValidUntil: e.target.value })}
+            onChange={(e) =>
+              setVendorForm({ ...vendorForm, eligibilityValidUntil: e.target.value })
+            }
           />
-          <Button className="w-full" onClick={() => vendorMutation.mutate()} disabled={vendorMutation.isPending}>
+          <Button
+            className="w-full"
+            onClick={() => vendorMutation.mutate()}
+            disabled={vendorMutation.isPending}
+          >
             Save vendor
           </Button>
         </div>
@@ -554,7 +624,11 @@ export function ProcurementPage() {
               onChange={(e) => setPrForm({ ...prForm, unitCost: e.target.value })}
             />
           </div>
-          <Button className="w-full" onClick={() => prMutation.mutate()} disabled={prMutation.isPending}>
+          <Button
+            className="w-full"
+            onClick={() => prMutation.mutate()}
+            disabled={prMutation.isPending}
+          >
             Create PR
           </Button>
         </div>
@@ -618,10 +692,7 @@ export function ProcurementPage() {
             className="w-full"
             onClick={() =>
               wrap(async () => {
-                await createQuotation({
-                  ...quoteForm,
-                  amount: Number(quoteForm.amount),
-                })
+                await createQuotation({ ...quoteForm, amount: Number(quoteForm.amount) })
                 setShowQuote(false)
               })
             }
@@ -690,7 +761,9 @@ export function ProcurementPage() {
           <Input
             placeholder="Quantity delivered"
             value={deliveryForm.quantityDelivered}
-            onChange={(e) => setDeliveryForm({ ...deliveryForm, quantityDelivered: e.target.value })}
+            onChange={(e) =>
+              setDeliveryForm({ ...deliveryForm, quantityDelivered: e.target.value })
+            }
           />
           <Button
             className="w-full"

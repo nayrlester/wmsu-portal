@@ -1,5 +1,6 @@
 import db from '@adonisjs/lucid/services/db'
 import { t } from '#modules/finance/helpers/db_schema'
+import { financialReportingService } from '#modules/finance/services/ufms/financial_reporting_service'
 
 async function countWhere(table: string, orgId: string, extra = '') {
   const result = await db.rawQuery(
@@ -12,21 +13,18 @@ async function countWhere(table: string, orgId: string, extra = '') {
 
 export class DashboardService {
   async getSummary(orgId: string) {
-    const [
-      budgetPlans,
-      journalEntries,
-      openPurchaseOrders,
-      posSalesToday,
-      pendingRequisitions,
-    ] = await Promise.all([
-      countWhere('financial_plans', orgId),
-      countWhere('journal_entries', orgId),
-      countWhere('purchase_orders', orgId, "AND status NOT IN ('closed', 'cancelled')"),
-      this.posSalesToday(orgId),
-      countWhere('purchase_requisitions', orgId, "AND status IN ('draft', 'submitted', 'approved')"),
-    ])
+    const [metrics, budgetPlans, journalEntries, openPurchaseOrders, posSalesToday, pendingRequisitions] =
+      await Promise.all([
+        financialReportingService.dashboardMetrics(orgId),
+        countWhere('financial_plans', orgId),
+        countWhere('journal_entries', orgId),
+        countWhere('purchase_orders', orgId, "AND status NOT IN ('closed', 'cancelled')"),
+        this.posSalesToday(orgId),
+        countWhere('purchase_requisitions', orgId, "AND status IN ('draft', 'submitted', 'approved')"),
+      ])
 
     return {
+      ...metrics,
       budgetPlans,
       journalEntries,
       openPurchaseOrders,

@@ -20,8 +20,7 @@ export function formatNumber(n: number | null | undefined): string {
 
 /** API often returns related rows as objects; never render those raw in JSX. */
 export type DisplayLabel =
-  | string
-  | { name?: string | null; code?: string | null; slug?: string | null }
+  string | { name?: string | null; code?: string | null; slug?: string | null }
 
 export function labelOf(value: DisplayLabel | null | undefined): string {
   if (value == null) return ''

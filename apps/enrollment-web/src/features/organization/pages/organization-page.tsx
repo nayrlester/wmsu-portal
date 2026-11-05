@@ -60,12 +60,17 @@ function OrgInfoSection() {
   })
 
   const onSubmit = form.handleSubmit((v) => mutation.mutate(v))
-  const { register, formState: { errors } } = form
+  const {
+    register,
+    formState: { errors },
+  } = form
 
   if (isLoading) {
     return (
       <div className="uims-card p-6">
-        <div className="flex justify-center py-8"><Spinner /></div>
+        <div className="flex justify-center py-8">
+          <Spinner />
+        </div>
       </div>
     )
   }
@@ -91,7 +96,12 @@ function OrgInfoSection() {
           <Input label="Organization Name" error={errors.name?.message} {...register('name')} />
           <Input label="Address" {...register('address')} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Contact Email" type="email" error={errors.contactEmail?.message} {...register('contactEmail')} />
+            <Input
+              label="Contact Email"
+              type="email"
+              error={errors.contactEmail?.message}
+              {...register('contactEmail')}
+            />
             <Input label="Contact Phone" {...register('contactPhone')} />
           </div>
           <div className="flex gap-2 pt-2">
@@ -99,7 +109,14 @@ function OrgInfoSection() {
               {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
               Save
             </Button>
-            <Button type="button" variant="outline" onClick={() => { setEditing(false); form.reset() }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setEditing(false)
+                form.reset()
+              }}
+            >
               Cancel
             </Button>
           </div>
@@ -150,8 +167,16 @@ type DeptModal =
 
 const deptColumns: Column<Department>[] = [
   { key: 'code', header: 'Code', className: 'font-mono text-xs', render: (d) => d.code },
-  { key: 'name', header: 'Department', render: (d) => <span className="font-medium">{d.name}</span> },
-  { key: 'headName', header: 'Head', render: (d) => d.headName || <span className="text-muted-foreground">—</span> },
+  {
+    key: 'name',
+    header: 'Department',
+    render: (d) => <span className="font-medium">{d.name}</span>,
+  },
+  {
+    key: 'headName',
+    header: 'Head',
+    render: (d) => d.headName || <span className="text-muted-foreground">—</span>,
+  },
 ]
 
 function DepartmentsSection() {
@@ -245,10 +270,18 @@ function DeptFormModal({
   })
 
   const onSubmit = form.handleSubmit((v) => mutation.mutate(v))
-  const { register, formState: { errors } } = form
+  const {
+    register,
+    formState: { errors },
+  } = form
 
   return (
-    <Modal open onClose={onClose} title={mode === 'create' ? 'Add Department' : 'Edit Department'} size="sm">
+    <Modal
+      open
+      onClose={onClose}
+      title={mode === 'create' ? 'Add Department' : 'Edit Department'}
+      size="sm"
+    >
       {mutation.isError && (
         <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           {getApiErrorMessage(mutation.error)}
@@ -256,10 +289,17 @@ function DeptFormModal({
       )}
       <form onSubmit={onSubmit} className="space-y-4">
         <Input label="Name" error={errors.name?.message} {...register('name')} />
-        <Input label="Code" placeholder="e.g. DEPT-IT" error={errors.code?.message} {...register('code')} />
+        <Input
+          label="Code"
+          placeholder="e.g. DEPT-IT"
+          error={errors.code?.message}
+          {...register('code')}
+        />
         <Input label="Department Head" placeholder="Full name" {...register('headName')} />
         <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
             {mode === 'create' ? 'Create' : 'Save'}
@@ -287,7 +327,8 @@ function DeleteDeptModal({
   return (
     <Modal open onClose={onClose} title="Delete Department" size="sm">
       <p className="text-sm text-muted-foreground">
-        Delete department <strong className="text-ink">{dept.name}</strong>? Items linked to this department will be unlinked.
+        Delete department <strong className="text-ink">{dept.name}</strong>? Items linked to this
+        department will be unlinked.
       </p>
       {mutation.isError && (
         <div className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -295,8 +336,14 @@ function DeleteDeptModal({
         </div>
       )}
       <div className="mt-5 flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button variant="destructive" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          disabled={mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
           {mutation.isPending ? <Spinner className="h-4 w-4" /> : null}
           Delete
         </Button>

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { SearchableSelect } from '@wmsu/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { udmsApi } from '@/api/modules/udms.api'
 import { documentsApi } from '@/api/modules/documents.api'
@@ -154,18 +154,17 @@ export function DocumentRoutingPanel({ documentId, status }: Props) {
         {canManageUsers ? (
           <div className="space-y-2">
             <Label htmlFor="routeToUser">Assign / route to user</Label>
-            <Select
+            <SearchableSelect
               id="routeToUser"
               value={toUserId}
-              onChange={(event) => setToUserId(event.target.value)}
-            >
-              <option value="">Select user…</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.fullName || user.email}
-                </option>
-              ))}
-            </Select>
+              onChange={setToUserId}
+              placeholder="Type a name or email…"
+              emptyText="No users match"
+              options={users.map((user) => ({
+                value: user.id,
+                label: user.fullName ? `${user.fullName} · ${user.email}` : user.email,
+              }))}
+            />
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -175,18 +174,17 @@ export function DocumentRoutingPanel({ documentId, status }: Props) {
 
         <div className="space-y-2">
           <Label htmlFor="routeToOffice">Office</Label>
-          <Select
+          <SearchableSelect
             id="routeToOffice"
             value={toOfficeId}
-            onChange={(event) => setToOfficeId(event.target.value)}
-          >
-            <option value="">Select office…</option>
-            {departments.map((dept) => (
-              <option key={dept.id} value={dept.id}>
-                {dept.name}
-              </option>
-            ))}
-          </Select>
+            onChange={setToOfficeId}
+            placeholder="Type an office name…"
+            emptyText="No offices match"
+            options={departments.map((dept) => ({
+              value: dept.id,
+              label: dept.name,
+            }))}
+          />
         </div>
 
         <div className="space-y-2">

@@ -60,6 +60,7 @@ export default class PaymentsController {
       paymentType: payload.paymentType,
       reference: payload.reference,
       particulars: payload.particulars,
+      assessmentNumber,
     })
     const receipt = fin.data.receipt as { or_number?: string; id?: string } | undefined
     const paymentRow = (fin.data as { payment?: { id?: string } }).payment

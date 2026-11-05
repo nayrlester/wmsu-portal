@@ -19,6 +19,7 @@ export const listTorRequestsValidator = vine.compile(
     studentNumber: vine.string().trim().maxLength(64).optional(),
     requestNumber: vine.string().trim().maxLength(64).optional(),
     mineOnly: vine.boolean().optional(),
+    page: vine.number().min(1).optional(),
     limit: vine.number().min(1).max(200).optional(),
   })
 )

@@ -2493,7 +2493,7 @@ export class ScholarshipSchema extends BaseModel {
 }
 
 export class SectionSchema extends BaseModel {
-  static $columns = ['academicYearId', 'capacity', 'code', 'createdAt', 'enrolledCount', 'id', 'isBlockSection', 'name', 'organizationId', 'programId', 'semester', 'status', 'subjectId', 'updatedAt', 'yearLevel'] as const
+  static $columns = ['academicYearId', 'blockGroupCode', 'capacity', 'code', 'createdAt', 'enrolledCount', 'id', 'isBlockSection', 'name', 'organizationId', 'programId', 'semester', 'status', 'subjectId', 'updatedAt', 'yearLevel'] as const
   $columns = SectionSchema.$columns
   @column()
   declare academicYearId: string
@@ -2509,6 +2509,8 @@ export class SectionSchema extends BaseModel {
   declare id: string
   @column()
   declare isBlockSection: boolean
+  @column()
+  declare blockGroupCode: string | null
   @column()
   declare name: string
   @column()

@@ -405,9 +405,12 @@ export class AdvisingService {
         .forUpdate()
         .firstOrFail()
 
-      if (!enrollment.isRegularBlock) {
+      const registrarOverride = ['registrar', 'dean', 'chancellor', 'assessment_officer'].includes(
+        input.authorityRole.trim().toLowerCase()
+      )
+      if (!enrollment.isRegularBlock && !registrarOverride) {
         throw new EnrollmentWorkflowError(
-          'Advising waiver is only for configured block-sectioned regular enrollments',
+          'Advising waiver is only for configured block-sectioned regular enrollments (or registrar/dean override)',
           422,
           'WAIVER_NOT_APPLICABLE'
         )

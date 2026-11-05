@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ExternalLink } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { AppFooter } from '@/components/layout/app-footer'
 import { AppHeader } from '@/components/layout/app-header'
 import { fetchMe } from '@/lib/auth-api'
@@ -45,14 +45,14 @@ function PlatformCard({ platform }: { platform: AuthPlatform }) {
         {logoUrl ? (
           <img src={logoUrl} alt="" className="h-full w-full object-contain p-1" />
         ) : (
-          <ExternalLink className="h-6 w-6 text-[#635bff]" />
+          <ArrowRight className="h-6 w-6 text-[#635bff]" />
         )}
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold text-[#12122a]">{platform.name}</h3>
           {!disabled && (
-            <ExternalLink className="h-4 w-4 text-[#6b6f8c] opacity-0 transition group-hover:opacity-100" />
+            <ArrowRight className="h-4 w-4 text-[#6b6f8c] opacity-0 transition group-hover:opacity-100" />
           )}
         </div>
         {platform.description && (

@@ -210,11 +210,14 @@ router
   .use(middleware.auth())
 
 const InternalClearanceController = () => import('#modules/inventory/controllers/internal_clearance_controller')
+const InternalProcurementAcceptanceController = () =>
+  import('#modules/inventory/controllers/internal_procurement_acceptance_controller')
 
 router
   .group(() => {
     router.get('/custodianships', [InternalCustodianshipsController, 'index'])
     router.get('/clearance/:studentNumber', [InternalClearanceController, 'checkClearance'])
+    router.post('/procurement/acceptance', [InternalProcurementAcceptanceController, 'accept'])
   })
   .prefix('/api/v1/inventory/internal').as('inventory.internal')
   .use(middleware.serviceApiKey())

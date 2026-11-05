@@ -13,6 +13,15 @@ import {
   type OverrideType,
 } from '#modules/enrollment/domain/enrollment_workflow'
 
+export type CurriculumRemainingSubject = {
+  id: string
+  subjectCode: string
+  title: string
+  units: number
+  yearLevel: number | null
+  semester: number | null
+}
+
 export type CurriculumEvaluation = {
   taken: Array<{ subjectCode: string; status: string; grade: number | null }>
   passed: string[]
@@ -22,7 +31,13 @@ export type CurriculumEvaluation = {
   creditedInternal: string[]
   creditedExternal: string[]
   creditedEquivalent: string[]
-  remaining: Array<{ id: string; subjectCode: string; title: string; units: number }>
+  remaining: CurriculumRemainingSubject[]
+  currentTermRemaining: CurriculumRemainingSubject[]
+  planByTerm: Array<{
+    yearLevel: number
+    semester: number
+    subjects: CurriculumRemainingSubject[]
+  }>
   deficiencies: Array<{ requirementCode: string; description: string }>
   academicStanding: string
   residencyTerms: number
@@ -82,22 +97,72 @@ export async function evaluateCurriculum(input: {
     ...creditedEquivalent,
   ])
 
-  const subjects = await Subject.query()
-    .where('organization_id', input.organizationId)
-    .where('is_active', true)
-    .if(input.programId, (q) => q.where((builder) => builder.where('program_id', input.programId!).orWhereNull('program_id')))
+  let remaining: CurriculumEvaluation['remaining'] = []
+  let usedCurriculumVersion = false
+  if (input.programId) {
+    const { curriculumService } = await import('#modules/enrollment/services/curriculum_service')
+    const versionSubjects = await curriculumService.getActiveVersionSubjectsForProgram(
+      input.organizationId,
+      input.programId
+    )
+    if (versionSubjects) {
+      usedCurriculumVersion = true
+      remaining = versionSubjects
+        .filter((line) => line.subject && !completed.has(line.subject.subjectCode))
+        .map((line) => ({
+          id: line.subject!.id,
+          subjectCode: line.subject!.subjectCode,
+          title: line.subject!.title,
+          units: line.subject!.units,
+          yearLevel: line.yearLevel ?? null,
+          semester: line.semester ?? null,
+        }))
+    }
+  }
+  if (!usedCurriculumVersion) {
+    const subjects = await Subject.query()
+      .where('organization_id', input.organizationId)
+      .where('is_active', true)
+      .if(input.programId, (q) =>
+        q.where((builder) => builder.where('program_id', input.programId!).orWhereNull('program_id'))
+      )
+    remaining = subjects
+      .filter((s) => !completed.has(s.subjectCode))
+      .map((s) => ({
+        id: s.id,
+        subjectCode: s.subjectCode,
+        title: s.title,
+        units: s.units,
+        yearLevel: null,
+        semester: null,
+      }))
+  }
 
-  const remaining = subjects
-    .filter((s) => !completed.has(s.subjectCode))
-    .map((s) => ({
-      id: s.id,
-      subjectCode: s.subjectCode,
-      title: s.title,
-      units: s.units,
-    }))
+  const currentTermRemaining =
+    input.yearLevel != null
+      ? remaining.filter((line) => line.yearLevel == null || line.yearLevel === input.yearLevel)
+      : remaining
+
+  const planMap = new Map<string, CurriculumRemainingSubject[]>()
+  for (const line of remaining) {
+    const yl = line.yearLevel ?? 0
+    const sem = line.semester ?? 0
+    const key = `${yl}:${sem}`
+    const bucket = planMap.get(key) ?? []
+    bucket.push(line)
+    planMap.set(key, bucket)
+  }
+  const planByTerm = [...planMap.entries()]
+    .map(([key, subjects]) => {
+      const [yearLevel, semester] = key.split(':').map((n) => Number(n))
+      return { yearLevel, semester, subjects }
+    })
+    .sort((a, b) => a.yearLevel - b.yearLevel || a.semester - b.semester)
 
   const deficiencies = await StudentDeficiency.query()
-    .where({ organization_id: input.organizationId, student_id: input.studentId, status: 'open' })
+    .where({ organization_id: input.organizationId, student_id: input.studentId })
+    .whereNull('deleted_at')
+    .whereIn('status', ['open', 'submitted', 'rejected'])
 
   const policy = await resolveUnitLoadPolicy(input.organizationId, input.programId ?? null, input.yearLevel ?? null)
 
@@ -117,6 +182,8 @@ export async function evaluateCurriculum(input: {
     creditedExternal,
     creditedEquivalent,
     remaining,
+    currentTermRemaining,
+    planByTerm,
     deficiencies: deficiencies.map((d) => ({
       requirementCode: d.requirementCode,
       description: d.description,

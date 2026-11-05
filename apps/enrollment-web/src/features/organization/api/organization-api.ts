@@ -29,7 +29,7 @@ export async function fetchOrganization(): Promise<Organization> {
 }
 
 export async function updateOrganization(
-  payload: Partial<Pick<Organization, 'name' | 'address' | 'contactEmail' | 'contactPhone'>>,
+  payload: Partial<Pick<Organization, 'name' | 'address' | 'contactEmail' | 'contactPhone'>>
 ): Promise<Organization> {
   const { data } = await apiClient.patch('/org', {
     name: payload.name,
@@ -46,7 +46,7 @@ export async function fetchDepartments(): Promise<Department[]> {
 }
 
 export async function createDepartment(
-  payload: Pick<Department, 'name' | 'code' | 'headName'> & { campusId?: string },
+  payload: Pick<Department, 'name' | 'code' | 'headName'> & { campusId?: string }
 ): Promise<Department> {
   let campusId = payload.campusId
   if (!campusId) {
@@ -68,7 +68,7 @@ export async function createDepartment(
 
 export async function updateDepartment(
   id: string,
-  payload: Partial<Pick<Department, 'name' | 'code' | 'headName'>>,
+  payload: Partial<Pick<Department, 'name' | 'code' | 'headName'>>
 ): Promise<Department> {
   const { data } = await apiClient.patch(`/org/departments/${id}`, {
     name: payload.name,

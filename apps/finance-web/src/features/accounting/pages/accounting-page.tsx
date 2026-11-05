@@ -20,6 +20,7 @@ import {
   fetchBankAccounts,
   fetchCashFlow,
   fetchFunds,
+  fetchJournal,
   fetchJournals,
   fetchLedger,
   fetchReconciliations,
@@ -27,6 +28,7 @@ import {
   fetchTaxRates,
   fetchTrialBalance,
   postJournal,
+  submitJournal,
 } from '../api/accounting-api'
 
 type Tab = 'journals' | 'ledger' | 'trial' | 'tax' | 'bank'
@@ -54,6 +56,9 @@ export function AccountingPage() {
   const [showTaxRate, setShowTaxRate] = useState(false)
   const [showTaxEntry, setShowTaxEntry] = useState(false)
   const [showRecon, setShowRecon] = useState(false)
+  const [viewJournal, setViewJournal] = useState<any | null>(null)
+  const [viewLoading, setViewLoading] = useState(false)
+  const [actionBusy, setActionBusy] = useState(false)
 
   const [journalForm, setJournalForm] = useState({
     entryType: 'jev',
@@ -127,12 +132,30 @@ export function AccountingPage() {
 
   const wrap = async (fn: () => Promise<unknown>) => {
     setError(null)
+    setActionBusy(true)
     try {
       await fn()
       invalidate()
     } catch (err) {
       setError(getApiErrorMessage(err))
       throw err
+    } finally {
+      setActionBusy(false)
+    }
+  }
+
+  const openJournal = async (id: string) => {
+    setError(null)
+    setViewLoading(true)
+    setViewJournal({ id })
+    try {
+      const entry = await fetchJournal(id)
+      setViewJournal(entry)
+    } catch (err) {
+      setError(getApiErrorMessage(err))
+      setViewJournal(null)
+    } finally {
+      setViewLoading(false)
     }
   }
 
@@ -169,7 +192,12 @@ export function AccountingPage() {
 
   const journalColumns = useMemo(
     () => [
-      { key: 'entryNumber', header: 'Number', className: 'font-mono text-xs', render: (r: any) => r.entryNumber },
+      {
+        key: 'entryNumber',
+        header: 'Number',
+        className: 'font-mono text-xs',
+        render: (r: any) => r.entryNumber,
+      },
       { key: 'entryType', header: 'Type', render: (r: any) => r.entryType },
       { key: 'description', header: 'Description', render: (r: any) => r.description },
       {
@@ -180,15 +208,46 @@ export function AccountingPage() {
       {
         key: 'actions',
         header: 'Actions',
-        render: (r: any) =>
-          r.status !== 'posted' && canPost ? (
-            <Button size="sm" onClick={() => wrap(() => postJournal(r.id))}>
-              Post
-            </Button>
-          ) : null,
+        className: 'text-right',
+        render: (r: any) => {
+          const status = String(r.status ?? '')
+          const canSubmit = canWrite && status === 'draft'
+          const canPostEntry = canPost && (status === 'draft' || status === 'submitted')
+          return (
+            <div className="flex flex-wrap justify-end gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={viewLoading || actionBusy}
+                onClick={() => openJournal(r.id)}
+              >
+                View
+              </Button>
+              {canSubmit ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={actionBusy}
+                  onClick={() => wrap(() => submitJournal(r.id))}
+                >
+                  Submit
+                </Button>
+              ) : null}
+              {canPostEntry ? (
+                <Button
+                  size="sm"
+                  disabled={actionBusy}
+                  onClick={() => wrap(() => postJournal(r.id))}
+                >
+                  Post
+                </Button>
+              ) : null}
+            </div>
+          )
+        },
       },
     ],
-    [canPost]
+    [actionBusy, canPost, canWrite, viewLoading]
   )
 
   const tabs: { id: Tab; label: string }[] = [
@@ -203,7 +262,7 @@ export function AccountingPage() {
     <div className="space-y-4 animate-fade-up">
       <PageHeader
         title="Accounting Management"
-        description="Chart-backed journals, GL inquiry, trial balance, withholding, and bank reconciliation (FIN-006/007/009/011/022/023)."
+        description="Chart-backed journals, GL inquiry, trial balance, withholding, and bank reconciliation."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Input
@@ -244,7 +303,9 @@ export function AccountingPage() {
             onClick={() => setTab(item.id)}
             className={cn(
               'rounded-lg px-3 py-1.5 text-sm font-medium',
-              tab === item.id ? 'bg-[var(--color-brand)] text-white' : 'text-slate-600 hover:bg-slate-100'
+              tab === item.id
+                ? 'bg-[var(--color-brand)] text-white'
+                : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             {item.label}
@@ -253,7 +314,10 @@ export function AccountingPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <div
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          role="alert"
+        >
           {error}
         </div>
       )}
@@ -273,8 +337,17 @@ export function AccountingPage() {
         <DataTable
           label="General ledger"
           columns={[
-            { key: 'entryNumber', header: 'JE#', className: 'font-mono text-xs', render: (r: any) => r.entryNumber },
-            { key: 'entryDate', header: 'Date', render: (r: any) => String(r.entryDate).slice(0, 10) },
+            {
+              key: 'entryNumber',
+              header: 'JE#',
+              className: 'font-mono text-xs',
+              render: (r: any) => r.entryNumber,
+            },
+            {
+              key: 'entryDate',
+              header: 'Date',
+              render: (r: any) => String(r.entryDate).slice(0, 10),
+            },
             {
               key: 'account',
               header: 'Account',
@@ -303,17 +376,21 @@ export function AccountingPage() {
       {tab === 'trial' && (
         <div className="space-y-3">
           <p className="text-sm text-slate-500">
-            Trial balance from posted `general_ledger_entries`. Cash monitor uses account types containing
-            cash/bank (FIN-006, FIN-009).
+            Trial balance from posted `general_ledger_entries`. Cash monitor uses account types
+            containing cash/bank.
           </p>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border bg-white p-4">
               <p className="text-xs uppercase text-slate-500">Debits</p>
-              <p className="text-lg font-semibold">{formatCurrency(trialQuery.data?.totals?.debitTotal)}</p>
+              <p className="text-lg font-semibold">
+                {formatCurrency(trialQuery.data?.totals?.debitTotal)}
+              </p>
             </div>
             <div className="rounded-xl border bg-white p-4">
               <p className="text-xs uppercase text-slate-500">Credits</p>
-              <p className="text-lg font-semibold">{formatCurrency(trialQuery.data?.totals?.creditTotal)}</p>
+              <p className="text-lg font-semibold">
+                {formatCurrency(trialQuery.data?.totals?.creditTotal)}
+              </p>
             </div>
             <div className="rounded-xl border bg-white p-4">
               <p className="text-xs uppercase text-slate-500">Cash net</p>
@@ -361,8 +438,8 @@ export function AccountingPage() {
             emptyTitle="No configured withholding rates"
           />
           <p className="text-sm text-slate-500">
-            Remittance total: {formatCurrency(remittanceQuery.data?.totalTax)} — BIR form variants For
-            Clarification (FIN-011).
+            Remittance total: {formatCurrency(remittanceQuery.data?.totalTax)} — BIR form variants
+            pending clarification.
           </p>
           <DataTable
             label="Withholding entries"
@@ -455,7 +532,10 @@ export function AccountingPage() {
             placeholder="Fund"
             value={journalForm.fundId}
             onChange={(e) => setJournalForm((s) => ({ ...s, fundId: e.target.value }))}
-            options={funds.map((f: any) => ({ value: f.id, label: `${f.fundCode} — ${f.fundName}` }))}
+            options={funds.map((f: any) => ({
+              value: f.id,
+              label: `${f.fundCode} — ${f.fundName}`,
+            }))}
           />
           <Select
             label="Debit account"
@@ -497,7 +577,11 @@ export function AccountingPage() {
         </div>
       </Modal>
 
-      <Modal open={showTaxRate} onClose={() => setShowTaxRate(false)} title="Configure withholding rate">
+      <Modal
+        open={showTaxRate}
+        onClose={() => setShowTaxRate(false)}
+        title="Configure withholding rate"
+      >
         <div className="space-y-3">
           <Input
             placeholder="Rate code"
@@ -619,6 +703,99 @@ export function AccountingPage() {
             Save
           </Button>
         </div>
+      </Modal>
+
+      <Modal
+        open={!!viewJournal}
+        onClose={() => setViewJournal(null)}
+        title={viewJournal?.entryNumber ? `Journal ${viewJournal.entryNumber}` : 'Journal detail'}
+      >
+        {viewLoading ? (
+          <p className="text-sm text-slate-500">Loading journal…</p>
+        ) : viewJournal ? (
+          <div className="space-y-3">
+            <div className="grid gap-2 sm:grid-cols-2 text-sm">
+              <div>
+                <p className="text-xs text-slate-500">Type</p>
+                <p>{viewJournal.entryType ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Status</p>
+                <Badge variant={statusVariant(String(viewJournal.status ?? ''))}>
+                  {viewJournal.status ?? '—'}
+                </Badge>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs text-slate-500">Description</p>
+                <p>{viewJournal.description ?? '—'}</p>
+              </div>
+            </div>
+            <DataTable
+              label="Journal lines"
+              columns={[
+                {
+                  key: 'account',
+                  header: 'Account',
+                  render: (line: any) =>
+                    line.account
+                      ? `${line.account.accountCode} — ${line.account.accountTitle}`
+                      : (line.accountId ?? '—'),
+                },
+                {
+                  key: 'debitAmount',
+                  header: 'Debit',
+                  className: 'text-right',
+                  render: (line: any) => formatCurrency(line.debitAmount),
+                },
+                {
+                  key: 'creditAmount',
+                  header: 'Credit',
+                  className: 'text-right',
+                  render: (line: any) => formatCurrency(line.creditAmount),
+                },
+              ]}
+              data={viewJournal.lines ?? []}
+              keyExtractor={(line: any) =>
+                String(line.id ?? `${line.accountId}-${line.debitAmount}`)
+              }
+              emptyTitle="No journal lines"
+            />
+            <div className="flex flex-wrap justify-end gap-2">
+              {canWrite && viewJournal.status === 'draft' ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={actionBusy}
+                  onClick={() =>
+                    wrap(async () => {
+                      await submitJournal(viewJournal.id)
+                      await openJournal(viewJournal.id)
+                    })
+                  }
+                >
+                  Submit
+                </Button>
+              ) : null}
+              {canPost && (viewJournal.status === 'draft' || viewJournal.status === 'submitted') ? (
+                <Button
+                  size="sm"
+                  disabled={actionBusy}
+                  onClick={() =>
+                    wrap(async () => {
+                      await postJournal(viewJournal.id)
+                      await openJournal(viewJournal.id)
+                    })
+                  }
+                >
+                  Post
+                </Button>
+              ) : null}
+              <Button size="sm" variant="outline" onClick={() => setViewJournal(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </Modal>
     </div>
   )
