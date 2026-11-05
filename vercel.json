@@ -6,7 +6,11 @@
       "framework": "vite",
       "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
       "buildCommand": "cd ../.. && pnpm --filter @wmsu/web-portal build",
-      "outputDirectory": "dist"
+      "outputDirectory": "dist",
+      "routes": [
+        { "handle": "filesystem" },
+        { "src": "/(.*)", "dest": "/index.html" }
+      ]
     },
     "admin-web": {
       "root": "apps/admin-web",
@@ -74,7 +78,15 @@
   },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/assets/:path*",
+      "destination": { "service": "web-portal" }
+    },
+    {
+      "source": "/((?!assets/)(?!.*\\.[^/]+$).*)",
+      "destination": { "service": "web-portal", "path": "/index.html" }
+    },
+    {
+      "source": "/:path*",
       "destination": { "service": "web-portal" }
     }
   ]
