@@ -103,10 +103,14 @@ pnpm run verify
 |---------|---------|
 | `pnpm run build:staging` | Production build for staging (`WMSU_DEPLOY_ENV=staging`) — platform + Identity |
 | `pnpm run build:production` | Production build for production |
-| `pnpm run deploy:staging` | Lint, typecheck, then `build:staging` + deploy checklist |
-| `pnpm run deploy:production` | Lint, typecheck, then `build:production` + deploy checklist |
+| `pnpm run deploy:staging` | Lint, typecheck, then `build:staging` + checklist |
+| `pnpm run deploy:production` | Lint, typecheck, then `build:production` + checklist |
+| `pnpm run deploy:cloud:staging` | Above + optional `-- --push` to redeploy Railway + Vercel |
+| `pnpm run deploy:cloud:production` | Same for production |
 
-Configure host URLs in each app’s `.env` / `.env.staging.example` / `.env.production.example` before deploy. Details: [`infrastructure/deployment/README.md`](infrastructure/deployment/README.md).
+**Hosting split:** APIs on **Railway** ([`deploy/railway/README.md`](deploy/railway/README.md)), SPAs on **Vercel** ([`deploy/vercel/README.md`](deploy/vercel/README.md)). First-time setup is linking GitHub projects and env vars — not automatic until you run `deploy:cloud:* -- --push` with CLI tokens.
+
+Configure host URLs in each app’s `.env` / [`deploy/env/web.vercel.env.example`](deploy/env/web.vercel.env.example). Summary: [`infrastructure/deployment/README.md`](infrastructure/deployment/README.md).
 
 ## TOR / USiS requirements (modules 1–28)
 

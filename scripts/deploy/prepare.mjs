@@ -33,11 +33,13 @@ run('Typecheck', 'pnpm', ['run', 'typecheck'])
 run('Production build', 'node', ['scripts/deploy/build.mjs', env])
 
 console.log('\n--- Post-build checklist ---')
-console.log('1. Host env: copy .env.example → .env on server (never commit secrets).')
-console.log('2. Data plane: docker compose -f infrastructure/docker/docker-compose.yml up -d')
-console.log('3. Migrations: pnpm run db:migrate  &&  npm run db:migrate --prefix ../wmsu-api')
-console.log('4. Processes: Base API (:3500), worker, Identity (:3411), static hosting for Vite apps.')
-console.log('5. Smoke: pnpm run verify  (point API_BASE_URL / WEB_PORTAL_URL at deployed URLs)')
+console.log('Railway: cis-base-api + cis-worker + identity-api — see deploy/railway/README.md')
+console.log('Vercel: one project per apps/*-web — see deploy/vercel/README.md')
+console.log('Env templates: deploy/env/*.example')
+console.log('Push to cloud: pnpm run deploy:cloud:staging -- --push  (needs Railway + Vercel CLI and service IDs)')
+console.log('1. Railway variables: base-api + worker + Identity (CORS + PLATFORM_* + VITE_* on Vercel)')
+console.log('2. Migrations run on deploy (Base API + Identity preDeployCommand); seed staging manually if needed')
+console.log('3. Smoke: pnpm run verify with API_BASE_URL / WEB_PORTAL_URL set to deployed URLs')
 
 if (env === 'staging') {
   console.log('\nStaging: use per-app VITE_* URLs (see apps/*-web/.env.staging.example where present).')

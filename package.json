@@ -41,7 +41,9 @@
     "build:staging": "node scripts/deploy/build.mjs staging",
     "build:production": "node scripts/deploy/build.mjs production",
     "deploy:staging": "node scripts/deploy/prepare.mjs staging",
-    "deploy:production": "node scripts/deploy/prepare.mjs production"
+    "deploy:production": "node scripts/deploy/prepare.mjs production",
+    "deploy:cloud:staging": "node scripts/deploy/cloud.mjs staging",
+    "deploy:cloud:production": "node scripts/deploy/cloud.mjs production"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
