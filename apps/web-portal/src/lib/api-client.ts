@@ -44,7 +44,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true
 
       try {
-        const refreshUrl = API_URL ? `${API_URL}/api/v1/auth/refresh` : '/api/v1/auth/refresh'
+        const refreshUrl = `${API_BASE}/auth/refresh`
         refreshPromise ??= axios
           .post<ApiResponse<{ tokens: { accessToken: string; refreshToken: string } }>>(refreshUrl, {
             refreshToken,
