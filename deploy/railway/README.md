@@ -2,6 +2,8 @@
 
 Deploy **compute and data** on Railway; deploy **React SPAs on Vercel** ([`../vercel/README.md`](../vercel/README.md)).
 
+**If Railway shows many `@wmsu/*-web` services:** read [`RAILWAY-DASHBOARD.md`](RAILWAY-DASHBOARD.md) — delete web services from Railway; keep only Base API + worker.
+
 ## Project layout (one Railway project, multiple services)
 
 | Service name | Config-as-code | Dockerfile |
