@@ -59,6 +59,7 @@ const updateSubjectValidator = vine.compile(
     lectureHours: vine.number().min(0).max(200).nullable().optional(),
     laboratoryHours: vine.number().min(0).max(200).nullable().optional(),
     isActive: vine.boolean().optional(),
+    programId: vine.string().uuid().nullable().optional(),
   })
 )
 

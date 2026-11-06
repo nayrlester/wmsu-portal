@@ -97,19 +97,19 @@ export function DisbursementPage() {
   const [adaForm, setAdaForm] = useState({ bankReference: '' })
 
   const invoicesQuery = usePaginatedQuery({
-    queryKey: ['disb-invoices', listControls.page],
+    queryKey: ['disb-invoices', listControls.page, listControls.pageSize],
     queryFn: () =>
       fetchDisbursementInvoices({ page: listControls.page, limit: listControls.pageSize }),
     enabled: canRead && (tab === 'invoices' || showDv),
   })
   const vouchersQuery = usePaginatedQuery({
-    queryKey: ['disb-vouchers', listControls.page],
+    queryKey: ['disb-vouchers', listControls.page, listControls.pageSize],
     queryFn: () =>
       fetchDisbursementVouchers({ page: listControls.page, limit: listControls.pageSize }),
     enabled: canRead && tab === 'vouchers',
   })
   const chequesQuery = usePaginatedQuery({
-    queryKey: ['disb-cheques', listControls.page],
+    queryKey: ['disb-cheques', listControls.page, listControls.pageSize],
     queryFn: () =>
       fetchDisbursementCheques({ page: listControls.page, limit: listControls.pageSize }),
     enabled: canRead && tab === 'cheques',
@@ -544,6 +544,8 @@ export function DisbursementPage() {
           <Pagination
             page={listControls.page}
             pageCount={Math.max(1, activeMeta?.lastPage ?? 1)}
+            pageSize={listControls.pageSize}
+            onPageSizeChange={listControls.setPageSize}
             onPageChange={listControls.setPage}
             totalLabel={listTotalLabel(activeMeta, listControls.page)}
           />

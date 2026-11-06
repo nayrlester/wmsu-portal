@@ -58,7 +58,7 @@ export function CertRequestsPage() {
   })
 
   const query = usePaginatedQuery({
-    queryKey: ['cert-requests', status, studentNumber, controls.page],
+    queryKey: ['cert-requests', status, studentNumber, controls.page, controls.pageSize],
     queryFn: () =>
       listCertRequests({
         status: status || undefined,
@@ -276,6 +276,8 @@ export function CertRequestsPage() {
             <Pagination
               page={controls.page}
               pageCount={Math.max(1, query.data?.meta.lastPage ?? 1)}
+              pageSize={controls.pageSize}
+              onPageSizeChange={controls.setPageSize}
               onPageChange={controls.setPage}
               totalLabel={listTotalLabel(query.data?.meta, controls.page)}
             />

@@ -2,6 +2,7 @@ import { Badge, Button } from '@wmsu/ui'
 import { Link } from 'react-router-dom'
 
 import type { EnrollmentWorkflowView } from '@/lib/usis-api'
+import { formatCurrency } from '@/lib/utils'
 
 export type { EnrollmentWorkflowView }
 
@@ -72,12 +73,12 @@ export function EnrollmentWorkflowPanel({
           <div className="mt-4 flex flex-wrap gap-2 text-sm">
             {tuition?.netAmount != null ? (
               <span>
-                Net assessed: <strong>{tuition.netAmount.toFixed(2)}</strong>
+                Net assessed: <strong>{formatCurrency(tuition.netAmount)}</strong>
               </span>
             ) : null}
             {tuition?.minimumDueRequired != null ? (
               <span>
-                Min due: <strong>{tuition.minimumDueRequired.toFixed(2)}</strong>
+                Min due: <strong>{formatCurrency(tuition.minimumDueRequired)}</strong>
               </span>
             ) : null}
             <Link to="/student/assessments">

@@ -24,9 +24,10 @@ export function useDebouncedValue<T>(value: T, delayMs = 300): T {
   return debounced
 }
 
-export function useListControls(initialSearch = '', pageSize = DEFAULT_PAGE_SIZE) {
+export function useListControls(initialSearch = '', initialPageSize = DEFAULT_PAGE_SIZE) {
   const [search, setSearch] = useState(initialSearch)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSizeState] = useState(initialPageSize)
   const debouncedSearch = useDebouncedValue(search, 300)
   return {
     search,
@@ -38,6 +39,10 @@ export function useListControls(initialSearch = '', pageSize = DEFAULT_PAGE_SIZE
     page,
     setPage,
     pageSize,
+    setPageSize: (size: number) => {
+      setPage(1)
+      setPageSizeState(size)
+    },
   }
 }
 

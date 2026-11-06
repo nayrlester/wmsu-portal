@@ -39,8 +39,9 @@ export function DocumentsListPage() {
   } = useDocumentsUiStore()
   const debouncedSearch = useDebouncedValue(search, 300)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
   const effectiveViewMode = isMobile && viewMode === 'details' ? 'list' : viewMode
-  const filters = buildDocumentListFilters(debouncedSearch, status, page, 25, {
+  const filters = buildDocumentListFilters(debouncedSearch, status, page, pageSize, {
     lifecycleStatus,
     confidentiality,
     napCategory,
@@ -114,10 +115,14 @@ export function DocumentsListPage() {
             className="mt-4"
             pagination={{
               page: data.meta.currentPage ?? page,
-              pageSize: data.meta.perPage ?? 25,
+              pageSize,
               total: data.meta.total ?? 0,
             }}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size)
+              setPage(1)
+            }}
           />
         )}
         {isMobile && canCreate ? (

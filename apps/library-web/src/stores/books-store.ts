@@ -12,6 +12,7 @@ interface BooksUiState {
   setSearch: (search: string) => void
   setMaterialType: (materialType: string) => void
   setPage: (page: number) => void
+  setPerPage: (perPage: number) => void
   openCreateForm: () => void
   openEditForm: (book: Book) => void
   closeForm: () => void
@@ -29,6 +30,7 @@ export const useBooksStore = create<BooksUiState>((set) => ({
   setSearch: (search) => set({ search, page: 1 }),
   setMaterialType: (materialType) => set({ materialType, page: 1 }),
   setPage: (page) => set({ page }),
+  setPerPage: (perPage) => set({ perPage, page: 1 }),
   openCreateForm: () => set({ isFormOpen: true, editingBook: null }),
   openEditForm: (book) => set({ isFormOpen: true, editingBook: book }),
   closeForm: () => set({ isFormOpen: false, editingBook: null }),

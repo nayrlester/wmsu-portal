@@ -110,7 +110,7 @@ function AdmissionsInner() {
   const qc = useQueryClient()
   const controls = useListControls()
   const query = usePaginatedQuery({
-    queryKey: ['office', 'applicants', controls.debouncedSearch, controls.page],
+    queryKey: ['office', 'applicants', controls.debouncedSearch, controls.page, controls.pageSize],
     queryFn: () =>
       fetchApplicants({
         search: controls.debouncedSearch || undefined,
@@ -144,6 +144,8 @@ function AdmissionsInner() {
       onSearchChange={controls.setSearch}
       page={controls.page}
       lastPage={query.data?.meta.lastPage}
+      pageSize={controls.pageSize}
+      onPageSizeChange={controls.setPageSize}
       onPageChange={controls.setPage}
       isEmpty={(d) => d.data.length === 0}
     >

@@ -16,6 +16,7 @@ import { SavedSearchesPanel } from '@/features/search/components/saved-searches-
 import { useSearch } from '@/hooks/use-search'
 import { useSearchStore } from '@/stores/search-store'
 import { ENTITY_TYPE_LABELS, type SearchEntityType, type SearchPreset } from '@/types/search'
+import { RowsPerPageSelect } from '@/components/rows-per-page'
 
 const ENTITY_ICONS: Record<SearchEntityType, typeof BookOpen> = {
   book: BookOpen,
@@ -29,6 +30,7 @@ export function SearchPage() {
   const urlPreset = searchParams.get('preset') ?? undefined
   const [localQuery, setLocalQuery] = useState(urlQuery)
   const [page, setPage] = useState(1)
+  const [perPage, setPerPage] = useState(20)
 
   const {
     selectedTypes,
@@ -58,9 +60,9 @@ export function SearchPage() {
       memberType: memberType ?? undefined,
       status: status ?? undefined,
       page,
-      perPage: 20,
+      perPage,
     }),
-    [urlQuery, selectedTypes, preset, urlPreset, genre, categoryId, memberType, status, page]
+    [urlQuery, selectedTypes, preset, urlPreset, genre, categoryId, memberType, status, page, perPage]
   )
 
   const hasSearchIntent =
@@ -172,11 +174,20 @@ export function SearchPage() {
                 })}
               </div>
 
-              {data && data.meta.totalPages > 1 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-slate-500">
-                    Page {data.meta.page} of {data.meta.totalPages}
-                  </p>
+              {data?.meta ? (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-slate-500">
+                      Page {data.meta.page} of {data.meta.totalPages}
+                    </p>
+                    <RowsPerPageSelect
+                      value={perPage}
+                      onChange={(size) => {
+                        setPerPage(size)
+                        setPage(1)
+                      }}
+                    />
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -196,7 +207,7 @@ export function SearchPage() {
                     </Button>
                   </div>
                 </div>
-              )}
+              ) : null}
             </>
           )}
         </div>

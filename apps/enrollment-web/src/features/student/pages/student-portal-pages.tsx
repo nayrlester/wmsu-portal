@@ -27,6 +27,7 @@ import { QueryPage, useListControls } from '@/components/query-page'
 import { EnrollmentWorkflowPanel } from '@/components/enrollment-workflow-panel'
 import { useInfiniteListQuery, usePaginatedQuery } from '@/lib/list-query'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { formatCurrency, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 import {
   createCounselingRequest,
@@ -479,7 +480,7 @@ export function StudentEnrollmentPage() {
     if (courseChoice.data?.semester) setSemester(String(courseChoice.data.semester))
   }, [courseChoice.data?.selectedCourse?.id, courseChoice.data?.semester])
   const query = usePaginatedQuery({
-    queryKey: ['student', 'enrollments', student.data?.id, controls.page],
+    queryKey: ['student', 'enrollments', student.data?.id, controls.page, controls.pageSize],
     queryFn: () =>
       fetchEnrollments({
         studentId: student.data?.id,
@@ -621,6 +622,8 @@ export function StudentEnrollmentPage() {
         query={query}
         page={controls.page}
         lastPage={query.data?.meta.lastPage}
+        pageSize={controls.pageSize}
+        onPageSizeChange={controls.setPageSize}
         onPageChange={controls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -1293,20 +1296,20 @@ function AssessmentFormPrintView({
                     <tr key={l.feeCode + l.description}>
                       <td className="py-0.5 font-mono">{l.feeCode}</td>
                       <td className="py-0.5">{l.description}</td>
-                      <td className="py-0.5 text-right">{Number(l.amount).toFixed(2)}</td>
+                      <td className="py-0.5 text-right">{formatCurrency(l.amount)}</td>
                     </tr>
                   ))}
               </tbody>
             </table>
           ) : (
             <>
-              <p>Tuition: {Number(snapshot.assessment.tuitionFee ?? 0).toFixed(2)}</p>
-              <p>Misc: {Number(snapshot.assessment.miscFees ?? 0).toFixed(2)}</p>
+              <p>Tuition: {formatCurrency(snapshot.assessment.tuitionFee ?? 0)}</p>
+              <p>Misc: {formatCurrency(snapshot.assessment.miscFees ?? 0)}</p>
             </>
           )}
-          <p>Discount: {Number(snapshot.assessment.discount ?? 0).toFixed(2)}</p>
+          <p>Discount: {formatCurrency(snapshot.assessment.discount ?? 0)}</p>
           <p className="font-semibold">
-            Net: {Number(snapshot.assessment.netAmount ?? 0).toFixed(2)}
+            Net: {formatCurrency(snapshot.assessment.netAmount ?? 0)}
           </p>
         </div>
       ) : null}
@@ -1323,7 +1326,7 @@ export function StudentAssessmentsPage() {
   const student = useMyStudent()
   const assessControls = useListControls()
   const query = usePaginatedQuery({
-    queryKey: ['student', 'assessments', assessControls.page, student.data?.id],
+    queryKey: ['student', 'assessments', assessControls.page, assessControls.pageSize, student.data?.id],
     queryFn: () =>
       fetchAssessments({
         page: assessControls.page,
@@ -1385,12 +1388,12 @@ export function StudentAssessmentsPage() {
           ) : monitor.data ? (
             <>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <DashboardCard title="Open deficiencies" value={monitor.data.openDeficiencyCount} />
+                <DashboardCard title="Open deficiencies" value={formatNumber(monitor.data.openDeficiencyCount)} />
                 <DashboardCard
                   title="Tuition balance"
                   value={
                     monitor.data.tuitionBalance
-                      ? Number(monitor.data.tuitionBalance.balanceAmount).toFixed(2)
+                      ? formatCurrency(monitor.data.tuitionBalance.balanceAmount)
                       : '—'
                   }
                 />
@@ -1398,13 +1401,13 @@ export function StudentAssessmentsPage() {
                   title="Minimum due"
                   value={
                     monitor.data.tuitionBalance?.minimumDueRequired != null
-                      ? Number(monitor.data.tuitionBalance.minimumDueRequired).toFixed(2)
+                      ? formatCurrency(monitor.data.tuitionBalance.minimumDueRequired)
                       : monitor.data.paymentSchedule?.minimumDueRequired != null
-                        ? Number(monitor.data.paymentSchedule.minimumDueRequired).toFixed(2)
+                        ? formatCurrency(monitor.data.paymentSchedule.minimumDueRequired)
                         : '—'
                   }
                 />
-                <DashboardCard title="Running grades" value={monitor.data.runningGrades.length} />
+                <DashboardCard title="Running grades" value={formatNumber(monitor.data.runningGrades.length)} />
               </div>
               {monitor.data.assessmentBreakdown?.length ? (
                 <DataTable
@@ -1421,13 +1424,13 @@ export function StudentAssessmentsPage() {
                       key: 'quantity',
                       header: 'Qty',
                       className: 'text-right',
-                      render: (row) => Number(row.quantity).toFixed(row.quantity % 1 ? 1 : 0),
+                      render: (row) => formatNumber(row.quantity),
                     },
                     {
                       key: 'amount',
                       header: 'Amount',
                       className: 'text-right whitespace-nowrap',
-                      render: (row) => Number(row.amount).toFixed(2),
+                      render: (row) => formatCurrency(row.amount),
                     },
                   ]}
                   data={monitor.data.assessmentBreakdown}
@@ -1443,12 +1446,12 @@ export function StudentAssessmentsPage() {
                     {
                       key: 'amount',
                       header: 'Amount',
-                      render: (row) => Number(row.amount).toFixed(2),
+                      render: (row) => formatCurrency(row.amount),
                     },
                     {
                       key: 'paidAmount',
                       header: 'Paid',
-                      render: (row) => Number(row.paidAmount).toFixed(2),
+                      render: (row) => formatCurrency(row.paidAmount),
                     },
                     {
                       key: 'dueDate',
@@ -1562,6 +1565,8 @@ export function StudentAssessmentsPage() {
         query={query}
         page={assessControls.page}
         lastPage={query.data?.meta.lastPage}
+        pageSize={assessControls.pageSize}
+        onPageSizeChange={assessControls.setPageSize}
         onPageChange={assessControls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -1571,7 +1576,7 @@ export function StudentAssessmentsPage() {
             columns={[
               { key: 'assessmentNumber', header: 'Number' },
               { key: 'status', header: 'Status' },
-              { key: 'netAmount', header: 'Net', render: (r) => Number(r.netAmount).toFixed(2) },
+              { key: 'netAmount', header: 'Net', render: (r) => formatCurrency(r.netAmount) },
               {
                 key: 'ufmsPaymentStatus',
                 header: 'UFMS payment',
@@ -1594,7 +1599,7 @@ export function StudentPaymentsPage() {
     queryFn: fetchMyAccountMonitor,
   })
   const query = usePaginatedQuery({
-    queryKey: ['student', 'payments', controls.page],
+    queryKey: ['student', 'payments', controls.page, controls.pageSize],
     queryFn: () => fetchPayments({ page: controls.page, limit: controls.pageSize }),
   })
   const minDue =
@@ -1611,8 +1616,8 @@ export function StudentPaymentsPage() {
         {minDue != null ? (
           <>
             {' '}
-            Minimum due now: <strong>{Number(minDue).toFixed(2)}</strong>
-            {balance != null ? <> · Balance: {Number(balance).toFixed(2)}</> : null}.
+            Minimum due now: <strong>{formatCurrency(minDue)}</strong>
+            {balance != null ? <> · Balance: {formatCurrency(balance)}</> : null}.
           </>
         ) : null}
       </Alert>
@@ -1628,7 +1633,7 @@ export function StudentPaymentsPage() {
                 { key: 'feeCode', header: 'Code' },
                 { key: 'description', header: 'Description' },
                 { key: 'feeType', header: 'Type', render: (r) => <Badge>{r.feeType}</Badge> },
-                { key: 'amount', header: 'Amount', render: (r) => Number(r.amount).toFixed(2) },
+                { key: 'amount', header: 'Amount', render: (r) => formatCurrency(r.amount) },
               ]}
               data={monitor.data.assessmentBreakdown}
               keyExtractor={(r) => `${r.feeCode}-${r.description}`}
@@ -1652,7 +1657,7 @@ export function StudentPaymentsPage() {
                     {
                       key: 'amount',
                       header: 'Amount',
-                      render: (r) => Number(r.amount).toFixed(2),
+                      render: (r) => formatCurrency(r.amount),
                     },
                   ]}
                   data={monitor.data.assessmentBreakdown}
@@ -1664,11 +1669,11 @@ export function StudentPaymentsPage() {
               label="Installments"
               columns={[
                 { key: 'label', header: 'Period' },
-                { key: 'amount', header: 'Amount', render: (r) => Number(r.amount).toFixed(2) },
+                { key: 'amount', header: 'Amount', render: (r) => formatCurrency(r.amount) },
                 {
                   key: 'paidAmount',
                   header: 'Paid',
-                  render: (r) => Number(r.paidAmount).toFixed(2),
+                  render: (r) => formatCurrency(r.paidAmount),
                 },
                 { key: 'status', header: 'Status', render: (r) => <Badge>{r.status}</Badge> },
               ]}
@@ -1684,6 +1689,8 @@ export function StudentPaymentsPage() {
         query={query}
         page={controls.page}
         lastPage={query.data?.meta.lastPage}
+        pageSize={controls.pageSize}
+        onPageSizeChange={controls.setPageSize}
         onPageChange={controls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -1692,7 +1699,7 @@ export function StudentPaymentsPage() {
             label="Payments"
             columns={[
               { key: 'orNumber', header: 'OR #', render: (r) => r.orNumber ?? '—' },
-              { key: 'amount', header: 'Amount', render: (r) => Number(r.amount).toFixed(2) },
+              { key: 'amount', header: 'Amount', render: (r) => formatCurrency(r.amount) },
               { key: 'paymentType', header: 'Type' },
               {
                 key: 'ufmsConfirmed',
@@ -1794,7 +1801,7 @@ export function StudentGradesPage() {
   const seeded = useRef(false)
   const gradeControls = useListControls()
   const query = usePaginatedQuery({
-    queryKey: ['student', 'grades', gradeControls.page],
+    queryKey: ['student', 'grades', gradeControls.page, gradeControls.pageSize],
     queryFn: () => fetchGrades({ page: gradeControls.page, limit: gradeControls.pageSize }),
     refetchInterval: 15_000,
   })
@@ -1843,6 +1850,8 @@ export function StudentGradesPage() {
         query={query}
         page={gradeControls.page}
         lastPage={query.data?.meta.lastPage}
+        pageSize={gradeControls.pageSize}
+        onPageSizeChange={gradeControls.setPageSize}
         onPageChange={gradeControls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -1944,7 +1953,7 @@ export function StudentScholarshipsPage() {
           columns={[
             { key: 'scholarshipCode', header: 'Code' },
             { key: 'name', header: 'Name' },
-            { key: 'amount', header: 'Amount', render: (r) => Number(r.amount).toFixed(2) },
+            { key: 'amount', header: 'Amount', render: (r) => formatCurrency(r.amount) },
             { key: 'status', header: 'Status' },
           ]}
           data={rows}

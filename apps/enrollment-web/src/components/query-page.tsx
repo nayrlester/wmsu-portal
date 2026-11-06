@@ -14,6 +14,9 @@ type Props<T> = {
   searchPlaceholder?: string
   page?: number
   lastPage?: number
+  pageSize?: number
+  pageSizeOptions?: number[]
+  onPageSizeChange?: (size: number) => void
   totalLabel?: string
   onPageChange?: (page: number) => void
   lazyLoad?: boolean
@@ -33,6 +36,9 @@ export function QueryPage<T>({
   searchPlaceholder = 'Search…',
   page,
   lastPage,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
   totalLabel,
   onPageChange,
   lazyLoad = false,
@@ -105,6 +111,9 @@ export function QueryPage<T>({
             pageCount={Math.max(pageCount, 1)}
             onPageChange={onPageChange}
             totalLabel={resolvedTotal}
+            pageSize={pageSize}
+            pageSizeOptions={pageSizeOptions}
+            onPageSizeChange={onPageSizeChange}
           />
         </div>
       ) : null}

@@ -21,6 +21,7 @@ export interface DataTableProps<T> {
   filterSummary?: ReactNode
   pagination?: PaginationState
   onPageChange?: (page: number) => void
+  onPageSizeChange?: (size: number) => void
   rowActions?: (row: T) => RowAction[]
   onRowClick?: (row: T) => void
   className?: string
@@ -39,6 +40,7 @@ export function DataTable<T>({
   filterSummary,
   pagination,
   onPageChange,
+  onPageSizeChange,
   rowActions,
   onRowClick,
   className,
@@ -97,7 +99,11 @@ export function DataTable<T>({
       </div>
 
       {pagination && onPageChange && (
-        <TablePagination pagination={pagination} onPageChange={onPageChange} />
+        <TablePagination
+          pagination={pagination}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+        />
       )}
     </div>
   )

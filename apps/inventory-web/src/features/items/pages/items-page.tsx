@@ -111,7 +111,7 @@ export function ItemsPage() {
   const [modal, setModal] = useState<ModalState>({ mode: 'closed' })
 
   const { data, isLoading } = usePaginatedQuery({
-    queryKey: ['items', { search: controls.debouncedSearch, category: categoryFilter, page: controls.page }],
+    queryKey: ['items', { search: controls.debouncedSearch, category: categoryFilter, page: controls.page, pageSize: controls.pageSize }],
     queryFn: async () => {
       const result = await fetchItems({
         search: controls.debouncedSearch || undefined,
@@ -203,6 +203,8 @@ export function ItemsPage() {
         <Pagination
           page={controls.page}
           pageCount={Math.max(1, data?.meta.lastPage ?? 1)}
+          pageSize={controls.pageSize}
+          onPageSizeChange={controls.setPageSize}
           onPageChange={controls.setPage}
           totalLabel={listTotalLabel(data?.meta, controls.page)}
         />

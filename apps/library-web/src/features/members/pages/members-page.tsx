@@ -20,6 +20,7 @@ import { useMembers, useDeleteMember } from '@/hooks/use-members'
 import { useMembersStore } from '@/stores/members-store'
 import { useAuthStore } from '@/stores/auth-store'
 import { MEMBER_TYPE_LABELS, type MembershipStatus, type MemberType } from '@/types/members'
+import { RowsPerPageSelect } from '@/components/rows-per-page'
 
 export function MembersPage() {
   const {
@@ -30,6 +31,7 @@ export function MembersPage() {
     typeFilter,
     setSearch,
     setPage,
+    setPerPage,
     setStatusFilter,
     setTypeFilter,
     openCreateForm,
@@ -213,11 +215,14 @@ export function MembersPage() {
         </CardContent>
       </Card>
 
-      {data?.meta && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-slate-600">
-          <span>
-            Page {data.meta.page} of {data.meta.totalPages} ({data.meta.total} members)
-          </span>
+      {data?.meta ? (
+        <div className="flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <span>
+              Page {data.meta.page} of {data.meta.totalPages} ({data.meta.total} members)
+            </span>
+            <RowsPerPageSelect value={perPage} onChange={setPerPage} />
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
@@ -232,7 +237,7 @@ export function MembersPage() {
             </Button>
           </div>
         </div>
-      )}
+      ) : null}
 
       <MemberFormModal />
     </div>

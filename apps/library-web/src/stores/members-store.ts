@@ -12,6 +12,7 @@ interface MembersUiState {
   showPendingPanel: boolean
   setSearch: (search: string) => void
   setPage: (page: number) => void
+  setPerPage: (perPage: number) => void
   setStatusFilter: (status: MembershipStatus | 'all') => void
   setTypeFilter: (type: MemberType | 'all') => void
   openCreateForm: () => void
@@ -32,6 +33,7 @@ export const useMembersStore = create<MembersUiState>((set) => ({
   showPendingPanel: false,
   setSearch: (search) => set({ search, page: 1 }),
   setPage: (page) => set({ page }),
+  setPerPage: (perPage) => set({ perPage, page: 1 }),
   setStatusFilter: (statusFilter) => set({ statusFilter, page: 1 }),
   setTypeFilter: (typeFilter) => set({ typeFilter, page: 1 }),
   openCreateForm: () => set({ isFormOpen: true, editingMember: null }),

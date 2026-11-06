@@ -8,6 +8,7 @@ import { getApiErrorMessage } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth-store'
 import { useInviteUser, useUpdateUser, useUsers } from '@/hooks/use-users'
 import type { StaffUser, UserRoleCode, UserStatus } from '@/types/users'
+import { RowsPerPageSelect } from '@/components/rows-per-page'
 
 const ROLE_OPTIONS: UserRoleCode[] = ['admin', 'librarian', 'staff', 'member']
 const STATUS_OPTIONS: UserStatus[] = ['invited', 'active', 'suspended', 'deactivated']
@@ -23,6 +24,7 @@ export function UsersPage() {
   const user = useAuthStore((s) => s.user)
   const { toast } = useDialog()
   const [page, setPage] = useState(1)
+  const [perPage, setPerPage] = useState(25)
   const [showInvite, setShowInvite] = useState(false)
   const [editing, setEditing] = useState<StaffUser | null>(null)
   const [invite, setInvite] = useState({
@@ -40,7 +42,7 @@ export function UsersPage() {
   const canCreate = user?.permissions.includes('users:create')
   const canUpdate = user?.permissions.includes('users:update')
 
-  const { data, isLoading, isError } = useUsers({ page, perPage: 25 })
+  const { data, isLoading, isError } = useUsers({ page, perPage })
   const inviteMutation = useInviteUser()
   const updateMutation = useUpdateUser()
 
@@ -276,8 +278,16 @@ export function UsersPage() {
         </CardContent>
       </Card>
 
-      {data?.meta && data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-end gap-2">
+      {data?.meta ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <RowsPerPageSelect
+            value={perPage}
+            onChange={(size) => {
+              setPerPage(size)
+              setPage(1)
+            }}
+          />
+          <div className="flex items-center justify-end gap-2">
           <Button
             size="sm"
             variant="outline"
@@ -297,8 +307,9 @@ export function UsersPage() {
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
+          </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

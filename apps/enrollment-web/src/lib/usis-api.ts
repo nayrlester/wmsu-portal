@@ -2676,6 +2676,7 @@ export async function fetchSubjects(params: PageParams = {}) {
     units: number
     lectureHours?: number | null
     laboratoryHours?: number | null
+    programId?: string | null
   }>(data)
 }
 
@@ -2707,6 +2708,7 @@ export async function updateSubjectCatalog(
     lectureHours: number | null
     laboratoryHours: number | null
     isActive: boolean
+    programId: string | null
   }>
 ) {
   const { data } = await apiClient.patch(`/academic/subjects/${id}`, payload)
@@ -2890,6 +2892,16 @@ export async function updateProgram(
   return asData<{ id: string; code: string; name: string }>(data)
 }
 
+export async function createProgram(payload: {
+  code: string
+  name: string
+  degreeLevel?: string
+  years?: number
+}) {
+  const { data } = await apiClient.post('/academic/programs', payload)
+  return asData<{ id: string; code: string; name: string }>(data)
+}
+
 export async function deleteProgram(id: string) {
   const { data } = await apiClient.delete(`/academic/programs/${id}`)
   return asData<{ id: string; deleted: boolean }>(data)
@@ -2906,6 +2918,19 @@ export async function fetchSections(params: PageParams = {}) {
     isBlockSection?: boolean
     blockGroupCode?: string | null
   }>(data)
+}
+
+export async function createSection(payload: {
+  academicYearId: string
+  programId: string
+  code: string
+  name: string
+  yearLevel: number
+  semester: number
+  capacity?: number
+}) {
+  const { data } = await apiClient.post('/academic/sections', payload)
+  return asData<{ id: string; code: string; name: string }>(data)
 }
 
 export async function patchSection(
@@ -3782,6 +3807,20 @@ export async function updateInstitutionalProfile(payload: {
   signatories: Array<{ role: string; name: string; title?: string }>
 }) {
   const { data } = await apiClient.patch('/academic/institution', payload)
+  return (data as { data: InstitutionalProfilePayload }).data
+}
+
+export async function uploadInstitutionalLogo(file: File) {
+  const body = new FormData()
+  body.append('logo', file)
+  const { data } = await apiClient.post('/academic/institution/logo', body, {
+    transformRequest: (payload, headers) => {
+      if (headers) {
+        delete headers['Content-Type']
+      }
+      return payload
+    },
+  })
   return (data as { data: InstitutionalProfilePayload }).data
 }
 

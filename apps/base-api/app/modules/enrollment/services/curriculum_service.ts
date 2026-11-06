@@ -385,6 +385,7 @@ export class CurriculumService {
       lectureHours: number | null
       laboratoryHours: number | null
       isActive: boolean
+      programId: string | null
     }>,
     actorUserId: string
   ) {
@@ -399,6 +400,17 @@ export class CurriculumService {
     if (data.lectureHours !== undefined) subject.lectureHours = data.lectureHours
     if (data.laboratoryHours !== undefined) subject.laboratoryHours = data.laboratoryHours
     if (data.isActive !== undefined) subject.isActive = data.isActive
+    if (data.programId !== undefined) {
+      if (data.programId === null) {
+        subject.programId = null
+      } else {
+        const program = await Program.query()
+          .where('organization_id', organizationId)
+          .where('id', data.programId)
+          .firstOrFail()
+        subject.programId = program.id
+      }
+    }
     await subject.save()
 
     await auditLogService.log({

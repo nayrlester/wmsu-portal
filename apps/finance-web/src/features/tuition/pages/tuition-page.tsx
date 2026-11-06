@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pagination } from '@wmsu/ui'
+import { Pagination, ConfirmDialog } from '@wmsu/ui'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -115,6 +115,13 @@ export function TuitionPage() {
   const [defaultPlanTemplateId, setDefaultPlanTemplateId] = useState('')
   const [scheduleListPage, setScheduleListPage] = useState(1)
   const [planListPage, setPlanListPage] = useState(1)
+  const [schedulePageSize, setSchedulePageSize] = useState(TUITION_LIST_PAGE_SIZE)
+  const [planPageSize, setPlanPageSize] = useState(TUITION_LIST_PAGE_SIZE)
+  const [removeTarget, setRemoveTarget] = useState<{
+    kind: 'schedule' | 'plan'
+    id: string
+    code: string
+  } | null>(null)
 
   const scopeQuery = useQuery({
     queryKey: ['tuition-fee-schedule-scope'],
@@ -297,10 +304,13 @@ export function TuitionPage() {
   const planList = plansQuery.data ?? []
 
   const schedulePaged = useMemo(
-    () => paginateList(scheduleList, scheduleListPage),
-    [scheduleList, scheduleListPage]
+    () => paginateList(scheduleList, scheduleListPage, schedulePageSize),
+    [scheduleList, scheduleListPage, schedulePageSize]
   )
-  const planPaged = useMemo(() => paginateList(planList, planListPage), [planList, planListPage])
+  const planPaged = useMemo(
+    () => paginateList(planList, planListPage, planPageSize),
+    [planList, planListPage, planPageSize]
+  )
 
   useEffect(() => {
     if (scheduleListPage > schedulePaged.pageCount) setScheduleListPage(schedulePaged.pageCount)
@@ -449,15 +459,13 @@ export function TuitionPage() {
                         size="sm"
                         variant="outline"
                         disabled={removeSchedule.isPending}
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `Remove schedule "${String(row.code)}"? It will no longer apply to new assessments. Past assessments are unchanged.`
-                            )
-                          ) {
-                            removeSchedule.mutate(String(row.id))
-                          }
-                        }}
+                        onClick={() =>
+                          setRemoveTarget({
+                            kind: 'schedule',
+                            id: String(row.id),
+                            code: String(row.code),
+                          })
+                        }
                       >
                         Remove
                       </Button>
@@ -465,11 +473,17 @@ export function TuitionPage() {
                   </li>
                 ))}
               </ul>
-              {schedulePaged.total > TUITION_LIST_PAGE_SIZE ? (
+              {schedulePaged.total > 0 ? (
                 <Pagination
                   className="mt-3"
                   page={schedulePaged.page}
                   pageCount={schedulePaged.pageCount}
+                  pageSize={schedulePageSize}
+                  pageSizeOptions={[5, 10, 20, 50, 100]}
+                  onPageSizeChange={(size) => {
+                    setSchedulePageSize(size)
+                    setScheduleListPage(1)
+                  }}
                   onPageChange={setScheduleListPage}
                   totalLabel={listPageLabel(
                     schedulePaged.from,
@@ -479,16 +493,6 @@ export function TuitionPage() {
                     schedulePaged.pageCount
                   )}
                 />
-              ) : schedulePaged.total > 0 ? (
-                <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
-                  {listPageLabel(
-                    schedulePaged.from,
-                    schedulePaged.to,
-                    schedulePaged.total,
-                    schedulePaged.page,
-                    schedulePaged.pageCount
-                  )}
-                </p>
               ) : null}
             </>
           )}
@@ -581,15 +585,13 @@ export function TuitionPage() {
                         size="sm"
                         variant="outline"
                         disabled={removePlan.isPending}
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `Remove template "${String(row.code)}"? New assessments will no longer use it. Existing student installments are unchanged.`
-                            )
-                          ) {
-                            removePlan.mutate(String(row.id))
-                          }
-                        }}
+                        onClick={() =>
+                          setRemoveTarget({
+                            kind: 'plan',
+                            id: String(row.id),
+                            code: String(row.code),
+                          })
+                        }
                       >
                         Remove
                       </Button>
@@ -597,11 +599,17 @@ export function TuitionPage() {
                   </li>
                 ))}
               </ul>
-              {planPaged.total > TUITION_LIST_PAGE_SIZE ? (
+              {planPaged.total > 0 ? (
                 <Pagination
                   className="mt-3"
                   page={planPaged.page}
                   pageCount={planPaged.pageCount}
+                  pageSize={planPageSize}
+                  pageSizeOptions={[5, 10, 20, 50, 100]}
+                  onPageSizeChange={(size) => {
+                    setPlanPageSize(size)
+                    setPlanListPage(1)
+                  }}
                   onPageChange={setPlanListPage}
                   totalLabel={listPageLabel(
                     planPaged.from,
@@ -611,16 +619,6 @@ export function TuitionPage() {
                     planPaged.pageCount
                   )}
                 />
-              ) : planPaged.total > 0 ? (
-                <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
-                  {listPageLabel(
-                    planPaged.from,
-                    planPaged.to,
-                    planPaged.total,
-                    planPaged.page,
-                    planPaged.pageCount
-                  )}
-                </p>
               ) : null}
             </>
           )}
@@ -676,6 +674,27 @@ export function TuitionPage() {
           </div>
         </section>
       </div>
+      <ConfirmDialog
+        open={removeTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null)
+        }}
+        title={`Remove ${removeTarget?.code ?? 'record'}?`}
+        description={
+          removeTarget?.kind === 'plan'
+            ? 'New assessments will no longer use this template. Existing student installments are unchanged.'
+            : 'It will no longer apply to new assessments. Past assessments are unchanged.'
+        }
+        confirmLabel="Remove"
+        tone="destructive"
+        loading={removeSchedule.isPending || removePlan.isPending}
+        onConfirm={() => {
+          if (!removeTarget) return
+          if (removeTarget.kind === 'schedule') removeSchedule.mutate(removeTarget.id)
+          else removePlan.mutate(removeTarget.id)
+          setRemoveTarget(null)
+        }}
+      />
     </div>
   )
 }

@@ -52,7 +52,7 @@ export function TorRequestsPage() {
   const [submitOk, setSubmitOk] = useState<string | null>(null)
 
   const query = usePaginatedQuery({
-    queryKey: ['tor-requests', status, studentNumber, controls.page],
+    queryKey: ['tor-requests', status, studentNumber, controls.page, controls.pageSize],
     queryFn: () =>
       listTorRequests({
         status: status || undefined,
@@ -252,6 +252,8 @@ export function TorRequestsPage() {
             <Pagination
               page={controls.page}
               pageCount={Math.max(1, query.data?.meta.lastPage ?? 1)}
+              pageSize={controls.pageSize}
+              onPageSizeChange={controls.setPageSize}
               onPageChange={controls.setPage}
               totalLabel={listTotalLabel(query.data?.meta, controls.page)}
             />

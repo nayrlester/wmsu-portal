@@ -19,6 +19,7 @@ import {
 } from '@wmsu/ui'
 import { RequirePermission } from '@/components/auth/require-permission'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { formatCurrency } from '@/lib/utils'
 import {
   advanceOfficeClearanceItem,
   createOfficeReferral,
@@ -479,7 +480,7 @@ function RegistrarClearanceReportInner() {
                 {office.office === 'finance' && officeClearance.assessment ? (
                   <p data-testid="finance-clearance-assessment">
                     {officeClearance.assessment.assessmentNumber} · balance{' '}
-                    {Number(officeClearance.assessment.balanceAmount ?? 0).toFixed(2)} · not a
+                    {formatCurrency(officeClearance.assessment.balanceAmount ?? 0)} · not a
                     clearance hold
                   </p>
                 ) : null}

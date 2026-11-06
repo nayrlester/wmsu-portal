@@ -161,6 +161,7 @@ export type ScannedRoutes = {
     'enrollment.academic_policies.update': { paramsTuple?: []; params?: {} }
     'enrollment.institutional_profile.show': { paramsTuple?: []; params?: {} }
     'enrollment.institutional_profile.update': { paramsTuple?: []; params?: {} }
+    'enrollment.institutional_profile.upload_logo': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.list_colleges': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.create_college': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.update_college': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -428,6 +429,7 @@ export type ScannedRoutes = {
     'enrollment.phase_2_records.store': { paramsTuple: [ParamValue]; params: {'moduleCode': ParamValue} }
     'enrollment.phase_2_modules.index': { paramsTuple?: []; params?: {} }
     'enrollment.internal.internal_grades.export_student_grades': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'enrollment.public.institutional_profile.show_logo': { paramsTuple: [ParamValue,ParamValue]; params: {'organizationId': ParamValue,'filename': ParamValue} }
     'enrollment.docs.swagger': { paramsTuple?: []; params?: {} }
     'enrollment.docs.openapi': { paramsTuple?: []; params?: {} }
     'enrollment.auth.login': { paramsTuple?: []; params?: {} }
@@ -1463,6 +1465,7 @@ export type ScannedRoutes = {
     'enrollment.phase_2_records.index': { paramsTuple: [ParamValue]; params: {'moduleCode': ParamValue} }
     'enrollment.phase_2_modules.index': { paramsTuple?: []; params?: {} }
     'enrollment.internal.internal_grades.export_student_grades': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'enrollment.public.institutional_profile.show_logo': { paramsTuple: [ParamValue,ParamValue]; params: {'organizationId': ParamValue,'filename': ParamValue} }
     'enrollment.docs.swagger': { paramsTuple?: []; params?: {} }
     'enrollment.docs.openapi': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.verify_report': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
@@ -2050,6 +2053,7 @@ export type ScannedRoutes = {
     'enrollment.phase_2_records.index': { paramsTuple: [ParamValue]; params: {'moduleCode': ParamValue} }
     'enrollment.phase_2_modules.index': { paramsTuple?: []; params?: {} }
     'enrollment.internal.internal_grades.export_student_grades': { paramsTuple: [ParamValue]; params: {'studentNumber': ParamValue} }
+    'enrollment.public.institutional_profile.show_logo': { paramsTuple: [ParamValue,ParamValue]; params: {'organizationId': ParamValue,'filename': ParamValue} }
     'enrollment.docs.swagger': { paramsTuple?: []; params?: {} }
     'enrollment.docs.openapi': { paramsTuple?: []; params?: {} }
     'enrollment.clearance.verify_report': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
@@ -2471,6 +2475,7 @@ export type ScannedRoutes = {
     'enrollment.academic_facilities.create_category': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_building': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_room': { paramsTuple?: []; params?: {} }
+    'enrollment.institutional_profile.upload_logo': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.create_college': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.create_department': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.create_position': { paramsTuple?: []; params?: {} }

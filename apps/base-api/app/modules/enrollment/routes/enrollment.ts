@@ -346,6 +346,9 @@ router
     router.patch('/academic/institution', [InstitutionalProfileController, 'update']).use(
       middleware.permission(['academic.write'])
     )
+    router
+      .post('/academic/institution/logo', [InstitutionalProfileController, 'uploadLogo'])
+      .use(middleware.permission(['academic.write']))
 
     router.get('/academic/colleges', [AcademicStructureController, 'listColleges']).use(
       middleware.permission(['academic.read'])
@@ -1252,3 +1255,13 @@ router
   })
   .prefix('/api/v1/enrollment/internal').as('enrollment.internal')
   .use(middleware.serviceApiKey())
+
+router
+  .group(() => {
+    router.get('/public/institution-logos/:organizationId/:filename', [
+      InstitutionalProfileController,
+      'showLogo',
+    ])
+  })
+  .prefix('/api/v1/enrollment')
+  .as('enrollment.public')

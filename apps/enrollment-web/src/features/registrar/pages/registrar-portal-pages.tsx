@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,6 +15,8 @@ import {
   DashboardCard,
   FormField,
   Input,
+  Modal,
+  ConfirmDialog,
   SearchableSelect,
   Select,
   useNotification,
@@ -27,6 +29,7 @@ import { usePaginatedQuery } from '@/lib/list-query'
 import { RequirePermission } from '@/components/auth/require-permission'
 import { useHasPermission } from '@/lib/permissions'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { formatCurrency, formatNumber } from '@/lib/utils'
 import { SAMPLE_ENTRANCE_EXAM_BANK } from '@/features/admissions/entrance-exam-sample-bank'
 import {
   admitApplicant,
@@ -87,6 +90,8 @@ import {
   fetchEnrollments,
   fetchGrades,
   fetchPrograms,
+  createProgram,
+  createSection,
   updateProgram,
   deleteProgram,
   fetchSections,
@@ -118,6 +123,7 @@ import {
   updateAcademicPolicies,
   fetchInstitutionalProfile,
   updateInstitutionalProfile,
+  uploadInstitutionalLogo,
   fetchColleges,
   createCollege,
   fetchAcademicDepartments,
@@ -168,6 +174,7 @@ import {
   syncAssessmentPayment,
   verifyEnrollmentPayment,
   approveRegistrarEnrollment,
+  type UsisCurriculum,
 } from '@/lib/usis-api'
 
 export function RegistrarDashboardPage() {
@@ -221,7 +228,7 @@ function RegistrarApplicantsInner() {
   const { notify } = useNotification()
   const qc = useQueryClient()
   const query = usePaginatedQuery({
-    queryKey: ['reg', 'applicants', controls.debouncedSearch, controls.page],
+    queryKey: ['reg', 'applicants', controls.debouncedSearch, controls.page, controls.pageSize],
     queryFn: () =>
       fetchApplicants({
         search: controls.debouncedSearch || undefined,
@@ -285,6 +292,8 @@ function RegistrarApplicantsInner() {
         onSearchChange={controls.setSearch}
         page={controls.page}
         lastPage={query.data?.meta.lastPage}
+        pageSize={controls.pageSize}
+        onPageSizeChange={controls.setPageSize}
         onPageChange={controls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -1132,7 +1141,7 @@ function RegistrarStudentsInner() {
   const { notify } = useNotification()
   const qc = useQueryClient()
   const query = usePaginatedQuery({
-    queryKey: ['reg', 'students', controls.debouncedSearch, controls.page],
+    queryKey: ['reg', 'students', controls.debouncedSearch, controls.page, controls.pageSize],
     queryFn: () =>
       fetchStudents({
         search: controls.debouncedSearch || undefined,
@@ -1172,6 +1181,8 @@ function RegistrarStudentsInner() {
         searchPlaceholder="Search student number, name, email"
         page={controls.page}
         lastPage={query.data?.meta.lastPage}
+        pageSize={controls.pageSize}
+        onPageSizeChange={controls.setPageSize}
         onPageChange={controls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -2013,7 +2024,7 @@ function RegistrarEnrollmentsInner() {
   const [financeRead, setFinanceRead] = useState('')
   const canReadFinance = useHasPermission('assessments.write', 'payments.write')
   const query = usePaginatedQuery({
-    queryKey: ['reg', 'enrollments', controls.page, controls.debouncedSearch],
+    queryKey: ['reg', 'enrollments', controls.page, controls.pageSize, controls.debouncedSearch],
     queryFn: () =>
       fetchEnrollments({
         page: controls.page,
@@ -2033,7 +2044,7 @@ function RegistrarEnrollmentsInner() {
     }) => syncAssessmentPayment(row.assessmentId).then((result) => ({ row, result })),
     onSuccess: ({ row, result }) => {
       const paymentStatus = result.status.paymentStatus
-      const paid = Number(result.status.paidAmount).toFixed(2)
+      const paid = formatCurrency(result.status.paidAmount)
       const line = `${row.studentNumber} · ${row.assessmentNumber} · ${paymentStatus} · paid ${paid}`
       setFinanceRead(line)
       notify({ tone: 'success', title: 'Finance status read', description: line })
@@ -2053,7 +2064,7 @@ function RegistrarEnrollmentsInner() {
       notify({
         tone: 'success',
         title: 'Assessment prepared',
-        description: net > 0 ? `Net assessed: ${net.toFixed(2)}` : undefined,
+        description: net > 0 ? `Net assessed: ${formatCurrency(net)}` : undefined,
       })
       refresh()
     },
@@ -2132,6 +2143,8 @@ function RegistrarEnrollmentsInner() {
         searchPlaceholder="Status filter (e.g. registered)"
         page={controls.page}
         lastPage={query.data?.meta.lastPage}
+        pageSize={controls.pageSize}
+        onPageSizeChange={controls.setPageSize}
         onPageChange={controls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -2282,6 +2295,14 @@ export function RegistrarAcademicPage() {
   )
 }
 
+export function RegistrarSettingsPage() {
+  return (
+    <RequirePermission anyOf={['academic.read', 'academic.write']}>
+      <RegistrarInstitutionalProfilePanel />
+    </RequirePermission>
+  )
+}
+
 function dateInputValue(value?: string | null) {
   if (!value) return ''
   return String(value).slice(0, 10)
@@ -2368,15 +2389,33 @@ function AcademicStructureEditor({
     target.kind === 'year'
       ? 'Edit academic year'
       : target.kind === 'program'
-        ? 'Edit program'
+        ? 'Edit course'
         : 'Edit section'
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="grid max-w-3xl gap-3 md:grid-cols-2">
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+      title={title}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            data-testid="save-academic-record"
+            disabled={!code.trim() || !name.trim() || mutation.isPending}
+            onClick={() => mutation.mutate()}
+          >
+            Save
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
         <FormField id="academicEditCode" label="Code" required>
           <Input id="academicEditCode" value={code} onChange={(e) => setCode(e.target.value)} />
         </FormField>
@@ -2431,20 +2470,8 @@ function AcademicStructureEditor({
             </FormField>
           </>
         ) : null}
-        <div className="flex items-end gap-2">
-          <Button
-            type="button"
-            disabled={!code.trim() || !name.trim() || mutation.isPending}
-            onClick={() => mutation.mutate()}
-          >
-            Save
-          </Button>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Modal>
   )
 }
 
@@ -2453,19 +2480,29 @@ function RegistrarAcademicInner() {
   const { notify } = useNotification()
   const qc = useQueryClient()
   const [editing, setEditing] = useState<AcademicEditTarget | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<AcademicEditTarget | null>(null)
+  const [courseCode, setCourseCode] = useState('')
+  const [courseName, setCourseName] = useState('')
+  const [courseYears, setCourseYears] = useState('4')
+  const [sectionYearId, setSectionYearId] = useState('')
+  const [sectionProgramId, setSectionProgramId] = useState('')
+  const [sectionCode, setSectionCode] = useState('')
+  const [sectionName, setSectionName] = useState('')
+  const [sectionYearLevel, setSectionYearLevel] = useState('1')
+  const [sectionSemester, setSectionSemester] = useState('1')
   const yearControls = useListControls()
   const programControls = useListControls()
   const sectionControls = useListControls()
   const years = usePaginatedQuery({
-    queryKey: ['reg', 'years', yearControls.page],
+    queryKey: ['reg', 'years', yearControls.page, yearControls.pageSize],
     queryFn: () => fetchAcademicYears({ page: yearControls.page, limit: yearControls.pageSize }),
   })
   const programs = usePaginatedQuery({
-    queryKey: ['reg', 'programs', programControls.page],
+    queryKey: ['reg', 'programs', programControls.page, programControls.pageSize],
     queryFn: () => fetchPrograms({ page: programControls.page, limit: programControls.pageSize }),
   })
   const sections = usePaginatedQuery({
-    queryKey: ['reg', 'sections', sectionControls.page],
+    queryKey: ['reg', 'sections', sectionControls.page, sectionControls.pageSize],
     queryFn: () => fetchSections({ page: sectionControls.page, limit: sectionControls.pageSize }),
   })
   const sectionOptions = usePaginatedQuery({
@@ -2480,11 +2517,55 @@ function RegistrarAcademicInner() {
     },
     onSuccess: () => {
       notify({ tone: 'success', title: 'Academic record deleted' })
+      setDeleteTarget(null)
       void qc.invalidateQueries({ queryKey: ['reg', 'years'] })
       void qc.invalidateQueries({ queryKey: ['reg', 'programs'] })
       void qc.invalidateQueries({ queryKey: ['reg', 'sections'] })
     },
   })
+
+  const createCourseMutation = useMutation({
+    mutationFn: () =>
+      createProgram({
+        code: courseCode.trim(),
+        name: courseName.trim(),
+        years: Number(courseYears) || 4,
+      }),
+    onSuccess: () => {
+      notify({ tone: 'success', title: 'Course created' })
+      setCourseCode('')
+      setCourseName('')
+      void qc.invalidateQueries({ queryKey: ['reg', 'programs'] })
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Course create failed', description: getApiErrorMessage(err) }),
+  })
+
+  const createSectionMutation = useMutation({
+    mutationFn: () =>
+      createSection({
+        academicYearId: sectionYearId,
+        programId: sectionProgramId,
+        code: sectionCode.trim(),
+        name: sectionName.trim(),
+        yearLevel: Number(sectionYearLevel) || 1,
+        semester: Number(sectionSemester) || 1,
+      }),
+    onSuccess: () => {
+      notify({ tone: 'success', title: 'Section created' })
+      setSectionCode('')
+      setSectionName('')
+      void qc.invalidateQueries({ queryKey: ['reg', 'sections'] })
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Section create failed', description: getApiErrorMessage(err) }),
+  })
+
+  useEffect(() => {
+    if (sectionYearId || !years.data?.data?.length) return
+    const active = years.data.data.find((year) => year.isActive) ?? years.data.data[0]
+    if (active) setSectionYearId(active.id)
+  }, [sectionYearId, years.data])
 
   const rowActions = (target: AcademicEditTarget) => (
     <div className="flex justify-end gap-1 whitespace-nowrap">
@@ -2496,13 +2577,7 @@ function RegistrarAcademicInner() {
         size="sm"
         variant="outline"
         disabled={deleteMutation.isPending}
-        onClick={() => {
-          const ok = window.confirm(
-            `Delete ${target.row.code}? This is blocked when students or classes already use it.`
-          )
-          if (!ok) return
-          deleteMutation.mutate(target)
-        }}
+        onClick={() => setDeleteTarget(target)}
       >
         Delete
       </Button>
@@ -2523,6 +2598,8 @@ function RegistrarAcademicInner() {
         query={years}
         page={yearControls.page}
         lastPage={years.data?.meta.lastPage}
+        pageSize={yearControls.pageSize}
+        onPageSizeChange={yearControls.setPageSize}
         onPageChange={yearControls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -2544,17 +2621,50 @@ function RegistrarAcademicInner() {
           />
         )}
       </QueryPage>
+      {canWrite ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>New course</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-4">
+              <FormField id="courseCode" label="Code" required>
+                <Input id="courseCode" value={courseCode} onChange={(event) => setCourseCode(event.target.value)} />
+              </FormField>
+              <FormField id="courseName" label="Name" required className="md:col-span-2">
+                <Input id="courseName" value={courseName} onChange={(event) => setCourseName(event.target.value)} />
+              </FormField>
+              <FormField id="courseYears" label="Years">
+                <Input id="courseYears" value={courseYears} onChange={(event) => setCourseYears(event.target.value)} />
+              </FormField>
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  data-testid="create-course"
+                  disabled={!courseCode.trim() || !courseName.trim() || createCourseMutation.isPending}
+                  onClick={() => createCourseMutation.mutate()}
+                >
+                  Create course
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
       <QueryPage
-        title="Programs"
+        title="Courses"
+        description="These degree programs are the courses you select when creating a curriculum."
         query={programs}
         page={programControls.page}
         lastPage={programs.data?.meta.lastPage}
+        pageSize={programControls.pageSize}
+        onPageSizeChange={programControls.setPageSize}
         onPageChange={programControls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
         {(page) => (
           <DataTable
-            label="Programs"
+            label="Courses"
             columns={[
               { key: 'code', header: 'Code' },
               { key: 'name', header: 'Name' },
@@ -2567,11 +2677,86 @@ function RegistrarAcademicInner() {
           />
         )}
       </QueryPage>
+      {canWrite ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>New section</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-3">
+              <FormField id="sectionYear" label="Academic year" required>
+                <Select
+                  id="sectionYear"
+                  value={sectionYearId}
+                  onChange={(event) => setSectionYearId(event.target.value)}
+                >
+                  <option value="">Select academic year</option>
+                  {(years.data?.data ?? []).map((year) => (
+                    <option key={year.id} value={year.id}>
+                      {year.code} — {year.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+              <FormField id="sectionCourse" label="Course" required className="md:col-span-2">
+                <SearchableSelect
+                  id="sectionCourse"
+                  value={sectionProgramId}
+                  onChange={setSectionProgramId}
+                  placeholder="Search course code or name…"
+                  options={(programs.data?.data ?? []).map((program) => ({
+                    value: program.id,
+                    label: `${program.code} — ${program.name}`,
+                  }))}
+                />
+              </FormField>
+              <FormField id="sectionCode" label="Code" required>
+                <Input id="sectionCode" value={sectionCode} onChange={(event) => setSectionCode(event.target.value)} />
+              </FormField>
+              <FormField id="sectionName" label="Name" required className="md:col-span-2">
+                <Input id="sectionName" value={sectionName} onChange={(event) => setSectionName(event.target.value)} />
+              </FormField>
+              <FormField id="sectionYearLevel" label="Year level">
+                <Input
+                  id="sectionYearLevel"
+                  value={sectionYearLevel}
+                  onChange={(event) => setSectionYearLevel(event.target.value)}
+                />
+              </FormField>
+              <FormField id="sectionSemester" label="Semester">
+                <Input
+                  id="sectionSemester"
+                  value={sectionSemester}
+                  onChange={(event) => setSectionSemester(event.target.value)}
+                />
+              </FormField>
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  data-testid="create-section"
+                  disabled={
+                    !sectionYearId ||
+                    !sectionProgramId ||
+                    !sectionCode.trim() ||
+                    sectionName.trim().length < 2 ||
+                    createSectionMutation.isPending
+                  }
+                  onClick={() => createSectionMutation.mutate()}
+                >
+                  Create section
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
       <QueryPage
         title="Sections"
         query={sections}
         page={sectionControls.page}
         lastPage={sections.data?.meta.lastPage}
+        pageSize={sectionControls.pageSize}
+        onPageSizeChange={sectionControls.setPageSize}
         onPageChange={sectionControls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -2592,12 +2777,26 @@ function RegistrarAcademicInner() {
           />
         )}
       </QueryPage>
-      <RegistrarInstitutionalProfilePanel />
       <RegistrarAcademicStructurePanel />
       <RegistrarFacilitiesPanel />
       <RegistrarAcademicPoliciesPanel />
       <RegistrarSectionSlotTools sections={sectionOptions.data?.data ?? []} />
       <RegistrarBlockEncodePanel sections={sectionOptions.data?.data ?? []} />
+      <ConfirmDialog
+        open={deleteTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+        title={`Delete ${deleteTarget?.row.code ?? 'record'}?`}
+        description="This is blocked when students or classes already use it."
+        confirmLabel="Delete"
+        tone="destructive"
+        loading={deleteMutation.isPending}
+        onConfirm={() => {
+          if (!deleteTarget) return
+          deleteMutation.mutate(deleteTarget)
+        }}
+      />
     </div>
   )
 }
@@ -3149,10 +3348,13 @@ function RegistrarAcademicStructurePanel() {
 
 function RegistrarInstitutionalProfilePanel() {
   const { notify } = useNotification()
+  const qc = useQueryClient()
+  const logoInputRef = useRef<HTMLInputElement>(null)
   const profile = useQuery({ queryKey: ['reg', 'institution'], queryFn: fetchInstitutionalProfile })
   const [legalName, setLegalName] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [sigRole, setSigRole] = useState('registrar')
   const [sigName, setSigName] = useState('')
   const [sigTitle, setSigTitle] = useState('University Registrar')
@@ -3170,6 +3372,12 @@ function RegistrarInstitutionalProfilePanel() {
     }
   }, [profile.data])
 
+  useEffect(() => {
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview)
+    }
+  }, [logoPreview])
+
   const saveMutation = useMutation({
     mutationFn: () =>
       updateInstitutionalProfile({
@@ -3180,10 +3388,55 @@ function RegistrarInstitutionalProfilePanel() {
           ? [{ role: sigRole.trim(), name: sigName.trim(), title: sigTitle.trim() || undefined }]
           : [],
       }),
-    onSuccess: () => notify({ tone: 'success', title: 'Institutional profile saved' }),
+    onSuccess: (saved) => {
+      setLogoUrl(saved.logoUrl ?? '')
+      notify({ tone: 'success', title: 'Institutional profile saved' })
+      void qc.invalidateQueries({ queryKey: ['reg', 'institution'] })
+    },
     onError: (err) =>
       notify({ tone: 'danger', title: 'Profile failed', description: getApiErrorMessage(err) }),
   })
+
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => uploadInstitutionalLogo(file),
+    onSuccess: (saved) => {
+      setLogoUrl(saved.logoUrl ?? '')
+      setLogoPreview((current) => {
+        if (current) URL.revokeObjectURL(current)
+        return null
+      })
+      notify({ tone: 'success', title: 'Logo uploaded' })
+      void qc.invalidateQueries({ queryKey: ['reg', 'institution'] })
+    },
+    onError: (err) => {
+      setLogoPreview((current) => {
+        if (current) URL.revokeObjectURL(current)
+        return null
+      })
+      notify({ tone: 'danger', title: 'Logo upload failed', description: getApiErrorMessage(err) })
+    },
+  })
+
+  const previewSrc = logoPreview || logoUrl
+
+  const onLogoSelected = (file: File | undefined) => {
+    if (!file) return
+    const allowed = ['image/png', 'image/jpeg', 'image/webp']
+    if (!allowed.includes(file.type)) {
+      notify({ tone: 'danger', title: 'Use a PNG, JPEG, or WebP logo' })
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      notify({ tone: 'danger', title: 'Logo must be 2 MB or smaller' })
+      return
+    }
+    const local = URL.createObjectURL(file)
+    setLogoPreview((current) => {
+      if (current) URL.revokeObjectURL(current)
+      return local
+    })
+    uploadMutation.mutate(file)
+  }
 
   return (
     <Card>
@@ -3201,8 +3454,45 @@ function RegistrarInstitutionalProfilePanel() {
             onChange={(e) => setDisplayName(e.target.value)}
           />
         </FormField>
-        <FormField id="logoUrl" label="Logo URL">
-          <Input id="logoUrl" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} />
+        <FormField id="institutionLogo" label="Logo">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-white">
+              {previewSrc ? (
+                <img
+                  src={previewSrc}
+                  alt="Institution logo preview"
+                  className="h-full w-full object-contain"
+                  data-testid="institution-logo-preview"
+                />
+              ) : (
+                <span className="px-2 text-center text-xs text-slate-500">No logo yet</span>
+              )}
+            </div>
+            <div className="space-y-2">
+              <input
+                ref={logoInputRef}
+                id="institutionLogo"
+                data-testid="institution-logo-file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  event.target.value = ''
+                  onLogoSelected(file)
+                }}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={uploadMutation.isPending}
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {uploadMutation.isPending ? 'Uploading…' : 'Upload logo'}
+              </Button>
+              <p className="text-xs text-slate-500">PNG, JPEG, or WebP. Maximum 2 MB.</p>
+            </div>
+          </div>
         </FormField>
         <div className="grid gap-3 md:grid-cols-3">
           <FormField id="instSigRole" label="Signatory role">
@@ -3613,6 +3903,7 @@ function RegistrarSectionSlotTools(props: {
   const [capacityEdit, setCapacityEdit] = useState('40')
   const [waitlistOn, setWaitlistOn] = useState(false)
   const [storedConflictText, setStoredConflictText] = useState('')
+  const [dissolveOpen, setDissolveOpen] = useState(false)
 
   const summary = useQuery({
     queryKey: ['reg', 'section-summary', sectionId],
@@ -3805,6 +4096,7 @@ function RegistrarSectionSlotTools(props: {
   })
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Section slot tools</CardTitle>
@@ -4088,16 +4380,7 @@ function RegistrarSectionSlotTools(props: {
               type="button"
               variant="destructive"
               disabled={dissolveMutation.isPending}
-              onClick={() => {
-                if (
-                  !window.confirm(
-                    'Dissolve this section? Enrolled students will be dropped and notifications queued. This cannot be undone.'
-                  )
-                ) {
-                  return
-                }
-                dissolveMutation.mutate()
-              }}
+              onClick={() => setDissolveOpen(true)}
             >
               Dissolve section
             </Button>
@@ -4105,6 +4388,20 @@ function RegistrarSectionSlotTools(props: {
         ) : null}
       </CardContent>
     </Card>
+    <ConfirmDialog
+      open={dissolveOpen}
+      onOpenChange={setDissolveOpen}
+      title="Dissolve this section?"
+      description="Enrolled students will be dropped and notifications queued. This cannot be undone."
+      confirmLabel="Dissolve"
+      tone="destructive"
+      loading={dissolveMutation.isPending}
+      onConfirm={() => {
+        setDissolveOpen(false)
+        dissolveMutation.mutate()
+      }}
+      />
+    </>
   )
 }
 
@@ -4173,11 +4470,29 @@ function CurriculumCatalogEditor({
   })
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{target.kind === 'curriculum' ? 'Edit curriculum' : 'Edit subject'}</CardTitle>
-      </CardHeader>
-      <CardContent className="grid max-w-4xl gap-3 md:grid-cols-2">
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+      title={target.kind === 'curriculum' ? 'Edit curriculum' : 'Edit subject'}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            data-testid="save-curriculum"
+            disabled={!code.trim() || !name.trim() || mutation.isPending}
+            onClick={() => mutation.mutate()}
+          >
+            Save
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
         <FormField id="catalogEditCode" label="Code" required>
           <Input id="catalogEditCode" value={code} onChange={(e) => setCode(e.target.value)} />
         </FormField>
@@ -4201,16 +4516,230 @@ function CurriculumCatalogEditor({
             </FormField>
           </>
         ) : null}
-        <div className="flex items-end gap-2">
-          <Button type="button" disabled={!code.trim() || !name.trim() || mutation.isPending} onClick={() => mutation.mutate()}>
-            Save
-          </Button>
-          <Button type="button" variant="outline" onClick={onClose}>
+      </div>
+    </Modal>
+  )
+}
+
+function SubjectEditModal({
+  subject,
+  onClose,
+}: {
+  subject: {
+    id: string
+    subjectCode: string
+    title: string
+    units: number
+    lectureHours?: number | null
+    laboratoryHours?: number | null
+  } | null
+  onClose: () => void
+}) {
+  const { notify } = useNotification()
+  const qc = useQueryClient()
+  const [code, setCode] = useState(subject?.subjectCode ?? '')
+  const [title, setTitle] = useState(subject?.title ?? '')
+  const [units, setUnits] = useState(String(subject?.units ?? 3))
+  const [lectureHours, setLectureHours] = useState(String(subject?.lectureHours ?? 0))
+  const [labHours, setLabHours] = useState(String(subject?.laboratoryHours ?? 0))
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!subject) return
+      await updateSubjectCatalog(subject.id, {
+        subjectCode: code.trim(),
+        title: title.trim(),
+        units: Number(units) || 0,
+        lectureHours: Number(lectureHours) || 0,
+        laboratoryHours: Number(labHours) || 0,
+      })
+    },
+    onSuccess: () => {
+      notify({ tone: 'success', title: 'Subject updated' })
+      void qc.invalidateQueries({ queryKey: ['reg', 'subjects'] })
+      onClose()
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Update failed', description: getApiErrorMessage(err) }),
+  })
+
+  return (
+    <Modal
+      open={subject != null}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+      title="Edit subject"
+      description={subject ? `${subject.subjectCode} — ${subject.title}` : undefined}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
             Cancel
           </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <Button
+            type="button"
+            data-testid="save-subject"
+            disabled={!code.trim() || !title.trim() || mutation.isPending}
+            onClick={() => mutation.mutate()}
+          >
+            Save
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-2" key={subject?.id}>
+        <FormField id="editSubjectCode" label="Code" required>
+          <Input id="editSubjectCode" value={code} onChange={(event) => setCode(event.target.value)} />
+        </FormField>
+        <FormField id="editSubjectTitle" label="Title" required>
+          <Input id="editSubjectTitle" value={title} onChange={(event) => setTitle(event.target.value)} />
+        </FormField>
+        <FormField id="editSubjectUnits" label="Units">
+          <Input id="editSubjectUnits" value={units} onChange={(event) => setUnits(event.target.value)} />
+        </FormField>
+        <FormField id="editSubjectLec" label="Lecture hours">
+          <Input
+            id="editSubjectLec"
+            value={lectureHours}
+            onChange={(event) => setLectureHours(event.target.value)}
+          />
+        </FormField>
+        <FormField id="editSubjectLab" label="Lab hours">
+          <Input id="editSubjectLab" value={labHours} onChange={(event) => setLabHours(event.target.value)} />
+        </FormField>
+      </div>
+    </Modal>
+  )
+}
+
+function SubjectLinkModal({
+  subject,
+  programs,
+  curricula,
+  onClose,
+}: {
+  subject: {
+    id: string
+    subjectCode: string
+    title: string
+    programId?: string | null
+  } | null
+  programs: Array<{ id: string; code: string; name: string }>
+  curricula: UsisCurriculum[]
+  onClose: () => void
+}) {
+  const { notify } = useNotification()
+  const qc = useQueryClient()
+  const [courseId, setCourseId] = useState(subject?.programId ?? '')
+  const [versionId, setVersionId] = useState('')
+  const [yearLevel, setYearLevel] = useState('1')
+  const [semester, setSemester] = useState('1')
+  const courseCurricula = curricula.filter((curriculum) => curriculum.programId === courseId)
+  const versions = courseCurricula.flatMap((curriculum) =>
+    (curriculum.versions ?? [])
+      .filter((version) => version.status !== 'archived')
+      .map((version) => ({
+        ...version,
+        label: `${curriculum.code} ${version.versionLabel} (${version.status})`,
+      }))
+  )
+
+  useEffect(() => {
+    if (!courseId) {
+      setVersionId('')
+      return
+    }
+    if (versions.some((version) => version.id === versionId)) return
+    const preferred = versions.find((version) => version.status === 'active') ?? versions[0]
+    setVersionId(preferred?.id ?? '')
+  }, [courseId, versionId, versions])
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!subject || !courseId) return
+      await updateSubjectCatalog(subject.id, { programId: courseId })
+      if (versionId) {
+        await addCurriculumVersionSubject(versionId, {
+          subjectId: subject.id,
+          yearLevel: Number(yearLevel) || 1,
+          semester: Number(semester) || 1,
+        })
+      }
+    },
+    onSuccess: () => {
+      notify({
+        tone: 'success',
+        title: versionId ? 'Subject linked to the course curriculum' : 'Subject linked to the course',
+      })
+      void qc.invalidateQueries({ queryKey: ['reg', 'subjects'] })
+      if (versionId) {
+        void qc.invalidateQueries({ queryKey: ['reg', 'curriculum-version-subjects', versionId] })
+      }
+      onClose()
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Link failed', description: getApiErrorMessage(err) }),
+  })
+
+  return (
+    <Modal
+      open={subject != null}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+      title="Link subject to a course"
+      description={subject ? `${subject.subjectCode} — ${subject.title}` : undefined}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            data-testid="save-subject-link"
+            disabled={!courseId || mutation.isPending}
+            onClick={() => mutation.mutate()}
+          >
+            Link
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <FormField id="linkCourse" label="Course" required className="sm:col-span-2">
+          <SearchableSelect
+            id="linkCourse"
+            value={courseId}
+            onChange={setCourseId}
+            placeholder="Search course code or name…"
+            options={programs.map((program) => ({
+              value: program.id,
+              label: `${program.code} — ${program.name}`,
+            }))}
+          />
+        </FormField>
+        <FormField id="linkVersion" label="Curriculum" className="sm:col-span-2">
+          <SearchableSelect
+            id="linkVersion"
+            value={versionId}
+            onChange={setVersionId}
+            placeholder={courseId ? 'Search a curriculum version…' : 'Choose a course first'}
+            options={versions.map((version) => ({ value: version.id, label: version.label }))}
+          />
+        </FormField>
+        <FormField id="linkYear" label="Year">
+          <Input id="linkYear" value={yearLevel} onChange={(event) => setYearLevel(event.target.value)} />
+        </FormField>
+        <FormField id="linkSemester" label="Semester">
+          <Input id="linkSemester" value={semester} onChange={(event) => setSemester(event.target.value)} />
+        </FormField>
+        {courseId && versions.length === 0 ? (
+          <p className="text-sm text-muted-foreground sm:col-span-2">
+            This course has no curriculum version yet. The subject will be linked to the course, and you
+            can place it on a year and semester after you create the curriculum.
+          </p>
+        ) : null}
+      </div>
+    </Modal>
   )
 }
 
@@ -4220,7 +4749,7 @@ function RegistrarCurriculumInner() {
   const qc = useQueryClient()
   const controls = useListControls()
   const subjects = usePaginatedQuery({
-    queryKey: ['reg', 'subjects', controls.debouncedSearch, controls.page],
+    queryKey: ['reg', 'subjects', controls.debouncedSearch, controls.page, controls.pageSize],
     queryFn: () =>
       fetchSubjects({
         search: controls.debouncedSearch || undefined,
@@ -4242,6 +4771,11 @@ function RegistrarCurriculumInner() {
 
   const [subjectCode, setSubjectCode] = useState('')
   const [subjectTitle, setSubjectTitle] = useState('')
+  const [catalogCode, setCatalogCode] = useState('')
+  const [catalogTitle, setCatalogTitle] = useState('')
+  const [catalogUnits, setCatalogUnits] = useState('3')
+  const [catalogLectureHours, setCatalogLectureHours] = useState('3')
+  const [catalogLabHours, setCatalogLabHours] = useState('0')
   const [units, setUnits] = useState('3')
   const [lectureHours, setLectureHours] = useState('3')
   const [labHours, setLabHours] = useState('0')
@@ -4254,7 +4788,71 @@ function RegistrarCurriculumInner() {
   const [selectedVersionId, setSelectedVersionId] = useState('')
   const [dupLabel, setDupLabel] = useState('')
   const [addSubjectId, setAddSubjectId] = useState('')
+  const [subjectYear, setSubjectYear] = useState('1')
+  const [subjectSemester, setSubjectSemester] = useState('1')
   const [editing, setEditing] = useState<CurriculumEditTarget | null>(null)
+  const [subjectEditor, setSubjectEditor] = useState<{
+    id: string
+    subjectCode: string
+    title: string
+    units: number
+    lectureHours?: number | null
+    laboratoryHours?: number | null
+  } | null>(null)
+  const [deleteSubjectTarget, setDeleteSubjectTarget] = useState<{
+    id: string
+    subjectCode: string
+  } | null>(null)
+  const [deleteCurriculumTarget, setDeleteCurriculumTarget] = useState<{
+    id: string
+    code: string
+  } | null>(null)
+  const [removeVersionSubjectTarget, setRemoveVersionSubjectTarget] = useState<{
+    id: string
+    subjectCode: string | null
+  } | null>(null)
+  const [removePrereqTarget, setRemovePrereqTarget] = useState<{
+    id: string
+    subjectCode: string | null
+  } | null>(null)
+  const [linkSubject, setLinkSubject] = useState<{
+    id: string
+    subjectCode: string
+    title: string
+    programId?: string | null
+  } | null>(null)
+  const filledCourseId = useRef('')
+
+  const selectedCurriculum = (curricula.data ?? []).find((curriculum) =>
+    (curriculum.versions ?? []).some((version) => version.id === selectedVersionId)
+  )
+  const visibleCurricula = programId
+    ? (curricula.data ?? []).filter((curriculum) => curriculum.programId === programId)
+    : (curricula.data ?? [])
+
+  useEffect(() => {
+    if (!programId || filledCourseId.current === programId) return
+    const course = programRows.find((row) => row.id === programId)
+    if (!course) return
+    filledCourseId.current = programId
+    setCurrCode(`${course.code}-2026`)
+    setCurrName(`${course.name} Curriculum`)
+  }, [programId, programRows])
+
+  useEffect(() => {
+    if (!programId) return
+    const versions = (curricula.data ?? [])
+      .filter((curriculum) => curriculum.programId === programId)
+      .flatMap((curriculum) => curriculum.versions ?? [])
+    const selectedIsKnown = (curricula.data ?? []).some((curriculum) =>
+      (curriculum.versions ?? []).some((version) => version.id === selectedVersionId)
+    )
+    if (selectedVersionId && !selectedIsKnown) return
+    if (versions.some((version) => version.id === selectedVersionId)) return
+    if (!versions.length) return
+    const preferred = versions.find((version) => version.status === 'active') ?? versions[0]
+    setSelectedVersionId(preferred.id)
+  }, [programId, curricula.data, selectedVersionId])
 
   const prereqs = useQuery({
     queryKey: ['reg', 'subject-prereqs', prereqSubjectId],
@@ -4267,20 +4865,56 @@ function RegistrarCurriculumInner() {
     enabled: !!selectedVersionId,
   })
 
-  const createSubjectMutation = useMutation({
+  const createCatalogSubjectMutation = useMutation({
     mutationFn: () =>
       createSubject({
+        subjectCode: catalogCode.trim(),
+        title: catalogTitle.trim(),
+        units: Number(catalogUnits) || 3,
+        lectureHours: Number(catalogLectureHours) || 0,
+        laboratoryHours: Number(catalogLabHours) || 0,
+      }),
+    onSuccess: () => {
+      notify({ tone: 'success', title: 'Subject created' })
+      setCatalogCode('')
+      setCatalogTitle('')
+      void qc.invalidateQueries({ queryKey: ['reg', 'subjects'] })
+    },
+    onError: (err) =>
+      notify({
+        tone: 'danger',
+        title: 'Subject create failed',
+        description: getApiErrorMessage(err),
+      }),
+  })
+
+  const createSubjectMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedVersionId || !selectedCurriculum) {
+        throw new Error('Create the curriculum for this course before adding a subject')
+      }
+      const created = await createSubject({
         subjectCode: subjectCode.trim(),
         title: subjectTitle.trim(),
         units: Number(units) || 3,
         lectureHours: Number(lectureHours) || 0,
         laboratoryHours: Number(labHours) || 0,
-      }),
+        programId: selectedCurriculum.programId,
+      })
+      await addCurriculumVersionSubject(selectedVersionId, {
+        subjectId: created.id,
+        yearLevel: Number(subjectYear) || 1,
+        semester: Number(subjectSemester) || 1,
+      })
+    },
     onSuccess: () => {
-      notify({ tone: 'success', title: 'Subject created' })
+      notify({ tone: 'success', title: 'Subject added to the course curriculum' })
       setSubjectCode('')
       setSubjectTitle('')
       void qc.invalidateQueries({ queryKey: ['reg', 'subjects'] })
+      void qc.invalidateQueries({
+        queryKey: ['reg', 'curriculum-version-subjects', selectedVersionId],
+      })
     },
     onError: (err) =>
       notify({
@@ -4312,10 +4946,10 @@ function RegistrarCurriculumInner() {
         name: currName.trim(),
         versionLabel: '1.0',
       }),
-    onSuccess: () => {
-      notify({ tone: 'success', title: 'Curriculum created' })
-      setCurrCode('')
-      setCurrName('')
+    onSuccess: (created) => {
+      const versionId = (created as { version?: { id?: string } }).version?.id
+      if (versionId) setSelectedVersionId(versionId)
+      notify({ tone: 'success', title: 'Curriculum created for the course' })
       void qc.invalidateQueries({ queryKey: ['reg', 'curricula'] })
     },
     onError: (err) =>
@@ -4356,8 +4990,8 @@ function RegistrarCurriculumInner() {
     mutationFn: () =>
       addCurriculumVersionSubject(selectedVersionId, {
         subjectId: addSubjectId,
-        yearLevel: 1,
-        semester: 1,
+        yearLevel: Number(subjectYear) || 1,
+        semester: Number(subjectSemester) || 1,
       }),
     onSuccess: () => {
       notify({ tone: 'success', title: 'Subject added to curriculum version' })
@@ -4373,6 +5007,7 @@ function RegistrarCurriculumInner() {
     mutationFn: (id: string) => deleteCurriculum(id),
     onSuccess: () => {
       notify({ tone: 'success', title: 'Curriculum deleted' })
+      setDeleteCurriculumTarget(null)
       void qc.invalidateQueries({ queryKey: ['reg', 'curricula'] })
     },
   })
@@ -4380,6 +5015,7 @@ function RegistrarCurriculumInner() {
     mutationFn: (id: string) => deleteSubject(id),
     onSuccess: () => {
       notify({ tone: 'success', title: 'Subject deleted' })
+      setDeleteSubjectTarget(null)
       void qc.invalidateQueries({ queryKey: ['reg', 'subjects'] })
     },
   })
@@ -4387,6 +5023,7 @@ function RegistrarCurriculumInner() {
     mutationFn: (lineId: string) => removeCurriculumVersionSubject(selectedVersionId, lineId),
     onSuccess: () => {
       notify({ tone: 'success', title: 'Subject removed from version' })
+      setRemoveVersionSubjectTarget(null)
       void qc.invalidateQueries({
         queryKey: ['reg', 'curriculum-version-subjects', selectedVersionId],
       })
@@ -4396,6 +5033,7 @@ function RegistrarCurriculumInner() {
     mutationFn: (linkId: string) => removeSubjectPrerequisite(prereqSubjectId, linkId),
     onSuccess: () => {
       notify({ tone: 'success', title: 'Prerequisite removed' })
+      setRemovePrereqTarget(null)
       void qc.invalidateQueries({ queryKey: ['reg', 'subject-prereqs', prereqSubjectId] })
     },
   })
@@ -4403,6 +5041,12 @@ function RegistrarCurriculumInner() {
   const allVersions = (curricula.data ?? []).flatMap((c) =>
     (c.versions ?? []).map((v) => ({ ...v, curriculumCode: c.code, programCode: c.programCode }))
   )
+  const courseVersions = programId
+    ? allVersions.filter((version) => {
+        const curriculum = (curricula.data ?? []).find((row) => row.id === version.curriculumId)
+        return curriculum?.programId === programId
+      })
+    : allVersions
 
   return (
     <div className="space-y-6">
@@ -4419,17 +5063,22 @@ function RegistrarCurriculumInner() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Maintain program curricula with version history, duplication for revisions, and subject
-            placement. Subject catalog hours and prerequisites are managed below.
+            Create subjects in the catalog, then link each one to a course curriculum and set its year
+            and semester. Activate the version when students should be advised on it.
           </p>
           {canWrite ? (
-          <div className="grid gap-3 md:grid-cols-4">
-            <FormField id="currProgram" label="Program">
+          <div className="grid gap-3 md:grid-cols-6">
+            <FormField
+              id="currProgram"
+              label="Course"
+              className="md:col-span-2"
+              description="Create the course under Registrar → Academic structure if it is not in this list."
+            >
               <SearchableSelect
                 id="currProgram"
                 value={programId}
                 onChange={setProgramId}
-                placeholder="Search program code or name…"
+                placeholder="Search course code or name…"
                 options={programRows.map((p) => ({
                   value: p.id,
                   label: `${p.code} — ${p.name}`,
@@ -4445,6 +5094,7 @@ function RegistrarCurriculumInner() {
             <div className="flex items-end">
               <Button
                 type="button"
+                data-testid="create-curriculum"
                 disabled={
                   !programId || !currCode.trim() || !currName.trim() || createCurrMutation.isPending
                 }
@@ -4461,7 +5111,7 @@ function RegistrarCurriculumInner() {
             columns={[
               { key: 'code', header: 'Code' },
               { key: 'name', header: 'Name' },
-              { key: 'programCode', header: 'Program', render: (r) => r.programCode || '—' },
+              { key: 'programCode', header: 'Course', render: (r) => r.programCode || '—' },
               {
                 key: 'versions',
                 header: 'Versions',
@@ -4487,13 +5137,7 @@ function RegistrarCurriculumInner() {
                         size="sm"
                         variant="outline"
                         disabled={deleteCurriculumMutation.isPending}
-                        onClick={() => {
-                          const ok = window.confirm(
-                            `Delete ${row.code}? Active curricula and curricula that still list subjects stay in place.`
-                          )
-                          if (!ok) return
-                          deleteCurriculumMutation.mutate(row.id)
-                        }}
+                        onClick={() => setDeleteCurriculumTarget(row)}
                       >
                         Delete
                       </Button>
@@ -4501,7 +5145,7 @@ function RegistrarCurriculumInner() {
                   )
                 : undefined
             }
-            data={curricula.data ?? []}
+            data={visibleCurricula}
             keyExtractor={(r) => r.id}
           />
 
@@ -4512,9 +5156,9 @@ function RegistrarCurriculumInner() {
                 value={selectedVersionId}
                 onChange={setSelectedVersionId}
                 placeholder="Search curriculum version…"
-                options={allVersions.map((v) => ({
+                options={courseVersions.map((v) => ({
                   value: v.id,
-                  label: `${v.curriculumCode} ${v.versionLabel} (${v.status})`,
+                  label: `${v.programCode || v.curriculumCode} · ${v.curriculumCode} ${v.versionLabel} (${v.status})`,
                 }))}
               />
             </FormField>
@@ -4543,30 +5187,104 @@ function RegistrarCurriculumInner() {
             ) : null}
           </div>
 
+          {programId && !selectedVersionId ? (
+            <p className="text-sm text-muted-foreground">
+              Create the curriculum for this course, then add its subjects.
+            </p>
+          ) : null}
+
           {selectedVersionId ? (
             <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {selectedCurriculum
+                  ? `Subjects for ${selectedCurriculum.programCode || 'this course'} · ${selectedCurriculum.code}`
+                  : 'Subjects for the selected curriculum'}
+              </p>
               {canWrite ? (
-              <div className="grid gap-3 md:grid-cols-3">
-                <FormField id="addSubjectToVersion" label="Add subject to version">
-                  <SearchableSelect
-                    id="addSubjectToVersion"
-                    value={addSubjectId}
-                    onChange={setAddSubjectId}
-                    placeholder="Search subject code or title…"
-                    options={subjectRows.map((s) => ({
-                      value: s.id,
-                      label: `${s.subjectCode} — ${s.title}`,
-                    }))}
-                  />
-                </FormField>
-                <div className="flex items-end">
-                  <Button
-                    type="button"
-                    disabled={!addSubjectId || addLineMutation.isPending}
-                    onClick={() => addLineMutation.mutate()}
-                  >
-                    Add to version
-                  </Button>
+              <div className="space-y-3 rounded-xl border border-[var(--color-border)] p-4">
+                <p className="text-sm font-medium text-[var(--color-ink)]">Add a subject to this course</p>
+                <div className="grid gap-3 md:grid-cols-6">
+                  <FormField id="newSubjectCode" label="Code">
+                    <Input
+                      id="newSubjectCode"
+                      value={subjectCode}
+                      onChange={(e) => setSubjectCode(e.target.value)}
+                    />
+                  </FormField>
+                  <FormField id="newSubjectTitle" label="Title" className="md:col-span-2">
+                    <Input
+                      id="newSubjectTitle"
+                      value={subjectTitle}
+                      onChange={(e) => setSubjectTitle(e.target.value)}
+                    />
+                  </FormField>
+                  <FormField id="newUnits" label="Units">
+                    <Input id="newUnits" value={units} onChange={(e) => setUnits(e.target.value)} />
+                  </FormField>
+                  <FormField id="subjectYear" label="Year">
+                    <Input
+                      id="subjectYear"
+                      value={subjectYear}
+                      onChange={(e) => setSubjectYear(e.target.value)}
+                    />
+                  </FormField>
+                  <FormField id="subjectSemester" label="Semester">
+                    <Input
+                      id="subjectSemester"
+                      value={subjectSemester}
+                      onChange={(e) => setSubjectSemester(e.target.value)}
+                    />
+                  </FormField>
+                </div>
+                <div className="grid gap-3 md:grid-cols-6">
+                  <FormField id="newLec" label="Lecture hours">
+                    <Input
+                      id="newLec"
+                      value={lectureHours}
+                      onChange={(e) => setLectureHours(e.target.value)}
+                    />
+                  </FormField>
+                  <FormField id="newLab" label="Lab hours">
+                    <Input id="newLab" value={labHours} onChange={(e) => setLabHours(e.target.value)} />
+                  </FormField>
+                  <div className="flex items-end md:col-span-2">
+                    <Button
+                      type="button"
+                      data-testid="add-curriculum-subject"
+                      disabled={
+                        !subjectCode.trim() ||
+                        !subjectTitle.trim() ||
+                        createSubjectMutation.isPending
+                      }
+                      onClick={() => createSubjectMutation.mutate()}
+                    >
+                      Add curriculum subject
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <FormField id="addSubjectToVersion" label="Or place an existing subject">
+                    <SearchableSelect
+                      id="addSubjectToVersion"
+                      value={addSubjectId}
+                      onChange={setAddSubjectId}
+                      placeholder="Search subject code or title…"
+                      options={subjectRows.map((s) => ({
+                        value: s.id,
+                        label: `${s.subjectCode} — ${s.title}`,
+                      }))}
+                    />
+                  </FormField>
+                  <div className="flex items-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={!addSubjectId || addLineMutation.isPending}
+                      onClick={() => addLineMutation.mutate()}
+                    >
+                      Place on this curriculum
+                    </Button>
+                  </div>
                 </div>
               </div>
               ) : null}
@@ -4587,13 +5305,7 @@ function RegistrarCurriculumInner() {
                           size="sm"
                           variant="outline"
                           disabled={removeLineMutation.isPending}
-                          onClick={() => {
-                            const ok = window.confirm(
-                              `Remove ${row.subjectCode || 'this subject'} from the version?`
-                            )
-                            if (!ok) return
-                            removeLineMutation.mutate(row.id)
-                          }}
+                          onClick={() => setRemoveVersionSubjectTarget(row)}
                         >
                           Remove
                         </Button>
@@ -4613,49 +5325,6 @@ function RegistrarCurriculumInner() {
           <CardTitle>Subject catalog</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {canWrite ? (
-            <>
-          <div className="grid gap-3 md:grid-cols-5">
-            <FormField id="newSubjectCode" label="Code">
-              <Input
-                id="newSubjectCode"
-                value={subjectCode}
-                onChange={(e) => setSubjectCode(e.target.value)}
-              />
-            </FormField>
-            <FormField id="newSubjectTitle" label="Title">
-              <Input
-                id="newSubjectTitle"
-                value={subjectTitle}
-                onChange={(e) => setSubjectTitle(e.target.value)}
-              />
-            </FormField>
-            <FormField id="newUnits" label="Units">
-              <Input id="newUnits" value={units} onChange={(e) => setUnits(e.target.value)} />
-            </FormField>
-            <FormField id="newLec" label="Lecture hours">
-              <Input
-                id="newLec"
-                value={lectureHours}
-                onChange={(e) => setLectureHours(e.target.value)}
-              />
-            </FormField>
-            <FormField id="newLab" label="Lab hours">
-              <Input id="newLab" value={labHours} onChange={(e) => setLabHours(e.target.value)} />
-            </FormField>
-          </div>
-          <Button
-            type="button"
-            disabled={
-              !subjectCode.trim() || !subjectTitle.trim() || createSubjectMutation.isPending
-            }
-            onClick={() => createSubjectMutation.mutate()}
-          >
-            Add subject
-          </Button>
-            </>
-          ) : null}
-
           <div className="grid gap-3 md:grid-cols-3">
             <FormField id="prereqSubject" label="Subject">
               <SearchableSelect
@@ -4723,11 +5392,7 @@ function RegistrarCurriculumInner() {
                         size="sm"
                         variant="outline"
                         disabled={removePrereqMutation.isPending}
-                        onClick={() => {
-                          const ok = window.confirm(`Remove prerequisite ${row.subjectCode || ''}?`)
-                          if (!ok) return
-                          removePrereqMutation.mutate(row.id)
-                        }}
+                        onClick={() => setRemovePrereqTarget(row)}
                       >
                         Remove
                       </Button>
@@ -4741,6 +5406,65 @@ function RegistrarCurriculumInner() {
         </CardContent>
       </Card>
 
+      {canWrite ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>New subject</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-6">
+              <FormField id="catalogSubjectCode" label="Code" required>
+                <Input
+                  id="catalogSubjectCode"
+                  value={catalogCode}
+                  onChange={(event) => setCatalogCode(event.target.value)}
+                />
+              </FormField>
+              <FormField id="catalogSubjectTitle" label="Title" required className="md:col-span-2">
+                <Input
+                  id="catalogSubjectTitle"
+                  value={catalogTitle}
+                  onChange={(event) => setCatalogTitle(event.target.value)}
+                />
+              </FormField>
+              <FormField id="catalogSubjectUnits" label="Units">
+                <Input
+                  id="catalogSubjectUnits"
+                  value={catalogUnits}
+                  onChange={(event) => setCatalogUnits(event.target.value)}
+                />
+              </FormField>
+              <FormField id="catalogSubjectLec" label="Lecture hours">
+                <Input
+                  id="catalogSubjectLec"
+                  value={catalogLectureHours}
+                  onChange={(event) => setCatalogLectureHours(event.target.value)}
+                />
+              </FormField>
+              <FormField id="catalogSubjectLab" label="Lab hours">
+                <Input
+                  id="catalogSubjectLab"
+                  value={catalogLabHours}
+                  onChange={(event) => setCatalogLabHours(event.target.value)}
+                />
+              </FormField>
+              <div className="flex items-end md:col-span-2">
+                <Button
+                  type="button"
+                  data-testid="create-catalog-subject"
+                  disabled={
+                    !catalogCode.trim() || !catalogTitle.trim() || createCatalogSubjectMutation.isPending
+                  }
+                  onClick={() => createCatalogSubjectMutation.mutate()}
+                >
+                  Create subject
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <QueryPage
         title="Subjects"
         query={subjects}
@@ -4748,6 +5472,8 @@ function RegistrarCurriculumInner() {
         onSearchChange={controls.setSearch}
         page={controls.page}
         lastPage={subjects.data?.meta.lastPage}
+        pageSize={controls.pageSize}
+        onPageSizeChange={controls.setPageSize}
         onPageChange={controls.setPage}
         isEmpty={(d) => d.data.length === 0}
       >
@@ -4768,6 +5494,11 @@ function RegistrarCurriculumInner() {
                 header: 'Lab',
                 render: (r) => r.laboratoryHours ?? '—',
               },
+              {
+                key: 'programId',
+                header: 'Course',
+                render: (r) => programRows.find((program) => program.id === r.programId)?.code || '—',
+              },
             ]}
             actions={
               canWrite
@@ -4777,7 +5508,7 @@ function RegistrarCurriculumInner() {
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={() => setEditing({ kind: 'subject', row })}
+                        onClick={() => setSubjectEditor(row)}
                       >
                         Edit
                       </Button>
@@ -4785,14 +5516,16 @@ function RegistrarCurriculumInner() {
                         type="button"
                         size="sm"
                         variant="outline"
+                        onClick={() => setLinkSubject(row)}
+                      >
+                        Link
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
                         disabled={deleteSubjectMutation.isPending}
-                        onClick={() => {
-                          const ok = window.confirm(
-                            `Delete ${row.subjectCode}? Subjects already used by classes or curricula stay in place.`
-                          )
-                          if (!ok) return
-                          deleteSubjectMutation.mutate(row.id)
-                        }}
+                        onClick={() => setDeleteSubjectTarget(row)}
                       >
                         Delete
                       </Button>
@@ -4805,6 +5538,78 @@ function RegistrarCurriculumInner() {
           />
         )}
       </QueryPage>
+      <SubjectEditModal
+        key={subjectEditor?.id ?? 'closed'}
+        subject={subjectEditor}
+        onClose={() => setSubjectEditor(null)}
+      />
+      <SubjectLinkModal
+        key={linkSubject?.id ?? 'link-closed'}
+        subject={linkSubject}
+        programs={programRows}
+        curricula={curricula.data ?? []}
+        onClose={() => setLinkSubject(null)}
+      />
+      <ConfirmDialog
+        open={deleteSubjectTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteSubjectTarget(null)
+        }}
+        title={`Delete ${deleteSubjectTarget?.subjectCode ?? 'subject'}?`}
+        description="This removes the subject from the catalog. A subject already used by a class or curriculum stays in place."
+        confirmLabel="Delete"
+        tone="destructive"
+        loading={deleteSubjectMutation.isPending}
+        onConfirm={() => {
+          if (!deleteSubjectTarget) return
+          deleteSubjectMutation.mutate(deleteSubjectTarget.id)
+        }}
+      />
+      <ConfirmDialog
+        open={deleteCurriculumTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteCurriculumTarget(null)
+        }}
+        title={`Delete ${deleteCurriculumTarget?.code ?? 'curriculum'}?`}
+        description="Active curricula and curricula that still list subjects stay in place."
+        confirmLabel="Delete"
+        tone="destructive"
+        loading={deleteCurriculumMutation.isPending}
+        onConfirm={() => {
+          if (!deleteCurriculumTarget) return
+          deleteCurriculumMutation.mutate(deleteCurriculumTarget.id)
+        }}
+      />
+      <ConfirmDialog
+        open={removeVersionSubjectTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setRemoveVersionSubjectTarget(null)
+        }}
+        title={`Remove ${removeVersionSubjectTarget?.subjectCode || 'this subject'}?`}
+        description="This takes the subject off the selected curriculum version. The catalog subject stays."
+        confirmLabel="Remove"
+        tone="destructive"
+        loading={removeLineMutation.isPending}
+        onConfirm={() => {
+          if (!removeVersionSubjectTarget) return
+          removeLineMutation.mutate(removeVersionSubjectTarget.id)
+        }}
+      />
+      <ConfirmDialog
+        open={removePrereqTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setRemovePrereqTarget(null)
+        }}
+        title={`Remove prerequisite ${removePrereqTarget?.subjectCode || ''}?`}
+        description="The subject stays in the catalog. Only this prerequisite link is removed."
+        confirmLabel="Remove"
+        tone="destructive"
+        loading={removePrereqMutation.isPending}
+        onConfirm={() => {
+          if (!removePrereqTarget) return
+          removePrereqMutation.mutate(removePrereqTarget.id)
+        }}
+      />
     </div>
   )
 }
@@ -4820,7 +5625,7 @@ export function RegistrarGradesPage() {
 function RegistrarGradesInner() {
   const controls = useListControls()
   const query = usePaginatedQuery({
-    queryKey: ['reg', 'grades', controls.page],
+    queryKey: ['reg', 'grades', controls.page, controls.pageSize],
     queryFn: () => fetchGrades({ page: controls.page, limit: controls.pageSize }),
   })
   return (
@@ -4829,6 +5634,8 @@ function RegistrarGradesInner() {
       query={query}
       page={controls.page}
       lastPage={query.data?.meta.lastPage}
+      pageSize={controls.pageSize}
+      onPageSizeChange={controls.setPageSize}
       onPageChange={controls.setPage}
       isEmpty={(d) => d.data.length === 0}
     >
@@ -4932,16 +5739,16 @@ function RegistrarAccountMonitorPanel() {
         {monitor.data ? (
           <>
             <div className="grid gap-3 sm:grid-cols-3">
-              <DashboardCard title="Open deficiencies" value={monitor.data.openDeficiencyCount} />
+              <DashboardCard title="Open deficiencies" value={formatNumber(monitor.data.openDeficiencyCount)} />
               <DashboardCard
                 title="Tuition balance"
                 value={
                   monitor.data.tuitionBalance
-                    ? Number(monitor.data.tuitionBalance.balanceAmount).toFixed(2)
+                    ? formatCurrency(monitor.data.tuitionBalance.balanceAmount)
                     : '—'
                 }
               />
-              <DashboardCard title="Running grades" value={monitor.data.runningGrades.length} />
+              <DashboardCard title="Running grades" value={formatNumber(monitor.data.runningGrades.length)} />
             </div>
             <Button
               type="button"
@@ -4990,6 +5797,7 @@ function RegistrarRequirementsInner() {
   const [studentId, setStudentId] = useState('')
   const [code, setCode] = useState('FORM-137')
   const [description, setDescription] = useState('')
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; code: string } | null>(null)
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -5110,12 +5918,7 @@ function RegistrarRequirementsInner() {
                 key: 'actions',
                 header: 'Actions',
                 render: (r) => {
-                  const runAction = (
-                    label: string,
-                    action: () => Promise<unknown>,
-                    confirmText?: string
-                  ) => {
-                    if (confirmText && !window.confirm(confirmText)) return
+                  const runAction = (label: string, action: () => Promise<unknown>) => {
                     void action()
                       .then(() => {
                         notify({ tone: 'success', title: label })
@@ -5182,11 +5985,10 @@ function RegistrarRequirementsInner() {
                         size="sm"
                         variant="outline"
                         onClick={() =>
-                          runAction(
-                            'Deleted',
-                            () => deleteStudentRequirement(r.id),
-                            `Delete requirement ${r.requirementCode ?? r.id}? This cannot be undone.`
-                          )
+                          setPendingDelete({
+                            id: r.id,
+                            code: r.requirementCode ?? r.id,
+                          })
                         }
                       >
                         Delete
@@ -5201,6 +6003,33 @@ function RegistrarRequirementsInner() {
           />
         )}
       </QueryPage>
+      <ConfirmDialog
+        open={pendingDelete != null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null)
+        }}
+        title={`Delete requirement ${pendingDelete?.code ?? ''}?`}
+        description="This cannot be undone."
+        confirmLabel="Delete"
+        tone="destructive"
+        onConfirm={() => {
+          if (!pendingDelete) return
+          const target = pendingDelete
+          setPendingDelete(null)
+          void deleteStudentRequirement(target.id)
+            .then(() => {
+              notify({ tone: 'success', title: 'Deleted' })
+              refresh()
+            })
+            .catch((err) =>
+              notify({
+                tone: 'danger',
+                title: 'Delete failed',
+                description: getApiErrorMessage(err),
+              })
+            )
+        }}
+      />
     </div>
   )
 }
@@ -5260,7 +6089,7 @@ function RegistrarRegistrationInner() {
       notify({
         tone: 'success',
         title: 'Assessment prepared',
-        description: net > 0 ? `Net assessed: ${net.toFixed(2)}` : undefined,
+        description: net > 0 ? `Net assessed: ${formatCurrency(net)}` : undefined,
       })
       refreshEnrollment()
     },
@@ -5491,7 +6320,7 @@ function RegistrarAnnouncementsInner() {
   const { notify } = useNotification()
   const qc = useQueryClient()
   const list = usePaginatedQuery({
-    queryKey: ['reg', 'announcements', controls.page],
+    queryKey: ['reg', 'announcements', controls.page, controls.pageSize],
     queryFn: () => fetchAnnouncements({ page: controls.page, limit: controls.pageSize }),
   })
   const settings = useQuery({
@@ -6014,7 +6843,16 @@ function RegistrarAnnouncementsInner() {
           </form>
         </CardContent>
       </Card>
-      <QueryPage title="Announcements" query={list} isEmpty={(d) => d.data.length === 0}>
+      <QueryPage
+        title="Announcements"
+        query={list}
+        page={controls.page}
+        lastPage={list.data?.meta.lastPage}
+        pageSize={controls.pageSize}
+        onPageSizeChange={controls.setPageSize}
+        onPageChange={controls.setPage}
+        isEmpty={(d) => d.data.length === 0}
+      >
         {(page) => (
           <DataTable
             label="Announcements"

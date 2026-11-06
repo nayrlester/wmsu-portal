@@ -31,6 +31,7 @@ import { batchCheckinCopies, batchCheckoutCopies, saveCategoryLoanRules, type Ba
 import { getApiErrorMessage } from '@/lib/api-client'
 import type { Borrowing, BorrowingStatus } from '@/types/borrowings'
 import { cn } from '@/lib/utils'
+import { RowsPerPageSelect } from '@/components/rows-per-page'
 
 const STATUS_TABS: Array<{ value: BorrowingStatus | 'all'; label: string }> = [
   { value: 'all', label: 'All' },
@@ -68,6 +69,7 @@ export function CirculationPage() {
     statusFilter,
     setSearch,
     setPage,
+    setPerPage,
     setStatusFilter,
     openRequestModal,
     openReturnPanel,
@@ -499,11 +501,14 @@ export function CirculationPage() {
             </CardContent>
           </Card>
 
-          {data && data.meta.totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-500">
-                Page {data.meta.page} of {data.meta.totalPages} ({data.meta.total} total)
-              </p>
+          {data?.meta ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-sm text-slate-500">
+                  Page {data.meta.page} of {data.meta.totalPages} ({data.meta.total} total)
+                </p>
+                <RowsPerPageSelect value={perPage} onChange={setPerPage} />
+              </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -523,7 +528,7 @@ export function CirculationPage() {
                 </Button>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         {canReadFines && (

@@ -27,6 +27,7 @@ import {
   BarChart3,
   Megaphone,
   ClipboardCheck,
+  Settings,
 } from 'lucide-react'
 import {
   hasAnyPermission,
@@ -353,6 +354,19 @@ export const NAV_GROUPS: UsisNavGroup[] = [
         path: '/registrar/faculty-eval',
         icon: ClipboardCheck,
         permissions: ['faculty_eval.read'],
+      },
+    ],
+  },
+  {
+    id: 'administration',
+    label: 'Administration',
+    items: [
+      {
+        id: 'admin-settings',
+        label: 'Settings',
+        path: '/registrar/settings',
+        icon: Settings,
+        permissions: ['academic.read', 'academic.write'],
       },
     ],
   },

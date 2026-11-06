@@ -1,4 +1,4 @@
-export { cn } from './lib/utils'
+export { cn, formatCurrency, formatNumber } from './lib/utils'
 
 export { Button, buttonVariants, type ButtonProps } from './components/button'
 export { Input, type InputProps } from './components/input'

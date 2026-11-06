@@ -11,6 +11,7 @@ interface CirculationState {
   selectedBorrowingId: string | null
   setSearch: (search: string) => void
   setPage: (page: number) => void
+  setPerPage: (perPage: number) => void
   setStatusFilter: (status: BorrowingStatus | 'all') => void
   openRequestModal: () => void
   closeRequestModal: () => void
@@ -28,6 +29,7 @@ export const useCirculationStore = create<CirculationState>((set) => ({
   selectedBorrowingId: null,
   setSearch: (search) => set({ search, page: 1 }),
   setPage: (page) => set({ page }),
+  setPerPage: (perPage) => set({ perPage, page: 1 }),
   setStatusFilter: (statusFilter) => set({ statusFilter, page: 1 }),
   openRequestModal: () => set({ showRequestModal: true }),
   closeRequestModal: () => set({ showRequestModal: false }),
