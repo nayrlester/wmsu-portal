@@ -55,6 +55,12 @@ export default class IntegrationsController {
     return ctx.response.ok({ success: true, data: this.service.status() })
   }
 
+  async syncEnrollment(ctx: HttpContext) {
+    this.ensureAdmin(ctx)
+    const result = await this.service.syncFromEnrollment()
+    return ctx.response.ok({ success: true, data: result })
+  }
+
   async syncAris(ctx: HttpContext) {
     this.ensureAdmin(ctx)
     const payload = await ctx.request.validateUsing(arisValidator)

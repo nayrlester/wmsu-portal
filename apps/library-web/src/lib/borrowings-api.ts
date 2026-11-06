@@ -5,6 +5,7 @@ import type {
   Borrowing,
   BorrowingDashboard,
   BorrowingListParams,
+  CirculationLoanRules,
   DirectCheckoutPayload,
   RequestBorrowPayload,
 } from '@/types/borrowings'
@@ -58,6 +59,37 @@ export async function returnBorrowing(id: string, notes?: string) {
 
 export async function markBorrowingLost(id: string) {
   const { data } = await apiClient.post<ApiResponse<Borrowing>>(`/borrowings/${id}/mark-lost`)
+  return data.data
+}
+
+export async function batchCheckoutCopies(payload: { cardNumber: string; barcodes: string[] }) {
+  const { data } = await apiClient.post<ApiResponse<BatchDeskResult>>('/borrowings/batch/checkout', payload)
+  return data.data
+}
+
+export async function batchCheckinCopies(payload: { barcodes: string[] }) {
+  const { data } = await apiClient.post<ApiResponse<BatchDeskResult>>('/borrowings/batch/checkin', payload)
+  return data.data
+}
+
+export interface BatchDeskLine {
+  barcode: string
+  ok: boolean
+  message: string
+  transactionNumber: string | null
+  status: string | null
+  bookTitle: string | null
+}
+
+export interface BatchDeskResult {
+  action: 'checkout' | 'checkin'
+  lines: BatchDeskLine[]
+}
+
+export async function saveCategoryLoanRules(categories: CirculationLoanRules['categories']) {
+  const { data } = await apiClient.patch<ApiResponse<CirculationLoanRules>>('/borrowings/loan-rules', {
+    categories,
+  })
   return data.data
 }
 

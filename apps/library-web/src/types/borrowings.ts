@@ -29,6 +29,13 @@ export interface Borrowing {
   createdAt: string
 }
 
+export interface CategoryLoanRule {
+  loanPeriodDays: number
+  renewalPeriodDays: number
+  maxRenewals: number
+  maxActiveBorrowings: number
+}
+
 export interface CirculationLoanRules {
   loanPeriodDays: number
   renewalPeriodDays: number
@@ -39,6 +46,7 @@ export interface CirculationLoanRules {
   maxActiveBorrowings: number
   holdPickupDays: number
   policyNote?: string
+  categories?: Partial<Record<'student' | 'faculty' | 'employee' | 'alumni', CategoryLoanRule>>
 }
 
 export interface BorrowingDashboard {
@@ -56,6 +64,7 @@ export interface BorrowingListParams {
   search?: string
   status?: BorrowingStatus
   memberId?: string
+  copyId?: string
   page?: number
   perPage?: number
 }

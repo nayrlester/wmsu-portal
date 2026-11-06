@@ -10,10 +10,12 @@ import {
   accessRepositoryItem,
   createEresource,
   createRepositoryItem,
+  openEresource,
   digitalUnifiedSearch,
   fetchEresources,
   fetchRepository,
   type EresourceItem,
+  type EresourceKind,
   type RepositoryItem,
   type RepositoryResourceType,
 } from '@/lib/digital-api'
@@ -37,6 +39,13 @@ function isPdfUrl(url: string) {
   return cleaned.endsWith('.pdf') || cleaned.includes('/pdf')
 }
 
+function accessLabel(method: string) {
+  if (method === 'sso') return 'Single sign-on'
+  if (method === 'proxy') return 'Proxy link'
+  if (method === 'open') return 'Open link'
+  return method
+}
+
 function openExternal(url: string) {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
@@ -54,9 +63,17 @@ export function DigitalPage() {
 
   const [repoTitle, setRepoTitle] = useState('')
   const [repoType, setRepoType] = useState<RepositoryResourceType>('thesis')
+  const [repoAuthors, setRepoAuthors] = useState('')
+  const [repoSubjects, setRepoSubjects] = useState('')
+  const [repoYear, setRepoYear] = useState('')
+  const [repoAbstract, setRepoAbstract] = useState('')
+  const [repoAccess, setRepoAccess] = useState<'public' | 'restricted'>('public')
   const [repoFileUrl, setRepoFileUrl] = useState('')
 
   const [erTitle, setErTitle] = useState('')
+  const [erKind, setErKind] = useState<EresourceKind>('database')
+  const [erProvider, setErProvider] = useState('')
+  const [erAuth, setErAuth] = useState('sso')
   const [erAccessUrl, setErAccessUrl] = useState('')
 
   const { data: repo } = useQuery({
@@ -80,6 +97,11 @@ export function DigitalPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['digital-repo'] })
       setRepoTitle('')
+      setRepoAuthors('')
+      setRepoSubjects('')
+      setRepoYear('')
+      setRepoAbstract('')
+      setRepoAccess('public')
       setRepoFileUrl('')
       setRepoType('thesis')
       toast.success('Repository item created')
@@ -92,6 +114,9 @@ export function DigitalPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['eresources'] })
       setErTitle('')
+      setErKind('database')
+      setErProvider('')
+      setErAuth('sso')
       setErAccessUrl('')
       toast.success('E-resource registered')
     },
@@ -165,6 +190,7 @@ export function DigitalPage() {
               >
                 <p>
                   <span className="text-slate-500">[repository]</span> {item.title} · {item.type}
+                  {item.accessLevel ? ` · ${item.accessLevel}` : ''}
                 </p>
                 {canAccess && (
                   <div className="flex gap-2">
@@ -257,9 +283,15 @@ export function DigitalPage() {
                 className="space-y-3"
                 onSubmit={(e) => {
                   e.preventDefault()
+                  const year = Number(repoYear)
                   createRepoMut.mutate({
                     title: repoTitle.trim(),
                     resourceType: repoType,
+                    authors: repoAuthors.trim() || undefined,
+                    subjects: repoSubjects.trim() || undefined,
+                    publicationYear: Number.isFinite(year) && repoYear.trim() ? year : undefined,
+                    abstract: repoAbstract.trim() || undefined,
+                    accessLevel: repoAccess,
                     fileUrl: repoFileUrl.trim() || undefined,
                   })
                 }}
@@ -289,6 +321,41 @@ export function DigitalPage() {
                   </select>
                 </div>
                 <div className="space-y-1">
+                  <Label htmlFor="repo-authors">Authors</Label>
+                  <Input id="repo-authors" value={repoAuthors} onChange={(e) => setRepoAuthors(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="repo-subjects">Subjects</Label>
+                  <Input id="repo-subjects" value={repoSubjects} onChange={(e) => setRepoSubjects(e.target.value)} />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="repo-year">Year</Label>
+                    <Input id="repo-year" inputMode="numeric" value={repoYear} onChange={(e) => setRepoYear(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="repo-access">Access</Label>
+                    <select
+                      id="repo-access"
+                      className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm"
+                      value={repoAccess}
+                      onChange={(e) => setRepoAccess(e.target.value as 'public' | 'restricted')}
+                    >
+                      <option value="public">Public</option>
+                      <option value="restricted">Restricted</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="repo-abstract">Abstract</Label>
+                  <textarea
+                    id="repo-abstract"
+                    className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                    value={repoAbstract}
+                    onChange={(e) => setRepoAbstract(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
                   <Label htmlFor="repo-file">File URL</Label>
                   <Input
                     id="repo-file"
@@ -314,8 +381,10 @@ export function DigitalPage() {
                   e.preventDefault()
                   createErMut.mutate({
                     title: erTitle.trim(),
+                    resourceKind: erKind,
+                    provider: erProvider.trim() || undefined,
+                    authMethod: erAuth,
                     accessUrl: erAccessUrl.trim() || undefined,
-                    resourceKind: 'open_access',
                   })
                 }}
               >
@@ -327,6 +396,39 @@ export function DigitalPage() {
                     onChange={(e) => setErTitle(e.target.value)}
                     required
                   />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="er-kind">Kind</Label>
+                  <select
+                    id="er-kind"
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm"
+                    value={erKind}
+                    onChange={(e) => setErKind(e.target.value as EresourceKind)}
+                  >
+                    <option value="database">Database</option>
+                    <option value="ebook">E-book</option>
+                    <option value="ejournal">E-journal</option>
+                    <option value="open_access">Open access</option>
+                    <option value="multimedia">Multimedia</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="er-provider">Provider</Label>
+                  <Input id="er-provider" value={erProvider} onChange={(e) => setErProvider(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="er-auth">Patron access</Label>
+                  <select
+                    id="er-auth"
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm"
+                    value={erAuth}
+                    onChange={(e) => setErAuth(e.target.value)}
+                  >
+                    <option value="sso">Single sign-on</option>
+                    <option value="open">Open link</option>
+                    <option value="proxy">Proxy link</option>
+                  </select>
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="er-url">Access URL</Label>
@@ -361,12 +463,13 @@ export function DigitalPage() {
                   <p className="text-slate-500">
                     {item.resourceType}
                     {item.authors ? ` · ${item.authors}` : ''}
+                    {item.accessLevel ? ` · ${item.accessLevel}` : ''}
                   </p>
                   <p className="text-xs text-slate-400">
                     Views {item.viewCount ?? 0} · Downloads {item.downloadCount ?? 0}
                   </p>
                 </div>
-                {canAccess && (
+                {canAccess && (item.accessLevel !== 'restricted' || canCreate) && (
                   <div className="flex shrink-0 gap-2">
                     <Button
                       size="sm"
@@ -405,14 +508,23 @@ export function DigitalPage() {
                   <p className="text-slate-500">
                     {item.resourceKind}
                     {item.provider ? ` · ${item.provider}` : ''}
+                    {item.authMethod ? ` · ${accessLabel(item.authMethod)}` : ''}
                   </p>
+                  <p className="text-xs text-slate-400">Views {item.viewCount ?? 0}</p>
                 </div>
                 {item.accessUrl ? (
                   <Button
                     size="sm"
                     variant="outline"
                     className="shrink-0"
-                    onClick={() => openExternal(item.accessUrl!)}
+                    onClick={() => {
+                      void openEresource(item.id)
+                        .then((opened) => {
+                          qc.invalidateQueries({ queryKey: ['eresources'] })
+                          if (opened.accessUrl) openExternal(opened.accessUrl)
+                        })
+                        .catch((err) => toast.error(getApiErrorMessage(err)))
+                    }}
                   >
                     <ExternalLink className="mr-1 h-3.5 w-3.5" />
                     Open

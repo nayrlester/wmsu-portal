@@ -21,6 +21,17 @@ export const BORROWING_DEFAULTS = {
     'Interim configurable defaults pending official WMSU patron-category loan tables (LIB-005 FC)',
 } as const
 
+export const PATRON_RULE_CATEGORIES = ['student', 'faculty', 'employee', 'alumni'] as const
+
+export type PatronRuleCategory = (typeof PATRON_RULE_CATEGORIES)[number]
+
+export type CategoryLoanRule = {
+  loanPeriodDays: number
+  renewalPeriodDays: number
+  maxRenewals: number
+  maxActiveBorrowings: number
+}
+
 export type CirculationLoanRules = {
   loanPeriodDays: number
   renewalPeriodDays: number
@@ -31,6 +42,7 @@ export type CirculationLoanRules = {
   maxActiveBorrowings: number
   holdPickupDays: number
   policyNote?: string
+  categories: Record<PatronRuleCategory, CategoryLoanRule>
 }
 
 export function normalizeCirculationRules(
@@ -42,16 +54,45 @@ export function normalizeCirculationRules(
     return Math.min(max, Math.max(min, Math.trunc(value)))
   }
 
-  return {
+  const base: CategoryLoanRule = {
     loanPeriodDays: n('loanPeriodDays', 1, 365),
     renewalPeriodDays: n('renewalPeriodDays', 1, 365),
     maxRenewals: n('maxRenewals', 0, 20),
+    maxActiveBorrowings: n('maxActiveBorrowings', 1, 100),
+  }
+  const stored = raw?.categories
+  const categorySource =
+    stored && typeof stored === 'object' ? (stored as Record<string, unknown>) : {}
+
+  const categories = Object.fromEntries(
+    PATRON_RULE_CATEGORIES.map((category) => {
+      const row = categorySource[category]
+      const source = row && typeof row === 'object' ? (row as Record<string, unknown>) : {}
+      const pick = (key: keyof CategoryLoanRule, min: number, max: number) => {
+        const value = Number(source[key])
+        if (!Number.isFinite(value)) return base[key]
+        return Math.min(max, Math.max(min, Math.trunc(value)))
+      }
+      return [
+        category,
+        {
+          loanPeriodDays: pick('loanPeriodDays', 1, 365),
+          renewalPeriodDays: pick('renewalPeriodDays', 1, 365),
+          maxRenewals: pick('maxRenewals', 0, 20),
+          maxActiveBorrowings: pick('maxActiveBorrowings', 1, 100),
+        },
+      ]
+    })
+  ) as Record<PatronRuleCategory, CategoryLoanRule>
+
+  return {
+    ...base,
     finePerDayCents: n('finePerDayCents', 0, 100_000),
     maxFineCents: n('maxFineCents', 0, 10_000_000),
     lostBookPenaltyCents: n('lostBookPenaltyCents', 0, 10_000_000),
-    maxActiveBorrowings: n('maxActiveBorrowings', 1, 100),
     holdPickupDays: n('holdPickupDays', 1, 30),
     policyNote:
       typeof raw?.policyNote === 'string' ? raw.policyNote : BORROWING_DEFAULTS.policyNote,
+    categories,
   }
 }

@@ -46,6 +46,9 @@ const AlumniPage = lazy(() =>
 const ReportsPage = lazy(() =>
   import('@/features/reports/pages/reports-page').then((m) => ({ default: m.ReportsPage }))
 )
+const AcademicSyncPage = lazy(() =>
+  import('@/features/sync/pages/academic-sync-page').then((m) => ({ default: m.AcademicSyncPage }))
+)
 const CertRequestsPage = lazy(() =>
   import('@/features/certifications/pages/cert-requests-page').then((m) => ({
     default: m.CertRequestsPage,
@@ -152,6 +155,7 @@ export function App() {
             <Route path="certifications/:idOrNumber" element={<CertRequestDetailPage />} />
             <Route path="alumni" element={<AlumniPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="academic-sync" element={<AcademicSyncPage />} />
             <Route path="foundation" element={<Navigate to="/dashboard" replace />} />
             <Route path="organization" element={<OrganizationPage />} />
             <Route path="users" element={<UsersPage />} />

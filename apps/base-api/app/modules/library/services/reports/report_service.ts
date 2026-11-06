@@ -3,6 +3,7 @@ import db from '@adonisjs/lucid/services/db'
 import { borrowingTenantId } from '#modules/library/services/borrowing/borrowing_helpers'
 import { formatMoneyFromCents } from '#modules/library/helpers/currency'
 import { buildReportPdf } from '#modules/library/services/reports/report_pdf'
+import HardwareService from '#modules/library/services/hardware/hardware_service'
 
 export type ReportType =
   | 'collections'
@@ -19,6 +20,7 @@ export type ReportType =
   | 'search_terms'
   | 'digital_usage'
   | 'user_activity'
+  | 'shelf_discrepancy'
 
 export const REPORT_TYPE_META: Array<{
   type: ReportType
@@ -110,6 +112,12 @@ export const REPORT_TYPE_META: Array<{
     tor: ['LIB-029'],
     description: 'Library attendance events by day',
   },
+  {
+    type: 'shelf_discrepancy',
+    label: 'Shelf discrepancy',
+    tor: ['LIB-013', 'LIB-018'],
+    description: 'Latest shelf scan: seen, missing, not on this shelf, and unknown reads',
+  },
 ]
 
 export interface ReportFilters {
@@ -156,6 +164,8 @@ export default class ReportService {
         return this.digitalUsageReport(tid)
       case 'user_activity':
         return this.userActivityReport(tid, from, to)
+      case 'shelf_discrepancy':
+        return this.shelfDiscrepancyReport(from, to)
       default:
         throw new Error(`Unknown report type: ${type}`)
     }
@@ -565,5 +575,57 @@ export default class ReportService {
       params
     )
     return result.rows as Record<string, unknown>[]
+  }
+
+  private async shelfDiscrepancyReport(from: DateTime | null, to: DateTime | null) {
+    const hardware = new HardwareService()
+    const summaries = await hardware.listShelfCounts(20)
+    const inRange = summaries.filter((summary) => {
+      if (!summary.createdAt) return false
+      const countedAt = DateTime.fromISO(summary.createdAt)
+      if (!countedAt.isValid) return false
+      if (from && countedAt < from) return false
+      if (to && countedAt > to) return false
+      return true
+    })
+    const latest = inRange[0]
+    if (!latest) return []
+    const report = await hardware.shelfCountReport(latest.id)
+    const countedAt = latest.createdAt
+    const base = { shelf_code: report.shelfCode, counted_at: countedAt }
+    return [
+      ...report.seen.map((copy) => ({
+        ...base,
+        outcome: 'Seen',
+        barcode: copy.barcode,
+        title: copy.bookTitle,
+        copy_status: copy.copyStatus,
+        recorded_shelf: report.shelfCode,
+      })),
+      ...report.missing.map((copy) => ({
+        ...base,
+        outcome: 'Missing',
+        barcode: copy.barcode,
+        title: copy.bookTitle,
+        copy_status: copy.copyStatus,
+        recorded_shelf: report.shelfCode,
+      })),
+      ...report.elsewhere.map((copy) => ({
+        ...base,
+        outcome: 'Not on this shelf',
+        barcode: copy.barcode,
+        title: copy.bookTitle,
+        copy_status: null,
+        recorded_shelf: copy.shelfLocation,
+      })),
+      ...report.unknown.map((value) => ({
+        ...base,
+        outcome: 'Unknown',
+        barcode: value,
+        title: null,
+        copy_status: null,
+        recorded_shelf: null,
+      })),
+    ]
   }
 }

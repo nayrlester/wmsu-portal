@@ -12,7 +12,11 @@ export class RecordsAlumniClient {
     lastName: string
     mobile?: string | null
   }) {
-    const base = (env.get('RECORDS_API_URL') ?? 'http://127.0.0.1:3345').replace(/\/$/, '')
+    const base = (
+      env.get('RECORDS_API_URL') ??
+      env.get('GATEWAY_RECORDS_URL') ??
+      'http://127.0.0.1:3500'
+    ).replace(/\/$/, '')
     const key = env.get('SERVICE_API_KEY') ?? ''
     const year = input.graduationDate.slice(0, 4)
     const res = await fetch(`${base}/api/v1/internal/alumni/from-graduation`, {

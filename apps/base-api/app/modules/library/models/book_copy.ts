@@ -11,6 +11,8 @@ export type BookCopyStatus =
   | 'maintenance'
   | 'lost'
   | 'withdrawn'
+  | 'damaged'
+  | 'under_repair'
 
 export default class BookCopy extends BaseModel {
   static table = t('book_copies')

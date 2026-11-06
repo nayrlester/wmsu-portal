@@ -32,13 +32,31 @@ export function AppShell({
               Online Public Access Catalog
             </p>
           </div>
-          <nav className="flex items-center gap-3 text-sm font-medium">
+          <nav className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium">
             {nav ?? (
               <>
-                <Link to="/" className="text-[var(--color-primary)] hover:underline">
+                <Link to="/" className="shrink-0 whitespace-nowrap text-[var(--color-primary)] hover:underline">
                   Search
                 </Link>
-                <Link to="/queue" className="text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                <Link to="/lists" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                  My lists
+                </Link>
+                <Link to="/loans" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                  My loans
+                </Link>
+                <Link to="/card" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                  My card
+                </Link>
+                <Link to="/request" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                  Request a title
+                </Link>
+                <Link to="/elibrary" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                  E-library
+                </Link>
+                <Link to="/locate" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                  Find a shelf
+                </Link>
+                <Link to="/queue" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
                   Queue board
                 </Link>
               </>

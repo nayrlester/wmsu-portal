@@ -12,6 +12,7 @@ import {
   gradeDeadlineValidator,
   facultyAssignValidator,
   openClassRecordValidator,
+  enlistClassStudentValidator,
   encodeGradesValidator,
   submitClassGradesValidator,
   correctionRequestValidator,
@@ -87,6 +88,19 @@ export default class GradeRecordsController {
       organizationId: user.organizationId,
       facultyUserId: user.id,
       ...payload,
+    })
+    return response.ok({ data })
+  }
+
+  async enlist({ params, request, response, auth }: HttpContext) {
+    const user = auth.user!
+    const payload = await request.validateUsing(enlistClassStudentValidator)
+    const service = new GradeRecordsService()
+    const data = await service.enlistRegisteredStudent({
+      organizationId: user.organizationId,
+      classRecordId: params.id,
+      facultyUserId: user.id,
+      studentNumber: payload.studentNumber,
     })
     return response.ok({ data })
   }

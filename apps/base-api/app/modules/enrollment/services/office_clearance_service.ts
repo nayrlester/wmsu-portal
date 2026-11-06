@@ -293,6 +293,25 @@ export class OfficeClearanceService {
 
     const offices = CLEARANCE_OFFICES.map((o) => byOffice[o]).filter((o) => (o?.items.length ?? 0) > 0)
     const holdOffices = offices.filter((o) => !o.cleared).map((o) => o.office)
+    const latestAssessment = await db
+      .from(`${t('assessments')} as a`)
+      .join(`${t('enrollments')} as e`, 'e.id', 'a.enrollment_id')
+      .where('e.student_id', studentId)
+      .where('a.organization_id', organizationId)
+      .orderBy('a.created_at', 'desc')
+      .select(
+        'a.assessment_number',
+        'a.net_amount',
+        'a.paid_amount',
+        'a.balance_amount',
+        'a.ufms_payment_status'
+      )
+      .first()
+    const netAmount = latestAssessment ? Number(latestAssessment.net_amount) : null
+    const paidAmount = latestAssessment ? Number(latestAssessment.paid_amount ?? 0) : null
+    const balanceAmount = latestAssessment
+      ? Number(latestAssessment.balance_amount ?? netAmount! - paidAmount!)
+      : null
     return {
       student: {
         id: student.id,
@@ -302,6 +321,15 @@ export class OfficeClearanceService {
       overallCleared: holdOffices.length === 0 && offices.length > 0,
       holdOffices,
       offices,
+      assessment: latestAssessment
+        ? {
+            assessmentNumber: latestAssessment.assessment_number as string,
+            netAmount,
+            paidAmount,
+            balanceAmount,
+            ufmsPaymentStatus: (latestAssessment.ufms_payment_status as string | null) ?? null,
+          }
+        : null,
       note: 'ENR-024 per-office clearance. Auto-sources draw from finance/library/inventory + SSS/academic signals. Enrollment hard-block gate remains [CONFIRM].',
     }
   }

@@ -8,5 +8,6 @@ export function registerDigitalRoutes() {
   router.post('digital/repository/:id/access', [DigitalController, 'accessRepository'])
   router.get('digital/eresources', [DigitalController, 'listElectronic'])
   router.post('digital/eresources', [DigitalController, 'createElectronic'])
+  router.post('digital/eresources/:id/open', [DigitalController, 'openElectronic'])
   router.get('digital/search', [DigitalController, 'unifiedSearch'])
 }

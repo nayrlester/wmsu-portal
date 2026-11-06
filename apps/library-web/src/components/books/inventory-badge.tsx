@@ -25,6 +25,16 @@ const statusConfig: Record<
     className: 'bg-slate-100 text-slate-600 border-slate-200',
     dotClass: 'bg-slate-400',
   },
+  damaged: {
+    label: 'Damaged',
+    className: 'bg-orange-50 text-orange-800 border-orange-200',
+    dotClass: 'bg-orange-500',
+  },
+  under_repair: {
+    label: 'Under repair',
+    className: 'bg-violet-50 text-violet-800 border-violet-200',
+    dotClass: 'bg-violet-500',
+  },
   lost: {
     label: 'Lost',
     className: 'bg-red-50 text-red-700 border-red-200',

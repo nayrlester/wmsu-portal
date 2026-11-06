@@ -37,6 +37,7 @@ import {
   fetchMyFacultyAssignments,
   markScheduleNotificationRead,
   openClassRecord,
+  enlistClassStudent,
   requestGradeCorrection,
   submitClassGrades,
 } from '@/lib/usis-api'
@@ -532,6 +533,8 @@ function FacultySubmitInner() {
   const [sigName, setSigName] = useState('Faculty of record')
   const [sigRole2, setSigRole2] = useState('Department Chair')
   const [sigName2, setSigName2] = useState('')
+  const [enlistNumber, setEnlistNumber] = useState('2026-PH-NEW001')
+  const [enlistResult, setEnlistResult] = useState('')
   const master = useQuery({
     queryKey: ['faculty', 'submit-master', assignment?.id],
     queryFn: () =>
@@ -541,6 +544,24 @@ function FacultySubmitInner() {
         semester: assignment!.semester,
       }),
     enabled: !!assignment,
+  })
+  const rosterCount = master.data?.roster.length ?? 0
+  const canLock = Boolean(master.data) && rosterCount > 0
+  const enlist = useMutation({
+    mutationFn: () => {
+      const classRecordId = master.data?.classRecord.id
+      if (!classRecordId) throw new Error('Open a class record first')
+      return enlistClassStudent(classRecordId, enlistNumber.trim())
+    },
+    onSuccess: (row) => {
+      const line = `${row.studentNumber} enlisted · enrollment ${row.enrollmentStatus} · payment ${row.paymentVerified ? 'kept' : 'unchanged'}`
+      setEnlistResult(line)
+      notify({ tone: 'success', title: 'Student enlisted', description: line })
+      void qc.invalidateQueries({ queryKey: ['faculty', 'submit-master'] })
+      void qc.invalidateQueries({ queryKey: ['faculty', 'encode-master'] })
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Enlist failed', description: getApiErrorMessage(err) }),
   })
   const classRecordId =
     master.data?.classRecord.id || pickedRecordId || classRecordRows[0]?.id || ''
@@ -597,6 +618,41 @@ function FacultySubmitInner() {
             Class: <Badge>{master.data?.classRecord.subjectCode ?? '—'}</Badge> · status{' '}
             <Badge>{master.data?.classRecord.status ?? '—'}</Badge>
           </p>
+          <p className="text-sm" data-testid="class-roster-count">
+            {master.data
+              ? rosterCount === 1
+                ? '1 student on this class'
+                : `${rosterCount} students on this class`
+              : 'Open a class record to see the roster.'}
+          </p>
+          {master.data && rosterCount === 0 ? (
+            <div className="space-y-2">
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                No students are enlisted on this class. Lock stays unavailable until a roster exists.
+              </p>
+              <FormField id="enlistStudentNumber" label="Registered student number">
+                <Input
+                  id="enlistStudentNumber"
+                  value={enlistNumber}
+                  onChange={(e) => setEnlistNumber(e.target.value)}
+                />
+              </FormField>
+              <Button
+                type="button"
+                variant="secondary"
+                className="whitespace-nowrap"
+                disabled={enlist.isPending || enlistNumber.trim().length < 3}
+                onClick={() => enlist.mutate()}
+              >
+                Enlist registered student
+              </Button>
+              {enlistResult ? (
+                <p className="text-sm" data-testid="enlist-result">
+                  {enlistResult}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           <div className="grid gap-3 md:grid-cols-2">
             <FormField id="sigRole" label="Signatory 1 role">
               <Input id="sigRole" value={sigRole} onChange={(e) => setSigRole(e.target.value)} />
@@ -614,7 +670,7 @@ function FacultySubmitInner() {
           <Button
             type="button"
             onClick={() => mutation.mutate()}
-            disabled={mutation.isPending || !master.data}
+            disabled={mutation.isPending || !canLock}
           >
             Submit & lock grades
           </Button>

@@ -21,19 +21,20 @@ export const NOTIFICATION_EVENTS = {
 export type NotificationEventType = (typeof NOTIFICATION_EVENTS)[keyof typeof NOTIFICATION_EVENTS]
 
 export const DEFAULT_EVENT_CHANNELS: Record<string, NotificationChannel[]> = {
-  [NOTIFICATION_EVENTS.DUE_DATE_REMINDER]: ['in_app', 'email'],
-  [NOTIFICATION_EVENTS.OVERDUE_NOTICE]: ['in_app', 'email'],
+  [NOTIFICATION_EVENTS.DUE_DATE_REMINDER]: ['in_app', 'email', 'sms'],
+  [NOTIFICATION_EVENTS.OVERDUE_NOTICE]: ['in_app', 'email', 'sms'],
   [NOTIFICATION_EVENTS.RESERVATION_READY]: ['in_app', 'email', 'sms'],
   [NOTIFICATION_EVENTS.RESERVATION_EXPIRED]: ['in_app'],
   [NOTIFICATION_EVENTS.MEMBERSHIP_EXPIRING]: ['in_app', 'email'],
   [NOTIFICATION_EVENTS.MEMBERSHIP_EXPIRED]: ['in_app', 'email'],
-  [NOTIFICATION_EVENTS.FINE_ASSESSED]: ['in_app', 'email'],
+  [NOTIFICATION_EVENTS.FINE_ASSESSED]: ['in_app', 'email', 'sms'],
   [NOTIFICATION_EVENTS.BORROWING_REQUESTED]: ['in_app'],
   [NOTIFICATION_EVENTS.BORROWING_APPROVED]: ['in_app', 'email'],
-  [NOTIFICATION_EVENTS.BORROWING_CHECKED_OUT]: ['in_app', 'email'],
+  [NOTIFICATION_EVENTS.BORROWING_CHECKED_OUT]: ['in_app', 'email', 'sms'],
   [NOTIFICATION_EVENTS.BORROWING_RETURNED]: ['in_app'],
-  [NOTIFICATION_EVENTS.BORROWING_OVERDUE]: ['in_app', 'email'],
-  [NOTIFICATION_EVENTS.BORROWING_LOST]: ['in_app', 'email'],
+  [NOTIFICATION_EVENTS.BORROWING_OVERDUE]: ['in_app', 'email', 'sms'],
+  [NOTIFICATION_EVENTS.BORROWING_LOST]: ['in_app', 'email', 'sms'],
+  'borrowing.renewed': ['in_app', 'email', 'sms'],
 }
 
 export const SECURITY_EVENTS = new Set<string>([
@@ -51,6 +52,7 @@ export interface SendNotificationInput {
   channels?: NotificationChannel[]
   email?: string | null
   phone?: string | null
+  recipientName?: string | null
   force?: boolean
 }
 

@@ -12,6 +12,7 @@ export function registerKioskRoutes() {
       router.get('kiosk/account', [KioskController, 'account'])
       router.get('kiosk/history', [KioskController, 'history'])
       router.post('kiosk/checkout', [KioskController, 'checkout'])
+      router.post('kiosk/renew', [KioskController, 'renew'])
       router.post('kiosk/return', [KioskController, 'returnItem'])
     })
     .use(middleware.tenant())

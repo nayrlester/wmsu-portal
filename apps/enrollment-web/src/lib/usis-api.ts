@@ -774,6 +774,16 @@ export async function fetchStudentProfile(studentId: string) {
   return asData<StudentProfilePayload>(data)
 }
 
+export async function computeStudentGwa(studentId: string) {
+  const { data } = await apiClient.post(`/grades/students/${studentId}/gwa`)
+  return asData<{
+    cumulativeGwa: number | null
+    termGwa: number | null
+    unitsGraded: number | null
+    academicStanding: string | null
+  }>(data)
+}
+
 export async function recordStudentViolation(
   studentId: string,
   payload: {
@@ -1010,6 +1020,13 @@ export type OfficeClearanceBundle = {
       sourceRef: string | null
     }>
   }>
+  assessment?: {
+    assessmentNumber: string
+    netAmount: number | null
+    paidAmount: number | null
+    balanceAmount: number | null
+    ufmsPaymentStatus: string | null
+  } | null
   note?: string
 }
 
@@ -1203,6 +1220,18 @@ export async function openClassRecord(body: {
   }>(data)
 }
 
+export async function enlistClassStudent(classRecordId: string, studentNumber: string) {
+  const { data } = await apiClient.post(`/grades/class-records/${classRecordId}/roster`, {
+    studentNumber,
+  })
+  return asData<{
+    studentNumber: string
+    enrollmentStatus: string
+    paymentVerified: boolean
+    created: boolean
+  }>(data)
+}
+
 export async function encodeClassGrades(body: {
   classRecordId: string
   grades: Array<{ studentId: string; markCode: string; rawScore?: number }>
@@ -1252,6 +1281,20 @@ export async function fetchAssessments(params: PageParams = {}) {
     status: string
     netAmount: number
     ufmsPaymentStatus?: string
+  }>(data)
+}
+
+export async function syncAssessmentPayment(assessmentId: string) {
+  const { data } = await apiClient.post(`/assessments/${assessmentId}/sync-payment-status`)
+  return asData<{
+    assessment: {
+      id: string
+      assessmentNumber: string
+      paidAmount: number
+      netAmount: number
+      ufmsPaymentStatus?: string | null
+    }
+    status: { paymentStatus: string; paidAmount: number; balanceAmount: number }
   }>(data)
 }
 
@@ -3279,6 +3322,21 @@ export async function fetchSectionSchedulingSummary(sectionId: string) {
         waitlistCount: number
         seated: number
         capacity: number
+      }
+    }
+  ).data
+}
+
+export async function reviewStoredSectionConflicts(sectionId: string) {
+  const { data } = await apiClient.get(`/scheduling/sections/${sectionId}/stored-conflicts`)
+  return (
+    data as {
+      data: {
+        sectionCode: string
+        meetingsChecked: number
+        ok: boolean
+        unchanged: boolean
+        conflicts: Array<{ message: string }>
       }
     }
   ).data

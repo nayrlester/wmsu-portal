@@ -140,6 +140,7 @@ export default class EmailChannel {
     if (emailJsMailerService.isConfigured()) {
       const result = await emailJsMailerService.send({
         toEmail: to,
+        toName: input.recipientName,
         subject: input.title,
         message: input.body,
         extraParams: {

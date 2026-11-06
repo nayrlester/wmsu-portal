@@ -63,7 +63,20 @@ export class DepreciationService {
   }
 
   async runPeriod(orgId: string, periodYear: number, periodMonth: number, userId: string, assetId?: string) {
-    return db.transaction(async (trx) => {
+    const [assetRow] = await Asset.query()
+      .where('organizationId', orgId)
+      .whereNull('deletedAt')
+      .count('* as total')
+    const assetCount = Number(assetRow?.$extras.total ?? 0)
+    if (assetCount === 0) {
+      return {
+        entries: [] as AssetDepreciationEntry[],
+        ran: false,
+        assetCount: 0,
+        reason: 'No inventory asset exists. Depreciation was not run.',
+      }
+    }
+    const posted = await db.transaction(async (trx) => {
       const q = AssetDepreciationProfile.query({ client: trx })
         .where('organizationId', orgId)
         .where('active', true)
@@ -144,6 +157,12 @@ export class DepreciationService {
 
       return posted
     })
+    return {
+      entries: posted,
+      ran: true,
+      assetCount,
+      reason: null as string | null,
+    }
   }
 
   async lapsingSchedule(orgId: string, assetId: string) {

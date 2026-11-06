@@ -53,6 +53,12 @@ export const openClassRecordValidator = vine.compile(
   })
 )
 
+export const enlistClassStudentValidator = vine.compile(
+  vine.object({
+    studentNumber: vine.string().trim().minLength(3).maxLength(64),
+  })
+)
+
 export const encodeGradesValidator = vine.compile(
   vine.object({
     classRecordId: vine.string().uuid(),

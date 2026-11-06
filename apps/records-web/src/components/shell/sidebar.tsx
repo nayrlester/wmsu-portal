@@ -8,6 +8,7 @@ import {
   Users,
   Building2,
   BarChart3,
+  RefreshCw,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -27,6 +28,7 @@ const navGroups = [
     label: 'Records',
     items: [
       { to: '/tor', icon: ScrollText, label: 'Transcript Requests' },
+      { to: '/academic-sync', icon: RefreshCw, label: 'Academic sync' },
       { to: '/certifications', icon: FileText, label: 'Certifications' },
       { to: '/alumni', icon: GraduationCap, label: 'Alumni' },
     ],
@@ -59,6 +61,9 @@ export function Sidebar({ onClose }: SidebarProps) {
             hasPermission(permissions, 'torms.requests.read') ||
             hasPermission(permissions, 'torms.requests.write')
           )
+        }
+        if (item.to === '/academic-sync') {
+          return hasPermission(permissions, 'torms.sync.write')
         }
         if (item.to === '/certifications') {
           return hasPermission(permissions, 'torms.requests.read')

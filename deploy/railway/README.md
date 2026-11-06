@@ -84,6 +84,34 @@ Identity: `preDeployCommand` in `wmsu-api/railway.toml`.
 
 Run seeds manually on staging only (`pnpm run db:seed`, Identity `npm run db:seed`).
 
+### Philippine SUC academic + tuition baseline (prod)
+
+Local cleanup/seed: `pnpm seed:ph-university`.
+
+Apply the same baseline to **Railway prod** (idempotent API seed; optional SQL cleanup of Playwright junk):
+
+```bash
+# PowerShell — public Postgres URL from Railway → Postgres → Connect
+$env:RAILWAY_PUBLIC_DATABASE_URL='postgresql://postgres:PASS@HOST.proxy.rlwy.net:PORT/railway'
+pnpm run seed:ph-university:prod
+# API-only (no cleanup): pnpm run seed:ph-university:prod -- --seed-only
+```
+
+Or mirror the whole local CIS DB (already cleaned + seeded):
+
+```bash
+$env:RAILWAY_PUBLIC_DATABASE_URL='postgresql://...'
+pnpm run db:push:railway
+```
+
+Cloud deploy can seed after redeploy (production only):
+
+```bash
+pnpm run deploy:cloud:production -- --push --seed-ph
+```
+
+Without `RAILWAY_PUBLIC_DATABASE_URL`, `--seed-ph` runs `--seed-only` against the live Base API.
+
 ### Run migrations from your laptop (Railway Postgres)
 
 `postgres.railway.internal` in service variables **only works inside Railway**. From your PC, use one of:

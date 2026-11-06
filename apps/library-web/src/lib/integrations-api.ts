@@ -28,6 +28,11 @@ export async function fetchIntegrationsStatus() {
   return data.data
 }
 
+export async function syncEnrollmentStudents() {
+  const { data } = await apiClient.post<ApiResponse<SyncResult>>('/integrations/enrollment/sync')
+  return data.data
+}
+
 export async function syncArisStudents(students: unknown[]) {
   const { data } = await apiClient.post<ApiResponse<SyncResult>>('/integrations/aris/sync', {
     students,

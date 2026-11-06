@@ -10,6 +10,7 @@ import { isStudentLimitedAccess } from '@/lib/student-access'
 
 export function DashboardLayout() {
   const user = useAuthStore((s) => s.user)
+  const [navOpen, setNavOpen] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
   const studentLimited = isStudentLimitedAccess(user)
   const canUseAi = !studentLimited && user?.permissions.includes('ai:query')
@@ -30,10 +31,18 @@ export function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-[var(--color-canvas)]">
-      <AppSidebar />
+      {navOpen && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          className="fixed inset-0 z-30 bg-slate-900/40 lg:hidden"
+          onClick={() => setNavOpen(false)}
+        />
+      )}
+      <AppSidebar mobileOpen={navOpen} onNavigate={() => setNavOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
-        <div className="flex flex-1 gap-6 px-6 pb-8 pt-4">
+        <TopBar onOpenNav={() => setNavOpen(true)} />
+        <div className="flex flex-1 gap-6 px-4 pb-8 pt-4 sm:px-6">
           <main className="min-w-0 flex-1">
             <Outlet />
           </main>

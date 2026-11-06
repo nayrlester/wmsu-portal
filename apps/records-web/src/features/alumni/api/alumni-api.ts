@@ -18,6 +18,16 @@ export type AlumniProfile = {
   consentTracer?: boolean
 }
 
+export async function alumniStanding(studentNumber: string) {
+  const { data } = await apiClient.get(`/torms/alumni/standing/${encodeURIComponent(studentNumber)}`)
+  return data.data as {
+    studentNumber: string
+    studentStatus: string | null
+    alumniRecord: boolean
+    message: string
+  }
+}
+
 export async function listAlumni(params?: {
   q?: string
   studentNumber?: string

@@ -73,6 +73,7 @@ export type UnifiedSearchResult = {
     source: 'repository'
     authors?: string | null
     year?: number | null
+    accessLevel?: string
   }>
   electronic: Array<{
     id: string
@@ -114,8 +115,14 @@ export async function fetchEresources() {
 export async function createEresource(payload: CreateEresourcePayload) {
   const { data } = await apiClient.post<ApiResponse<EresourceItem>>('/digital/eresources', {
     resourceKind: 'open_access',
+    authMethod: 'sso',
     ...payload,
   })
+  return data.data
+}
+
+export async function openEresource(id: string) {
+  const { data } = await apiClient.post<ApiResponse<EresourceItem>>(`/digital/eresources/${id}/open`)
   return data.data
 }
 

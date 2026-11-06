@@ -105,13 +105,13 @@ export function ReportsPage() {
             className="w-full"
           />
           <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={() => void runReport()} disabled={isFetching} className="gap-1.5">
+            <Button onClick={() => void runReport()} disabled={isFetching} className="gap-1.5 whitespace-nowrap">
               <Play className="size-3.5" />
               {isFetching ? 'Running…' : 'Run'}
             </Button>
             <Button
               variant="outline"
-              className="gap-1.5 border-[var(--color-border)] bg-white"
+              className="gap-1.5 whitespace-nowrap border-[var(--color-border)] bg-white"
               onClick={() =>
                 downloadReport(selected, 'csv', { from: from || undefined, to: to || undefined }).catch(
                   (err) => toast.error(err instanceof Error ? err.message : 'CSV export failed')
@@ -123,7 +123,7 @@ export function ReportsPage() {
             </Button>
             <Button
               variant="outline"
-              className="gap-1.5 border-[var(--color-border)] bg-white"
+              className="gap-1.5 whitespace-nowrap border-[var(--color-border)] bg-white"
               onClick={() =>
                 downloadReport(selected, 'xlsx', {
                   from: from || undefined,
@@ -138,7 +138,7 @@ export function ReportsPage() {
             </Button>
             <Button
               variant="outline"
-              className="gap-1.5 border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
+              className="gap-1.5 whitespace-nowrap border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
               onClick={() =>
                 downloadReport(selected, 'pdf', { from: from || undefined, to: to || undefined }).catch(
                   (err) => toast.error(err instanceof Error ? err.message : 'PDF export failed')
@@ -216,7 +216,23 @@ export function ReportsPage() {
               </p>
             </div>
           ) : (
-            <table className="min-w-full text-left text-sm" data-testid="report-results-table">
+            <>
+              <div className="space-y-3 p-3 md:hidden">
+                {report.rows.slice(0, 100).map((row, idx) => (
+                  <div key={idx} className="space-y-1 rounded-lg border border-slate-100 p-3 text-sm">
+                    {Object.entries(row).map(([key, value]) => (
+                      <p key={key} className="text-slate-700">
+                        <span className="text-slate-500">{humanizeColumn(key)}</span>
+                        {' · '}
+                        <span className={/barcode|shelf|status|outcome|code/i.test(key) ? 'whitespace-nowrap font-mono' : ''}>
+                          {formatReportCell(key, value)}
+                        </span>
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <table className="hidden min-w-full text-left text-sm md:table" data-testid="report-results-table">
               <thead>
                 <tr className="bg-[var(--color-primary)]/[0.06] text-[11px] uppercase tracking-wide text-[var(--color-primary)]">
                   {Object.keys(report.rows[0] ?? { notice: '' }).map((key) => (
@@ -244,6 +260,7 @@ export function ReportsPage() {
                 ))}
               </tbody>
             </table>
+            </>
           )}
         </CardContent>
       </Card>

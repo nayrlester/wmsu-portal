@@ -79,15 +79,16 @@ export async function createDepreciationProfile(
 
 export async function runDepreciation(
   payload: DepreciationRunPayload,
-): Promise<{ processed: number }> {
+): Promise<{ processed: number; ran: boolean; reason: string | null }> {
   const { data } = await apiClient.post('/depreciation/run', {
     periodYear: payload.periodYear,
     periodMonth: payload.periodMonth,
     assetId: payload.assetId || undefined,
   })
   const result = data.data ?? data
+  const meta = (data.meta ?? {}) as { ran?: boolean; reason?: string | null }
   const processed = Array.isArray(result) ? result.length : Number(result.processed ?? result.count ?? 0)
-  return { processed }
+  return { processed, ran: meta.ran !== false, reason: meta.reason ?? null }
 }
 
 export async function fetchLapsingSchedule(assetId: string): Promise<LapsingScheduleResult> {

@@ -9,6 +9,30 @@ import {
 export default class NotificationsController {
   private notificationService = new NotificationService()
 
+  async deliveryLog(ctx: HttpContext) {
+    if (!ctx.authUser || !ctx.authUser.permissions.includes('reports:export')) {
+      throw new ForbiddenException('Missing permission: reports:export')
+    }
+
+    const filters = await ctx.request.validateUsing(listNotificationsValidator)
+    const paginator = await this.notificationService.listDeliveryLog(filters.page ?? 1, filters.perPage ?? 20)
+
+    return ctx.response.ok({
+      success: true,
+      data: paginator.all().map((log) => ({
+        id: log.id,
+        eventType: log.eventType,
+        channel: log.channel,
+        title: log.title,
+        status: log.status,
+        failedReason: log.failedReason,
+        sentAt: log.sentAt?.toISO() ?? null,
+        createdAt: log.createdAt.toISO(),
+      })),
+      meta: paginator.getMeta(),
+    })
+  }
+
   async index(ctx: HttpContext) {
     if (!ctx.authUser) throw new ForbiddenException('Authentication required')
 

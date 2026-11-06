@@ -120,8 +120,16 @@ function AdmissionsInner() {
   })
   const admit = useMutation({
     mutationFn: (id: string) => admitApplicant(id, `ADM-${Date.now().toString().slice(-8)}`),
-    onSuccess: () => {
-      notify({ tone: 'success', title: 'Applicant admitted' })
+    onSuccess: (result) => {
+      const notice = (result as { accountNotice?: { sent?: boolean; to?: string | null; reason?: string | null } })
+        .accountNotice
+      notify({
+        tone: 'success',
+        title: 'Applicant admitted',
+        description: notice?.sent
+          ? `Account email sent to ${notice.to}`
+          : `Student record created. Account email was not sent${notice?.reason ? `: ${notice.reason}` : ''}.`,
+      })
       qc.invalidateQueries({ queryKey: ['office', 'applicants'] })
     },
     onError: (err) =>
@@ -2305,7 +2313,8 @@ function ScholarshipInner() {
     defaultValues: { sourceType: 'internal', code: '', name: '' },
   })
   const [programId, setProgramId] = useState('')
-  const [scholarStudentRef, setScholarStudentRef] = useState('')
+  const [scholarStudentRef, setScholarStudentRef] = useState('2026-PH-NEW001')
+  const [awardResult, setAwardResult] = useState('')
   const [saStudentRef, setSaStudentRef] = useState('')
   const [deployOffice, setDeployOffice] = useState('Registrar')
   const createProgram = useMutation({
@@ -2363,7 +2372,10 @@ function ScholarshipInner() {
     mutationFn: (id: string) =>
       decideScholarshipApplication(id, { approve: true, awardAmount: 1000 }),
     onSuccess: () => {
-      notify({ tone: 'success', title: 'Scholarship awarded + tuition aid tagged' })
+      setAwardResult(
+        `Scholarship awarded for ${scholarStudentRef.trim()}. Tuition aid tagged. No cashier payment was posted.`
+      )
+      notify({ tone: 'success', title: 'Scholarship awarded' })
       void qc.invalidateQueries({ queryKey: ['office', 'scholarship-applications'] })
       void qc.invalidateQueries({ queryKey: ['office', 'scholarship-awards'] })
       void qc.invalidateQueries({ queryKey: ['office', 'scholarship-assistance'] })
@@ -2537,6 +2549,9 @@ function ScholarshipInner() {
           <CardTitle>Applications & awards</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
+          {awardResult ? (
+            <p data-testid="scholarship-award-result">{awardResult}</p>
+          ) : null}
           {(applications.data ?? []).slice(0, 8).map((app) => (
             <div
               key={app.id}

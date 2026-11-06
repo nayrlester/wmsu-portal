@@ -1,6 +1,8 @@
 import { DateTime } from 'luxon'
+import db from '@adonisjs/lucid/services/db'
 import Member from '#modules/library/models/member'
 import { borrowingTenantId } from '#modules/library/services/borrowing/borrowing_helpers'
+import { buildMemberSearchText } from '#modules/library/services/members/member_helpers'
 import BusinessRuleException from '#modules/library/exceptions/business_rule_exception'
 
 const MAX_SYNC_BATCH = 500
@@ -145,12 +147,112 @@ export default class IntegrationService {
     return { source: 'HRIS', created, updated, skipped, received: employees.length }
   }
 
+  async syncFromEnrollment() {
+    const tid = borrowingTenantId()
+    const rows = await db
+      .from('enrollment.students')
+      .whereNull('deleted_at')
+      .select('student_number', 'first_name', 'middle_name', 'last_name', 'email', 'mobile', 'status')
+      .orderBy('student_number', 'asc')
+      .limit(MAX_SYNC_BATCH)
+
+    let created = 0
+    let updated = 0
+    let skipped = 0
+
+    for (const row of rows) {
+      const studentId = this.sanitizeId(String(row.student_number ?? ''))
+      const fullName = this.sanitizeName(
+        [row.first_name, row.middle_name, row.last_name].filter(Boolean).join(' ')
+      )
+      const email = String(row.email ?? '').trim().toLowerCase()
+      if (!studentId || !fullName) {
+        skipped++
+        continue
+      }
+
+      const enrolled = ['active', 'enrolled'].includes(String(row.status ?? '').toLowerCase())
+      const existing = await Member.query()
+        .where('tenant_id', tid)
+        .whereNull('deleted_at')
+        .where((query) => {
+          if (email) query.whereRaw('lower(email) = ?', [email])
+          query.orWhere('library_card_number', studentId)
+        })
+        .first()
+
+      if (existing) {
+        existing.fullName = fullName
+        if (email) existing.email = email
+        if (!existing.contact && row.mobile) existing.contact = String(row.mobile)
+        existing.memberType = 'student'
+        existing.isEnrolled = enrolled
+        existing.academicStatus = String(row.status ?? (enrolled ? 'active' : 'inactive'))
+        if (!enrolled && existing.membershipStatus === 'approved') {
+          existing.membershipStatus = 'suspended'
+        }
+        if (enrolled && ['pending', 'suspended'].includes(existing.membershipStatus)) {
+          existing.membershipStatus = 'approved'
+          existing.approvedAt = existing.approvedAt ?? DateTime.now()
+        }
+        existing.searchText = buildMemberSearchText({
+          fullName,
+          email: existing.email,
+          contact: existing.contact,
+          department: existing.department,
+          libraryCardNumber: existing.libraryCardNumber,
+          memberType: 'student',
+        })
+        await existing.save()
+        updated++
+        continue
+      }
+
+      const cardTaken = await Member.query()
+        .where('tenant_id', tid)
+        .where('library_card_number', studentId)
+        .whereNull('deleted_at')
+        .first()
+      if (cardTaken) {
+        skipped++
+        continue
+      }
+
+      await Member.create({
+        tenantId: tid,
+        fullName,
+        email: email || null,
+        contact: row.mobile ? String(row.mobile) : null,
+        department: null,
+        memberType: 'student',
+        membershipStatus: enrolled ? 'approved' : 'suspended',
+        libraryCardNumber: studentId,
+        isBlacklisted: false,
+        isEnrolled: enrolled,
+        academicStatus: String(row.status ?? (enrolled ? 'active' : 'inactive')),
+        approvedAt: enrolled ? DateTime.now() : null,
+        searchText: buildMemberSearchText({
+          fullName,
+          email,
+          contact: row.mobile ? String(row.mobile) : null,
+          department: null,
+          libraryCardNumber: studentId,
+          memberType: 'student',
+        }),
+      })
+      created++
+    }
+
+    return { source: 'USiS', created, updated, skipped, received: rows.length }
+  }
+
   status() {
     return {
       aris: {
-        configured: Boolean(process.env.ARIS_API_URL),
-        mode: 'inbound_sync',
+        configured: true,
+        mode: 'local_usis',
         maxBatch: MAX_SYNC_BATCH,
+        note: 'Students are read from USiS enrollment records in this database.',
       },
       hris: {
         configured: Boolean(process.env.HRIS_API_URL),

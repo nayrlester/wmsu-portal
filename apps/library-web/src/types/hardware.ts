@@ -23,6 +23,15 @@ export interface KioskTransaction {
   createdAt: string
 }
 
+export interface QueueAnalytics {
+  issued: number
+  waiting: number
+  serving: number
+  finished: number
+  averageWaitSeconds: number | null
+  averageServiceSeconds: number | null
+}
+
 export interface QueueTicket {
   id: string
   ticketNumber: string

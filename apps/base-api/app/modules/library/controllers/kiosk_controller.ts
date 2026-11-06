@@ -59,6 +59,23 @@ export default class KioskController {
     return ctx.response.ok({ success: true, data })
   }
 
+  async renew(ctx: HttpContext) {
+    const payload = await ctx.request.validateUsing(
+      vine.compile(
+        vine.object({
+          cardNumber: vine.string().trim().minLength(3).maxLength(100),
+          copyBarcode: vine.string().trim().minLength(1).maxLength(100),
+        })
+      )
+    )
+    const data = await this.service.renewByBarcode(
+      ctx.kioskDevice!,
+      payload.cardNumber,
+      payload.copyBarcode
+    )
+    return ctx.response.ok({ success: true, data })
+  }
+
   async returnItem(ctx: HttpContext) {
     const payload = await ctx.request.validateUsing(
       vine.compile(

@@ -81,6 +81,7 @@ import {
   fetchRequirementsComplianceReport,
   fetchStudentAccountMonitor,
   fetchStudentProfile,
+  computeStudentGwa,
   recordStudentViolation,
   issueRegistrationDocument,
   fetchEnrollments,
@@ -99,6 +100,7 @@ import {
   fetchSectionWaitlist,
   promoteSectionWaitlist,
   checkMeetingSlotConflicts,
+  reviewStoredSectionConflicts,
   addSectionMeeting,
   deleteSectionMeeting,
   updateSectionMeeting,
@@ -163,6 +165,7 @@ import {
   fetchEnrollmentWorkflow,
   registerEnrollment,
   assessEnrollment,
+  syncAssessmentPayment,
   verifyEnrollmentPayment,
   approveRegistrarEnrollment,
 } from '@/lib/usis-api'
@@ -232,11 +235,15 @@ function RegistrarApplicantsInner() {
   })
   const admit = useMutation({
     mutationFn: (id: string) => admitApplicant(id, `STU-${Date.now().toString().slice(-8)}`),
-    onSuccess: () => {
+    onSuccess: (result) => {
+      const notice = (result as { accountNotice?: { sent?: boolean; to?: string | null; reason?: string | null } })
+        .accountNotice
       notify({
         tone: 'success',
         title: 'Applicant admitted',
-        description: 'Student record created — open Student records / Enrollment management next.',
+        description: notice?.sent
+          ? `Account email sent to ${notice.to}`
+          : `Student record created. Account email was not sent${notice?.reason ? `: ${notice.reason}` : ''}.`,
       })
       void qc.invalidateQueries({ queryKey: ['reg', 'applicants'] })
       void qc.invalidateQueries({ queryKey: ['reg', 'students'] })
@@ -265,7 +272,9 @@ function RegistrarApplicantsInner() {
       <Alert variant="info" title="Applicant → student pipeline">
         Guests stay on this Applicants list until you Admit them. Status{' '}
         <strong>under_review</strong> (after entrance exam / requirements) is ready for Admit. Only
-        after Admit do they appear under Student records and Enrollment management.
+        after Admit do they appear under Student records and Enrollment management. Admit
+        emails the application address with the student number, sign-in email, and temporary
+        password when a new account is issued.
       </Alert>
       <RegistrarAdmissionFormPanel />
       <RegistrarAdmissionEventsPanel />
@@ -1212,10 +1221,23 @@ function RegistrarStudentProfilePanel() {
   const [studentId, setStudentId] = useState('')
   const [violationCode, setViolationCode] = useState('ATTENDANCE')
   const [violationTitle, setViolationTitle] = useState('')
+  const [gwaText, setGwaText] = useState('')
   const profile = useQuery({
     queryKey: ['reg', 'student-profile', studentId],
     queryFn: () => fetchStudentProfile(studentId),
     enabled: !!studentId,
+  })
+
+  const gwaMutation = useMutation({
+    mutationFn: () => computeStudentGwa(studentId),
+    onSuccess: (row) => {
+      const value = row.cumulativeGwa == null ? 'no graded units' : Number(row.cumulativeGwa).toFixed(4)
+      setGwaText(`${value} · ${row.academicStanding ?? 'no standing'} · graded units ${row.unitsGraded ?? 0}`)
+      notify({ tone: 'success', title: 'GWA computed' })
+      void profile.refetch()
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'GWA failed', description: getApiErrorMessage(err) }),
   })
 
   const violationMutation = useMutation({
@@ -1257,7 +1279,20 @@ function RegistrarStudentProfilePanel() {
               <Button type="button" variant="outline" onClick={() => window.print()}>
                 Print profile
               </Button>
+              <Button
+                type="button"
+                className="whitespace-nowrap"
+                disabled={gwaMutation.isPending}
+                onClick={() => gwaMutation.mutate()}
+              >
+                Compute GWA
+              </Button>
             </div>
+            {gwaText ? (
+              <p className="text-sm" data-testid="gwa-result">
+                Cumulative GWA {gwaText}
+              </p>
+            ) : null}
             <div className="grid gap-3 sm:grid-cols-4">
               <DashboardCard title="Grades" value={profile.data.performance.gradeCount} />
               <DashboardCard
@@ -1975,6 +2010,8 @@ function RegistrarEnrollmentsInner() {
   const { notify } = useNotification()
   const qc = useQueryClient()
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string | null>(null)
+  const [financeRead, setFinanceRead] = useState('')
+  const canReadFinance = useHasPermission('assessments.write', 'payments.write')
   const query = usePaginatedQuery({
     queryKey: ['reg', 'enrollments', controls.page, controls.debouncedSearch],
     queryFn: () =>
@@ -1988,6 +2025,27 @@ function RegistrarEnrollmentsInner() {
     void qc.invalidateQueries({ queryKey: ['reg', 'enrollments'] })
     void qc.invalidateQueries({ queryKey: ['reg', 'enrollment-workflow'] })
   }
+  const financeReadMutation = useMutation({
+    mutationFn: (row: {
+      studentNumber: string
+      assessmentId: string
+      assessmentNumber: string
+    }) => syncAssessmentPayment(row.assessmentId).then((result) => ({ row, result })),
+    onSuccess: ({ row, result }) => {
+      const paymentStatus = result.status.paymentStatus
+      const paid = Number(result.status.paidAmount).toFixed(2)
+      const line = `${row.studentNumber} · ${row.assessmentNumber} · ${paymentStatus} · paid ${paid}`
+      setFinanceRead(line)
+      notify({ tone: 'success', title: 'Finance status read', description: line })
+      refresh()
+    },
+    onError: (err) =>
+      notify({
+        tone: 'danger',
+        title: 'Finance status failed',
+        description: getApiErrorMessage(err),
+      }),
+  })
   const assessMutation = useMutation({
     mutationFn: (id: string) => assessEnrollment({ enrollmentId: id }),
     onSuccess: (data) => {
@@ -2033,8 +2091,15 @@ function RegistrarEnrollmentsInner() {
   })
   const registerMutation = useMutation({
     mutationFn: (id: string) => registerEnrollment(id),
-    onSuccess: () => {
-      notify({ tone: 'success', title: 'Enrollment registered' })
+    onSuccess: (row) => {
+      const notice = (row as { enrollmentNotice?: { sent?: boolean; to?: string | null } | null }).enrollmentNotice
+      notify({
+        tone: 'success',
+        title: 'Enrollment registered',
+        description: notice?.sent
+          ? `Confirmation email sent to ${notice.to}`
+          : 'Official enrollment saved. Confirmation email was not sent.',
+      })
       refresh()
     },
     onError: (err) =>
@@ -2048,10 +2113,16 @@ function RegistrarEnrollmentsInner() {
     assessMutation.isPending ||
     verifyMutation.isPending ||
     approveMutation.isPending ||
-    registerMutation.isPending
+    registerMutation.isPending ||
+    financeReadMutation.isPending
 
   return (
     <div className="space-y-6">
+      {financeRead ? (
+        <p className="text-sm" data-testid="finance-read-result">
+          {financeRead}
+        </p>
+      ) : null}
       <QueryPage
         title="Enrollment management"
         description="Assess → collect minimum due at UFMS cashier → Verify payment → Approve → Register"
@@ -2175,6 +2246,27 @@ function RegistrarEnrollmentsInner() {
           />
         )}
       </QueryPage>
+      {selectedEnrollmentId && canReadFinance && query.data?.data.find((row) => row.id === selectedEnrollmentId)?.assessments?.[0] ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="whitespace-nowrap"
+          disabled={busy}
+          aria-label={`Read finance ${query.data.data.find((row) => row.id === selectedEnrollmentId)?.student?.studentNumber ?? selectedEnrollmentId}`}
+          onClick={() => {
+            const row = query.data?.data.find((item) => item.id === selectedEnrollmentId)
+            const assessment = row?.assessments?.[0]
+            if (!row || !assessment) return
+            financeReadMutation.mutate({
+              studentNumber: row.student?.studentNumber ?? row.studentId,
+              assessmentId: assessment.id,
+              assessmentNumber: assessment.assessmentNumber,
+            })
+          }}
+        >
+          Read finance
+        </Button>
+      ) : null}
       {selectedEnrollmentId ? (
         <RegistrarEnrollmentWorkflowSection enrollmentId={selectedEnrollmentId} />
       ) : null}
@@ -3471,6 +3563,7 @@ function RegistrarSectionSlotTools(props: {
   const [editMeetingId, setEditMeetingId] = useState<string | null>(null)
   const [capacityEdit, setCapacityEdit] = useState('40')
   const [waitlistOn, setWaitlistOn] = useState(false)
+  const [storedConflictText, setStoredConflictText] = useState('')
 
   const summary = useQuery({
     queryKey: ['reg', 'section-summary', sectionId],
@@ -3535,6 +3628,24 @@ function RegistrarSectionSlotTools(props: {
       notify({ tone: 'danger', title: 'Promote failed', description: getApiErrorMessage(err) }),
   })
 
+  const storedConflictMutation = useMutation({
+    mutationFn: () => reviewStoredSectionConflicts(sectionId),
+    onSuccess: (data) => {
+      const detail = data.conflicts.map((row) => row.message).join('; ')
+      const summary =
+        data.meetingsChecked === 0
+          ? `${data.sectionCode}: no stored meeting slots. No overlap was found. The section was not changed.`
+          : data.ok
+            ? `${data.sectionCode}: ${data.meetingsChecked} stored slot(s) checked. No room or faculty overlap. The section was not changed.`
+            : `${data.sectionCode}: ${detail}. The section was not changed.`
+      setStoredConflictText(summary)
+      notify({ tone: data.ok ? 'success' : 'warning', title: 'Stored slots checked' })
+    },
+    onError: (err) => {
+      setStoredConflictText('')
+      notify({ tone: 'danger', title: 'Conflict check failed', description: getApiErrorMessage(err) })
+    },
+  })
   const conflictCheckMutation = useMutation({
     mutationFn: () =>
       checkMeetingSlotConflicts(sectionId, {
@@ -3763,6 +3874,14 @@ function RegistrarSectionSlotTools(props: {
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
+                variant="secondary"
+                disabled={!sectionId || storedConflictMutation.isPending}
+                onClick={() => storedConflictMutation.mutate()}
+              >
+                Check stored section conflicts
+              </Button>
+              <Button
+                type="button"
                 variant="outline"
                 disabled={conflictCheckMutation.isPending}
                 onClick={() => conflictCheckMutation.mutate()}
@@ -3787,6 +3906,11 @@ function RegistrarSectionSlotTools(props: {
                 </Button>
               ) : null}
             </div>
+            {storedConflictText ? (
+              <p className="text-sm" data-testid="section-conflict-result">
+                {storedConflictText}
+              </p>
+            ) : null}
             {(meetings.data ?? []).length > 0 ? (
               <DataTable
                 label="Meeting slots"
@@ -4525,6 +4649,17 @@ function RegistrarCurriculumInner() {
             ) : null}
           </div>
           {prereqSubjectId ? (
+            <p className="text-sm" data-testid="prerequisite-result">
+              {prereqs.isFetching
+                ? 'Reading the catalog…'
+                : (prereqs.data ?? []).length === 0
+                  ? 'No prerequisite is linked for this subject.'
+                  : (prereqs.data ?? [])
+                      .map((row) => `${row.subjectCode || 'subject'} · ${row.title || 'untitled'}`)
+                      .join(' | ')}
+            </p>
+          ) : null}
+          {prereqSubjectId ? (
             <DataTable
               label="Prerequisites"
               columns={[
@@ -5068,10 +5203,21 @@ function RegistrarRegistrationInner() {
     void queryClient.invalidateQueries({ queryKey: ['reg', 'enrollment-workflow'] })
   }
 
+  const [registrationNotice, setRegistrationNotice] = useState('')
   const registerMutation = useMutation({
     mutationFn: () => registerEnrollment(enrollmentId),
-    onSuccess: () => {
-      notify({ tone: 'success', title: 'Enrollment registered' })
+    onSuccess: (row) => {
+      const notice = (row as { enrollmentNotice?: { sent?: boolean; to?: string | null; reason?: string | null } | null })
+        .enrollmentNotice
+      const text = notice?.sent
+        ? `Official enrollment email sent to ${notice.to}. No password was included.`
+        : `Official enrollment saved. Confirmation email was not sent${notice?.reason ? `: ${notice.reason}` : ''}.`
+      setRegistrationNotice(text)
+      notify({
+        tone: 'success',
+        title: 'Enrollment registered',
+        description: text,
+      })
       refreshEnrollment()
     },
     onError: (err) =>
@@ -5182,6 +5328,11 @@ function RegistrarRegistrationInner() {
               Register enrollment
             </Button>
           </div>
+          {registrationNotice ? (
+            <p className="text-sm" data-testid="enrollment-email-result">
+              {registrationNotice}
+            </p>
+          ) : null}
         </div>
         {enrollmentQuery.isFetching ? (
           <p className="text-sm text-[var(--color-muted-foreground)]">Loading enrollment…</p>

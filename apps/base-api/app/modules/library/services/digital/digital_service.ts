@@ -3,6 +3,7 @@ import DigitalRepositoryItem from '#modules/library/models/digital_repository_it
 import ElectronicResource from '#modules/library/models/electronic_resource'
 import { borrowingTenantId } from '#modules/library/services/borrowing/borrowing_helpers'
 import BusinessRuleException from '#modules/library/exceptions/business_rule_exception'
+import OpacService from '#modules/library/services/opac/opac_service'
 
 export default class DigitalService {
   async listRepository(filters: { q?: string; resourceType?: string; page?: number; perPage?: number }) {
@@ -16,7 +17,10 @@ export default class DigitalService {
     if (filters.q) {
       const term = `%${filters.q}%`
       query.where((q) => {
-        q.whereILike('title', term).orWhereILike('authors', term).orWhereILike('subjects', term)
+        q.whereILike('title', term)
+          .orWhereILike('authors', term)
+          .orWhereILike('subjects', term)
+          .orWhereILike('abstract', term)
       })
     }
 
@@ -50,15 +54,19 @@ export default class DigitalService {
     })
   }
 
-  async accessRepositoryItem(id: string, mode: 'view' | 'download') {
+  async accessRepositoryItem(
+    id: string,
+    mode: 'view' | 'download',
+    options?: { allowRestricted?: boolean }
+  ) {
     const item = await DigitalRepositoryItem.query()
       .where('id', id)
       .where('tenant_id', borrowingTenantId())
       .whereNull('deleted_at')
       .firstOrFail()
 
-    if (item.accessLevel === 'restricted') {
-      throw new BusinessRuleException('This digital item requires elevated access')
+    if (item.accessLevel === 'restricted' && !options?.allowRestricted) {
+      throw new BusinessRuleException('This digital item is restricted. Ask the library desk.')
     }
 
     if (mode === 'download') item.downloadCount += 1
@@ -97,6 +105,90 @@ export default class DigitalService {
     })
   }
 
+  async portalSearch(filters: { q?: string; author?: string; subject?: string; year?: number }) {
+    const tid = borrowingTenantId()
+    const catalog = await new OpacService().search({
+      q: filters.q,
+      author: filters.author,
+      subject: filters.subject,
+      year: filters.year,
+      perPage: 10,
+    })
+
+    const repo = DigitalRepositoryItem.query().where('tenant_id', tid).whereNull('deleted_at')
+    if (filters.q) {
+      const term = `%${filters.q}%`
+      repo.where((builder) => {
+        builder
+          .whereILike('title', term)
+          .orWhereILike('authors', term)
+          .orWhereILike('subjects', term)
+          .orWhereILike('abstract', term)
+      })
+    }
+    if (filters.author) repo.whereILike('authors', `%${filters.author}%`)
+    if (filters.subject) repo.whereILike('subjects', `%${filters.subject}%`)
+    if (filters.year) repo.where('publication_year', filters.year)
+
+    const electronic = ElectronicResource.query().where('tenant_id', tid).where('is_active', true)
+    if (filters.author || filters.subject || filters.year) {
+      electronic.whereRaw('1 = 0')
+    } else if (filters.q) {
+      const term = `%${filters.q}%`
+      electronic.where((builder) => {
+        builder.whereILike('title', term).orWhereILike('provider', term)
+      })
+    }
+
+    const [repository, databases] = await Promise.all([repo.limit(20), electronic.limit(20)])
+
+    return {
+      catalog: catalog.data.map((book) => ({
+        id: book.id,
+        title: book.title,
+        authors: book.authors,
+        year: book.publicationYear,
+        source: 'catalog' as const,
+      })),
+      repository: repository.map((item) => ({
+        id: item.id,
+        title: item.title,
+        authors: item.authors,
+        subjects: item.subjects,
+        year: item.publicationYear,
+        resourceType: item.resourceType,
+        accessLevel: item.accessLevel,
+        canOpen: item.accessLevel !== 'restricted',
+        source: 'repository' as const,
+      })),
+      electronic: databases.map((item) => ({
+        id: item.id,
+        title: item.title,
+        provider: item.provider,
+        resourceKind: item.resourceKind,
+        authMethod: item.authMethod,
+        source: 'electronic' as const,
+      })),
+      counts: {
+        catalog: catalog.data.length,
+        repository: repository.length,
+        electronic: databases.length,
+      },
+    }
+  }
+
+  async openElectronicResource(id: string) {
+    const item = await ElectronicResource.query()
+      .where('id', id)
+      .where('tenant_id', borrowingTenantId())
+      .where('is_active', true)
+      .firstOrFail()
+
+    item.viewCount += 1
+    await item.save()
+    return item
+  }
+
   async unifiedSearch(q: string) {
     const tid = borrowingTenantId()
     const term = `%${q}%`
@@ -106,7 +198,11 @@ export default class DigitalService {
         .where('tenant_id', tid)
         .whereNull('deleted_at')
         .where((builder) => {
-          builder.whereILike('title', term).orWhereILike('authors', term).orWhereILike('subjects', term)
+          builder
+          .whereILike('title', term)
+          .orWhereILike('authors', term)
+          .orWhereILike('subjects', term)
+          .orWhereILike('abstract', term)
         })
         .limit(20),
       ElectronicResource.query()
@@ -124,6 +220,7 @@ export default class DigitalService {
         source: 'repository' as const,
         authors: r.authors,
         year: r.publicationYear,
+        accessLevel: r.accessLevel,
       })),
       electronic: eresources.map((r) => ({
         id: r.id,

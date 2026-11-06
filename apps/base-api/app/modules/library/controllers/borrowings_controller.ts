@@ -1,3 +1,4 @@
+import vine from '@vinejs/vine'
 import type { HttpContext } from '@adonisjs/core/http'
 import BorrowingService from '#modules/library/services/borrowing/borrowing_service'
 import RbacService from '#modules/library/services/auth/rbac_service'
@@ -18,6 +19,24 @@ function auditFromCtx(ctx: HttpContext) {
     requestId: ctx.request.header('x-request-id') ?? undefined,
   }
 }
+
+const categoryRuleValidator = vine.object({
+  loanPeriodDays: vine.number().min(1).max(365).optional(),
+  renewalPeriodDays: vine.number().min(1).max(365).optional(),
+  maxRenewals: vine.number().min(0).max(20).optional(),
+  maxActiveBorrowings: vine.number().min(1).max(100).optional(),
+})
+
+const categoryLoanRulesValidator = vine.compile(
+  vine.object({
+    categories: vine.object({
+      student: categoryRuleValidator.optional(),
+      faculty: categoryRuleValidator.optional(),
+      employee: categoryRuleValidator.optional(),
+      alumni: categoryRuleValidator.optional(),
+    }),
+  })
+)
 
 export default class BorrowingsController {
   private borrowingService = new BorrowingService()
@@ -106,6 +125,18 @@ export default class BorrowingsController {
     })
   }
 
+  async updateLoanRules(ctx: HttpContext) {
+    this.ensure(ctx, 'settings:update')
+    this.ensureStaffDesk(ctx)
+    const payload = await ctx.request.validateUsing(categoryLoanRulesValidator)
+    const rules = await this.borrowingService.saveCategoryLoanRules(payload.categories, ctx.authUser?.id ?? null)
+    return ctx.response.ok({
+      success: true,
+      message: 'Patron category loan rules saved. Official WMSU tables remain For Clarification.',
+      data: rules,
+    })
+  }
+
   async request(ctx: HttpContext) {
     this.ensure(ctx, 'borrowings:request')
     const payload = await ctx.request.validateUsing(requestBorrowValidator)
@@ -167,6 +198,47 @@ export default class BorrowingsController {
       message: 'Book checked out',
       data: this.borrowingService.serializeBorrowing(borrowing),
     })
+  }
+
+  async batchCheckout(ctx: HttpContext) {
+    this.ensure(ctx, 'borrowings:checkout')
+    this.ensureStaffDesk(ctx)
+    const payload = await ctx.request.validateUsing(
+      vine.compile(
+        vine.object({
+          cardNumber: vine.string().trim().minLength(3).maxLength(100),
+          barcodes: vine.array(vine.string().trim().minLength(2).maxLength(100)).minLength(1).maxLength(20),
+        })
+      )
+    )
+    const data = await this.borrowingService.batchDesk(
+      'checkout',
+      payload.barcodes,
+      ctx.authUser!.id,
+      payload.cardNumber,
+      auditFromCtx(ctx)
+    )
+    return ctx.response.ok({ success: true, data })
+  }
+
+  async batchCheckin(ctx: HttpContext) {
+    this.ensure(ctx, 'borrowings:return')
+    this.ensureStaffDesk(ctx)
+    const payload = await ctx.request.validateUsing(
+      vine.compile(
+        vine.object({
+          barcodes: vine.array(vine.string().trim().minLength(2).maxLength(100)).minLength(1).maxLength(20),
+        })
+      )
+    )
+    const data = await this.borrowingService.batchDesk(
+      'checkin',
+      payload.barcodes,
+      ctx.authUser!.id,
+      undefined,
+      auditFromCtx(ctx)
+    )
+    return ctx.response.ok({ success: true, data })
   }
 
   async return(ctx: HttpContext) {

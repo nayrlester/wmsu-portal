@@ -1,6 +1,7 @@
 import db from '@adonisjs/lucid/services/db'
 import { t } from '#modules/records/helpers/db_schema'
 import { auditLogService } from '#modules/records/services/audit_log_service'
+import Student from '#modules/enrollment/models/student'
 
 function httpError(message: string, status: number) {
   const err = new Error(message) as Error & { status: number }
@@ -183,6 +184,28 @@ export class AlumniProfileService {
     return {
       items: rows.map((r) => publicAlumniView(r, true)),
       meta: { total, limit, offset },
+    }
+  }
+
+  async standing(studentNumber: string) {
+    const number = studentNumber.trim()
+    const student = await Student.query().where('student_number', number).first()
+    const alumni = await db.from(t('alumni_profiles')).where('student_number', number).first()
+    const studentStatus = student?.status ?? null
+    const alumniRecord = Boolean(alumni)
+    let message = 'No student and no alumni record.'
+    if (alumniRecord) {
+      message = 'Alumni record exists. This check did not create another one.'
+    } else if (studentStatus === 'active') {
+      message = 'Active student. No alumni record was created.'
+    } else if (studentStatus) {
+      message = `Student status ${studentStatus}. No alumni record was created.`
+    }
+    return {
+      studentNumber: number,
+      studentStatus,
+      alumniRecord,
+      message,
     }
   }
 

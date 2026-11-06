@@ -9,10 +9,11 @@ const push = process.argv.includes('--push')
 const skipPrepare = process.argv.includes('--skip-prepare')
 const vercelOnly = process.argv.includes('--vercel-only')
 const railwayOnly = process.argv.includes('--railway-only')
+const seedPh = process.argv.includes('--seed-ph')
 
 if (env !== 'staging' && env !== 'production') {
   console.error(
-    'Usage: node scripts/deploy/cloud.mjs staging|production [--push] [--skip-prepare] [--vercel-only] [--railway-only]'
+    'Usage: node scripts/deploy/cloud.mjs staging|production [--push] [--skip-prepare] [--vercel-only] [--railway-only] [--seed-ph]'
   )
   process.exit(1)
 }
@@ -92,6 +93,21 @@ if (!railwayOnly) {
   for (const app of VERCEL_WEB_APPS) {
     const appRoot = path.join(root, app.dir)
     run(`Vercel ${app.slug}`, 'vercel', ['deploy', vercelTarget, '--yes'].filter(Boolean), appRoot)
+  }
+}
+
+if (seedPh) {
+  if (env !== 'production') {
+    console.warn('Skip --seed-ph: only wired for production Base API today.')
+  } else {
+    const seedArgs = ['scripts/ph-university-reset-and-seed.mjs', '--prod']
+    if (!process.env.RAILWAY_PUBLIC_DATABASE_URL?.trim()) {
+      seedArgs.push('--seed-only')
+      console.warn(
+        'RAILWAY_PUBLIC_DATABASE_URL unset — running PH seed API-only (no SQL cleanup).'
+      )
+    }
+    run('PH university baseline (prod)', 'node', seedArgs)
   }
 }
 

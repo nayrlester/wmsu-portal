@@ -78,7 +78,11 @@ export default class DigitalController {
   async accessRepository(ctx: HttpContext) {
     this.ensure(ctx, 'digital:access')
     const mode = ctx.request.input('mode', 'view') === 'download' ? 'download' : 'view'
-    const item = await this.service.accessRepositoryItem(ctx.params.id, mode)
+    const perms = ctx.authUser?.permissions ?? []
+    const allowRestricted = ['digital:create', 'digital:delete', '*'].some((code) =>
+      this.rbac.hasPermission(perms, code)
+    )
+    const item = await this.service.accessRepositoryItem(ctx.params.id, mode, { allowRestricted })
     return ctx.response.ok({ success: true, data: this.service.serializeRepo(item) })
   }
 
@@ -96,6 +100,12 @@ export default class DigitalController {
     const payload = await ctx.request.validateUsing(eresourceValidator)
     const item = await this.service.createElectronicResource(payload)
     return ctx.response.created({ success: true, data: this.service.serializeEresource(item) })
+  }
+
+  async openElectronic(ctx: HttpContext) {
+    this.ensure(ctx, 'digital:access')
+    const item = await this.service.openElectronicResource(ctx.params.id)
+    return ctx.response.ok({ success: true, data: this.service.serializeEresource(item) })
   }
 
   async unifiedSearch(ctx: HttpContext) {

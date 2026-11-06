@@ -48,10 +48,13 @@ export class EmailJsMailerService {
     }
 
     const fromName = env.get('MAIL_FROM_NAME') || env.get('APP_NAME') || 'WMSU CIS'
+    const recipientName = (input.toName || to.split('@')[0] || 'User').trim()
     const templateParams: Record<string, string> = {
       to_email: to,
       email: to,
-      to_name: (input.toName || to.split('@')[0] || 'User').trim(),
+      to_name: recipientName,
+      user: recipientName,
+      user_name: fromName,
       subject: input.subject,
       title: input.subject,
       message: input.message,

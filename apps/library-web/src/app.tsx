@@ -23,10 +23,12 @@ import { SearchPage } from '@/features/search/pages/search-page'
 import { AuditLogsPage } from '@/features/audit/pages/audit-logs-page'
 import { ReservationsPage } from '@/features/reservations/pages/reservations-page'
 import { ReportsPage } from '@/features/reports/pages/reports-page'
+import { NoticeLogPage } from '@/features/notices/pages/notice-log-page'
 import { OpacPage } from '@/features/opac/pages/opac-page'
 import { PortalPage } from '@/features/portal/pages/portal-page'
 import { DigitalPage } from '@/features/digital/pages/digital-page'
 import { KioskPlatformPage } from '@/features/kiosk/pages/kiosk-platform-page'
+import { RfidPage } from '@/features/rfid/pages/rfid-page'
 import { AttendancePage } from '@/features/attendance/pages/attendance-page'
 import { IntegrationsPage } from '@/features/integrations/pages/integrations-page'
 import { AcquisitionsPage } from '@/features/acquisitions/pages/acquisitions-page'
@@ -77,10 +79,12 @@ export function App() {
                 <Route path="/acquisitions" element={<AcquisitionsPage />} />
                 <Route path="/reservations" element={<ReservationsPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/notice-log" element={<NoticeLogPage />} />
                 <Route path="/opac" element={<OpacPage />} />
                 <Route path="/portal" element={<PortalPage />} />
                 <Route path="/digital" element={<DigitalPage />} />
                 <Route path="/kiosk-platform" element={<KioskPlatformPage />} />
+                <Route path="/rfid" element={<RfidPage />} />
                 <Route path="/attendance" element={<AttendancePage />} />
                 <Route path="/integrations" element={<IntegrationsPage />} />
                 <Route path="/search" element={<SearchPage />} />

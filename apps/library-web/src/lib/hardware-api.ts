@@ -4,6 +4,7 @@ import type {
   KioskDevice,
   KioskTransaction,
   LocateResult,
+  QueueAnalytics,
   QueueTicket,
   ShelfLocation,
   UpsertKioskPayload,
@@ -54,6 +55,18 @@ export async function callNextTicket(serviceType?: string) {
   const { data } = await apiClient.post<ApiResponse<QueueTicket>>('/hardware/queue/call-next', {
     serviceType,
   })
+  return data.data
+}
+
+export async function completeQueueTicket(id: string) {
+  const { data } = await apiClient.post<ApiResponse<QueueTicket>>(
+    `/hardware/queue/tickets/${id}/complete`
+  )
+  return data.data
+}
+
+export async function fetchQueueAnalytics() {
+  const { data } = await apiClient.get<ApiResponse<QueueAnalytics>>('/hardware/queue/analytics')
   return data.data
 }
 

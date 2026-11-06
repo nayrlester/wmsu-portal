@@ -134,6 +134,15 @@ export default class SchedulingController {
     return ctx.response.ok({ data })
   }
 
+  async reviewStoredConflicts(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const data = await schedulingService.reviewStoredSectionConflicts(
+      user.organizationId,
+      ctx.params.sectionId
+    )
+    return ctx.response.ok({ data })
+  }
+
   async myWaitlist(ctx: HttpContext) {
     const user = ctx.auth.user!
     const student = await facultyEvalService.resolveStudent(user.organizationId, user.email ?? '')

@@ -20,6 +20,7 @@ import AttendanceRecord from '#modules/enrollment/models/attendance_record'
 import Section from '#modules/enrollment/models/section'
 import Subject from '#modules/enrollment/models/subject'
 import EnrollmentLine from '#modules/enrollment/models/enrollment_line'
+import Enrollment from '#modules/enrollment/models/enrollment'
 import Student from '#modules/enrollment/models/student'
 import { RecordsGradesClient } from '#modules/enrollment/services/integrations/records_grades_client'
 import { resolveStudentGradeStatuses } from '#modules/enrollment/services/academic_policy_runtime_service'
@@ -319,6 +320,70 @@ export class GradeRecordsService {
     return this.getClassMasterList(input.organizationId, record.id)
   }
 
+  async enlistRegisteredStudent(input: {
+    organizationId: string
+    classRecordId: string
+    facultyUserId: string
+    studentNumber: string
+  }) {
+    const record = await ClassRecord.query()
+      .where('id', input.classRecordId)
+      .where('organization_id', input.organizationId)
+      .firstOrFail()
+    if (record.status === 'locked' || record.status === 'submitted') {
+      throw new EnrollmentWorkflowError('Class grades already submitted and locked', 409, 'GRADES_LOCKED')
+    }
+    await this.assertFacultyAuthorized(input.organizationId, record, input.facultyUserId)
+
+    const student = await Student.query()
+      .where('organization_id', input.organizationId)
+      .where('student_number', input.studentNumber.trim())
+      .first()
+    if (!student) {
+      throw new EnrollmentWorkflowError('Student was not found', 404, 'STUDENT_NOT_FOUND')
+    }
+
+    const enrollment = await Enrollment.query()
+      .where('organization_id', input.organizationId)
+      .where('student_id', student.id)
+      .whereIn('status', ['registered', 'payment_verified'])
+      .orderBy('created_at', 'desc')
+      .first()
+    if (!enrollment) {
+      throw new EnrollmentWorkflowError(
+        'Student has no registered enrollment for this class',
+        422,
+        'ENROLLMENT_NOT_REGISTERED'
+      )
+    }
+
+    const existing = await EnrollmentLine.query()
+      .where('enrollment_id', enrollment.id)
+      .where('section_id', record.sectionId)
+      .whereNot('status', 'dropped')
+      .first()
+    if (!existing) {
+      await EnrollmentLine.create({
+        organizationId: input.organizationId,
+        enrollmentId: enrollment.id,
+        subjectId: record.subjectId,
+        subjectCode: record.subjectCode,
+        subjectTitle: record.subjectTitle,
+        units: Number(record.units || 0),
+        sectionId: record.sectionId,
+        status: enrollment.status === 'registered' ? 'registered' : 'enrolled',
+      })
+    }
+
+    const unchanged = await Enrollment.findOrFail(enrollment.id)
+    return {
+      studentNumber: student.studentNumber,
+      enrollmentStatus: unchanged.status,
+      paymentVerified: unchanged.paymentVerified,
+      created: !existing,
+    }
+  }
+
   async encodeGrades(input: {
     organizationId: string
     classRecordId: string
@@ -474,7 +539,7 @@ export class GradeRecordsService {
       )
     }
 
-    return db.transaction(async (trx) => {
+    const locked = await db.transaction(async (trx) => {
       const now = DateTime.now()
       for (const entry of entries) {
         entry.useTransaction(trx)
@@ -544,6 +609,19 @@ export class GradeRecordsService {
 
       return { classRecord: record, submission, entries }
     })
+
+    const studentIds = [
+      ...new Set(locked.entries.map((entry) => entry.studentId).filter((id): id is string => Boolean(id))),
+    ]
+    const recordsSync = []
+    for (const studentId of studentIds) {
+      recordsSync.push({
+        studentId,
+        ...(await this.syncApprovedGradesToRecords(input.organizationId, studentId)),
+      })
+    }
+
+    return { ...locked, recordsSync }
   }
 
   async requestCorrection(input: {
@@ -977,7 +1055,9 @@ export class GradeRecordsService {
     } else {
       entriesQuery.whereIn('status', ['submitted', 'locked', 'draft', 'encoded'])
     }
-    const entries = await entriesQuery.preload('enrollment', (q) => q.preload('academicYear'))
+    const entries = await entriesQuery
+      .preload('enrollment', (q) => q.preload('academicYear'))
+      .preload('classRecord', (q) => q.preload('academicYear'))
 
     const history = await GradeEntryHistory.query()
       .whereIn(
@@ -998,13 +1078,14 @@ export class GradeRecordsService {
         firstName: student.firstName,
         middleName: student.middleName,
         lastName: student.lastName,
+        organizationId: student.organizationId,
         programCode: student.program?.code,
         programName: student.program?.name,
       },
       grades: entries.map((g) => ({
         id: g.id,
-        academicYear: g.enrollment?.academicYear?.code,
-        semester: g.enrollment?.semester,
+        academicYear: g.enrollment?.academicYear?.code ?? g.classRecord?.academicYear?.code,
+        semester: g.enrollment?.semester ?? g.classRecord?.semester,
         courseCode: g.courseCode,
         courseTitle: g.courseTitle,
         units: Number(g.units),
@@ -1065,12 +1146,19 @@ export class GradeRecordsService {
 
   async syncApprovedGradesToRecords(organizationId: string, studentId: string) {
     const payload = await this.academicRecordsForStudent(organizationId, studentId)
+    const approved = payload.grades.filter(
+      (grade) =>
+        (grade.status === 'locked' || grade.status === 'submitted') &&
+        Boolean(grade.courseCode) &&
+        Boolean(grade.academicYear)
+    )
+    if (!approved.length) return { synced: true, received: 0 }
     try {
       const client = new RecordsGradesClient()
-      await client.syncGrades({
+      const result = await client.syncGrades({
         organizationId,
         studentNumber: payload.student.studentNumber,
-        grades: payload.grades.map((g) => ({
+        grades: approved.map((g) => ({
           academicYear: g.academicYear ?? 'UNKNOWN',
           semester: g.semester ?? 1,
           courseCode: g.courseCode,
@@ -1078,11 +1166,14 @@ export class GradeRecordsService {
           units: g.units,
           grade: g.grade,
           remarks: g.remarks ?? null,
+          sourceEntryId: g.id,
+          originalGrade: g.originalGrade ?? g.grade,
+          programCode: payload.student.programCode ?? null,
         })),
       })
-      return { synced: true }
+      return { synced: true, received: approved.length, stored: result.data.synced }
     } catch {
-      return { synced: false }
+      return { synced: false, received: approved.length }
     }
   }
 }

@@ -51,6 +51,36 @@ function ClearanceQr({ url }: { url: string }) {
   )
 }
 
+function holdLabel(check: { cleared: boolean; openItems?: number }) {
+  if (check.cleared) return 'Cleared'
+  if (typeof check.openItems === 'number' && check.openItems > 0) {
+    return check.openItems === 1 ? 'Hold · 1 open item' : `Hold · ${check.openItems} open items`
+  }
+  return 'Hold / unavailable'
+}
+
+function officeSourceLabel(sourceRef: string | null) {
+  const library = sourceRef?.match(/^library:open:(\d+)$/)
+  if (library) {
+    const count = Number(library[1])
+    return count === 1 ? '1 open loan or unpaid fine' : `${count} open loans or unpaid fines`
+  }
+  const finance = sourceRef?.match(/^finance:open:(\d+)$/)
+  if (finance) {
+    const count = Number(finance[1])
+    return count === 1 ? '1 open finance item' : `${count} open finance items`
+  }
+  const inventory = sourceRef?.match(/^inventory:open:(\d+)$/)
+  if (inventory) {
+    const count = Number(inventory[1])
+    return count === 1 ? '1 open property assignment' : `${count} open property assignments`
+  }
+  if (sourceRef === 'finance:error') return 'Finance check unavailable'
+  if (sourceRef === 'library:error') return 'Library check unavailable'
+  if (sourceRef === 'inventory:error') return 'Inventory check unavailable'
+  return null
+}
+
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -99,7 +129,7 @@ function ClearanceReportPrintView({ report }: { report: ClearanceReportIssuePayl
             className="flex justify-between gap-2 rounded-lg bg-[var(--color-canvas)] px-3 py-2"
           >
             <span className="capitalize">{office}</span>
-            <span>{check.cleared ? 'Cleared' : 'Hold / unavailable'}</span>
+            <span className="whitespace-nowrap">{holdLabel(check)}</span>
           </li>
         ))}
       </ul>
@@ -386,6 +416,7 @@ function RegistrarClearanceReportInner() {
             <Button
               type="button"
               variant="secondary"
+              className="whitespace-nowrap"
               disabled={!studentNumber.trim() || syncOffice.isPending}
               onClick={() => syncOffice.mutate()}
             >
@@ -445,6 +476,13 @@ function RegistrarClearanceReportInner() {
                 <div className="font-medium capitalize">
                   {office.office} · {office.cleared ? 'cleared' : 'hold'}
                 </div>
+                {office.office === 'finance' && officeClearance.assessment ? (
+                  <p data-testid="finance-clearance-assessment">
+                    {officeClearance.assessment.assessmentNumber} · balance{' '}
+                    {Number(officeClearance.assessment.balanceAmount ?? 0).toFixed(2)} · not a
+                    clearance hold
+                  </p>
+                ) : null}
                 <ul className="space-y-1">
                   {office.items.map((item) => (
                     <li
@@ -454,6 +492,9 @@ function RegistrarClearanceReportInner() {
                       <span>
                         {item.label} · {item.status}
                         {item.autoSynced ? ' · auto' : ''}
+                        {officeSourceLabel(item.sourceRef) ? (
+                          <span className="whitespace-nowrap"> · {officeSourceLabel(item.sourceRef)}</span>
+                        ) : null}
                       </span>
                       {item.status !== 'waived' && item.status !== 'cleared' ? (
                         <Button

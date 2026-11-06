@@ -16,8 +16,10 @@ import { useDialog } from '@/components/providers/dialog-provider'
 import { getApiErrorMessage } from '@/lib/api-client'
 import {
   callNextTicket,
+  completeQueueTicket,
   fetchKioskTransactions,
   fetchKiosks,
+  fetchQueueAnalytics,
   fetchQueueBoard,
   fetchShelfLocations,
   issueQueueTicket,
@@ -70,6 +72,13 @@ export function KioskPlatformPage() {
   const { data: board = [] } = useQuery({
     queryKey: ['hardware-queue-board'],
     queryFn: fetchQueueBoard,
+    enabled: tab === 'queue' && Boolean(canQueue),
+    refetchInterval: 5000,
+  })
+
+  const { data: analytics } = useQuery({
+    queryKey: ['hardware-queue-analytics'],
+    queryFn: fetchQueueAnalytics,
     enabled: tab === 'queue' && Boolean(canQueue),
     refetchInterval: 5000,
   })
@@ -127,6 +136,7 @@ export function KioskPlatformPage() {
     mutationFn: issueQueueTicket,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['hardware-queue-board'] })
+      qc.invalidateQueries({ queryKey: ['hardware-queue-analytics'] })
       toast.success('Ticket issued')
       setTicketForm((s) => ({ ...s, patronName: '' }))
     },
@@ -137,7 +147,18 @@ export function KioskPlatformPage() {
     mutationFn: () => callNextTicket(ticketForm.serviceType),
     onSuccess: (ticket) => {
       qc.invalidateQueries({ queryKey: ['hardware-queue-board'] })
+      qc.invalidateQueries({ queryKey: ['hardware-queue-analytics'] })
       toast.success(`Now serving ${ticket.ticketNumber}`)
+    },
+    onError: (e) => toast.error(getApiErrorMessage(e)),
+  })
+
+  const finishTicket = useMutation({
+    mutationFn: completeQueueTicket,
+    onSuccess: (ticket) => {
+      qc.invalidateQueries({ queryKey: ['hardware-queue-board'] })
+      qc.invalidateQueries({ queryKey: ['hardware-queue-analytics'] })
+      toast.success(`Finished ${ticket.ticketNumber}`)
     },
     onError: (e) => toast.error(getApiErrorMessage(e)),
   })
@@ -323,6 +344,21 @@ export function KioskPlatformPage() {
 
       {tab === 'queue' && (
         <div className="grid gap-6 lg:grid-cols-2">
+          {analytics && (
+            <Card className="lg:col-span-2">
+              <CardContent className="space-y-2 p-4">
+                <h2 className="font-semibold">Today</h2>
+                <p className="text-sm text-slate-600">
+                  Issued {analytics.issued} · Waiting {analytics.waiting} · Serving {analytics.serving} · Finished{' '}
+                  {analytics.finished}
+                </p>
+                <p className="text-sm text-slate-600">
+                  Average wait {durationLabel(analytics.averageWaitSeconds)} · Average service{' '}
+                  {durationLabel(analytics.averageServiceSeconds)}
+                </p>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="space-y-3 p-4">
               <h2 className="flex items-center gap-2 font-semibold">
@@ -365,8 +401,8 @@ export function KioskPlatformPage() {
             <CardContent className="space-y-2 p-4">
               <h2 className="font-semibold">Live board</h2>
               {board.map((t) => (
-                <div key={t.id} className="flex items-center justify-between border-b border-slate-100 py-2 text-sm">
-                  <span className="font-semibold">{t.ticketNumber}</span>
+                <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 py-2 text-sm">
+                  <span className="whitespace-nowrap font-semibold">{t.ticketNumber}</span>
                   <span className="text-slate-500">{t.serviceType}</span>
                   <span
                     className={
@@ -376,6 +412,17 @@ export function KioskPlatformPage() {
                     {t.status}
                   </span>
                   {t.patronName && <span className="text-slate-500">{t.patronName}</span>}
+                  {t.status === 'called' && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="whitespace-nowrap"
+                      disabled={!canCall || finishTicket.isPending}
+                      onClick={() => finishTicket.mutate(t.id)}
+                    >
+                      Finish service
+                    </Button>
+                  )}
                 </div>
               ))}
               {!board.length && <p className="text-sm text-slate-500">No waiting tickets.</p>}
@@ -518,6 +565,12 @@ export function KioskPlatformPage() {
       )}
     </div>
   )
+}
+
+function durationLabel(seconds: number | null) {
+  if (seconds == null) return '—'
+  if (seconds < 60) return `${seconds}s`
+  return `${Math.round(seconds / 60)} min`
 }
 
 function KioskRow({

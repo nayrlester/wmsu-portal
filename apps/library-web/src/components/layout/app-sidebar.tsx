@@ -11,6 +11,7 @@ import {
   ScrollText,
   Bookmark,
   FileBarChart,
+  Bell,
   Globe,
   UserRound,
   HardDrive,
@@ -18,6 +19,7 @@ import {
   ClipboardList,
   LogOut,
   Plug,
+  ScanLine,
   ShoppingCart,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -65,6 +67,7 @@ const navSections: NavSection[] = [
       { to: '/acquisitions', label: 'Acquisitions', icon: ShoppingCart, permission: 'acquisitions:read' },
       { to: '/reservations', label: 'Holds & reservations', icon: Bookmark, permission: 'reservations:read' },
       { to: '/kiosk-platform', label: 'Kiosk platform', icon: MonitorSmartphone, permission: 'settings:read' },
+      { to: '/rfid', label: 'RFID desk', icon: ScanLine, permission: 'settings:read' },
     ],
   },
   {
@@ -81,6 +84,7 @@ const navSections: NavSection[] = [
     label: 'Insights',
     items: [
       { to: '/reports', label: 'Reports', icon: FileBarChart, permission: 'reports:export' },
+      { to: '/notice-log', label: 'Notice log', icon: Bell, permission: 'reports:export' },
       { to: '/audit-logs', label: 'Audit logs', icon: ScrollText, permission: 'audit:read' },
     ],
   },
@@ -96,10 +100,11 @@ function filterItems(items: NavItem[], permissions: string[] | undefined) {
   return items.filter((item) => !item.permission || permissions?.includes(item.permission))
 }
 
-function NavItemLink({ to, label, icon: Icon }: NavItem) {
+function NavItemLink({ to, label, icon: Icon, onNavigate }: NavItem & { onNavigate?: () => void }) {
   return (
     <NavLink
       to={to}
+      onClick={onNavigate}
       className={({ isActive }) =>
         cn(
           'group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
@@ -128,7 +133,13 @@ const studentNavSections: NavSection[] = [
   },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({
+  mobileOpen = false,
+  onNavigate,
+}: {
+  mobileOpen?: boolean
+  onNavigate?: () => void
+}) {
   const tenant = useAuthStore((s) => s.tenant)
   const user = useAuthStore((s) => s.user)
   const tokens = useAuthStore((s) => s.tokens)
@@ -154,7 +165,13 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="sticky top-0 z-20 flex h-screen w-[260px] shrink-0 flex-col overflow-hidden bg-[var(--color-sidebar)] text-[var(--color-sidebar-foreground)]">
+    <aside
+      className={cn(
+        'top-0 z-40 h-screen w-[260px] shrink-0 flex-col overflow-hidden bg-[var(--color-sidebar)] text-[var(--color-sidebar-foreground)]',
+        'lg:sticky lg:flex',
+        mobileOpen ? 'fixed inset-y-0 left-0 flex' : 'hidden'
+      )}
+    >
       <div className="flex flex-col items-center px-5 pb-5 pt-6 sm:pt-8">
         <WmsuLogo productName="WMSU" productTagline="University Library" variant="sidebar" invert className="w-full max-w-[220px]" />
         <p className="mt-3 line-clamp-2 text-center text-sm font-semibold leading-snug">
@@ -173,7 +190,7 @@ export function AppSidebar() {
             </p>
             <div className="space-y-0.5">
               {section.items.map((item) => (
-                <NavItemLink key={item.to} {...item} />
+                <NavItemLink key={item.to} {...item} onNavigate={onNavigate} />
               ))}
             </div>
           </div>
@@ -187,7 +204,7 @@ export function AppSidebar() {
           </p>
         )}
         {visibleAdmin.map((item) => (
-          <NavItemLink key={item.to} {...item} />
+          <NavItemLink key={item.to} {...item} onNavigate={onNavigate} />
         ))}
         <button
           type="button"

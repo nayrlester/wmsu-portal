@@ -186,6 +186,15 @@ router
         router.post('/integrations/probe', [TormsFoundationController, 'probeIntegrations']).use(
           middleware.permission(['torms.foundation.admin'])
         )
+        router.get('/integrations/archive-readiness', [TormsFoundationController, 'archiveReadiness']).use(
+          middleware.permission(['torms.sync.write'])
+        )
+        router.post('/integrations/archive-reference', [TormsFoundationController, 'archiveReference']).use(
+          middleware.permission(['torms.sync.write'])
+        )
+        router.post('/integrations/archive-route', [TormsFoundationController, 'archiveRoute']).use(
+          middleware.permission(['torms.sync.write'])
+        )
         router.get('/settings', [TormsFoundationController, 'listSettings']).use(
           middleware.permission(['torms.foundation.read'])
         )
@@ -204,12 +213,18 @@ router
         router.post('/sync/usis/pull', [TormsFoundationController, 'pullUsisGrades']).use(
           middleware.permission(['torms.sync.write'])
         )
+        router.get('/sync/ledger/:studentNumber', [TorController, 'preview']).use(
+          middleware.permission(['torms.sync.write'])
+        )
 
         router
           .get('/alumni', [TormsAlumniController, 'index'])
           .use(middleware.permission(['torms.alumni.read']))
         router
           .get('/alumni/me', [TormsAlumniController, 'me'])
+          .use(middleware.permission(['torms.alumni.read']))
+        router
+          .get('/alumni/standing/:studentNumber', [TormsAlumniController, 'standing'])
           .use(middleware.permission(['torms.alumni.read']))
         router
           .get('/alumni/:idOrStudent', [TormsAlumniController, 'show'])
@@ -239,4 +254,12 @@ router
     router.post('/alumni/from-graduation', [AlumniController, 'createFromGraduation'])
   })
   .prefix('/api/v1/records/internal').as('records.internal')
+  .use(middleware.serviceApiKey())
+
+router
+  .group(() => {
+    router.post('/grades/sync', [InternalGradesController, 'syncGrades'])
+    router.post('/alumni/from-graduation', [AlumniController, 'createFromGraduation'])
+  })
+  .prefix('/api/v1/internal').as('records.internal.legacy')
   .use(middleware.serviceApiKey())

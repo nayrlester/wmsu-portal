@@ -7,6 +7,7 @@ export const listBorrowingsValidator = vine.compile(
       .enum(['requested', 'approved', 'borrowed', 'returned', 'overdue', 'lost'])
       .optional(),
     memberId: vine.string().uuid().optional(),
+    copyId: vine.string().uuid().optional(),
     page: vine.number().min(1).optional(),
     perPage: vine.number().min(1).max(100).optional(),
   })

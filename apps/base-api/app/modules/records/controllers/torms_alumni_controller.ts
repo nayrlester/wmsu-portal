@@ -47,6 +47,11 @@ export default class TormsAlumniController {
     }
   }
 
+  async standing({ params, response }: HttpContext) {
+    const data = await alumniProfileService.standing(params.studentNumber)
+    return response.ok({ success: true, data })
+  }
+
   async show({ auth, params, response }: HttpContext) {
     const user = auth.user!
     try {

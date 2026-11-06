@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { EmptyState } from '@/components/ui/empty-state'
-import { getAlumni, listAlumni, updateAlumni } from '../api/alumni-api'
+import { getAlumni, alumniStanding, listAlumni, updateAlumni } from '../api/alumni-api'
 
 export function AlumniPage() {
   const qc = useQueryClient()
@@ -24,6 +24,9 @@ export function AlumniPage() {
   })
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [standingNumber, setStandingNumber] = useState('2026-PH-NEW001')
+  const [standingText, setStandingText] = useState('')
+  const [standingError, setStandingError] = useState('')
 
   const list = useQuery({
     queryKey: ['alumni', q, collegeCode, programCode, graduationYear, location],
@@ -42,6 +45,19 @@ export function AlumniPage() {
     queryKey: ['alumni-detail', selected],
     queryFn: () => getAlumni(selected!),
     enabled: Boolean(selected),
+  })
+
+  const standing = useMutation({
+    mutationFn: () => alumniStanding(standingNumber.trim()),
+    onSuccess: (data) => {
+      setStandingError('')
+      setStandingText(data.message)
+    },
+    onError: (err: unknown) => {
+      setStandingText('')
+      const ax = err as { response?: { data?: { message?: string } } }
+      setStandingError(ax.response?.data?.message ?? 'Alumni check failed')
+    },
   })
 
   const save = useMutation({
@@ -74,6 +90,32 @@ export function AlumniPage() {
       />
 
       <SectionCard title="Search">
+        <div className="mb-4 space-y-2">
+          <label className="block text-sm text-slate-600">
+            Student number
+            <Input
+              className="mt-1 max-w-sm"
+              aria-label="Alumni student number"
+              value={standingNumber}
+              onChange={(event) => setStandingNumber(event.target.value)}
+            />
+          </label>
+          <Button
+            type="button"
+            variant="secondary"
+            className="whitespace-nowrap"
+            disabled={standing.isPending || standingNumber.trim().length < 3}
+            onClick={() => standing.mutate()}
+          >
+            Check alumni standing
+          </Button>
+          {standingError ? <p className="text-sm text-red-600">{standingError}</p> : null}
+          {standingText ? (
+            <p className="text-sm text-slate-700" data-testid="alumni-standing">
+              {standingText}
+            </p>
+          ) : null}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <label className="text-sm">
             <span className="mb-1 block text-slate-600">Name / student / email</span>

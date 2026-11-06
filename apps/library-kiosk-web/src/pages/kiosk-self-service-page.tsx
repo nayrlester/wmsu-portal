@@ -6,6 +6,7 @@ import {
   kioskHeartbeat,
   kioskHistory,
   kioskPatron,
+  kioskRenew,
   kioskReturn,
   kioskSession,
   type KioskCredentials,
@@ -18,7 +19,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { KioskActionGrid } from '@/components/kiosk-action-grid'
 
-type Mode = 'home' | 'borrow' | 'return' | 'account' | 'history'
+type Mode = 'home' | 'borrow' | 'return' | 'renew' | 'account' | 'history'
 
 function SoftBackdrop({ children }: { children: React.ReactNode }) {
   return (
@@ -190,6 +191,41 @@ export function KioskSelfServicePage() {
       setMessage('Borrow successful. Please take your materials.')
       setBarcode('')
       setTimeout(resetSession, 4000)
+    } catch (err) {
+      setError(getKioskApiError(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function completeRenew(e: FormEvent) {
+    e.preventDefault()
+    if (!patronName) {
+      await startBorrow()
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const result = await kioskRenew(creds!, {
+        cardNumber: cardNumber.trim(),
+        copyBarcode: barcode.trim(),
+      })
+      const due = result.borrowing.dueAt
+        ? new Date(result.borrowing.dueAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            timeZone: 'Asia/Manila',
+          })
+        : 'the new due date'
+      const used = result.borrowing.renewalCount ?? 0
+      const max = result.borrowing.maxRenewals ?? 0
+      setServerTime(String(result.serverTime))
+      setMessage(
+        `Renewed. "${result.borrowing.bookTitle ?? 'This item'}" is now due ${due}. Renewal ${used} of ${max}.`
+      )
+      setBarcode('')
     } catch (err) {
       setError(getKioskApiError(err))
     } finally {
@@ -426,6 +462,41 @@ export function KioskSelfServicePage() {
                   </Button>
                   <Button type="submit" disabled={busy} className="h-12 flex-1" size="lg">
                     {patronName ? 'Complete borrow' : 'Verify card'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {mode === 'renew' && (
+          <Card className="mx-auto mt-10 w-full max-w-xl animate-fade-up">
+            <CardContent className="space-y-4 p-8">
+              <h2 className="text-3xl font-bold text-[var(--color-ink)]">Renew</h2>
+              <form onSubmit={completeRenew} className="space-y-4">
+                <Input
+                  autoFocus
+                  className="h-14 text-lg"
+                  placeholder="Library card number"
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value)}
+                  required
+                />
+                {patronName && (
+                  <Input
+                    className="h-14 text-lg"
+                    placeholder="Item barcode"
+                    value={barcode}
+                    onChange={(e) => setBarcode(e.target.value)}
+                    required
+                  />
+                )}
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" onClick={resetSession} className="h-12">
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={busy} className="h-12 flex-1" size="lg">
+                    {patronName ? 'Renew loan' : 'Verify card'}
                   </Button>
                 </div>
               </form>

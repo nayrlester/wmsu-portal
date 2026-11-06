@@ -131,6 +131,7 @@ export default class KioskService {
       features: {
         borrow: true,
         return: true,
+        renew: true,
         account: true,
         history: true,
       },
@@ -190,6 +191,41 @@ export default class KioskService {
 
     return {
       borrowing: this.borrowingService.serializeBorrowing(borrowing),
+      serverTime: this.serverTime(),
+    }
+  }
+
+  async renewByBarcode(kiosk: KioskDevice, cardNumber: string, copyBarcode: string) {
+    const member = await this.findMemberByCard(cardNumber)
+    const copy = await this.findCopyByBarcode(copyBarcode)
+    const borrowing = await Borrowing.query()
+      .where('tenant_id', borrowingTenantId())
+      .where('copy_id', copy.id)
+      .where('member_id', member.id)
+      .whereIn('status', ['borrowed', 'overdue'])
+      .first()
+
+    if (!borrowing) {
+      throw new BusinessRuleException('No active loan for this card and item')
+    }
+
+    const serviceUser = await this.ensureServiceUser()
+    const renewed = await this.borrowingService.renew(borrowing.id, {
+      userId: serviceUser.id,
+      userEmail: serviceUser.email,
+    })
+
+    await this.log(kiosk, 'renew', member.id, {
+      cardNumber: member.libraryCardNumber,
+      barcode: copy.barcode,
+      borrowingId: renewed.id,
+      bookTitle: renewed.book?.title ?? null,
+      dueAt: renewed.dueAt?.toISO() ?? null,
+      renewalCount: renewed.renewalCount ?? 0,
+    })
+
+    return {
+      borrowing: this.borrowingService.serializeBorrowing(renewed),
       serverTime: this.serverTime(),
     }
   }

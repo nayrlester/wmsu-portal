@@ -37,7 +37,12 @@ export class StudentAccountService {
     applicantId?: string | null
     classification?: string | null
     mdmCampusId?: string | null
-  }): Promise<Student> {
+  }): Promise<{
+    student: Student
+    loginEmail: string
+    temporaryPassword: string | null
+    provisioned: boolean
+  }> {
     const emailDomain = env.get('STUDENT_EMAIL_DOMAIN') ?? 'demo.edu.ph'
     const email = `${data.studentNumber}@${emailDomain}`
 
@@ -57,6 +62,8 @@ export class StudentAccountService {
       status: 'active',
     })
 
+    let temporaryPassword: string | null = null
+    let provisioned = false
     try {
       const result = await this.provisionClient.provisionStudent({
         studentNumber: data.studentNumber,
@@ -67,11 +74,13 @@ export class StudentAccountService {
         mobile: data.mobile,
       })
       student.platformUserId = result.userId
+      temporaryPassword = result.temporaryPassword
+      provisioned = true
       await student.save()
     } catch {
-      // Local/dev CIS can proceed without Identity when the provision key is mismatched or Identity is down.
+      provisioned = false
     }
 
-    return student
+    return { student, loginEmail: email, temporaryPassword, provisioned }
   }
 }

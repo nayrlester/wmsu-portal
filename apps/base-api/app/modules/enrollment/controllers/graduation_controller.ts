@@ -13,9 +13,6 @@ export default class GraduationController {
     const programCode = request.input('programCode', 'GENERAL')
     const graduationDate = request.input('graduationDate', new Date().toISOString().slice(0, 10))
 
-    student.status = 'graduated'
-    await student.save()
-
     const alumni = new RecordsAlumniClient()
     await alumni.createFromGraduation({
       organizationId: user.organizationId,
@@ -28,6 +25,11 @@ export default class GraduationController {
       lastName: student.lastName,
       mobile: student.mobile,
     })
+
+    if (student.status !== 'graduated') {
+      student.status = 'graduated'
+      await student.save()
+    }
 
     return response.ok({ data: { student } })
   }

@@ -19,7 +19,9 @@ export class IdentityProvisionClient {
     this.apiKey = env.get('ENROLLMENT_SERVICE_API_KEY') ?? env.get('SERVICE_API_KEY') ?? ''
   }
 
-  async provisionStudent(payload: StudentProvisionPayload): Promise<{ userId: string; email: string }> {
+  async provisionStudent(
+    payload: StudentProvisionPayload
+  ): Promise<{ userId: string; email: string; temporaryPassword: string | null; created: boolean }> {
     const fullName = [payload.firstName, payload.middleName, payload.lastName]
       .filter(Boolean)
       .join(' ')
@@ -32,11 +34,18 @@ export class IdentityProvisionClient {
       studentNumber: payload.studentNumber,
       status: 'active' as const,
     }
-    const data = await this.post<{ id: string; email: string }>(
-      '/api/v1/integrations/enrollment/students',
-      body
-    )
-    return { userId: data.id, email: data.email }
+    const data = await this.post<{
+      id: string
+      email: string
+      temporaryPassword?: string
+      created?: boolean
+    }>('/api/v1/integrations/enrollment/students', body)
+    return {
+      userId: data.id,
+      email: data.email,
+      temporaryPassword: data.temporaryPassword?.trim() || null,
+      created: Boolean(data.created),
+    }
   }
 
   private async post<T>(path: string, payload: unknown): Promise<T> {

@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from 'react'
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
+  '/academic-sync': 'Academic sync',
   '/items': 'Items',
   '/warehouses': 'Warehouses',
   '/stock': 'Stock Movements',

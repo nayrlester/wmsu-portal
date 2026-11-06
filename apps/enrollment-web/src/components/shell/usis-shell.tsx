@@ -1,6 +1,7 @@
+import { LayoutGrid } from 'lucide-react'
 import { useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { AppShell, NotificationProvider } from '@wmsu/ui'
+import { AppShell, Button, NotificationProvider } from '@wmsu/ui'
 import { WmsuLogo } from '@/components/brand/wmsu-logo'
 import { useAuthStore } from '@/stores/auth-store'
 import { filterNavGroups } from '@/lib/nav-config'
@@ -88,10 +89,30 @@ export function UsisShell({ children }: { children: React.ReactNode }) {
           subtitle: user?.fullName
             ? `Signed in as ${user.fullName}`
             : (user?.email ?? 'Campus portal'),
+          actions: (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 whitespace-nowrap"
+              onClick={() => returnToPlatforms()}
+            >
+              <LayoutGrid className="h-4 w-4" aria-hidden />
+              Platforms
+            </Button>
+          ),
           user: {
             name: user?.fullName || user?.email || 'User',
             email: user?.email ?? '',
             role: user?.roles?.[0] ?? 'USiS',
+            items: [
+              {
+                id: 'platforms',
+                label: 'Platforms',
+                icon: <LayoutGrid className="h-4 w-4" aria-hidden />,
+                onSelect: () => returnToPlatforms(),
+              },
+            ],
             onSignOut: () => returnToPlatforms({ clearSession: true }),
           },
         }}

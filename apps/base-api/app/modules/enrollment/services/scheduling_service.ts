@@ -180,6 +180,37 @@ export class SchedulingService {
     return { ok: conflicts.length === 0, conflicts }
   }
 
+  async reviewStoredSectionConflicts(organizationId: string, sectionId: string) {
+    const section = await Section.query()
+      .where('organization_id', organizationId)
+      .where('id', sectionId)
+      .firstOrFail()
+    const meetings = await UsisSectionMeeting.query()
+      .where('organization_id', organizationId)
+      .where('section_id', sectionId)
+    const conflicts: ScheduleConflict[] = []
+    for (const meeting of meetings) {
+      const result = await this.detectMeetingSlotConflicts({
+        organizationId,
+        sectionId,
+        dayOfWeek: meeting.dayOfWeek,
+        startMinute: meeting.startMinute,
+        endMinute: meeting.endMinute,
+        roomCode: meeting.roomCode,
+        facultyUserId: meeting.facultyUserId,
+        excludeMeetingId: meeting.id,
+      })
+      conflicts.push(...result.conflicts)
+    }
+    return {
+      sectionCode: section.code,
+      meetingsChecked: meetings.length,
+      ok: conflicts.length === 0,
+      conflicts,
+      unchanged: true,
+    }
+  }
+
   async detectConflicts(input: {
     organizationId: string
     studentId: string

@@ -69,4 +69,13 @@ export default await Env.create(new URL('../', import.meta.url), {
   SMTP_PASSWORD: Env.schema.string.optional(),
   MAIL_FROM: Env.schema.string.optional(),
   STUDENT_EMAIL_DOMAIN: Env.schema.string.optional(),
+  PHILSMS_API_URL: Env.schema.string.optional(),
+  PHILSMS_API_TOKEN: Env.schema.string.optional(),
+  PHILSMS_SENDER_ID: Env.schema.string.optional(),
+  UNISMS_API_URL: Env.schema.string.optional(),
+  UNISMS_API_TOKEN: Env.schema.string.optional(),
+  UNISMS_SENDER_ID: Env.schema.string.optional(),
+  TWILIO_ACCOUNT_SID: Env.schema.string.optional(),
+  TWILIO_AUTH_TOKEN: Env.schema.string.optional(),
+  TWILIO_FROM_NUMBER: Env.schema.string.optional(),
 })

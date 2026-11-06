@@ -221,6 +221,10 @@ router
     router.post('/scheduling/sections/:sectionId/meetings', [SchedulingController, 'upsertMeeting']).use(
       middleware.permission(['academic.write'])
     )
+    router
+      .get('/scheduling/sections/:sectionId/stored-conflicts', [SchedulingController, 'reviewStoredConflicts'])
+      .use(middleware.permission(['academic.read', 'enrollments.read']))
+      .as('scheduling.stored_conflicts')
     router.get('/scheduling/sections/:sectionId/summary', [SchedulingController, 'sectionSummary']).use(
       middleware.permission(['academic.read', 'students.self', 'enrollments.read'])
     )
@@ -564,6 +568,9 @@ router
       middleware.permission(['grades.read'])
     )
     router.post('/grades/class-records/open', [GradeRecordsController, 'openClassRecord']).use(
+      middleware.permission(['grades.write'])
+    )
+    router.post('/grades/class-records/:id/roster', [GradeRecordsController, 'enlist']).use(
       middleware.permission(['grades.write'])
     )
     router.get('/grades/class-records/:id/master-list', [GradeRecordsController, 'classMasterList']).use(

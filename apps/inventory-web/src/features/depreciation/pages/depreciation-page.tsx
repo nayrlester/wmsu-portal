@@ -417,8 +417,12 @@ function RunModal({ onClose, onDone }: { onClose: () => void; onDone: () => void
         assetId: assetId.trim() || undefined,
       }),
     onSuccess: (res) => {
-      setResultMsg(`Posted ${res.processed} depreciation entr${res.processed === 1 ? 'y' : 'ies'}.`)
-      setTimeout(onDone, 900)
+      setResultMsg(
+        res.ran
+          ? `Posted ${res.processed} depreciation entr${res.processed === 1 ? 'y' : 'ies'}.`
+          : res.reason || 'Depreciation was not run.'
+      )
+      if (res.ran) setTimeout(onDone, 900)
     },
   })
 
@@ -430,7 +434,7 @@ function RunModal({ onClose, onDone }: { onClose: () => void; onDone: () => void
         </div>
       )}
       {resultMsg && (
-        <div className="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{resultMsg}</div>
+        <div data-testid="depreciation-run-result" className="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{resultMsg}</div>
       )}
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">

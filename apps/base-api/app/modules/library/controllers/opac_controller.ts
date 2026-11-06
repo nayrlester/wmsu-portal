@@ -12,6 +12,7 @@ const searchValidator = vine.compile(
     subject: vine.string().trim().optional(),
     callNumber: vine.string().trim().optional(),
     year: vine.number().optional(),
+    isbn: vine.string().trim().maxLength(40).optional(),
     resourceType: vine.enum(['physical', 'digital', 'all']).optional(),
     availability: vine.enum(['available', 'any']).optional(),
     language: vine.string().trim().optional(),

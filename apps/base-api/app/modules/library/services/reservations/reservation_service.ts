@@ -237,13 +237,18 @@ export default class ReservationService {
     }
     await next.save()
 
+    const book = await Book.find(bookId)
+    const title = book?.title?.trim() || 'A reserved title'
+    const pickupBy = next.expiresAt?.toFormat('MMM d, yyyy')
     await enqueueNotification({
       tenantId: tid,
       eventType: NOTIFICATION_EVENTS.RESERVATION_READY,
       recipientType: 'member',
       recipientId: next.memberId,
       title: 'Reservation ready',
-      body: 'A reserved item is ready for pickup. Please collect it within 3 days.',
+      body: pickupBy
+        ? `"${title}" is ready for pickup through ${pickupBy}.`
+        : `"${title}" is ready for pickup.`,
       payload: { reservationId: next.id, bookId, copyId: availableCopy.id },
     })
 

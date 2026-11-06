@@ -1,5 +1,6 @@
-import env from '#start/env'
 import { fetchJson } from '#modules/records/services/integrations/http_json_client'
+import Student from '#modules/enrollment/models/student'
+import { GradeRecordsService } from '#modules/enrollment/services/grade_records_service'
 
 export type UsisGradesExport = {
   success?: boolean
@@ -28,11 +29,11 @@ export class UsisAcademicClient {
     null
 
   private baseUrl() {
-    return (env.get('USIS_API_URL') ?? env.get('ENROLLMENT_API_URL') ?? '').replace(/\/$/, '')
+    return (process.env.USIS_API_URL ?? process.env.ENROLLMENT_API_URL ?? '').replace(/\/$/, '')
   }
 
   private serviceKey() {
-    return env.get('USIS_SERVICE_API_KEY') ?? env.get('SERVICE_API_KEY') ?? ''
+    return process.env.USIS_SERVICE_API_KEY ?? process.env.SERVICE_API_KEY ?? ''
   }
 
   isConfigured() {
@@ -40,7 +41,7 @@ export class UsisAcademicClient {
   }
 
   private resolveOrganizationId(organizationId: string) {
-    const mapped = env.get('USIS_ORGANIZATION_ID')?.trim()
+    const mapped = process.env.USIS_ORGANIZATION_ID?.trim()
     return mapped || organizationId
   }
 
@@ -50,20 +51,14 @@ export class UsisAcademicClient {
     }
 
     if (!this.baseUrl() || !this.serviceKey()) {
-      return {
-        ok: false,
-        status: null,
-        error: 'USIS_API_URL (or ENROLLMENT_API_URL) and service API key are not configured',
-        unavailable: true,
-        contract: 'INT-TOR-01',
-      }
+      return this.exportFromLocalEnrollment(studentNumber)
     }
 
     const usisOrgId = this.resolveOrganizationId(organizationId)
-    const url = `${this.baseUrl()}/api/v1/internal/students/${encodeURIComponent(studentNumber)}/grades-export?organizationId=${encodeURIComponent(usisOrgId)}`
+    const url = `${this.baseUrl()}/api/v1/enrollment/internal/students/${encodeURIComponent(studentNumber)}/grades-export?organizationId=${encodeURIComponent(usisOrgId)}`
     const result = await fetchJson<UsisGradesExport>(url, {
       headers: { 'X-Service-Api-Key': this.serviceKey() },
-      timeoutMs: env.get('USIS_HTTP_TIMEOUT_MS') ?? 8_000,
+      timeoutMs: Number(process.env.USIS_HTTP_TIMEOUT_MS ?? 8_000),
     })
 
     if (!result.ok) {
@@ -71,6 +66,38 @@ export class UsisAcademicClient {
     }
 
     return { ...result, contract: 'INT-TOR-01' }
+  }
+
+  private async exportFromLocalEnrollment(studentNumber: string): Promise<ExportResult> {
+    const student = await Student.query().where('student_number', studentNumber).preload('program').first()
+    if (!student) {
+      return {
+        ok: false,
+        status: 404,
+        error: 'Student was not found in USiS',
+        unavailable: false,
+        contract: 'INT-TOR-01',
+      }
+    }
+
+    const records = await new GradeRecordsService().academicRecordsForStudent(
+      student.organizationId,
+      student.id
+    )
+    return {
+      ok: true,
+      status: 200,
+      contract: 'INT-TOR-01',
+      data: {
+        success: true,
+        data: {
+          student: records.student,
+          grades: records.grades,
+          gwa: records.gwa,
+          history: records.history,
+        },
+      },
+    }
   }
 }
 

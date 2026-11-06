@@ -78,7 +78,16 @@ export default class CopyService {
 
     if (input.barcode !== undefined) copy.barcode = input.barcode
     if (input.shelfLocation !== undefined) copy.shelfLocation = input.shelfLocation
-    if (input.status !== undefined) copy.status = input.status
+    if (input.status !== undefined && input.status !== copy.status) {
+      if (copy.status === 'on_loan' || copy.status === 'reserved') {
+        throw new BusinessRuleException('Return the loan or release the hold before changing item status.')
+      }
+      const staffStatuses: BookCopyStatus[] = ['available', 'damaged', 'under_repair', 'maintenance']
+      if (!staffStatuses.includes(input.status)) {
+        throw new BusinessRuleException('Use the circulation desk for checkout, holds, loss, and withdrawal.')
+      }
+      copy.status = input.status
+    }
     if (input.condition !== undefined) copy.condition = input.condition
     if (input.notes !== undefined) copy.notes = input.notes
 

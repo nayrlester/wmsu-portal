@@ -9,6 +9,7 @@ export interface OpacSearchFilters {
   subject?: string
   callNumber?: string
   year?: number
+  isbn?: string
   resourceType?: 'physical' | 'digital' | 'all'
   availability?: 'available' | 'any'
   language?: string
@@ -25,20 +26,52 @@ export default class OpacService {
     const query = Book.query().where('tenant_id', tid).whereNull('deleted_at').preload('category')
 
     if (filters.q) {
-      const term = `%${filters.q.toLowerCase()}%`
-      query.where((q) => {
-        q.whereILike('title', term)
+      const term = `%${filters.q}%`
+      query.where((builder) => {
+        builder
+          .whereILike('title', term)
           .orWhereILike('author_names', term)
           .orWhereILike('genre', term)
+          .orWhereILike('subject_names', term)
           .orWhereILike('description', term)
           .orWhereILike('search_text', term)
+          .orWhereILike('isbn13', term)
+          .orWhereILike('isbn10', term)
+          .orWhereILike('issn', term)
+          .orWhereILike('classification_number', term)
+          .orWhereILike('catalog_barcode', term)
       })
     }
 
     if (filters.title) query.whereILike('title', `%${filters.title}%`)
     if (filters.author) query.whereILike('author_names', `%${filters.author}%`)
-    if (filters.subject) query.whereILike('genre', `%${filters.subject}%`)
-    if (filters.callNumber) query.whereILike('catalog_barcode', `%${filters.callNumber}%`)
+    if (filters.subject) {
+      const term = `%${filters.subject}%`
+      query.where((builder) => {
+        builder.whereILike('genre', term).orWhereILike('subject_names', term)
+      })
+    }
+    if (filters.callNumber) {
+      const term = `%${filters.callNumber}%`
+      query.where((builder) => {
+        builder.whereILike('catalog_barcode', term).orWhereILike('classification_number', term)
+      })
+    }
+    if (filters.year) query.where('publication_year', filters.year)
+    if (filters.isbn) {
+      const term = `%${filters.isbn}%`
+      query.where((builder) => {
+        builder.whereILike('isbn13', term).orWhereILike('isbn10', term).orWhereILike('issn', term)
+      })
+    }
+    if (filters.language) {
+      const term = `%${filters.language}%`
+      query.where((builder) => {
+        builder
+          .whereRaw(`coalesce(dublin_core->>'language', '') ilike ?`, [term])
+          .orWhereILike('search_text', term)
+      })
+    }
     if (filters.resourceType === 'digital') query.where('is_digital', true)
     if (filters.resourceType === 'physical') query.where('is_digital', false)
 
@@ -101,7 +134,7 @@ export default class OpacService {
 
   buildCitations(book: Book) {
     const authors = book.authorNames ?? 'Unknown'
-    const year = new Date().getFullYear()
+    const year = book.publicationYear ?? 'n.d.'
     const title = book.title
 
     return {
@@ -111,6 +144,8 @@ export default class OpacService {
   }
 
   private serialize(book: Book, availableCopies: number, totalCopies: number) {
+    const thesis = book.materialType === 'dissertation' || book.materialType === 'thesis'
+    const dc = book.dublinCore
     return {
       id: book.id,
       title: book.title,
@@ -119,7 +154,14 @@ export default class OpacService {
       genre: book.genre,
       category: book.category?.name ?? null,
       isbn13: book.isbn13,
-      callNumber: book.catalogBarcode,
+      issn: book.issn,
+      callNumber: book.classificationNumber || book.catalogBarcode,
+      publicationYear: book.publicationYear,
+      materialType: book.materialType,
+      detailProfile: thesis ? 'thesis' : 'catalog',
+      degree: thesis ? dcText(dc, 'degree') : null,
+      department: thesis ? dcText(dc, 'department') : null,
+      advisor: thesis ? dcText(dc, 'advisor') : null,
       isDigital: book.isDigital,
       coverImageUrl: book.coverImageUrl,
       availableCopies,
@@ -127,4 +169,9 @@ export default class OpacService {
       availability: availableCopies > 0 ? 'available' : 'unavailable',
     }
   }
+}
+
+function dcText(dc: Record<string, unknown> | null, key: string) {
+  const value = dc?.[key]
+  return typeof value === 'string' && value.trim() ? value.trim() : null
 }

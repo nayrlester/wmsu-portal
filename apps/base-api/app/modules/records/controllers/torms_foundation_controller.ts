@@ -201,6 +201,32 @@ export default class TormsFoundationController {
     return response.ok({ success: true, data: result })
   }
 
+  async archiveReadiness({ response }: HttpContext) {
+    const data = await udmsDocumentClient.archiveReadiness()
+    return response.ok({ success: true, data })
+  }
+
+  async archiveReference({ request, response }: HttpContext) {
+    const payload = await request.validateUsing(syncPullValidator)
+    const result = await udmsDocumentClient.saveAcademicReference(payload.studentNumber)
+    if (!result.ok) {
+      return response.unprocessableEntity({
+        success: false,
+        message: 'error' in result ? result.error : 'Archive reference was not stored',
+      })
+    }
+    return response.ok({ success: true, data: 'data' in result ? result.data : null })
+  }
+
+  async archiveRoute({ request, response }: HttpContext) {
+    const payload = await request.validateUsing(syncPullValidator)
+    const result = await udmsDocumentClient.routeAcademicReference(payload.studentNumber)
+    if (!result.ok) {
+      return response.unprocessableEntity({ success: false, message: result.error })
+    }
+    return response.ok({ success: true, data: result.data })
+  }
+
   async probeIntegrations({ auth, request, response }: HttpContext) {
     const user = auth.user!
     const payload = await request.validateUsing(integrationProbeValidator)

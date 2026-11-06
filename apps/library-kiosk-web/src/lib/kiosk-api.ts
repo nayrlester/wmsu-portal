@@ -84,6 +84,24 @@ export async function kioskCheckout(
   return data.data
 }
 
+export async function kioskRenew(
+  creds: KioskCredentials,
+  payload: { cardNumber: string; copyBarcode: string }
+) {
+  const { data } = await client(creds).post<
+    ApiResponse<{
+      borrowing: {
+        bookTitle?: string
+        dueAt?: string | null
+        renewalCount?: number
+        maxRenewals?: number
+      }
+      serverTime: string
+    }>
+  >('/kiosk/renew', payload)
+  return data.data
+}
+
 export async function kioskReturn(creds: KioskCredentials, copyBarcode: string) {
   const { data } = await client(creds).post<
     ApiResponse<{ borrowing: Record<string, unknown>; serverTime: string }>
@@ -92,6 +110,10 @@ export async function kioskReturn(creds: KioskCredentials, copyBarcode: string) 
 }
 
 export function getKioskApiError(error: unknown): string {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message
+    if (message) return message
+  }
   if (error && typeof error === 'object' && 'message' in error) {
     return String((error as { message?: string }).message ?? 'Transaction failed')
   }

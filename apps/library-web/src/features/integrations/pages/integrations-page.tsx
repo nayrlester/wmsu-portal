@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   fetchIntegrationsStatus,
+  syncEnrollmentStudents,
   syncArisStudents,
   syncHrisEmployees,
 } from '@/lib/integrations-api'
@@ -44,6 +45,22 @@ export function IntegrationsPage() {
     queryKey: ['integrations-status'],
     queryFn: fetchIntegrationsStatus,
     enabled: Boolean(canManage),
+  })
+
+  const [syncResult, setSyncResult] = useState('')
+
+  const enrollmentMut = useMutation({
+    mutationFn: syncEnrollmentStudents,
+    onSuccess: (result) => {
+      const message = `Enrollment sync: ${result.created} created, ${result.updated} updated, ${result.skipped} skipped`
+      setSyncResult(message)
+      toast.success(message)
+    },
+    onError: (err) => {
+      const message = getApiErrorMessage(err) || 'Enrollment sync failed'
+      setSyncResult(message)
+      toast.error(message)
+    },
   })
 
   const arisMut = useMutation({
@@ -145,6 +162,29 @@ export function IntegrationsPage() {
               </Card>
             ))}
       </div>
+
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          <div>
+            <p className="font-medium text-slate-900">USiS enrollment</p>
+            <p className="text-sm text-slate-500">
+              Copy active student records into library patrons. An existing patron with the same email keeps the current library card.
+            </p>
+          </div>
+          <Button
+            className="whitespace-nowrap"
+            onClick={() => enrollmentMut.mutate()}
+            disabled={enrollmentMut.isPending}
+          >
+            Sync from enrollment
+          </Button>
+          {syncResult ? (
+            <p className="text-sm text-slate-700" data-testid="enrollment-sync-result">
+              {syncResult}
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="space-y-3 p-4">

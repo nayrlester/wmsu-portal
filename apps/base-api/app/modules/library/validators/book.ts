@@ -80,7 +80,7 @@ export const updateCopyValidator = vine.compile(
     barcode: vine.string().trim().maxLength(50).optional(),
     shelfLocation: vine.string().trim().maxLength(100).nullable().optional(),
     status: vine
-      .enum(['available', 'on_loan', 'reserved', 'maintenance', 'lost', 'withdrawn'])
+      .enum(['available', 'on_loan', 'reserved', 'maintenance', 'lost', 'withdrawn', 'damaged', 'under_repair'])
       .optional(),
     condition: vine.string().trim().maxLength(20).nullable().optional(),
     notes: vine.string().trim().nullable().optional(),

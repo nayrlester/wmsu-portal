@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react'
 
-type ActionId = 'borrow' | 'return' | 'account' | 'history'
+type ActionId = 'borrow' | 'return' | 'renew' | 'account' | 'history'
 
 const ACTIONS: Array<{
   id: ActionId
@@ -24,15 +24,22 @@ const ACTIONS: Array<{
     accent: 'var(--color-sidebar)',
   },
   {
-    id: 'account',
+    id: 'renew',
     index: '03',
+    title: 'Renew',
+    desc: 'Scan your card and the item you already have',
+    accent: '#0f6e56',
+  },
+  {
+    id: 'account',
+    index: '04',
     title: 'Account',
     desc: 'Membership status and outstanding fines',
     accent: '#3d5a80',
   },
   {
     id: 'history',
-    index: '04',
+    index: '05',
     title: 'History',
     desc: 'Recent loans and due dates',
     accent: '#5c4d7a',
@@ -66,6 +73,14 @@ function Icon({
         <path d="M9 10H4V5" />
         <path d="M4 10a8 8 0 1 0 2.3-5.7L4 10" />
         <path d="M12 8v5l3 2" />
+      </svg>
+    )
+  }
+  if (id === 'renew') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden {...common}>
+        <path d="M20 12a8 8 0 1 1-2.3-5.7" />
+        <path d="M20 4v5h-5" />
       </svg>
     )
   }

@@ -184,7 +184,14 @@ export default class EnrollmentsController {
     const service = new EnrollmentFlowService()
     const enrollmentId = await resolveEnrollmentId(user.organizationId, params.id)
     const enrollment = await service.register(enrollmentId, user.id)
-    return response.ok({ data: enrollment })
+    const enrollmentNotice = (enrollment as Enrollment & { enrollmentNotice?: { sent: boolean; to: string | null; reason: string | null } })
+      .enrollmentNotice
+    return response.ok({
+      data: {
+        ...enrollment.serialize(),
+        enrollmentNotice: enrollmentNotice ?? null,
+      },
+    })
   }
 
   async reject({ params, request, response, auth }: HttpContext) {

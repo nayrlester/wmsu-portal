@@ -10,6 +10,8 @@ import BorrowingService from '#modules/library/services/borrowing/borrowing_serv
 import ReservationService from '#modules/library/services/reservations/reservation_service'
 import BusinessRuleException from '#modules/library/exceptions/business_rule_exception'
 import { borrowingTenantId } from '#modules/library/services/borrowing/borrowing_helpers'
+import { buildQrPayload } from '#modules/library/services/members/member_helpers'
+import { tenantContext } from '#modules/library/services/tenant/tenant_context'
 import type { AuditContext } from '#modules/library/services/audit/audit_service'
 
 export default class PortalService {
@@ -88,8 +90,37 @@ export default class PortalService {
     return this.borrowingService.serializeBorrowing(borrowing)
   }
 
+  async libraryCard(member: Member) {
+    if (member.membershipStatus !== 'approved') {
+      throw new BusinessRuleException('Library card is available after membership approval.')
+    }
+    const tenant = tenantContext.get()
+    return {
+      fullName: member.fullName,
+      libraryCardNumber: member.libraryCardNumber,
+      memberType: member.memberType,
+      department: member.department,
+      tenantName: tenant.name,
+      qrPayload: buildQrPayload(tenant.slug, member.libraryCardNumber, member.id),
+    }
+  }
+
   async reserve(memberId: string, bookId: string, auditCtx?: AuditContext) {
-    return this.reservationService.create(memberId, bookId, auditCtx)
+    const reservation = await this.reservationService.create(memberId, bookId, auditCtx)
+    return this.reservationService.serializeWithRelations(reservation)
+  }
+
+  async cancelReservation(memberId: string, reservationId: string, auditCtx?: AuditContext) {
+    const reservation = await this.reservationService.findById(reservationId)
+    if (reservation.memberId !== memberId) {
+      throw new BusinessRuleException('Hold does not belong to this member')
+    }
+    const cancelled = await this.reservationService.cancel(
+      reservationId,
+      'Cancelled from the OPAC',
+      auditCtx
+    )
+    return this.reservationService.serializeWithRelations(cancelled)
   }
 
   async listReadingLists(memberId: string) {

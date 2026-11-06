@@ -20,14 +20,17 @@ export default class DepreciationController {
 
   async run({ auth, request, response }: HttpContext) {
     const data = await request.validateUsing(runDepreciationValidator)
-    const entries = await depreciationService.runPeriod(
+    const result = await depreciationService.runPeriod(
       auth.user!.organizationId,
       data.periodYear,
       data.periodMonth,
       auth.user!.id,
       data.assetId
     )
-    return response.ok({ data: entries })
+    return response.ok({
+      data: result.entries,
+      meta: { ran: result.ran, assetCount: result.assetCount, reason: result.reason },
+    })
   }
 
   async lapsingSchedule({ auth, request, response }: HttpContext) {

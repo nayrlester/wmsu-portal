@@ -24,6 +24,7 @@ export interface BorrowingListFilters {
   search?: string
   status?: BorrowingStatus
   memberId?: string
+  copyId?: string
   page?: number
   perPage?: number
 }
@@ -70,6 +71,7 @@ export default class BorrowingService {
 
     if (filters.status) query.where('status', filters.status)
     if (filters.memberId) query.where('member_id', filters.memberId)
+    if (filters.copyId) query.where('copy_id', filters.copyId)
 
     if (filters.search) {
       const term = `%${filters.search.toLowerCase()}%`
@@ -153,6 +155,18 @@ export default class BorrowingService {
     return this.rulesService.ensureSeeded()
   }
 
+  async saveCategoryLoanRules(
+    categories: Parameters<CirculationRulesService['saveCategories']>[0],
+    actorUserId: string | null
+  ) {
+    return this.rulesService.saveCategories(categories, actorUserId)
+  }
+
+  private async rulesForMember(memberId: string) {
+    const member = await Member.query().where('id', memberId).first()
+    return this.rulesService.getRulesFor(member?.memberType)
+  }
+
   async request(input: RequestBorrowInput, auditCtx?: AuditContext) {
     const tid = borrowingTenantId()
     const member = await this.ensureEligibleMember(input.memberId)
@@ -166,7 +180,7 @@ export default class BorrowingService {
       await this.ensureCopyAvailable(input.copyId, input.bookId)
     }
 
-    const rules = await this.rulesService.getRules()
+    const rules = await this.rulesService.getRulesFor(member.memberType)
     const activeCount = await this.countActiveBorrowings(input.memberId)
     if (activeCount >= rules.maxActiveBorrowings) {
       throw new BusinessRuleException(
@@ -291,7 +305,7 @@ export default class BorrowingService {
   async directCheckout(input: DirectCheckoutInput, userId: string, auditCtx?: AuditContext) {
     const tid = borrowingTenantId()
     const member = await this.ensureEligibleMember(input.memberId)
-    const rules = await this.rulesService.getRules()
+    const rules = await this.rulesService.getRulesFor(member.memberType)
 
     const activeCount = await this.countActiveBorrowings(input.memberId)
     if (activeCount >= rules.maxActiveBorrowings) {
@@ -463,7 +477,7 @@ export default class BorrowingService {
     }
 
     await this.ensureEligibleMember(borrowing.memberId, { allowActiveOverdue: false })
-    const rules = await this.rulesService.getRules()
+    const rules = await this.rulesForMember(borrowing.memberId)
 
     const maxRenewals = borrowing.maxRenewals ?? rules.maxRenewals
     const renewalCount = borrowing.renewalCount ?? 0
@@ -641,6 +655,115 @@ export default class BorrowingService {
     return { processed }
   }
 
+  async batchDesk(
+    action: 'checkout' | 'checkin',
+    barcodes: string[],
+    userId: string,
+    cardNumber?: string,
+    auditCtx?: AuditContext
+  ) {
+    const unique = [...new Set(barcodes.map((value) => value.trim()).filter((value) => value.length >= 2))]
+    if (!unique.length) throw new BusinessRuleException('Scan at least one barcode')
+    if (unique.length > 20) throw new BusinessRuleException('Batch is limited to 20 barcodes')
+
+    let memberId = ''
+    if (action === 'checkout') {
+      const card = cardNumber?.trim() ?? ''
+      if (card.length < 3) throw new BusinessRuleException('Library card is required')
+      const member = await Member.query()
+        .where('tenant_id', borrowingTenantId())
+        .whereNull('deleted_at')
+        .whereILike('library_card_number', card)
+        .first()
+      if (!member) throw new BusinessRuleException('Library card not found')
+      memberId = member.id
+    }
+
+    const lines: Array<{
+      barcode: string
+      ok: boolean
+      message: string
+      transactionNumber: string | null
+      status: string | null
+      bookTitle: string | null
+    }> = []
+
+    for (const barcode of unique) {
+      try {
+        const copy = await BookCopy.query()
+          .where('tenant_id', borrowingTenantId())
+          .whereNull('deleted_at')
+          .where('barcode', barcode)
+          .first()
+        if (!copy) {
+          lines.push({
+            barcode,
+            ok: false,
+            message: 'Copy not found',
+            transactionNumber: null,
+            status: null,
+            bookTitle: null,
+          })
+          continue
+        }
+        if (action === 'checkout') {
+          const borrowing = await this.directCheckout(
+            { memberId, copyId: copy.id, notes: `batch:${barcode}` },
+            userId,
+            auditCtx
+          )
+          const serialized = this.serializeBorrowing(borrowing)
+          lines.push({
+            barcode,
+            ok: true,
+            message: 'Checked out',
+            transactionNumber: serialized.transactionNumber,
+            status: serialized.status,
+            bookTitle: serialized.bookTitle ?? null,
+          })
+          continue
+        }
+        const active = await Borrowing.query()
+          .where('tenant_id', borrowingTenantId())
+          .where('copy_id', copy.id)
+          .whereIn('status', ['borrowed', 'overdue'])
+          .first()
+        if (!active) {
+          lines.push({
+            barcode,
+            ok: false,
+            message: 'No active loan for this copy',
+            transactionNumber: null,
+            status: null,
+            bookTitle: null,
+          })
+          continue
+        }
+        const returned = await this.return(active.id, userId, `batch:${barcode}`, auditCtx)
+        const serialized = this.serializeBorrowing(returned)
+        lines.push({
+          barcode,
+          ok: true,
+          message: 'Checked in',
+          transactionNumber: serialized.transactionNumber,
+          status: serialized.status,
+          bookTitle: serialized.bookTitle ?? null,
+        })
+      } catch (error) {
+        lines.push({
+          barcode,
+          ok: false,
+          message: error instanceof Error ? error.message : 'Could not process this barcode',
+          transactionNumber: null,
+          status: null,
+          bookTitle: null,
+        })
+      }
+    }
+
+    return { action, lines }
+  }
+
   serializeBorrowing(borrowing: Borrowing) {
     return {
       id: borrowing.id,
@@ -760,7 +883,7 @@ export default class BorrowingService {
       throw new BusinessRuleException('A copy must be assigned before checkout')
     }
 
-    const rules = await this.rulesService.getRules()
+    const rules = await this.rulesForMember(borrowing.memberId)
     const borrowedAt = loanWindow?.borrowedAt ?? borrowing.borrowedAt ?? DateTime.now()
     const dueAt =
       loanWindow?.dueAt ??

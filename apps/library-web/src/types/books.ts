@@ -5,6 +5,8 @@ export type BookCopyStatus =
   | 'maintenance'
   | 'lost'
   | 'withdrawn'
+  | 'damaged'
+  | 'under_repair'
 
 export type MaterialType =
   | 'book'

@@ -31,7 +31,7 @@ export function BarcodeDisplay({
             />
           ))}
         </div>
-        <p className="mt-2 text-center font-mono text-sm tracking-widest text-slate-800">{value}</p>
+        <p className="mt-2 whitespace-nowrap text-center font-mono text-sm tracking-widest text-slate-800">{value}</p>
       </div>
     </div>
   )

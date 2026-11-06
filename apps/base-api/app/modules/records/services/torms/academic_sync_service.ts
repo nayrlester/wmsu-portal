@@ -49,7 +49,7 @@ export class AcademicSyncService {
 
       for (const g of input.grades) {
         const sourceEntryId = g.sourceEntryId?.trim() || ''
-        const existing = await trx
+        let existing = await trx
           .from(t('academic_ledger_lines'))
           .where({
             organization_id: input.organizationId,
@@ -60,6 +60,20 @@ export class AcademicSyncService {
             source_entry_id: sourceEntryId,
           })
           .first()
+
+        if (!existing && sourceEntryId) {
+          existing = await trx
+            .from(t('academic_ledger_lines'))
+            .where({
+              organization_id: input.organizationId,
+              student_number: input.studentNumber,
+              academic_year: g.academicYear,
+              semester: g.semester,
+              course_code: g.courseCode,
+              source_entry_id: '',
+            })
+            .first()
+        }
 
         if (existing && existing.grade !== null && g.grade !== null && Number(existing.grade) !== Number(g.grade)) {
           await trx.table(t('torms_sync_discrepancies')).insert({
@@ -196,7 +210,12 @@ export class AcademicSyncService {
     }
 
     const gradesRaw = exportResult.data?.data?.grades ?? []
-    const grades: LedgerGradeInput[] = gradesRaw.map((g) => ({
+    const grades: LedgerGradeInput[] = gradesRaw
+      .filter((g) => {
+        const status = String(g.status ?? '')
+        return !status || status === 'locked' || status === 'submitted'
+      })
+      .map((g) => ({
       academicYear: String(g.academicYear ?? g.academic_year ?? ''),
       semester: Number(g.semester ?? 0),
       courseCode: String(g.courseCode ?? g.course_code ?? ''),
@@ -215,6 +234,7 @@ export class AcademicSyncService {
           : Number(g.modifiedGrade),
       programCode: (g.programCode as string | null) ?? null,
     }))
+      .filter((grade) => grade.courseCode.length > 0 && grade.academicYear.length > 0)
 
     const ingest = await this.ingestGrades({
       organizationId: input.organizationId,
@@ -224,7 +244,12 @@ export class AcademicSyncService {
       source: 'usis_pull',
     })
 
-    return { ok: true as const, ...ingest, contract: exportResult.contract }
+    const student = exportResult.data?.data?.student as
+      | { firstName?: string; lastName?: string }
+      | undefined
+    const studentName = [student?.lastName, student?.firstName].filter(Boolean).join(', ')
+
+    return { ok: true as const, ...ingest, studentName, contract: exportResult.contract }
   }
 
   async listSyncRuns(organizationId: string, limit = 50) {

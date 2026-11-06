@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Plus,
   Search,
@@ -26,6 +27,8 @@ import {
 } from '@/hooks/use-borrowings'
 import { useCirculationStore } from '@/stores/circulation-store'
 import { useAuthStore } from '@/stores/auth-store'
+import { batchCheckinCopies, batchCheckoutCopies, saveCategoryLoanRules, type BatchDeskResult } from '@/lib/borrowings-api'
+import { getApiErrorMessage } from '@/lib/api-client'
 import type { Borrowing, BorrowingStatus } from '@/types/borrowings'
 import { cn } from '@/lib/utils'
 
@@ -72,6 +75,10 @@ export function CirculationPage() {
 
   const [localSearch, setLocalSearch] = useState(search)
   const [selectedBorrowing, setSelectedBorrowing] = useState<Borrowing | null>(null)
+  const [batchCard, setBatchCard] = useState('')
+  const [batchBarcodes, setBatchBarcodes] = useState('')
+  const [batchResult, setBatchResult] = useState<BatchDeskResult | null>(null)
+  const [batchError, setBatchError] = useState<string | null>(null)
 
   const canRequest = user?.permissions.includes('borrowings:request')
   const canApprove = user?.permissions.includes('borrowings:approve')
@@ -79,6 +86,8 @@ export function CirculationPage() {
   const canReturn = user?.permissions.includes('borrowings:return')
   const canRenew = user?.permissions.includes('borrowings:renew')
   const canReadFines = user?.permissions.includes('fines:read')
+  const canEditRules = user?.permissions.includes('settings:update')
+  const [rulesNotice, setRulesNotice] = useState('')
 
   const { data: dashboard } = useBorrowingDashboard()
   const { data, isLoading } = useBorrowings({
@@ -91,6 +100,40 @@ export function CirculationPage() {
   const approveBorrow = useApproveBorrowing()
   const checkoutBorrow = useCheckoutBorrowing()
   const renewBorrow = useRenewBorrowing()
+  const qc = useQueryClient()
+
+  function batchBarcodeList() {
+    return batchBarcodes
+      .split(/\r?\n/)
+      .map((value) => value.trim())
+      .filter((value) => value.length >= 2)
+  }
+
+  const checkoutBatch = useMutation({
+    mutationFn: () => batchCheckoutCopies({ cardNumber: batchCard.trim(), barcodes: batchBarcodeList() }),
+    onSuccess: (result) => {
+      setBatchError(null)
+      setBatchResult(result)
+      void qc.invalidateQueries({ queryKey: ['borrowings'] })
+    },
+    onError: (err) => {
+      setBatchResult(null)
+      setBatchError(getApiErrorMessage(err))
+    },
+  })
+
+  const checkinBatch = useMutation({
+    mutationFn: () => batchCheckinCopies({ barcodes: batchBarcodeList() }),
+    onSuccess: (result) => {
+      setBatchError(null)
+      setBatchResult(result)
+      void qc.invalidateQueries({ queryKey: ['borrowings'] })
+    },
+    onError: (err) => {
+      setBatchResult(null)
+      setBatchError(getApiErrorMessage(err))
+    },
+  })
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -121,6 +164,65 @@ export function CirculationPage() {
           </Button>
         )}
       </div>
+
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          <h2 className="font-semibold">Batch desk</h2>
+          <p className="text-sm text-slate-500">
+            One barcode per line. Each line uses the same loan rules as a single checkout or return.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              value={batchCard}
+              onChange={(event) => setBatchCard(event.target.value)}
+              placeholder="Library card"
+              aria-label="Batch library card"
+            />
+            <textarea
+              value={batchBarcodes}
+              onChange={(event) => setBatchBarcodes(event.target.value)}
+              placeholder="One barcode per line"
+              aria-label="Batch barcodes"
+              rows={3}
+              className="w-full rounded-2xl border border-transparent bg-[var(--color-primary-soft)] px-4 py-2 text-sm text-[var(--color-ink)] placeholder:text-[#9aa0c3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/35"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              className="whitespace-nowrap"
+              disabled={!canCheckout || checkoutBatch.isPending || batchCard.trim().length < 3 || batchBarcodeList().length < 1}
+              onClick={() => checkoutBatch.mutate()}
+            >
+              Check out batch
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="whitespace-nowrap"
+              disabled={!canReturn || checkinBatch.isPending || batchBarcodeList().length < 1}
+              onClick={() => checkinBatch.mutate()}
+            >
+              Check in batch
+            </Button>
+          </div>
+          {batchError ? <p className="text-sm text-red-700">{batchError}</p> : null}
+          {batchResult?.lines.map((line) => (
+            <p key={`${line.barcode}-${line.message}`} className="text-sm text-slate-700">
+              <span className="whitespace-nowrap font-mono">{line.barcode}</span>
+              {' · '}
+              <span className="whitespace-nowrap">{line.message}</span>
+              {line.transactionNumber ? (
+                <>
+                  {' · '}
+                  <span className="whitespace-nowrap font-mono">{line.transactionNumber}</span>
+                </>
+              ) : null}
+              {line.bookTitle ? ` · ${line.bookTitle}` : ''}
+            </p>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5" data-testid="circulation-dashboard">
         <Card>
@@ -167,6 +269,105 @@ export function CirculationPage() {
           {dashboard.loanRules.maxActiveBorrowings}
         </p>
       )}
+      {canEditRules && dashboard?.loanRules?.categories ? (
+        <form
+          key={JSON.stringify(dashboard.loanRules.categories)}
+          className="space-y-3 rounded-xl border border-slate-200 bg-white p-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            const form = new FormData(event.currentTarget)
+            const categories = Object.fromEntries(
+              (['student', 'faculty', 'employee', 'alumni'] as const).map((category) => [
+                category,
+                {
+                  loanPeriodDays: Number(form.get(`${category}.loanPeriodDays`)),
+                  renewalPeriodDays: Number(form.get(`${category}.renewalPeriodDays`)),
+                  maxRenewals: Number(form.get(`${category}.maxRenewals`)),
+                  maxActiveBorrowings: Number(form.get(`${category}.maxActiveBorrowings`)),
+                },
+              ])
+            )
+            setRulesNotice('')
+            void saveCategoryLoanRules(categories)
+              .then(async () => {
+                await qc.invalidateQueries({ queryKey: ['borrowings', 'dashboard'] })
+                setRulesNotice('Category rules saved')
+              })
+              .catch((error) => setRulesNotice(getApiErrorMessage(error)))
+          }}
+        >
+          <div>
+            <p className="text-sm font-medium text-slate-900">Patron category rules</p>
+            <p className="text-xs text-slate-500">
+              Interim limits by patron category. These are not the official WMSU loan table.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {(['student', 'faculty', 'employee', 'alumni'] as const).map((category) => {
+              const rule = dashboard.loanRules?.categories?.[category]
+              return (
+                <div key={category} className="space-y-2 rounded-lg border border-slate-100 p-3">
+                  <p className="whitespace-nowrap text-sm font-medium capitalize text-slate-800">{category}</p>
+                  <label className="block text-xs text-slate-500">
+                    Loan days
+                    <input
+                      name={`${category}.loanPeriodDays`}
+                      aria-label={`${category} loan days`}
+                      type="number"
+                      min={1}
+                      max={365}
+                      defaultValue={rule?.loanPeriodDays ?? dashboard.loanRules?.loanPeriodDays}
+                      className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2 text-sm"
+                    />
+                  </label>
+                  <label className="block text-xs text-slate-500">
+                    Renewal days
+                    <input
+                      name={`${category}.renewalPeriodDays`}
+                      aria-label={`${category} renewal days`}
+                      type="number"
+                      min={1}
+                      max={365}
+                      defaultValue={rule?.renewalPeriodDays ?? dashboard.loanRules?.renewalPeriodDays}
+                      className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2 text-sm"
+                    />
+                  </label>
+                  <label className="block text-xs text-slate-500">
+                    Max renewals
+                    <input
+                      name={`${category}.maxRenewals`}
+                      aria-label={`${category} max renewals`}
+                      type="number"
+                      min={0}
+                      max={20}
+                      defaultValue={rule?.maxRenewals ?? dashboard.loanRules?.maxRenewals}
+                      className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2 text-sm"
+                    />
+                  </label>
+                  <label className="block text-xs text-slate-500">
+                    Max active
+                    <input
+                      name={`${category}.maxActiveBorrowings`}
+                      aria-label={`${category} max active`}
+                      type="number"
+                      min={1}
+                      max={100}
+                      defaultValue={rule?.maxActiveBorrowings ?? dashboard.loanRules?.maxActiveBorrowings}
+                      className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2 text-sm"
+                    />
+                  </label>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="submit" className="whitespace-nowrap">
+              Save category rules
+            </Button>
+            {rulesNotice ? <p className="text-sm text-slate-600">{rulesNotice}</p> : null}
+          </div>
+        </form>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">

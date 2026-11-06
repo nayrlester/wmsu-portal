@@ -6,6 +6,13 @@ export function registerHardwareRoutes() {
   router.get('hardware/rfid', [HardwareController, 'listRfid'])
   router.post('hardware/rfid', [HardwareController, 'registerRfid'])
   router.post('hardware/rfid/checkout', [HardwareController, 'rfidCheckout'])
+  router.post('hardware/rfid/checkin', [HardwareController, 'rfidCheckin'])
+  router.get('hardware/rfid/gate', [HardwareController, 'listGateEvents'])
+  router.post('hardware/rfid/gate', [HardwareController, 'readGate'])
+  router.get('hardware/inventory/counts', [HardwareController, 'listShelfCounts'])
+  router.get('hardware/inventory/counts/:id', [HardwareController, 'showShelfCount'])
+  router.post('hardware/inventory/counts', [HardwareController, 'startShelfCount'])
+  router.post('hardware/inventory/counts/:id/scans', [HardwareController, 'addShelfScan'])
 
   router.get('hardware/kiosks', [HardwareController, 'listKiosks'])
   router.get('hardware/kiosks/transactions', [HardwareController, 'listKioskTransactions'])
@@ -15,6 +22,8 @@ export function registerHardwareRoutes() {
 
   router.post('hardware/queue/tickets', [HardwareController, 'issueTicket'])
   router.post('hardware/queue/call-next', [HardwareController, 'callNext'])
+  router.post('hardware/queue/tickets/:id/complete', [HardwareController, 'completeTicket'])
+  router.get('hardware/queue/analytics', [HardwareController, 'queueAnalytics'])
   router.get('hardware/queue/board', [HardwareController, 'queueBoard']).as('hardware.queue_board')
 
   router.get('hardware/locations', [HardwareController, 'listLocations'])

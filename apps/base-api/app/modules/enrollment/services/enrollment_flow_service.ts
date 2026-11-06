@@ -108,12 +108,70 @@ export async function resolveEnrollmentId(organizationId: string, ref: string) {
   return enrollment.id
 }
 
+export type AccountNotice = {
+  sent: boolean
+  to: string | null
+  loginEmail: string
+  provisioned: boolean
+  reason: string | null
+}
+
+function portalLine() {
+  const portal = process.env.USIS_PORTAL_URL?.trim() || process.env.ENROLLMENT_PORTAL_URL?.trim()
+  return portal ? `Sign in at ${portal}.` : 'Sign in at the USiS student portal.'
+}
+
+async function sendAccountMail(input: {
+  toEmail: string
+  toName: string
+  subject: string
+  message: string
+  channel: string
+}): Promise<AccountNotice> {
+  const { emailJsMailerService } = await import(
+    '#modules/common-platform/services/emailjs_mailer_service'
+  )
+  const to = input.toEmail.trim()
+  if (!to) {
+    return {
+      sent: false,
+      to: null,
+      loginEmail: '',
+      provisioned: false,
+      reason: 'No email address is on the application',
+    }
+  }
+  if (!emailJsMailerService.isConfigured()) {
+    return {
+      sent: false,
+      to,
+      loginEmail: '',
+      provisioned: false,
+      reason: 'Email delivery is not configured',
+    }
+  }
+  const result = await emailJsMailerService.send({
+    toEmail: to,
+    toName: input.toName,
+    subject: input.subject,
+    message: input.message,
+    extraParams: { channel: input.channel },
+  })
+  return {
+    sent: result.success,
+    to,
+    loginEmail: '',
+    provisioned: false,
+    reason: result.success ? null : result.error || 'Email was not delivered',
+  }
+}
+
 export class EnrollmentFlowService {
   private studentAccountService = new StudentAccountService()
 
   async admitApplicant(applicantId: string, studentNumber: string, organizationId: string) {
     const applicant = await Applicant.findOrFail(applicantId)
-    const student = await this.studentAccountService.createStudent({
+    const account = await this.studentAccountService.createStudent({
       organizationId,
       studentNumber,
       firstName: applicant.firstName,
@@ -144,7 +202,48 @@ export class EnrollmentFlowService {
     } catch {
       /* status history is additive; admit must not fail if history table is unavailable */
     }
-    return { student, applicant }
+    const accountNotice = await this.sendAdmissionAccountEmail(applicant, account)
+    return { student: account.student, applicant, accountNotice }
+  }
+
+  private async sendAdmissionAccountEmail(
+    applicant: Applicant,
+    account: {
+      loginEmail: string
+      temporaryPassword: string | null
+      provisioned: boolean
+      student: { studentNumber: string }
+    }
+  ): Promise<AccountNotice> {
+    const name = `${applicant.firstName} ${applicant.lastName}`.trim()
+    const lines = [
+      `Hi ${name},`,
+      '',
+      'The registrar admitted your application. Your student account is ready so you can continue enrollment.',
+      `Student number: ${account.student.studentNumber}`,
+      `Sign-in email: ${account.loginEmail}`,
+    ]
+    if (account.provisioned && account.temporaryPassword) {
+      lines.push(`Temporary password: ${account.temporaryPassword}`)
+      lines.push('Change this password after you sign in.')
+    } else if (account.provisioned) {
+      lines.push('This sign-in already exists. Use the password you already have. A new password was not issued.')
+    } else {
+      lines.push('The sign-in account could not be issued. Contact the registrar before you try to sign in.')
+    }
+    lines.push(portalLine(), '', 'WMSU Student Information')
+    const notice = await sendAccountMail({
+      toEmail: applicant.email,
+      toName: name,
+      subject: `WMSU student account — ${account.student.studentNumber}`,
+      message: lines.join('\n'),
+      channel: 'admission_account',
+    })
+    return {
+      ...notice,
+      loginEmail: account.loginEmail,
+      provisioned: account.provisioned,
+    }
   }
 
   async createEnrollment(input: {
@@ -299,25 +398,26 @@ export class EnrollmentFlowService {
   }
 
   async register(enrollmentId: string, actorUserId?: string | null): Promise<Enrollment> {
-    return db.transaction(async (trx) => {
-      const enrollment = await Enrollment.query({ client: trx }).where('id', enrollmentId).forUpdate().firstOrFail()
+    let newlyRegistered = false
+    const enrollment = await db.transaction(async (trx) => {
+      const row = await Enrollment.query({ client: trx }).where('id', enrollmentId).forUpdate().firstOrFail()
 
-      if (enrollment.status === 'registered') return enrollment
+      if (row.status === 'registered') return row
 
-      await assertAdvisingGate(enrollment, trx)
-      await assertAssessmentGate(enrollment)
-      await assertPaymentGate(enrollment)
-      await assertRegistrarGate(enrollment)
+      await assertAdvisingGate(row, trx)
+      await assertAssessmentGate(row)
+      await assertPaymentGate(row)
+      await assertRegistrarGate(row)
 
-      if (enrollment.requiresReadvising || enrollment.requiresReassessment) {
+      if (row.requiresReadvising || row.requiresReassessment) {
         throw new EnrollmentWorkflowError('Pending re-advising or re-assessment', 409, 'WORKFLOW_INCOMPLETE')
       }
 
-      const lines = await EnrollmentLine.query({ client: trx }).where('enrollment_id', enrollment.id)
-      const student = await Student.findOrFail(enrollment.studentId, { client: trx })
+      const lines = await EnrollmentLine.query({ client: trx }).where('enrollment_id', row.id)
+      const student = await Student.findOrFail(row.studentId, { client: trx })
       const validation = await validateEnrollmentLines({
-        organizationId: enrollment.organizationId,
-        enrollmentId: enrollment.id,
+        organizationId: row.organizationId,
+        enrollmentId: row.id,
         studentId: student.id,
         lines: lines.map((l) => ({
           subjectId: l.subjectId,
@@ -328,9 +428,8 @@ export class EnrollmentFlowService {
         overloadApproved: true,
         underloadApproved: true,
         programId: student.programId,
-        yearLevel: enrollment.yearLevel,
+        yearLevel: row.yearLevel,
       })
-      // At register, still block non-overridden holds
       const blocking = validation.issues.filter((i) => !['unit_load'].includes(i.type))
       if (blocking.length) {
         throw new EnrollmentWorkflowError('Registration blocked by validations', 422, 'ENROLLMENT_VALIDATION_FAILED', {
@@ -344,12 +443,42 @@ export class EnrollmentFlowService {
         await line.save()
       }
 
-      enrollment.useTransaction(trx)
-      enrollment.registeredAt = DateTime.now()
-      enrollment.validationSnapshot = { issues: validation.issues, totalUnits: validation.totalUnits }
-      await statusHistory(enrollment, 'registered', actorUserId ?? null, 'Officially registered', trx)
-      return enrollment
+      row.useTransaction(trx)
+      row.registeredAt = DateTime.now()
+      row.validationSnapshot = { issues: validation.issues, totalUnits: validation.totalUnits }
+      await statusHistory(row, 'registered', actorUserId ?? null, 'Officially registered', trx)
+      newlyRegistered = true
+      return row
     })
+    if (!newlyRegistered) return enrollment
+    const enrollmentNotice = await this.sendOfficialEnrollmentEmail(enrollment)
+    return Object.assign(enrollment, { enrollmentNotice })
+  }
+
+  private async sendOfficialEnrollmentEmail(enrollment: Enrollment): Promise<AccountNotice> {
+    const student = await Student.findOrFail(enrollment.studentId)
+    const applicant = student.applicantId ? await Applicant.find(student.applicantId) : null
+    const toEmail = applicant?.email?.trim() || student.email
+    const name = `${student.firstName} ${student.lastName}`.trim()
+    const message = [
+      `Hi ${name},`,
+      '',
+      'You are officially enrolled.',
+      `Student number: ${student.studentNumber}`,
+      `Year level ${enrollment.yearLevel}, semester ${enrollment.semester}.`,
+      'Sign in with your student account to view this registration.',
+      portalLine(),
+      '',
+      'WMSU Student Information',
+    ].join('\n')
+    const notice = await sendAccountMail({
+      toEmail,
+      toName: name,
+      subject: `WMSU official enrollment — ${student.studentNumber}`,
+      message,
+      channel: 'official_enrollment',
+    })
+    return { ...notice, loginEmail: student.email, provisioned: true }
   }
 
   async reject(enrollmentId: string, actorUserId: string, reason: string) {
@@ -577,6 +706,8 @@ export class EnrollmentFlowService {
             units: e.units,
             grade: e.grade,
             remarks: e.remarks ?? null,
+            sourceEntryId: e.id,
+            originalGrade: e.originalNumericGrade ?? e.grade,
           })),
         })
       } catch {

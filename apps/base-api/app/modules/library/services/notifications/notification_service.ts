@@ -33,14 +33,62 @@ export default class NotificationService {
           channels
         )
 
-    const { enqueueDispatch } = await import('#modules/library/services/queue/queue_service')
+    if (enabledChannels.includes('in_app')) {
+      await this.deliverInApp(resolved)
+      await NotificationLog.create({
+        tenantId: resolved.tenantId,
+        eventType: resolved.eventType,
+        channel: 'in_app',
+        recipientType: resolved.recipientType,
+        recipientId: resolved.recipientId ?? null,
+        title: resolved.title,
+        body: resolved.body,
+        payload: resolved.payload ?? {},
+        status: 'sent',
+        sentAt: DateTime.now(),
+      })
+    }
 
-    await enqueueDispatch({
-      ...resolved,
-      channels: enabledChannels,
+    for (const channel of enabledChannels) {
+      if (channel === 'in_app') continue
+      await this.deliverExternal(resolved, channel)
+    }
+
+    return { queued: false, channels: enabledChannels }
+  }
+
+  private async deliverExternal(input: SendNotificationInput, channel: 'email' | 'sms') {
+    const log = await NotificationLog.create({
+      tenantId: input.tenantId,
+      eventType: input.eventType,
+      channel,
+      recipientType: input.recipientType,
+      recipientId: input.recipientId ?? null,
+      title: input.title,
+      body: input.body,
+      payload: input.payload ?? {},
+      status: 'pending',
     })
 
-    return { queued: true, channels: enabledChannels }
+    try {
+      const result =
+        channel === 'email' ? await this.emailChannel.send(input) : await this.smsChannel.send(input)
+      if (!result.success) {
+        log.status = 'failed'
+        log.failedReason = result.error ?? `${channel} delivery failed`
+      } else {
+        log.status = 'sent'
+        log.sentAt = DateTime.now()
+        if (result.providerId) {
+          log.payload = { ...(log.payload ?? {}), providerId: result.providerId }
+        }
+      }
+    } catch (error) {
+      log.status = 'failed'
+      log.failedReason = error instanceof Error ? error.message : `${channel} delivery failed`
+    }
+
+    await log.save()
   }
 
   async dispatch(data: DispatchJobData) {
@@ -188,6 +236,14 @@ export default class NotificationService {
     })
   }
 
+  async listDeliveryLog(page = 1, perPage = 20) {
+    const tid = tenantContext.get().id
+    return NotificationLog.query()
+      .where('tenant_id', tid)
+      .orderBy('created_at', 'desc')
+      .paginate(page, Math.min(perPage, 50))
+  }
+
   async markSent(notificationId: string) {
     const log = await NotificationLog.findOrFail(notificationId)
     log.status = 'sent'
@@ -219,21 +275,27 @@ export default class NotificationService {
   }
 
   private async resolveRecipientContact(input: SendNotificationInput): Promise<SendNotificationInput> {
-    if (input.email !== undefined && input.phone !== undefined) return input
-
     let email = input.email ?? null
     let phone = input.phone ?? null
+    let recipientName = input.recipientName ?? null
+    const needsContact = input.email === undefined || input.phone === undefined
 
-    if (input.recipientId && input.recipientType === 'member') {
-      const member = await Member.find(input.recipientId)
-      email = email ?? member?.email ?? null
-      phone = phone ?? member?.contact ?? null
-    } else if (input.recipientId && input.recipientType === 'user') {
-      const user = await User.find(input.recipientId)
-      email = email ?? user?.email ?? null
+    if (input.recipientId && (needsContact || !recipientName)) {
+      if (input.recipientType === 'member') {
+        const member = await Member.find(input.recipientId)
+        if (needsContact) {
+          email = email ?? member?.email ?? null
+          phone = phone ?? member?.contact ?? null
+        }
+        recipientName = recipientName ?? member?.fullName ?? null
+      } else if (input.recipientType === 'user') {
+        const user = await User.find(input.recipientId)
+        if (needsContact) email = email ?? user?.email ?? null
+        recipientName = recipientName ?? user?.fullName ?? null
+      }
     }
 
-    return { ...input, email, phone }
+    return { ...input, email, phone, recipientName }
   }
 
   private async filterByPreferences(
