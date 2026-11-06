@@ -469,12 +469,49 @@ export class AdvisingService {
       ['advised', 'assessed', 'payment_verified', 'registered'].includes(r.status) || r.advisingWaived
     )
     const notAdvised = rows.filter((r) => !advised.includes(r))
+    const pendingRows = await Enrollment.query()
+      .where('organization_id', organizationId)
+      .whereIn('status', ['draft', 'advising'])
+      .preload('student')
+      .orderBy('created_at', 'desc')
+      .limit(50)
+    const sessionRows = await AdvisingSession.query()
+      .where('organization_id', organizationId)
+      .preload('enrollment', (enrollment) => enrollment.preload('student'))
+      .preload('recommendations')
+      .orderBy('created_at', 'desc')
+      .limit(50)
     return {
       total: rows.length,
       advised: advised.length,
       notAdvised: notAdvised.length,
       completionRate: rows.length ? advised.length / rows.length : 0,
       requiresReadvising: rows.filter((r) => r.requiresReadvising).length,
+      pendingEnrollments: pendingRows.map((row) => ({
+        enrollmentId: row.id,
+        status: row.status,
+        yearLevel: row.yearLevel,
+        semester: row.semester,
+        studentNumber: row.student?.studentNumber ?? '',
+        studentName: [row.student?.lastName, row.student?.firstName].filter(Boolean).join(', '),
+      })),
+      recentSessions: sessionRows.map((row) => ({
+        id: row.id,
+        status: row.status,
+        enrollmentId: row.enrollmentId,
+        mode: row.mode,
+        createdAt: row.createdAt?.toISO() ?? '',
+        endorsedAt: row.endorsedAt?.toISO() ?? null,
+        approvedUnits: row.approvedUnits,
+        yearLevel: row.enrollment?.yearLevel ?? null,
+        semester: row.enrollment?.semester ?? null,
+        enrollmentStatus: row.enrollment?.status ?? '',
+        studentNumber: row.enrollment?.student?.studentNumber ?? '',
+        studentName: [row.enrollment?.student?.lastName, row.enrollment?.student?.firstName]
+          .filter(Boolean)
+          .join(', '),
+        subjects: row.recommendations.map((item) => item.subjectCode).filter(Boolean),
+      })),
     }
   }
 }

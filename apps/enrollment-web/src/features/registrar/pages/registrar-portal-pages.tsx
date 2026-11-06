@@ -5307,7 +5307,7 @@ function RegistrarRegistrationInner() {
             <Button
               type="button"
               variant="secondary"
-              disabled={!enrollmentId || busy}
+              disabled={!enrollmentId || busy || enrollment?.status !== 'assessed'}
               onClick={() => verifyMutation.mutate()}
             >
               Verify payment
@@ -5315,19 +5315,32 @@ function RegistrarRegistrationInner() {
             <Button
               type="button"
               variant="secondary"
-              disabled={!enrollmentId || busy}
+              disabled={!enrollmentId || busy || enrollment?.status !== 'payment_verified'}
               onClick={() => approveMutation.mutate()}
             >
               Registrar approve
             </Button>
             <Button
               type="button"
-              disabled={!enrollmentId || busy}
+              disabled={
+                !enrollmentId ||
+                busy ||
+                !(
+                  enrollment?.status === 'registrar_approved' ||
+                  (!registrarStepEnabled && enrollment?.status === 'payment_verified')
+                )
+              }
               onClick={() => registerMutation.mutate()}
             >
               Register enrollment
             </Button>
           </div>
+          {enrollment && ['draft', 'advising'].includes(String(enrollment.status)) ? (
+            <p className="text-sm" data-testid="registration-gate">
+              Academic advising is still current. The adviser endorses this draft, then registrar staff
+              prepare the assessment. Payment cannot be verified before that assessment exists.
+            </p>
+          ) : null}
           {registrationNotice ? (
             <p className="text-sm" data-testid="enrollment-email-result">
               {registrationNotice}

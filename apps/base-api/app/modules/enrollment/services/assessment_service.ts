@@ -48,6 +48,14 @@ function quantityForScheduleLine(
   return scoped.length > 0 || !line.subjectCode?.trim() ? 1 : 0
 }
 
+function feeScheduleClassificationCandidates(classification: string | null | undefined) {
+  const value = (classification ?? '').trim().toLowerCase()
+  if (value === 'freshman' || value === 'new') return ['freshman', 'new']
+  if (value === 'continuing' || value === 'old') return ['continuing', 'old']
+  if (!value) return []
+  return [value]
+}
+
 export class AssessmentService {
   constructor(private finance: FinanceAssessmentGateway = createFinanceAssessmentClient()) {}
 
@@ -249,7 +257,11 @@ export class AssessmentService {
         )
       }
 
-      if (!['advised', 'incomplete', 'assessed'].includes(enrollment.status)) {
+      if (
+        !['advised', 'incomplete', 'assessed', 'payment_verified', 'registrar_approved', 'registered'].includes(
+          enrollment.status
+        )
+      ) {
         throw new EnrollmentWorkflowError(
           `Cannot assess enrollment in status ${enrollment.status}`,
           409,
@@ -270,7 +282,8 @@ export class AssessmentService {
           .where('organization_id', input.organizationId)
           .firstOrFail()
       } else {
-        schedule = await FeeSchedule.query({ client: trx })
+        const candidates = feeScheduleClassificationCandidates(enrollment.classification)
+        const scheduleQuery = FeeSchedule.query({ client: trx })
           .where('organization_id', input.organizationId)
           .where('is_active', true)
           .if(enrollment.academicYearId, (q) =>
@@ -282,13 +295,23 @@ export class AssessmentService {
           .if(student.programId, (q) =>
             q.where((b) => b.where('program_id', student.programId).orWhereNull('program_id'))
           )
-          .if(enrollment.classification, (q) =>
-            q.where((b) =>
-              b.where('classification', enrollment.classification!).orWhereNull('classification')
-            )
-          )
-          .orderBy('created_at', 'desc')
-          .first()
+        if (candidates.length) {
+          scheduleQuery.where((b) => b.whereIn('classification', candidates).orWhereNull('classification'))
+        }
+        const matches = await scheduleQuery
+        const exact = (enrollment.classification ?? '').trim().toLowerCase()
+        matches.sort((a, b) => {
+          const rank = (row: FeeSchedule) => {
+            const value = (row.classification ?? '').trim().toLowerCase()
+            if (value && value === exact) return 0
+            if (value && candidates.includes(value)) return 1
+            return 2
+          }
+          const byRank = rank(a) - rank(b)
+          if (byRank !== 0) return byRank
+          return b.createdAt.toMillis() - a.createdAt.toMillis()
+        })
+        schedule = matches[0] ?? null
       }
 
       const scheduleLines = schedule
@@ -444,7 +467,17 @@ export class AssessmentService {
       enrollment.useTransaction(trx)
       enrollment.assessedAt = DateTime.now()
       enrollment.requiresReassessment = false
-      if (enrollment.status !== 'assessed') {
+      const previousPaid = Number(prior?.paidAmount ?? 0)
+      const laterStatus = ['payment_verified', 'registrar_approved', 'registered'].includes(enrollment.status)
+      if (laterStatus && previousPaid + 0.001 < netAmount) {
+        enrollment.paymentVerified = false
+        enrollment.paymentVerifiedAt = null
+        enrollment.paymentVerifiedBy = null
+        enrollment.registrarApprovedAt = null
+        enrollment.registrarApprovedBy = null
+        enrollment.registeredAt = null
+        enrollment.status = 'assessed'
+      } else if (!laterStatus) {
         enrollment.status = 'assessed'
       }
       await enrollment.save()
@@ -648,7 +681,14 @@ export class AssessmentService {
     if (enrollmentProbe.requiresReassessment) {
       throw new EnrollmentWorkflowError('Re-assessment required after schedule changes', 409, 'REASSESSMENT_REQUIRED')
     }
-    const assessmentProbe = await Assessment.query().where('enrollment_id', enrollmentId).firstOrFail()
+    const assessmentProbe = await Assessment.query().where('enrollment_id', enrollmentId).first()
+    if (!assessmentProbe) {
+      throw new EnrollmentWorkflowError(
+        `Enrollment is ${enrollmentProbe.status}. An adviser endorses the draft, then registrar staff prepare the assessment. Payment cannot be verified before that assessment exists.`,
+        422,
+        'ASSESSMENT_REQUIRED'
+      )
+    }
     if (!assessmentProbe.ufmsAssessmentId && assessmentProbe.ufmsSyncStatus !== 'submitted') {
       throw new EnrollmentWorkflowError(
         'Assessment must be submitted to UFMS before payment verification',

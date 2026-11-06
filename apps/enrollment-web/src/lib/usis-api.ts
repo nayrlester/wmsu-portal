@@ -63,8 +63,10 @@ function asPaginated<T>(payload: unknown): PaginatedResult<T> {
 }
 
 function asData<T>(payload: unknown): T {
-  const root = payload as { data?: T }
-  return (root.data ?? payload) as T
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    return (payload as { data: T }).data
+  }
+  return payload as T
 }
 
 export async function fetchApplicants(params: PageParams = {}) {
@@ -952,7 +954,9 @@ export async function fetchEnrollment(id: string, options?: { includeSchedule?: 
 
 export async function fetchStudentEnrollmentWorkflow() {
   const { data } = await apiClient.get('/student-portal/enrollment-workflow')
-  return asData<EnrollmentWorkflowView | null>(data)
+  const view = asData<EnrollmentWorkflowView | null>(data)
+  if (!view?.enrollment) return null
+  return view
 }
 
 export async function fetchEnrollmentWorkflow(id: string) {
@@ -1148,9 +1152,40 @@ export async function fetchAdvisingSessions(params: PageParams = {}) {
   }>
 }
 
+export type AdvisingQueueRow = {
+  enrollmentId: string
+  status: string
+  yearLevel: number
+  semester: number
+  studentNumber: string
+  studentName: string
+}
+
 export async function fetchAdvisingDashboard() {
   const { data } = await apiClient.get('/advising/dashboard', { skipHttpErrorToast: true })
-  return asData<Record<string, unknown>>(data)
+  return asData<{
+    total: number
+    advised: number
+    notAdvised: number
+    completionRate: number
+    requiresReadvising: number
+    pendingEnrollments?: AdvisingQueueRow[]
+    recentSessions?: Array<{
+      id: string
+      status: string
+      enrollmentId: string
+      mode: string
+      createdAt: string
+      endorsedAt?: string | null
+      approvedUnits?: number | null
+      yearLevel?: number | null
+      semester?: number | null
+      enrollmentStatus?: string
+      studentNumber?: string
+      studentName?: string
+      subjects?: string[]
+    }>
+  }>(data)
 }
 
 export async function startAdvisingSession(body: Record<string, unknown>) {

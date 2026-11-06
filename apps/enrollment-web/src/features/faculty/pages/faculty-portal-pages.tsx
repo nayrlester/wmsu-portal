@@ -29,7 +29,7 @@ import {
   encodeClassGrades,
   exportClassGradeReport,
   fetchAdvisingDashboard,
-  fetchAdvisingSessions,
+  startAdvisingSession,
   fetchClassGradeReport,
   fetchClassRecords,
   fetchGradeCorrections,
@@ -914,26 +914,63 @@ export function FacultyAdvisingPage() {
 }
 
 function FacultyAdvisingInner() {
+  const notify = useNotification()
+  const queryClient = useQueryClient()
   const query = useQuery({
-    queryKey: ['faculty', 'sessions'],
-    queryFn: () => fetchAdvisingSessions(),
+    queryKey: ['faculty', 'advising-queue'],
+    queryFn: fetchAdvisingDashboard,
+  })
+  const start = useMutation({
+    mutationFn: (enrollmentId: string) => startAdvisingSession({ enrollmentId, mode: 'face_to_face' }),
+    onSuccess: () => {
+      notify({ tone: 'success', title: 'Advising session started' })
+      void queryClient.invalidateQueries({ queryKey: ['faculty', 'advising-queue'] })
+    },
+    onError: (err) =>
+      notify({
+        tone: 'danger',
+        title: 'Advising session failed',
+        description: getApiErrorMessage(err),
+      }),
   })
   return (
-    <QueryPage title="Academic advising" query={query} isEmpty={(d) => d.length === 0}>
-      {(rows) => (
+    <QueryPage
+      title="Academic advising"
+      description="Draft enrollments waiting for an adviser. Starting a session moves the enrollment from draft to advising."
+      query={query}
+      isEmpty={(d) => (d.pendingEnrollments?.length ?? 0) === 0}
+      emptyTitle="No drafts waiting"
+      emptyDescription="Students appear here after they open a term enrollment and before an adviser starts the session."
+    >
+      {(dash) => (
         <DataTable
-          label="Advising sessions"
+          label="Enrollments waiting for advising"
           columns={[
-            {
-              key: 'id',
-              header: 'Session',
-              render: (r) => <span className="font-mono text-xs">{r.id.slice(0, 8)}</span>,
-            },
+            { key: 'studentNumber', header: 'Student' },
+            { key: 'studentName', header: 'Name' },
+            { key: 'yearLevel', header: 'Year' },
+            { key: 'semester', header: 'Sem' },
             { key: 'status', header: 'Status', render: (r) => <Badge>{r.status}</Badge> },
-            { key: 'mode', header: 'Mode' },
+            {
+              key: 'enrollmentId',
+              header: 'Action',
+              render: (r) =>
+                r.status === 'draft' ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={start.isPending}
+                    onClick={() => start.mutate(r.enrollmentId)}
+                  >
+                    Start advising
+                  </Button>
+                ) : (
+                  <span className="text-xs text-[var(--color-muted-foreground)]">Session open</span>
+                ),
+            },
           ]}
-          data={rows}
-          keyExtractor={(r) => r.id}
+          data={dash.pendingEnrollments ?? []}
+          keyExtractor={(r) => r.enrollmentId}
         />
       )}
     </QueryPage>
@@ -941,5 +978,52 @@ function FacultyAdvisingInner() {
 }
 
 export function FacultyAdvisingHistoryPage() {
-  return <FacultyAdvisingPage />
+  return (
+    <RequirePermission anyOf={['advising.read', 'advising.write']}>
+      <FacultyAdvisingHistoryInner />
+    </RequirePermission>
+  )
+}
+
+function FacultyAdvisingHistoryInner() {
+  const query = useQuery({
+    queryKey: ['faculty', 'advising-history'],
+    queryFn: fetchAdvisingDashboard,
+  })
+  return (
+    <QueryPage
+      title="Advising history"
+      description="Advising sessions already opened, including endorsed enrollments."
+      query={query}
+      isEmpty={(d) => (d.recentSessions?.length ?? 0) === 0}
+      emptyTitle="No advising sessions"
+      emptyDescription="Sessions appear here after an adviser starts advising."
+    >
+      {(dash) => (
+        <DataTable
+          label="Advising sessions"
+          columns={[
+            { key: 'studentNumber', header: 'Student' },
+            { key: 'studentName', header: 'Name' },
+            { key: 'yearLevel', header: 'Year' },
+            { key: 'semester', header: 'Sem' },
+            { key: 'status', header: 'Session', render: (r) => <Badge>{r.status}</Badge> },
+            { key: 'enrollmentStatus', header: 'Enrollment', render: (r) => <Badge>{r.enrollmentStatus || '—'}</Badge> },
+            {
+              key: 'subjects',
+              header: 'Subjects',
+              render: (r) => (r.subjects?.length ? r.subjects.join(', ') : '—'),
+            },
+            {
+              key: 'endorsedAt',
+              header: 'Endorsed',
+              render: (r) => r.endorsedAt || '—',
+            },
+          ]}
+          data={dash.recentSessions ?? []}
+          keyExtractor={(r) => r.id}
+        />
+      )}
+    </QueryPage>
+  )
 }

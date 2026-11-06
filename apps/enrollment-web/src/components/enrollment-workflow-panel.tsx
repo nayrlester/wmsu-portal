@@ -22,7 +22,11 @@ export function EnrollmentWorkflowPanel({
   showSchedule = true,
   showTuitionLinks = true,
 }: Props) {
-  const enr = data.enrollment
+  const enr = data?.enrollment
+  if (!enr) return null
+  const steps = data.workflowSteps ?? []
+  const scheduleRows = data.scheduleRows ?? []
+  const tuition = data.tuitionSummary
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
@@ -41,7 +45,7 @@ export function EnrollmentWorkflowPanel({
           ) : null}
         </div>
         <ol className="mt-4 space-y-3">
-          {data.workflowSteps.map((step) => (
+          {steps.map((step) => (
             <li
               key={step.key}
               className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--color-border)] pb-3 last:border-0 last:pb-0"
@@ -58,14 +62,14 @@ export function EnrollmentWorkflowPanel({
         </ol>
         {showTuitionLinks ? (
           <div className="mt-4 flex flex-wrap gap-2 text-sm">
-            {data.tuitionSummary.netAmount != null ? (
+            {tuition?.netAmount != null ? (
               <span>
-                Net assessed: <strong>{data.tuitionSummary.netAmount.toFixed(2)}</strong>
+                Net assessed: <strong>{tuition.netAmount.toFixed(2)}</strong>
               </span>
             ) : null}
-            {data.tuitionSummary.minimumDueRequired != null ? (
+            {tuition?.minimumDueRequired != null ? (
               <span>
-                Min due: <strong>{data.tuitionSummary.minimumDueRequired.toFixed(2)}</strong>
+                Min due: <strong>{tuition.minimumDueRequired.toFixed(2)}</strong>
               </span>
             ) : null}
             <Link to="/student/assessments">
@@ -86,7 +90,7 @@ export function EnrollmentWorkflowPanel({
           </div>
         ) : null}
       </div>
-      {showSchedule && data.scheduleRows.length > 0 ? (
+      {showSchedule && scheduleRows.length > 0 ? (
         <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)]">
           <table className="min-w-full text-sm">
             <thead className="bg-[var(--color-surface-muted)]/50 text-left">
@@ -99,7 +103,7 @@ export function EnrollmentWorkflowPanel({
               </tr>
             </thead>
             <tbody>
-              {data.scheduleRows.map((row) => (
+              {scheduleRows.map((row) => (
                 <tr key={row.lineId} className="border-t border-[var(--color-border)]">
                   <td className="px-3 py-2">
                     <span className="font-mono text-xs">{row.subjectCode}</span>
