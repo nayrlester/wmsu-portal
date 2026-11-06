@@ -182,6 +182,11 @@ const FacultyAdvisingHistoryPage = lazy(() =>
     default: m.FacultyAdvisingHistoryPage,
   }))
 )
+const FacultyAdvisingSessionPage = lazy(() =>
+  import('@/features/faculty/pages/faculty-portal-pages').then((m) => ({
+    default: m.FacultyAdvisingSessionPage,
+  }))
+)
 
 const RegistrarDashboardPage = lazy(() =>
   import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
@@ -431,6 +436,7 @@ export function App() {
               <Route path="faculty/grades/corrections" element={<FacultyCorrectionsPage />} />
               <Route path="faculty/advising" element={<FacultyAdvisingPage />} />
               <Route path="faculty/advising/history" element={<FacultyAdvisingHistoryPage />} />
+              <Route path="faculty/advising/:sessionId" element={<FacultyAdvisingSessionPage />} />
             </Route>
 
             <Route

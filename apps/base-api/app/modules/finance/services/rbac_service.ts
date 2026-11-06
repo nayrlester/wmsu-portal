@@ -80,8 +80,12 @@ export class RbacService {
       .where('id', user.id)
       .preload('roles', (q) => q.wherePivot('organization_id', user.organizationId))
       .first()
-    if (!withRoles?.roles?.length) return
-    if (withRoles.roles.some((r) => r.slug === 'admin' || r.slug === 'finance_accounting')) return
+    if (!withRoles) return
+    if (withRoles.roles.some((r) => r.slug === 'admin')) return
+    if (withRoles.roles.some((r) => r.slug === 'finance_accounting')) {
+      await this.ensureFinanceAccountingRole(user.organizationId)
+      return
+    }
 
     const local = await this.getUserPermissions(user)
     if (local.includes('finance.write') || local.includes('accounting.write')) return

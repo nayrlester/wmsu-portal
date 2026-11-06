@@ -13,6 +13,7 @@ const updateValidator = vine.compile(
         name: vine.string().trim().maxLength(255),
       })
     ),
+    nextTermEnrollmentOpen: vine.boolean(),
   })
 )
 
@@ -25,6 +26,7 @@ export default class AcademicPoliciesController {
         enrollmentApprovalSteps: row.enrollmentApprovalSteps,
         gradeDisplayMode: row.gradeDisplayMode,
         gradeDocumentSignatories: row.gradeDocumentSignatories,
+        nextTermEnrollmentOpen: Boolean(row.nextTermEnrollmentOpen),
       },
     })
   }
@@ -37,6 +39,7 @@ export default class AcademicPoliciesController {
       enrollmentApprovalSteps: body.enrollmentApprovalSteps,
       gradeDisplayMode: body.gradeDisplayMode,
       gradeDocumentSignatories: body.gradeDocumentSignatories,
+      nextTermEnrollmentOpen: body.nextTermEnrollmentOpen,
       actorUserId: user.id,
     })
     return ctx.response.ok({
@@ -44,6 +47,7 @@ export default class AcademicPoliciesController {
         enrollmentApprovalSteps: row.enrollmentApprovalSteps,
         gradeDisplayMode: row.gradeDisplayMode,
         gradeDocumentSignatories: row.gradeDocumentSignatories,
+        nextTermEnrollmentOpen: Boolean(row.nextTermEnrollmentOpen),
       },
     })
   }

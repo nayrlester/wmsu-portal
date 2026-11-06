@@ -10,6 +10,25 @@ import { formatCurrency } from '@/lib/utils'
 import { apiClient } from '@/lib/api-client'
 import { fetchDailyCollection, fetchStudentAccount, recordCashierPayment } from '../api/cashier-api'
 
+type CollectionRow = {
+  id?: string
+  studentNumber?: string
+  amount?: number
+  paymentType?: string
+  orNumber?: string | null
+  particulars?: string | null
+  assessmentNumber?: string | null
+  reference?: string | null
+  paidAt?: string
+}
+
+type DailyCollection = {
+  businessDate?: string
+  total?: number
+  count?: number
+  rows?: CollectionRow[]
+}
+
 type StudentAccount = {
   studentNumber?: string
   openBalance?: number
@@ -24,6 +43,21 @@ type StudentAccount = {
     paidAmount?: number
     status?: string
   }>
+}
+
+function collectionTime(value?: string) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' })
+}
+
+function collectionLabel(value?: string | null) {
+  const text = String(value ?? '').trim()
+  if (!text) return '—'
+  return text
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
 function rowStr(row: Record<string, unknown>, camel: string): string {
@@ -55,6 +89,8 @@ export function CashierPage() {
   })
 
   const account = accountQuery.data as StudentAccount | undefined
+  const daily = dailyQuery.data as DailyCollection | undefined
+  const collections = daily?.rows ?? []
 
   const payMutation = useMutation({
     mutationFn: () =>
@@ -317,14 +353,79 @@ export function CashierPage() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
-        <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Daily collection</h2>
+      <section
+        className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6"
+        data-testid="daily-collection"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Daily collection</h2>
+          {daily ? (
+            <p className="text-sm text-slate-500">{daily.businessDate}</p>
+          ) : null}
+        </div>
         {dailyQuery.isLoading ? <Spinner className="mt-4 h-5 w-5" /> : null}
-        {dailyQuery.data ? (
-          <div className="mt-4 text-sm">
-            <p>Date: {dailyQuery.data.businessDate}</p>
-            <p>Total: {formatCurrency(Number(dailyQuery.data.total ?? 0))}</p>
-            <p>Transactions: {dailyQuery.data.count ?? 0}</p>
+        {dailyQuery.isError ? (
+          <p className="mt-4 text-sm text-red-600" role="alert">
+            {getApiErrorMessage(dailyQuery.error, 'Daily collection could not be loaded.')}
+          </p>
+        ) : null}
+        {daily ? (
+          <div className="mt-4 space-y-4">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="rounded-xl border bg-white p-3">
+                <p className="text-xs uppercase text-slate-500">Total collected</p>
+                <p className="font-semibold">{formatCurrency(Number(daily.total ?? 0))}</p>
+              </div>
+              <div className="rounded-xl border bg-white p-3">
+                <p className="text-xs uppercase text-slate-500">Transactions</p>
+                <p className="font-semibold">{daily.count ?? collections.length}</p>
+              </div>
+            </div>
+            {collections.length > 0 ? (
+              <div className="overflow-x-auto rounded-xl border">
+                <table className="min-w-full text-left text-xs" data-testid="daily-collection-list">
+                  <thead className="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th className="whitespace-nowrap px-3 py-2">Time</th>
+                      <th className="whitespace-nowrap px-3 py-2">OR</th>
+                      <th className="whitespace-nowrap px-3 py-2">Student</th>
+                      <th className="whitespace-nowrap px-3 py-2">Type</th>
+                      <th className="whitespace-nowrap px-3 py-2">Particulars</th>
+                      <th className="whitespace-nowrap px-3 py-2 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {collections.map((row) => (
+                      <tr
+                        key={row.id ?? `${row.orNumber}-${row.studentNumber}-${row.paidAt}`}
+                        className="border-t"
+                      >
+                        <td className="whitespace-nowrap px-3 py-2">{collectionTime(row.paidAt)}</td>
+                        <td className="whitespace-nowrap px-3 py-2 font-mono">
+                          {row.orNumber || '—'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 font-mono">
+                          {row.studentNumber || '—'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2">
+                          {collectionLabel(row.paymentType)}
+                        </td>
+                        <td className="max-w-[16rem] truncate px-3 py-2">
+                          {row.particulars || row.assessmentNumber || row.reference || '—'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                          {formatCurrency(Number(row.amount ?? 0))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="rounded-xl border border-dashed px-3 py-4 text-sm text-slate-500">
+                No collections for this date.
+              </p>
+            )}
           </div>
         ) : null}
       </section>

@@ -3462,11 +3462,13 @@ function RegistrarAcademicPoliciesPanel() {
   const [sigDocType, setSigDocType] = useState('grade_report')
   const [sigRole, setSigRole] = useState('registrar')
   const [sigName, setSigName] = useState('')
+  const [nextTermOpen, setNextTermOpen] = useState(false)
 
   useEffect(() => {
     if (!policies.data) return
     setGradeDisplayMode(policies.data.gradeDisplayMode)
     setApprovalSteps(policies.data.enrollmentApprovalSteps.join(', '))
+    setNextTermOpen(Boolean(policies.data.nextTermEnrollmentOpen))
     const first = policies.data.gradeDocumentSignatories[0]
     if (first) {
       setSigDocType(first.docType)
@@ -3486,10 +3488,36 @@ function RegistrarAcademicPoliciesPanel() {
         gradeDocumentSignatories: sigName.trim()
           ? [{ docType: sigDocType.trim(), role: sigRole.trim(), name: sigName.trim() }]
           : [],
+        nextTermEnrollmentOpen: nextTermOpen,
       }),
     onSuccess: () => notify({ tone: 'success', title: 'Academic policies saved' }),
     onError: (err) =>
       notify({ tone: 'danger', title: 'Policies failed', description: getApiErrorMessage(err) }),
+  })
+  const toggleNextTerm = useMutation({
+    mutationFn: (open: boolean) =>
+      updateAcademicPolicies({
+        gradeDisplayMode,
+        enrollmentApprovalSteps: approvalSteps
+          .split(',')
+          .map((step) => step.trim())
+          .filter(Boolean),
+        gradeDocumentSignatories: sigName.trim()
+          ? [{ docType: sigDocType.trim(), role: sigRole.trim(), name: sigName.trim() }]
+          : policies.data?.gradeDocumentSignatories ?? [],
+        nextTermEnrollmentOpen: open,
+      }),
+    onSuccess: (saved) => {
+      setNextTermOpen(saved.nextTermEnrollmentOpen)
+      notify({
+        tone: 'success',
+        title: saved.nextTermEnrollmentOpen ? 'Next term enrollment is open' : 'Next term enrollment is closed',
+      })
+    },
+    onError: (err, open) => {
+      setNextTermOpen(!open)
+      notify({ tone: 'danger', title: 'Enrollment window was not saved', description: getApiErrorMessage(err) })
+    },
   })
 
   return (
@@ -3498,6 +3526,27 @@ function RegistrarAcademicPoliciesPanel() {
         <CardTitle>Enrollment and grade display</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <label className="flex items-start gap-3 text-sm" htmlFor="next-term-enrollment">
+          <input
+            id="next-term-enrollment"
+            data-testid="next-term-enrollment-toggle"
+            className="mt-1"
+            type="checkbox"
+            checked={nextTermOpen}
+            disabled={!policies.data || toggleNextTerm.isPending}
+            onChange={(event) => {
+              const open = event.target.checked
+              setNextTermOpen(open)
+              toggleNextTerm.mutate(open)
+            }}
+          />
+          <span>
+            <span className="font-medium">Allow currently enrolled students to start the next term</span>
+            <span className="mt-1 block text-[var(--color-muted-foreground)]">
+              Turn this on after the semester ends. While it is off, a student who is already enrolled cannot start another enrollment.
+            </span>
+          </span>
+        </label>
         <FormField id="approvalSteps" label="Enrollment approval steps (comma-separated)">
           <Input
             id="approvalSteps"
@@ -5204,6 +5253,20 @@ function RegistrarRegistrationInner() {
   }
 
   const [registrationNotice, setRegistrationNotice] = useState('')
+  const assessMutation = useMutation({
+    mutationFn: () => assessEnrollment({ enrollmentId }),
+    onSuccess: (data) => {
+      const net = Number((data as { netAmount?: number }).netAmount ?? 0)
+      notify({
+        tone: 'success',
+        title: 'Assessment prepared',
+        description: net > 0 ? `Net assessed: ${net.toFixed(2)}` : undefined,
+      })
+      refreshEnrollment()
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Assess failed', description: getApiErrorMessage(err) }),
+  })
   const registerMutation = useMutation({
     mutationFn: () => registerEnrollment(enrollmentId),
     onSuccess: (row) => {
@@ -5260,8 +5323,14 @@ function RegistrarRegistrationInner() {
   const enrollment = enrollmentQuery.data
   const steps = policies.data?.enrollmentApprovalSteps ?? []
   const registrarStepEnabled = steps.includes('registrar')
+  const waitingForStudentCourse = Boolean(enrollment && enrollment.status === 'advised' && !enrollment.curriculumId)
+  const canAssess = (enrollment?.status === 'advised' || enrollment?.status === 'incomplete') && !waitingForStudentCourse
+  const continuingWithoutAdvising = Boolean(enrollment?.advisingWaived && !enrollment?.advisingWaiverId)
   const busy =
-    verifyMutation.isPending || approveMutation.isPending || registerMutation.isPending
+    assessMutation.isPending ||
+    verifyMutation.isPending ||
+    approveMutation.isPending ||
+    registerMutation.isPending
 
   return (
     <Card>
@@ -5306,6 +5375,14 @@ function RegistrarRegistrationInner() {
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
+              data-testid="registration-assess"
+              disabled={!enrollmentId || busy || !canAssess}
+              onClick={() => assessMutation.mutate()}
+            >
+              Assess
+            </Button>
+            <Button
+              type="button"
               variant="secondary"
               disabled={!enrollmentId || busy || enrollment?.status !== 'assessed'}
               onClick={() => verifyMutation.mutate()}
@@ -5335,10 +5412,26 @@ function RegistrarRegistrationInner() {
               Register enrollment
             </Button>
           </div>
+          {enrollment && waitingForStudentCourse ? (
+            <p className="text-sm" data-testid="registration-gate">
+              Advising is endorsed. The student selects one of the advised courses before this enrollment can be assessed.
+            </p>
+          ) : null}
           {enrollment && ['draft', 'advising'].includes(String(enrollment.status)) ? (
             <p className="text-sm" data-testid="registration-gate">
               Academic advising is still current. The adviser endorses this draft, then registrar staff
               prepare the assessment. Payment cannot be verified before that assessment exists.
+            </p>
+          ) : null}
+          {enrollment && canAssess && continuingWithoutAdvising ? (
+            <p className="text-sm" data-testid="registration-gate">
+              This student was previously enrolled, so advising is not part of this enrollment. Assess
+              to continue to payment.
+            </p>
+          ) : null}
+          {enrollment && canAssess && !continuingWithoutAdvising ? (
+            <p className="text-sm" data-testid="registration-gate">
+              Advising is endorsed. Assess this enrollment to continue to payment.
             </p>
           ) : null}
           {registrationNotice ? (

@@ -14,6 +14,9 @@ import {
   advisingPeriodValidator,
 } from '#modules/enrollment/validators/enrollment_workflow'
 import { evaluateCurriculum } from '#modules/enrollment/services/enrollment_validation_service'
+import { curriculumService } from '#modules/enrollment/services/curriculum_service'
+import { studentCourseSelectionService } from '#modules/enrollment/services/student_course_selection_service'
+import vine from '@vinejs/vine'
 import Student from '#modules/enrollment/models/student'
 import Enrollment from '#modules/enrollment/models/enrollment'
 
@@ -103,6 +106,23 @@ export default class AdvisingController {
     return response.ok({ data: { removed: true } })
   }
 
+  async assignCourse({ params, request, response, auth }: HttpContext) {
+    const user = auth.user!
+    const payload = await request.validateUsing(
+      vine.compile(
+        vine.object({
+          curriculumIds: vine.array(vine.string().uuid()),
+        })
+      )
+    )
+    const data = await studentCourseSelectionService.assignAdviserCourses({
+      organizationId: user.organizationId,
+      sessionId: params.id,
+      curriculumIds: payload.curriculumIds,
+    })
+    return response.ok({ data })
+  }
+
   async endorse({ params, request, response, auth }: HttpContext) {
     const user = auth.user!
     const payload = await request.validateUsing(endorseAdvisingValidator)
@@ -152,7 +172,25 @@ export default class AdvisingController {
       .where('id', params.id)
       .where('organization_id', user.organizationId)
       .preload('recommendations')
+      .preload('enrollment', (enrollment) => enrollment.preload('student'))
       .firstOrFail()
+    if (session.status === 'in_progress' && session.enrollment?.student) {
+      const evaluation = await evaluateCurriculum({
+        organizationId: user.organizationId,
+        studentId: session.enrollment.student.id,
+        programId: session.enrollment.student.programId,
+        yearLevel: session.enrollment.yearLevel,
+      })
+      const advisingCourses = await curriculumService.advisingCourseOptions({
+        organizationId: user.organizationId,
+        studentProgramId: session.enrollment.student.programId,
+        yearLevel: session.enrollment.yearLevel,
+        semester: session.enrollment.semester,
+        assessedSubjects: evaluation.assessedSubjects,
+      })
+      session.curriculumEvaluation = { ...evaluation, advisingCourses }
+      await session.save()
+    }
     return response.ok({ data: session })
   }
 

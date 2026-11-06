@@ -248,6 +248,14 @@ export class AssessmentService {
       if (!enrollment.advisingWaived) {
         await assertAdvisingGate(enrollment, trx)
       }
+      const offered = Array.isArray(enrollment.advisedCurriculumIds) ? enrollment.advisedCurriculumIds : []
+      if (offered.length > 0 && !enrollment.curriculumId) {
+        throw new EnrollmentWorkflowError(
+          'The student selects one advised course before assessment',
+          422,
+          'COURSE_SELECTION_REQUIRED'
+        )
+      }
 
       if (enrollment.requiresReadvising) {
         throw new EnrollmentWorkflowError(

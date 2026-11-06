@@ -8,6 +8,7 @@ export type { EnrollmentWorkflowView }
 function stepBadge(state: EnrollmentWorkflowView['workflowSteps'][0]['state']) {
   if (state === 'complete') return <Badge>Done</Badge>
   if (state === 'current') return <Badge>Current</Badge>
+  if (state === 'skipped') return <Badge>Skipped</Badge>
   return <span className="text-xs text-[var(--color-muted-foreground)]">Pending</span>
 }
 
@@ -38,6 +39,12 @@ export function EnrollmentWorkflowPanel({
               {enr.academicYearCode}
             </span>
           ) : null}
+          {enr.courseCode ? (
+            <span className="text-sm" data-testid="enrollment-course">
+              Course {enr.courseCode}
+              {enr.courseName ? ` — ${enr.courseName}` : ''}
+            </span>
+          ) : null}
           {enr.sectionCode ? (
             <span className="text-sm text-[var(--color-muted-foreground)]">
               Section {enr.sectionCode}
@@ -48,6 +55,7 @@ export function EnrollmentWorkflowPanel({
           {steps.map((step) => (
             <li
               key={step.key}
+              data-testid={`workflow-step-${step.key}`}
               className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--color-border)] pb-3 last:border-0 last:pb-0"
             >
               <div>
@@ -92,7 +100,7 @@ export function EnrollmentWorkflowPanel({
       </div>
       {showSchedule && scheduleRows.length > 0 ? (
         <div className="overflow-x-auto rounded-2xl border border-[var(--color-border)]">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-sm" data-testid="enrollment-course-subjects">
             <thead className="bg-[var(--color-surface-muted)]/50 text-left">
               <tr>
                 <th className="px-3 py-2">Subject</th>

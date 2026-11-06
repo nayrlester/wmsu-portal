@@ -339,6 +339,80 @@ export class ReceivablesService {
     }
   }
 
+  async linkUnassignedTuitionPayments(organizationId: string, studentNumber: string) {
+    const normalized = studentNumber.trim().toLowerCase()
+    if (!normalized) return
+
+    await db.transaction(async (trx) => {
+      const openItem = await trx
+        .from(t('student_ar_open_items'))
+        .where('organization_id', organizationId)
+        .whereRaw('LOWER(student_number) = ?', [normalized])
+        .where('status', 'open')
+        .where('open_amount', '>', 0)
+        .orderBy('opened_at', 'desc')
+        .forUpdate()
+        .first()
+      if (!openItem?.assessment_number) return
+
+      const payments = await trx
+        .from(t('student_payments'))
+        .where('organization_id', organizationId)
+        .whereRaw('LOWER(student_number) = ?', [normalized])
+        .whereNull('assessment_number')
+        .where((query) => {
+          query.where('payment_type', 'tuition').orWhereNull('payment_type')
+        })
+        .orderBy('paid_at', 'asc')
+        .forUpdate()
+      if (!payments.length) return
+
+      for (const payment of payments) {
+        await trx.from(t('student_payments')).where('id', payment.id).update({
+          assessment_number: openItem.assessment_number,
+          student_number: openItem.student_number,
+          updated_at: new Date(),
+        })
+        await this.applyPaymentToAr(
+          organizationId,
+          String(openItem.student_number),
+          Number(payment.amount),
+          String(openItem.assessment_number),
+          trx
+        )
+        await paymentPlanService.applyPaymentToInstallments(
+          organizationId,
+          String(openItem.assessment_number),
+          Number(payment.amount),
+          trx
+        )
+      }
+
+      const paidRows = await trx
+        .from(t('student_payments'))
+        .where({
+          organization_id: organizationId,
+          assessment_number: openItem.assessment_number,
+        })
+      const paidAmount = paidRows.reduce((sum, row) => sum + Number(row.amount), 0)
+      const assessment = await trx
+        .from(t('student_assessments'))
+        .where({
+          organization_id: organizationId,
+          assessment_number: openItem.assessment_number,
+        })
+        .first()
+      if (!assessment) return
+      const net = Number(assessment.net_amount)
+      const paymentStatus = paidAmount + 0.001 >= net ? 'paid' : paidAmount > 0 ? 'partial' : 'unpaid'
+      await trx.from(t('student_assessments')).where('id', assessment.id).update({
+        paid_amount: paidAmount,
+        payment_status: paymentStatus,
+        updated_at: new Date(),
+      })
+    })
+  }
+
   async recordStudentPayment(input: RecordPaymentInput) {
     return db.transaction(async (trx) => {
       if (input.idempotencyKey) {
@@ -355,6 +429,23 @@ export class ReceivablesService {
       }
 
       const settings = await ensureSettings(input.organizationId, trx)
+      const normalizedStudent = input.studentNumber.trim().toLowerCase()
+      const openItem = normalizedStudent
+        ? await trx
+            .from(t('student_ar_open_items'))
+            .where('organization_id', input.organizationId)
+            .whereRaw('LOWER(student_number) = ?', [normalizedStudent])
+            .where('status', 'open')
+            .where('open_amount', '>', 0)
+            .orderBy('opened_at', 'desc')
+            .first()
+        : null
+      const studentNumber = openItem?.student_number
+        ? String(openItem.student_number)
+        : input.studentNumber.trim()
+      const assessmentNumber =
+        input.assessmentNumber?.trim() ||
+        (openItem?.assessment_number ? String(openItem.assessment_number) : null)
       const { orNumber, orSeriesId } = await allocateOrNumber(
         input.organizationId,
         (settings.tuition_or_series_id as string | null) ?? null,
@@ -367,9 +458,9 @@ export class ReceivablesService {
           organization_id: input.organizationId,
           or_number: orNumber,
           or_series_id: orSeriesId,
-          payer_name: input.studentNumber,
+          payer_name: studentNumber,
           payer_type: 'student',
-          payer_reference: input.studentNumber,
+          payer_reference: studentNumber,
           amount: input.amount,
           particulars: input.particulars ?? null,
           issued_at: new Date(),
@@ -378,12 +469,11 @@ export class ReceivablesService {
         })
         .returning('*')
 
-      const assessmentNumber = input.assessmentNumber ?? null
       const [payment] = await trx
         .table(t('student_payments'))
         .insert({
           organization_id: input.organizationId,
-          student_number: input.studentNumber,
+          student_number: studentNumber,
           or_id: receipt.id,
           amount: input.amount,
           payment_type: input.paymentType ?? 'tuition',
@@ -398,7 +488,7 @@ export class ReceivablesService {
 
       await this.applyPaymentToAr(
         input.organizationId,
-        input.studentNumber,
+        studentNumber,
         input.amount,
         assessmentNumber,
         trx
@@ -462,6 +552,8 @@ export class ReceivablesService {
     if (!assessment) return null
 
     const assessmentOrgId = String(assessment.organization_id)
+    await this.linkUnassignedTuitionPayments(assessmentOrgId, String(assessment.student_number))
+
     const payments = await db
       .from(t('student_payments'))
       .where((q) => {
@@ -547,17 +639,22 @@ export class ReceivablesService {
   }
 
   async getStudentAccount(organizationId: string, studentNumber: string) {
+    const normalized = studentNumber.trim().toLowerCase()
+    await this.linkUnassignedTuitionPayments(organizationId, studentNumber)
     const openItems = await db
       .from(t('student_ar_open_items'))
-      .where({ organization_id: organizationId, student_number: studentNumber })
+      .where('organization_id', organizationId)
+      .whereRaw('LOWER(student_number) = ?', [normalized])
       .orderBy('opened_at', 'desc')
     const assessments = await db
       .from(t('student_assessments'))
-      .where({ organization_id: organizationId, student_number: studentNumber })
+      .where('organization_id', organizationId)
+      .whereRaw('LOWER(student_number) = ?', [normalized])
       .orderBy('assessed_at', 'desc')
     const payments = await db
       .from(t('student_payments'))
-      .where({ organization_id: organizationId, student_number: studentNumber })
+      .where('organization_id', organizationId)
+      .whereRaw('LOWER(student_number) = ?', [normalized])
       .orderBy('paid_at', 'desc')
       .limit(50)
 
@@ -586,8 +683,13 @@ export class ReceivablesService {
       }
     }
 
+    const canonicalStudentNumber =
+      (openItems.find((item) => item.status === 'open')?.student_number as string | undefined) ??
+      (assessments[0]?.student_number as string | undefined) ??
+      studentNumber
+
     return {
-      studentNumber,
+      studentNumber: canonicalStudentNumber,
       openBalance,
       openItems,
       assessments,
@@ -601,13 +703,17 @@ export class ReceivablesService {
   }
 
   async getClearance(organizationId: string, studentNumber: string) {
+    const normalized = studentNumber.trim().toLowerCase()
     const openItems = await db
       .from(t('student_ar_open_items'))
-      .where({ organization_id: organizationId, student_number: studentNumber, status: 'open' })
+      .where('organization_id', organizationId)
+      .whereRaw('LOWER(student_number) = ?', [normalized])
+      .where('status', 'open')
     const balance = openItems.reduce((s, i) => s + Number(i.open_amount), 0)
     const payments = await db
       .from(t('student_payments'))
-      .where({ organization_id: organizationId, student_number: studentNumber })
+      .where('organization_id', organizationId)
+      .whereRaw('LOWER(student_number) = ?', [normalized])
       .sum('amount as total_paid')
       .first()
     const totalPaid = Number(payments?.total_paid ?? 0)
@@ -635,15 +741,21 @@ export class ReceivablesService {
       receiptIds.length > 0
         ? await db.from(t('official_receipts')).whereIn('id', receiptIds)
         : []
-    const orById = new Map(receipts.map((r) => [r.id, r.or_number as string]))
-
-    const rows = payments.map((p) => ({
-      studentNumber: p.student_number,
-      amount: Number(p.amount),
-      paymentType: p.payment_type,
-      orNumber: p.or_id ? orById.get(p.or_id) : null,
-      paidAt: p.paid_at,
-    }))
+    const receiptById = new Map(receipts.map((r) => [r.id, r]))
+    const rows = payments.map((p) => {
+      const receipt = p.or_id ? receiptById.get(p.or_id) : null
+      return {
+        id: p.id,
+        studentNumber: p.student_number,
+        amount: Number(p.amount),
+        paymentType: p.payment_type,
+        orNumber: receipt?.or_number ?? null,
+        particulars: receipt?.particulars ?? null,
+        assessmentNumber: p.assessment_number ?? null,
+        reference: p.reference ?? null,
+        paidAt: p.paid_at,
+      }
+    })
     const total = rows.reduce((s, r) => s + r.amount, 0)
     return { businessDate: day, total, count: rows.length, rows }
   }

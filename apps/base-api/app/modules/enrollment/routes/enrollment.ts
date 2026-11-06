@@ -126,6 +126,12 @@ router
       .get('/student-portal/academic-years', [StudentPortalController, 'openAcademicYears'])
       .use(middleware.permission(['students.self', 'portal.student']))
     router
+      .get('/student-portal/course-choice', [StudentPortalController, 'courseChoice'])
+      .use(middleware.permission(['students.self', 'portal.student']))
+    router
+      .post('/student-portal/course-choice', [StudentPortalController, 'selectCourse'])
+      .use(middleware.permission(['students.self', 'portal.student']))
+    router
       .post('/student-portal/enrollments/start', [StudentPortalController, 'startEnrollment'])
       .use(middleware.permission(['students.self', 'portal.student']))
     router.get('/students', [StudentsController, 'index']).use(middleware.permission(['students.read']))
@@ -529,6 +535,9 @@ router
       middleware.permission(['advising.write'])
     )
     router.delete('/advising/sessions/:id/recommendations/:recommendationId', [AdvisingController, 'removeRecommendation']).use(
+      middleware.permission(['advising.write'])
+    )
+    router.post('/advising/sessions/:id/course', [AdvisingController, 'assignCourse']).use(
       middleware.permission(['advising.write'])
     )
     router.post('/advising/sessions/:id/endorse', [AdvisingController, 'endorse']).use(

@@ -78,6 +78,21 @@ export default class Enrollment extends BaseModel {
   @column()
   declare advisedBy: string | null
 
+  @column()
+  declare advisedCurriculumId: string | null
+
+  @column({
+    prepare: (value: string[] | null) => (value == null ? null : JSON.stringify(value)),
+    consume: (value: string[] | string | null) => {
+      if (value == null) return null
+      return typeof value === 'string' ? (JSON.parse(value) as string[]) : value
+    },
+  })
+  declare advisedCurriculumIds: string[] | null
+
+  @column()
+  declare curriculumId: string | null
+
   @column.dateTime()
   declare assessedAt: DateTime | null
 

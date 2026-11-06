@@ -89,6 +89,8 @@ export type ScannedRoutes = {
     'enrollment.student_portal.enrollment_workflow': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.curriculum_plan': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.open_academic_years': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.course_choice': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.select_course': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.start_enrollment': { paramsTuple?: []; params?: {} }
     'enrollment.students.index': { paramsTuple?: []; params?: {} }
     'enrollment.students.classifications': { paramsTuple?: []; params?: {} }
@@ -221,6 +223,7 @@ export type ScannedRoutes = {
     'enrollment.advising.list_recommendations': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.add_recommendation': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.remove_recommendation': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'recommendationId': ParamValue} }
+    'enrollment.advising.assign_course': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.endorse': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.waiver': { paramsTuple?: []; params?: {} }
     'enrollment.advising.curriculum_evaluation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
@@ -1311,6 +1314,7 @@ export type ScannedRoutes = {
     'enrollment.student_portal.enrollment_workflow': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.curriculum_plan': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.open_academic_years': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.course_choice': { paramsTuple?: []; params?: {} }
     'enrollment.students.index': { paramsTuple?: []; params?: {} }
     'enrollment.students.classifications': { paramsTuple?: []; params?: {} }
     'enrollment.students.merge_jobs.index': { paramsTuple?: []; params?: {} }
@@ -1897,6 +1901,7 @@ export type ScannedRoutes = {
     'enrollment.student_portal.enrollment_workflow': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.curriculum_plan': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.open_academic_years': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.course_choice': { paramsTuple?: []; params?: {} }
     'enrollment.students.index': { paramsTuple?: []; params?: {} }
     'enrollment.students.classifications': { paramsTuple?: []; params?: {} }
     'enrollment.students.merge_jobs.index': { paramsTuple?: []; params?: {} }
@@ -2437,6 +2442,7 @@ export type ScannedRoutes = {
     'enrollment.admissions.events.store': { paramsTuple?: []; params?: {} }
     'enrollment.admissions.events.assign': { paramsTuple?: []; params?: {} }
     'enrollment.admissions.events.record_result': { paramsTuple?: []; params?: {} }
+    'enrollment.student_portal.select_course': { paramsTuple?: []; params?: {} }
     'enrollment.student_portal.start_enrollment': { paramsTuple?: []; params?: {} }
     'enrollment.students.merge': { paramsTuple?: []; params?: {} }
     'enrollment.students.import.run': { paramsTuple?: []; params?: {} }
@@ -2495,6 +2501,7 @@ export type ScannedRoutes = {
     'enrollment.advising.upsert_period': { paramsTuple?: []; params?: {} }
     'enrollment.advising.start_session': { paramsTuple?: []; params?: {} }
     'enrollment.advising.add_recommendation': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.advising.assign_course': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.endorse': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.waiver': { paramsTuple?: []; params?: {} }
     'enrollment.grades.submit': { paramsTuple?: []; params?: {} }

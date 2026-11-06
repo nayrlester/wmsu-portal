@@ -563,6 +563,42 @@ export async function fetchStudentOpenAcademicYears() {
   return asData<Array<{ id: string; code: string; name: string }>>(data)
 }
 
+export async function fetchStudentEnrollmentWindow() {
+  const { data } = await apiClient.get('/student-portal/enrollment-policy')
+  return asData<{
+    nextTermEnrollmentOpen: boolean
+    canStartEnrollment: boolean
+    enrollmentHoldReason: string | null
+  }>(data)
+}
+
+export type StudentCourseOption = {
+  id: string
+  code: string
+  name: string
+  subjects: Array<{ subjectCode: string; title: string; units: number }>
+}
+
+export type StudentCourseChoice = {
+  enrollmentId: string | null
+  enrollmentStatus: string | null
+  yearLevel: number | null
+  semester: number | null
+  adviserCourses: StudentCourseOption[]
+  selectedCourse: StudentCourseOption | null
+  requiresCourseSelection: boolean
+}
+
+export async function fetchStudentCourseChoice() {
+  const { data } = await apiClient.get('/student-portal/course-choice')
+  return asData<StudentCourseChoice>(data)
+}
+
+export async function selectStudentCourse(curriculumId: string) {
+  const { data } = await apiClient.post('/student-portal/course-choice', { curriculumId })
+  return asData<{ enrollmentId: string; selectedCourse: NonNullable<StudentCourseChoice['selectedCourse']> }>(data)
+}
+
 export async function startMyEnrollment(payload: {
   academicYearId: string
   semester: number
@@ -930,6 +966,9 @@ export async function fetchEnrollment(id: string, options?: { includeSchedule?: 
     semester: number
     studentId: string
     paymentVerified?: boolean
+    advisingWaived?: boolean
+    advisingWaiverId?: string | null
+    curriculumId?: string | null
     registrarApprovedAt?: string | null
     lines?: Array<{
       id: string
@@ -1159,6 +1198,7 @@ export type AdvisingQueueRow = {
   semester: number
   studentNumber: string
   studentName: string
+  openSessionId?: string | null
 }
 
 export async function fetchAdvisingDashboard() {
@@ -1188,13 +1228,97 @@ export async function fetchAdvisingDashboard() {
   }>(data)
 }
 
-export async function startAdvisingSession(body: Record<string, unknown>) {
+export async function assignAdvisingCourses(sessionId: string, curriculumIds: string[]) {
+  const { data } = await apiClient.post(`/advising/sessions/${sessionId}/course`, { curriculumIds })
+  return asData<{
+    enrollmentId: string
+    adviserCourses: Array<{ id: string; code: string; name: string }>
+  }>(data)
+}
+
+export async function startAdvisingSession(body: { enrollmentId: string; mode: 'online' | 'face_to_face' }) {
   const { data } = await apiClient.post('/advising/sessions', body)
+  return asData<{ session: { id: string } }>(data)
+}
+
+export async function fetchAdvisingSession(id: string) {
+  const { data } = await apiClient.get(`/advising/sessions/${id}`)
+  return asData<{
+    id: string
+    status: string
+    enrollmentId: string
+    mode: string
+    remarks?: string | null
+    curriculumEvaluation?: {
+      allowableUnitLoad?: { minUnits?: number; maxUnits?: number }
+      planByTerm?: Array<{
+        yearLevel?: number | null
+        semester?: number | null
+        subjects?: AdvisingSubjectChoice[]
+      }>
+      currentTermRemaining?: AdvisingSubjectChoice[]
+      remaining?: AdvisingSubjectChoice[]
+      eligibleSubjects?: AdvisingSubjectChoice[]
+      assessedSubjects?: string[]
+      advisingCourses?: Array<{
+        id: string
+        code: string
+        name: string
+        curriculumCode: string
+        matchesStudent: boolean
+        subjects: AdvisingSubjectChoice[]
+      }>
+    } | null
+    recommendations?: AdvisingSubjectChoice[]
+    enrollment?: {
+      yearLevel?: number
+      semester?: number
+      advisedCurriculumId?: string | null
+      advisedCurriculumIds?: string[] | null
+      curriculumId?: string | null
+      student?: { studentNumber?: string; firstName?: string; lastName?: string }
+    }
+  }>(data)
+}
+
+export type AdvisingSubjectChoice = {
+  id?: string
+  subjectCode: string
+  subjectTitle?: string
+  title?: string
+  units: number
+  yearLevel?: number | null
+  semester?: number | null
+}
+
+export async function fetchAdvisingRecommendations(sessionId: string) {
+  const { data } = await apiClient.get(`/advising/sessions/${sessionId}/recommendations`)
+  return asData<AdvisingSubjectChoice[]>(data)
+}
+
+export async function removeAdvisingRecommendation(sessionId: string, recommendationId: string) {
+  const { data } = await apiClient.delete(
+    `/advising/sessions/${sessionId}/recommendations/${recommendationId}`
+  )
   return asData(data)
 }
 
-export async function endorseAdvisingSession(id: string) {
-  const { data } = await apiClient.post(`/advising/sessions/${id}/endorse`)
+export async function addAdvisingRecommendation(
+  sessionId: string,
+  body: { subjectCode: string; subjectId?: string; subjectTitle?: string; units?: number }
+) {
+  const { data } = await apiClient.post(`/advising/sessions/${sessionId}/recommendations`, {
+    ...body,
+    action: 'recommend',
+  })
+  return asData(data)
+}
+
+export async function endorseAdvisingSession(
+  id: string,
+  body: { underloadApproved?: boolean; remarks?: string } = {}
+) {
+  const { data } = await apiClient.post(`/advising/sessions/${id}/endorse`, body)
   return asData(data)
 }
 
@@ -1378,6 +1502,8 @@ export type EnrollmentWorkflowView = {
     academicYearCode: string | null
     paymentVerified: boolean
     advisingWaived: boolean
+    courseCode?: string | null
+    courseName?: string | null
   }
   approvalSteps: string[]
   workflowSteps: Array<{
@@ -3624,6 +3750,7 @@ export type AcademicPoliciesPayload = {
   enrollmentApprovalSteps: string[]
   gradeDisplayMode: 'immediate' | 'after_deadline' | 'manual_release'
   gradeDocumentSignatories: Array<{ docType: string; role: string; name: string }>
+  nextTermEnrollmentOpen: boolean
 }
 
 export async function fetchAcademicPolicies() {

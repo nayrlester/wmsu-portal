@@ -1,4 +1,5 @@
 import Enrollment from '#modules/enrollment/models/enrollment'
+import UsisCurriculum from '#modules/enrollment/models/usis_curriculum'
 import EnrollmentLine from '#modules/enrollment/models/enrollment_line'
 import FacultyClassAssignment from '#modules/enrollment/models/faculty_class_assignment'
 import User from '#modules/enrollment/models/user'
@@ -6,6 +7,7 @@ import Section from '#modules/enrollment/models/section'
 import { SchedulingService } from '#modules/enrollment/services/scheduling_service'
 import { resolveEnrollmentApprovalSteps } from '#modules/enrollment/services/academic_policy_runtime_service'
 import { AssessmentService } from '#modules/enrollment/services/assessment_service'
+import { studentCourseSelectionService } from '#modules/enrollment/services/student_course_selection_service'
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -61,11 +63,21 @@ export class EnrollmentPortalWorkflowService {
       .preload('academicYear')
       .firstOrFail()
 
+    const advisingSkippedForPriorCourse = await studentCourseSelectionService.skipAdvisingWhenPreviouslyEnrolled(enrollment)
+    const courseBilled = await studentCourseSelectionService.ensureSelectedCourseBilled(enrollment)
+    if (advisingSkippedForPriorCourse || courseBilled) {
+      await enrollment.refresh()
+      await enrollment.load('student')
+      await enrollment.load('section')
+      await enrollment.load('academicYear')
+    }
+
     const approvalSteps = await resolveEnrollmentApprovalSteps(organizationId)
     const registrarStepEnabled = approvalSteps.includes('registrar')
 
+    const advisingSkipped = enrollment.advisingWaived
     const advisedComplete =
-      enrollment.advisingWaived ||
+      advisingSkipped ||
       Boolean(enrollment.advisedAt) ||
       ['advised', 'assessed', 'payment_verified', 'registrar_approved', 'registered'].includes(enrollment.status)
 
@@ -86,12 +98,14 @@ export class EnrollmentPortalWorkflowService {
       {
         key: 'advising',
         label: 'Academic advising',
-        state: advisedComplete ? 'complete' : 'current',
-        detail: enrollment.advisingWaived
+        state: advisingSkipped ? 'skipped' : advisedComplete ? 'complete' : 'current',
+        detail: enrollment.advisingWaiverId
           ? 'Advising waived per policy'
-          : enrollment.advisedAt
-            ? `Endorsed ${enrollment.advisedAt.toISO()}`
-            : null,
+          : advisingSkipped
+            ? 'Previously enrolled. The existing course continues without advising.'
+            : enrollment.advisedAt
+              ? `Endorsed ${enrollment.advisedAt.toISO()}`
+              : null,
       },
       {
         key: 'assessment',
@@ -124,6 +138,13 @@ export class EnrollmentPortalWorkflowService {
     })
 
     const scheduleRows = await this.buildScheduleRows(organizationId, enrollment.id)
+    const selectedCurriculum = enrollment.curriculumId
+      ? await UsisCurriculum.query()
+          .where('organization_id', organizationId)
+          .where('id', enrollment.curriculumId)
+          .preload('program')
+          .first()
+      : null
     const assessmentService = new AssessmentService()
     let tuitionSummary: {
       netAmount: number | null
@@ -159,6 +180,8 @@ export class EnrollmentPortalWorkflowService {
         academicYearCode: enrollment.academicYear?.code ?? null,
         paymentVerified: enrollment.paymentVerified,
         advisingWaived: enrollment.advisingWaived,
+        courseCode: selectedCurriculum?.program?.code ?? selectedCurriculum?.code ?? null,
+        courseName: selectedCurriculum?.program?.name ?? selectedCurriculum?.name ?? null,
       },
       approvalSteps,
       workflowSteps: steps,

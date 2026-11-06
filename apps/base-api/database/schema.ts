@@ -5041,7 +5041,7 @@ export class EnrollmentStatusHistorySchema extends BaseModel {
 }
 
 export class EnrollmentSchema extends BaseModel {
-  static $columns = ['academicYearId', 'advisedAt', 'advisedBy', 'advisingWaived', 'advisingWaiverId', 'approvedUnits', 'assessedAt', 'classification', 'createdAt', 'id', 'isRegularBlock', 'organizationId', 'paymentVerified', 'paymentVerifiedAt', 'paymentVerifiedBy', 'registeredAt', 'registrarApprovedAt', 'registrarApprovedBy', 'rejectionReason', 'requiresReadvising', 'requiresReassessment', 'sectionId', 'semester', 'status', 'studentId', 'updatedAt', 'validationSnapshot', 'yearLevel'] as const
+  static $columns = ['academicYearId', 'advisedAt', 'advisedBy', 'advisedCurriculumId', 'advisedCurriculumIds', 'advisingWaived', 'advisingWaiverId', 'approvedUnits', 'assessedAt', 'classification', 'createdAt', 'curriculumId', 'id', 'isRegularBlock', 'organizationId', 'paymentVerified', 'paymentVerifiedAt', 'paymentVerifiedBy', 'registeredAt', 'registrarApprovedAt', 'registrarApprovedBy', 'rejectionReason', 'requiresReadvising', 'requiresReassessment', 'sectionId', 'semester', 'status', 'studentId', 'updatedAt', 'validationSnapshot', 'yearLevel'] as const
   $columns = EnrollmentSchema.$columns
   @column()
   declare academicYearId: string
@@ -5049,6 +5049,10 @@ export class EnrollmentSchema extends BaseModel {
   declare advisedAt: DateTime | null
   @column()
   declare advisedBy: string | null
+  @column()
+  declare advisedCurriculumId: string | null
+  @column()
+  declare advisedCurriculumIds: string[] | null
   @column()
   declare advisingWaived: boolean
   @column()
@@ -5061,6 +5065,8 @@ export class EnrollmentSchema extends BaseModel {
   declare classification: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
+  @column()
+  declare curriculumId: string | null
   @column({ isPrimary: true })
   declare id: string
   @column()
@@ -13028,7 +13034,7 @@ export class UsisAcademicDepartmentSchema extends BaseModel {
 }
 
 export class UsisAcademicPolicySchema extends BaseModel {
-  static $columns = ['createdAt', 'enrollmentApprovalSteps', 'gradeDisplayMode', 'gradeDocumentSignatories', 'id', 'organizationId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'enrollmentApprovalSteps', 'gradeDisplayMode', 'gradeDocumentSignatories', 'id', 'nextTermEnrollmentOpen', 'organizationId', 'updatedAt'] as const
   $columns = UsisAcademicPolicySchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -13040,6 +13046,8 @@ export class UsisAcademicPolicySchema extends BaseModel {
   declare gradeDocumentSignatories: any
   @column({ isPrimary: true })
   declare id: string
+  @column()
+  declare nextTermEnrollmentOpen: boolean
   @column()
   declare organizationId: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -18,6 +18,7 @@ import {
   Input,
   SearchableSelect,
   Select,
+  Textarea,
   useNotification,
 } from '@wmsu/ui'
 import { QueryPage } from '@/components/query-page'
@@ -29,7 +30,13 @@ import {
   encodeClassGrades,
   exportClassGradeReport,
   fetchAdvisingDashboard,
+  fetchAdvisingRecommendations,
+  fetchAdvisingSession,
+  assignAdvisingCourses,
   startAdvisingSession,
+  addAdvisingRecommendation,
+  removeAdvisingRecommendation,
+  endorseAdvisingSession,
   fetchClassGradeReport,
   fetchClassRecords,
   fetchGradeCorrections,
@@ -914,7 +921,8 @@ export function FacultyAdvisingPage() {
 }
 
 function FacultyAdvisingInner() {
-  const notify = useNotification()
+  const { notify } = useNotification()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const query = useQuery({
     queryKey: ['faculty', 'advising-queue'],
@@ -922,8 +930,13 @@ function FacultyAdvisingInner() {
   })
   const start = useMutation({
     mutationFn: (enrollmentId: string) => startAdvisingSession({ enrollmentId, mode: 'face_to_face' }),
-    onSuccess: () => {
+    onSuccess: (result) => {
       notify({ tone: 'success', title: 'Advising session started' })
+      const sessionId = result.session?.id
+      if (sessionId) {
+        navigate(`/faculty/advising/${sessionId}`)
+        return
+      }
       void queryClient.invalidateQueries({ queryKey: ['faculty', 'advising-queue'] })
     },
     onError: (err) =>
@@ -963,6 +976,14 @@ function FacultyAdvisingInner() {
                     onClick={() => start.mutate(r.enrollmentId)}
                   >
                     Start advising
+                  </Button>
+                ) : r.openSessionId ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => navigate(`/faculty/advising/${r.openSessionId}`)}
+                  >
+                    Open advising
                   </Button>
                 ) : (
                   <span className="text-xs text-[var(--color-muted-foreground)]">Session open</span>
@@ -1024,6 +1045,299 @@ function FacultyAdvisingHistoryInner() {
           keyExtractor={(r) => r.id}
         />
       )}
+    </QueryPage>
+  )
+}
+
+type SessionSubject = {
+  id?: string
+  subjectCode: string
+  title?: string
+  subjectTitle?: string
+  units: number
+  yearLevel?: number | null
+  semester?: number | null
+}
+
+function advisingFailureMessage(err: unknown) {
+  const data = (err as { response?: { data?: { details?: { issues?: Array<{ message?: string }> } } } })
+    ?.response?.data
+  const issues = data?.details?.issues?.map((issue) => issue.message).filter(Boolean) ?? []
+  if (issues.length) return issues.join(' ')
+  return getApiErrorMessage(err)
+}
+
+export function FacultyAdvisingSessionPage() {
+  return (
+    <RequirePermission anyOf={['advising.read', 'advising.write']}>
+      <FacultyAdvisingSessionInner />
+    </RequirePermission>
+  )
+}
+
+function sameCourseIds(left: string[], right: string[]) {
+  return left.length === right.length && left.every((id) => right.includes(id))
+}
+
+function FacultyAdvisingSessionInner() {
+  const { sessionId = '' } = useParams()
+  const navigate = useNavigate()
+  const { notify } = useNotification()
+  const [courseIds, setCourseIds] = useState<string[]>([])
+  const [courseSeeded, setCourseSeeded] = useState(false)
+  const [remarks, setRemarks] = useState('')
+  const [remarksSeeded, setRemarksSeeded] = useState(false)
+  const [underloadApproved, setUnderloadApproved] = useState(false)
+  const session = useQuery({
+    queryKey: ['faculty', 'advising-session', sessionId],
+    queryFn: () => fetchAdvisingSession(sessionId),
+    enabled: Boolean(sessionId),
+  })
+  const recommendations = useQuery({
+    queryKey: ['faculty', 'advising-recommendations', sessionId],
+    queryFn: () => fetchAdvisingRecommendations(sessionId),
+    enabled: Boolean(sessionId),
+  })
+  useEffect(() => {
+    if (courseSeeded || !session.data) return
+    const saved = session.data.enrollment?.advisedCurriculumIds
+    const single = session.data.enrollment?.advisedCurriculumId
+    setCourseIds(saved?.length ? saved : single ? [single] : [])
+    setCourseSeeded(true)
+  }, [courseSeeded, session.data])
+  const assignCourses = useMutation({
+    mutationFn: (curriculumIds: string[]) => assignAdvisingCourses(sessionId, curriculumIds),
+    onSuccess: () => {
+      void session.refetch()
+    },
+    onError: (err) =>
+      notify({
+        tone: 'danger',
+        title: 'Courses were not saved',
+        description: getApiErrorMessage(err),
+      }),
+  })
+  const savedCourseIds = session.data?.enrollment?.advisedCurriculumIds?.length
+    ? session.data.enrollment.advisedCurriculumIds
+    : session.data?.enrollment?.advisedCurriculumId
+      ? [session.data.enrollment.advisedCurriculumId]
+      : []
+  useEffect(() => {
+    if (remarksSeeded || !session.data) return
+    const saved = session.data.remarks?.trim()
+    if (saved && saved !== 'Endorsed from the advising session.') setRemarks(saved)
+    setRemarksSeeded(true)
+  }, [remarksSeeded, session.data])
+  const endorse = useMutation({
+    mutationFn: async (input: { subjects: SessionSubject[]; selectedCodes: string[] }) => {
+      if (input.selectedCodes.length === 0) {
+        return endorseAdvisingSession(sessionId, {
+          underloadApproved,
+          remarks: remarks.trim() || 'Endorsed from the advising session.',
+        })
+      }
+      const existing = recommendations.data ?? []
+      const keepIds = new Set<string>()
+      for (const code of input.selectedCodes) {
+        const match = existing.find((row) => row.id && row.subjectCode === code && !keepIds.has(row.id))
+        if (match?.id) keepIds.add(match.id)
+      }
+      for (const row of existing) {
+        if (!row.id || keepIds.has(row.id)) continue
+        await removeAdvisingRecommendation(sessionId, row.id)
+      }
+      const keptCodes = new Set(
+        existing.filter((row) => row.id && keepIds.has(row.id)).map((row) => row.subjectCode)
+      )
+      for (const subject of input.subjects) {
+        if (!input.selectedCodes.includes(subject.subjectCode) || keptCodes.has(subject.subjectCode)) continue
+        await addAdvisingRecommendation(sessionId, {
+          subjectCode: subject.subjectCode,
+          subjectId: subject.id,
+          subjectTitle: subject.title ?? subject.subjectTitle,
+          units: Number(subject.units),
+        })
+      }
+      return endorseAdvisingSession(sessionId, {
+        underloadApproved,
+        remarks: remarks.trim() || 'Endorsed from the advising session.',
+      })
+    },
+    onSuccess: () => {
+      notify({ tone: 'success', title: 'Advising endorsed' })
+      navigate('/faculty/advising')
+    },
+    onError: (err) =>
+      notify({
+        tone: 'danger',
+        title: 'Endorse failed',
+        description: advisingFailureMessage(err),
+      }),
+  })
+  return (
+    <QueryPage
+      title="Advising session"
+      description="Select the courses this student may take. The student chooses one of those courses before enrollment continues."
+      query={session}
+      isEmpty={() => false}
+    >
+      {(row) => {
+        const student = row.enrollment?.student
+        const name = [student?.lastName, student?.firstName].filter(Boolean).join(', ')
+        const yearLevel = row.enrollment?.yearLevel ?? null
+        const semester = row.enrollment?.semester ?? null
+        const courseOptions = row.curriculumEvaluation?.advisingCourses ?? []
+        const chosen = courseOptions.find(
+          (item) => item.id === row.enrollment?.curriculumId && courseIds.includes(item.id)
+        )
+        const subjects = chosen?.subjects ?? []
+        const assessed = row.curriculumEvaluation?.assessedSubjects ?? []
+        const load = row.curriculumEvaluation?.allowableUnitLoad
+        const selectedUnits = subjects.reduce((sum, subject) => sum + Number(subject.units), 0)
+        const overMax = load?.maxUnits != null && selectedUnits > load.maxUnits
+        const underMin = load?.minUnits != null && selectedUnits > 0 && selectedUnits < load.minUnits
+        const editable = row.status === 'in_progress'
+        const loadIssue = !chosen
+          ? ''
+          : overMax
+            ? `Exceeds maximum load of ${load?.maxUnits} units.`
+            : underMin && !underloadApproved
+              ? `Below the minimum load of ${load?.minUnits} units.`
+              : ''
+        const coursesReady = courseIds.length > 0 && sameCourseIds(savedCourseIds, courseIds) && !assignCourses.isPending
+        const chosenLoadBlocked = Boolean(chosen) && (selectedUnits === 0 || overMax || (underMin && !underloadApproved))
+        const toggleCourse = (curriculumId: string) => {
+          const next = courseIds.includes(curriculumId)
+            ? courseIds.filter((id) => id !== curriculumId)
+            : [...courseIds, curriculumId]
+          setCourseIds(next)
+          if (editable) assignCourses.mutate(next)
+        }
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <span className="font-mono">{student?.studentNumber}</span>
+              <span>{name}</span>
+              <Badge>{row.status}</Badge>
+              <span>
+                Year {yearLevel ?? '—'} · Sem {semester ?? '—'}
+              </span>
+              <Button type="button" size="sm" variant="outline" onClick={() => navigate('/faculty/advising')}>
+                Back to queue
+              </Button>
+            </div>
+            {assessed.length ? (
+              <p className="text-sm text-[var(--color-muted-foreground)]" data-testid="advising-assessed-courses">
+                Already assessed: {assessed.join(', ')}.
+              </p>
+            ) : null}
+            <fieldset className="space-y-3" data-testid="advising-courses">
+              <legend className="text-sm font-medium">Advisable courses</legend>
+              {courseOptions.map((item) => {
+                const checked = courseIds.includes(item.id)
+                const units = item.subjects.reduce((sum, subject) => sum + Number(subject.units), 0)
+                return (
+                  <div key={item.id} className="rounded-xl border border-[var(--color-border)] p-3">
+                    <label className="flex items-center gap-2 text-sm font-medium">
+                      <input
+                        type="checkbox"
+                        data-testid={`advising-course-${item.code}`}
+                        checked={checked}
+                        disabled={!editable || endorse.isPending || assignCourses.isPending}
+                        onChange={() => toggleCourse(item.id)}
+                      />
+                      {item.code} — {item.name}
+                    </label>
+                    {checked ? (
+                      item.subjects.length ? (
+                        <>
+                          <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
+                            {item.code} includes {units} units
+                            {load?.minUnits != null ? ` · minimum ${load.minUnits}` : ''}
+                            {load?.maxUnits != null ? ` · maximum ${load.maxUnits}` : ''}.
+                          </p>
+                          <ul className="mt-2 space-y-2 text-sm" data-testid={`advising-course-subjects-${item.code}`}>
+                            {item.subjects.map((subject) => (
+                              <li key={subject.subjectCode} className="flex flex-wrap items-center gap-3">
+                                <span className="font-mono">{subject.subjectCode}</span>
+                                <span>{subject.title ?? subject.subjectTitle}</span>
+                                <span className="text-[var(--color-muted-foreground)]">{subject.units} units</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
+                          This course has no remaining subjects for the term.
+                        </p>
+                      )
+                    ) : null}
+                  </div>
+                )
+              })}
+            </fieldset>
+            {courseIds.length > 0 && sameCourseIds(savedCourseIds, courseIds) ? (
+              <p className="text-sm text-[var(--color-muted-foreground)]" data-testid="advising-course-saved">
+                These courses are available on the student dashboard.
+              </p>
+            ) : null}
+            {courseIds.length === 0 ? (
+              <p className="text-sm text-[var(--color-muted-foreground)]" data-testid="advising-pick-course">
+                Select every course the student may choose.
+              </p>
+            ) : null}
+            {editable && courseIds.length > 0 ? (
+              <div className="space-y-4">
+                <FormField id="advising-remarks" label="Adviser comments">
+                  <Textarea
+                    id="advising-remarks"
+                    data-testid="advising-remarks"
+                    rows={4}
+                    value={remarks}
+                    disabled={endorse.isPending}
+                    placeholder="Advice for the student before this endorsement"
+                    onChange={(event) => setRemarks(event.target.value)}
+                  />
+                </FormField>
+                {loadIssue ? (
+                  <p className="text-sm text-[var(--color-destructive)]" data-testid="advising-load-issue" role="alert">
+                    {loadIssue}
+                  </p>
+                ) : (
+                  <p className="text-sm text-[var(--color-muted-foreground)]" data-testid="advising-awaiting-student">
+                    Endorse this list. The student then chooses one of these courses.
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-4">
+                  {chosen ? (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={underloadApproved}
+                        onChange={(event) => setUnderloadApproved(event.target.checked)}
+                      />
+                      Endorse below the minimum unit load
+                    </label>
+                  ) : null}
+                  <Button
+                    type="button"
+                    data-testid="endorse-advising"
+                    disabled={endorse.isPending || !coursesReady || chosenLoadBlocked}
+                    onClick={() =>
+                      endorse.mutate({
+                        subjects: chosen ? subjects : [],
+                        selectedCodes: chosen ? subjects.map((subject) => subject.subjectCode) : [],
+                      })
+                    }
+                  >
+                    Endorse advising
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )
+      }}
     </QueryPage>
   )
 }

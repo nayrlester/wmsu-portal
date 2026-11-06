@@ -573,6 +573,80 @@ export class CurriculumService {
       .where('curriculum_version_id', version.id)
       .preload('subject')
   }
+
+  async advisingCourseOptions(input: {
+    organizationId: string
+    studentProgramId: string | null
+    yearLevel: number | null
+    semester: number | null
+    assessedSubjects: string[]
+  }) {
+    const studentProgram = input.studentProgramId
+      ? await Program.query()
+          .where('organization_id', input.organizationId)
+          .where('id', input.studentProgramId)
+          .first()
+      : null
+    const curricula = await UsisCurriculum.query()
+      .where('organization_id', input.organizationId)
+      .where('is_active', true)
+      .preload('program')
+      .preload('versions', (query) => {
+        query.where('status', 'active').orderBy('created_at', 'desc')
+      })
+    const assessed = new Set(input.assessedSubjects)
+    const studentCode = studentProgram?.code?.toUpperCase() ?? ''
+    const studentName = studentProgram?.name?.trim().toLowerCase() ?? ''
+    const options = []
+    for (const curriculum of curricula) {
+      const version = curriculum.versions?.[0]
+      if (!version) continue
+      const lines = await UsisCurriculumVersionSubject.query()
+        .where('curriculum_version_id', version.id)
+        .preload('subject')
+      const remaining = lines
+        .filter((line) => line.subject && !assessed.has(line.subject.subjectCode))
+        .map((line) => ({
+          id: line.subject!.id,
+          subjectCode: line.subject!.subjectCode,
+          title: line.subject!.title,
+          units: Number(line.subject!.units),
+          yearLevel: line.yearLevel,
+          semester: line.semester,
+        }))
+      const forTerm = remaining.filter((subject) => {
+        const yearOk = input.yearLevel == null || subject.yearLevel === input.yearLevel
+        const semesterOk = input.semester == null || subject.semester === input.semester
+        return yearOk && semesterOk
+      })
+      const subjects = forTerm.length
+        ? forTerm
+        : remaining.filter((subject) => input.yearLevel == null || subject.yearLevel === input.yearLevel)
+      const programCode = curriculum.program?.code ?? curriculum.code
+      const programName = curriculum.program?.name ?? curriculum.name
+      const normalizedCode = programCode.toUpperCase()
+      const matchesStudent = Boolean(
+        (input.studentProgramId && curriculum.programId === input.studentProgramId) ||
+          (studentName && programName.trim().toLowerCase() === studentName) ||
+          (studentCode &&
+            normalizedCode &&
+            (studentCode === normalizedCode ||
+              studentCode.startsWith(`${normalizedCode}-`) ||
+              normalizedCode.startsWith(`${studentCode}-`)))
+      )
+      options.push({
+        id: curriculum.id,
+        code: programCode,
+        name: programName,
+        curriculumCode: curriculum.code,
+        matchesStudent,
+        subjects,
+      })
+    }
+    return options.sort(
+      (a, b) => Number(b.matchesStudent) - Number(a.matchesStudent) || a.code.localeCompare(b.code)
+    )
+  }
 }
 
 async function countColumn(table: string, column: string, id: string) {

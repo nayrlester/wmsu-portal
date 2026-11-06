@@ -9,6 +9,13 @@ import { enrollmentPortalWorkflowService } from '#modules/enrollment/services/en
 import { subjectCreditService } from '#modules/enrollment/services/subject_credit_service'
 import { EnrollmentFlowService } from '#modules/enrollment/services/enrollment_flow_service'
 import { EnrollmentWorkflowError } from '#modules/enrollment/domain/enrollment_workflow'
+import { studentCourseSelectionService } from '#modules/enrollment/services/student_course_selection_service'
+
+const selectCourseValidator = vine.compile(
+  vine.object({
+    curriculumId: vine.string().uuid(),
+  })
+)
 
 const startEnrollmentValidator = vine.compile(
   vine.object({
@@ -61,10 +68,22 @@ export default class StudentPortalController {
     if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
     const policy = await academicPoliciesService.getOrCreate(user.organizationId)
     const steps = await resolveEnrollmentApprovalSteps(user.organizationId)
+    const email = user.email?.trim().toLowerCase()
+    const student = email ? await facultyEvalService.resolveStudent(user.organizationId, email) : null
+    const window = student
+      ? await academicPoliciesService.studentEnrollmentWindow(user.organizationId, student.id)
+      : {
+          nextTermEnrollmentOpen: Boolean(policy.nextTermEnrollmentOpen),
+          canStartEnrollment: true,
+          enrollmentHoldReason: null as string | null,
+        }
     return ctx.response.ok({
       data: {
         enrollmentApprovalSteps: steps,
         gradeDisplayMode: policy.gradeDisplayMode,
+        nextTermEnrollmentOpen: window.nextTermEnrollmentOpen,
+        canStartEnrollment: window.canStartEnrollment,
+        enrollmentHoldReason: window.enrollmentHoldReason,
       },
     })
   }
@@ -149,6 +168,55 @@ export default class StudentPortalController {
     })
   }
 
+  async courseChoice(ctx: HttpContext) {
+    const linked = await this.linkedStudent(ctx)
+    if (!linked) return
+    const data = await studentCourseSelectionService.courseChoice(linked.user.organizationId, linked.student.id)
+    return ctx.response.ok({ data })
+  }
+
+  async selectCourse(ctx: HttpContext) {
+    const linked = await this.linkedStudent(ctx)
+    if (!linked) return
+    try {
+      const payload = await ctx.request.validateUsing(selectCourseValidator)
+      const data = await studentCourseSelectionService.selectStudentCourse({
+        organizationId: linked.user.organizationId,
+        studentId: linked.student.id,
+        curriculumId: payload.curriculumId,
+      })
+      return ctx.response.ok({ data })
+    } catch (error) {
+      if (error instanceof EnrollmentWorkflowError) {
+        return ctx.response.status(error.status).send({
+          success: false,
+          error: error.message,
+          code: error.code,
+        })
+      }
+      throw error
+    }
+  }
+
+  private async linkedStudent(ctx: HttpContext) {
+    const user = ctx.auth.user ?? ctx.platformUser
+    if (!user) {
+      ctx.response.unauthorized({ error: 'Unauthorized' })
+      return null
+    }
+    const email = user.email?.trim().toLowerCase()
+    if (!email) {
+      ctx.response.notFound({ error: 'No student profile linked to this account' })
+      return null
+    }
+    const student = await facultyEvalService.resolveStudent(user.organizationId, email)
+    if (!student) {
+      ctx.response.notFound({ error: 'No student profile linked to this account' })
+      return null
+    }
+    return { user, student }
+  }
+
   async startEnrollment(ctx: HttpContext) {
     const user = ctx.auth.user ?? ctx.platformUser
     if (!user) return ctx.response.unauthorized({ error: 'Unauthorized' })
@@ -169,6 +237,14 @@ export default class StudentPortalController {
         .first()
       if (!year) {
         return ctx.response.unprocessableEntity({ error: 'Academic year not found' })
+      }
+      const window = await academicPoliciesService.studentEnrollmentWindow(user.organizationId, student.id)
+      if (!window.canStartEnrollment) {
+        throw new EnrollmentWorkflowError(
+          window.enrollmentHoldReason ?? 'Enrollment for the next term is closed',
+          422,
+          'ENROLLMENT_PERIOD_CLOSED'
+        )
       }
 
       const service = new EnrollmentFlowService()

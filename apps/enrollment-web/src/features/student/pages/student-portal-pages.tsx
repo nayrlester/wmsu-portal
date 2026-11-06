@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -47,8 +47,11 @@ import {
   fetchDeficiencies,
   fetchEnrollments,
   fetchStudentEnrollmentWorkflow,
+  fetchStudentCourseChoice,
+  selectStudentCourse,
   fetchMyCurriculumPlan,
   fetchStudentOpenAcademicYears,
+  fetchStudentEnrollmentWindow,
   startMyEnrollment,
   fetchGrades,
   fetchStudentGradeFeedback,
@@ -176,6 +179,95 @@ function StudentAnnouncementFeed() {
   )
 }
 
+function StudentCourseGate() {
+  const navigate = useNavigate()
+  const { notify } = useNotification()
+  const qc = useQueryClient()
+  const [courseId, setCourseId] = useState('')
+  const choice = useQuery({
+    queryKey: ['student', 'course-choice'],
+    queryFn: fetchStudentCourseChoice,
+  })
+  useEffect(() => {
+    const selected = choice.data?.selectedCourse?.id
+    if (selected) setCourseId(selected)
+  }, [choice.data?.selectedCourse?.id])
+  const selectCourse = useMutation({
+    mutationFn: () => selectStudentCourse(courseId),
+    onSuccess: (result) => {
+      notify({
+        tone: 'success',
+        title: 'Course selected',
+        description: `${result.selectedCourse.code} subjects are ready for the registrar.`,
+      })
+      void qc.invalidateQueries({ queryKey: ['student', 'course-choice'] })
+      void qc.invalidateQueries({ queryKey: ['student', 'enrollment-workflow'] })
+      navigate('/student/enrollment')
+    },
+    onError: (err) =>
+      notify({
+        tone: 'danger',
+        title: 'Course was not saved',
+        description: getApiErrorMessage(err),
+      }),
+  })
+  if (choice.isLoading) return <LoadingState label="Course selection" />
+  if (!choice.data?.enrollmentId) return null
+  const offered = choice.data.adviserCourses ?? []
+  const picked = offered.find((course) => course.id === courseId) ?? null
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Select your course</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {offered.length ? (
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            Your adviser listed {offered.map((course) => course.code).join(', ')}. Select one course before you continue enrollment.
+          </p>
+        ) : (
+          <Alert variant="warning" title="Waiting for your adviser">
+            Your adviser selects the courses you may take before you can continue enrollment.
+          </Alert>
+        )}
+        <FormField id="student-course" label="Course">
+          <Select
+            id="student-course"
+            data-testid="student-course"
+            value={courseId}
+            disabled={offered.length === 0 || selectCourse.isPending}
+            onChange={(event) => setCourseId(event.target.value)}
+          >
+            <option value="">Select your course…</option>
+            {offered.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.code} — {course.name}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+        {picked?.subjects.length ? (
+          <ul className="space-y-1 text-sm" data-testid="student-course-subjects">
+            {picked.subjects.map((subject) => (
+              <li key={subject.subjectCode}>
+                <span className="font-mono">{subject.subjectCode}</span> {subject.title} · {subject.units} units
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <Button
+          type="button"
+          data-testid="student-continue-enrollment"
+          disabled={!picked || selectCourse.isPending}
+          onClick={() => selectCourse.mutate()}
+        >
+          Continue enrollment
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
 export function StudentDashboardPage() {
   const studentQuery = useMyStudent()
   const studentId = studentQuery.data?.id
@@ -218,6 +310,7 @@ export function StudentDashboardPage() {
   return (
     <div className="space-y-4">
       <StudentAnnouncementFeed />
+      <StudentCourseGate />
       <StudentTaskCalendarPanel />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardCard title="Student number" value={studentQuery.data.studentNumber} />
@@ -359,6 +452,7 @@ export function StudentEnrollmentPage() {
   const controls = useListControls('', 10)
   const [academicYearId, setAcademicYearId] = useState('')
   const [semester, setSemester] = useState('1')
+  const [courseId, setCourseId] = useState('')
   const workflow = useQuery({
     queryKey: ['student', 'enrollment-workflow'],
     queryFn: fetchStudentEnrollmentWorkflow,
@@ -369,6 +463,21 @@ export function StudentEnrollmentPage() {
     queryFn: fetchStudentOpenAcademicYears,
     enabled: !!student.data?.id,
   })
+  const courseChoice = useQuery({
+    queryKey: ['student', 'course-choice'],
+    queryFn: fetchStudentCourseChoice,
+    enabled: !!student.data?.id,
+  })
+  const enrollmentWindow = useQuery({
+    queryKey: ['student', 'enrollment-window'],
+    queryFn: fetchStudentEnrollmentWindow,
+    enabled: !!student.data?.id,
+  })
+  useEffect(() => {
+    const selected = courseChoice.data?.selectedCourse?.id
+    if (selected) setCourseId(selected)
+    if (courseChoice.data?.semester) setSemester(String(courseChoice.data.semester))
+  }, [courseChoice.data?.selectedCourse?.id, courseChoice.data?.semester])
   const query = usePaginatedQuery({
     queryKey: ['student', 'enrollments', student.data?.id, controls.page],
     queryFn: () =>
@@ -398,19 +507,73 @@ export function StudentEnrollmentPage() {
         description: getApiErrorMessage(err),
       }),
   })
+  const offered = courseChoice.data?.adviserCourses ?? []
+  const mustChoose = Boolean(courseChoice.data?.requiresCourseSelection)
+  const nextTermOpen = enrollmentWindow.data?.nextTermEnrollmentOpen === true
+  const showStartCard = mustChoose || nextTermOpen
+  const picked = offered.find((course) => course.id === courseId) ?? null
+  const selectCourse = useMutation({
+    mutationFn: () => selectStudentCourse(courseId),
+    onSuccess: (result) => {
+      notify({
+        tone: 'success',
+        title: 'Course selected',
+        description: `${result.selectedCourse.code} subjects are ready for the registrar.`,
+      })
+      void qc.invalidateQueries({ queryKey: ['student', 'course-choice'] })
+      void qc.invalidateQueries({ queryKey: ['student', 'enrollment-workflow'] })
+      void qc.invalidateQueries({ queryKey: ['student', 'enrollments'] })
+    },
+    onError: (err) =>
+      notify({
+        tone: 'danger',
+        title: 'Course was not saved',
+        description: getApiErrorMessage(err),
+      }),
+  })
   return (
     <div className="space-y-6">
       {workflow.isLoading ? <LoadingState label="Enrollment workflow" /> : null}
       {workflow.data ? <EnrollmentWorkflowPanel data={workflow.data} showSchedule={false} /> : null}
+      {showStartCard ? (
+      <div data-testid="start-term-enrollment">
       <Card>
         <CardHeader>
           <CardTitle>Start term enrollment</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            Open a draft for the active academic year, then complete advising, assessment, cashier
-            payment, and registrar registration.
+            {offered.length > 0
+              ? `Your adviser listed ${offered.map((course) => course.code).join(', ')}. Select one course before this enrollment continues.`
+              : 'Open a draft for the active academic year, then complete advising, assessment, cashier payment, and registrar registration.'}
           </p>
+          {offered.length > 0 ? (
+            <FormField id="student-enrollment-course" label="Course">
+              <Select
+                id="student-enrollment-course"
+                data-testid="student-enrollment-course"
+                value={courseId}
+                disabled={selectCourse.isPending}
+                onChange={(event) => setCourseId(event.target.value)}
+              >
+                <option value="">Select your course…</option>
+                {offered.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.code} — {course.name}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          ) : null}
+          {picked?.subjects.length ? (
+            <ul className="space-y-1 text-sm" data-testid="student-enrollment-course-subjects">
+              {picked.subjects.map((subject) => (
+                <li key={subject.subjectCode}>
+                  <span className="font-mono">{subject.subjectCode}</span> {subject.title} · {subject.units} units
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <div className="grid gap-3 md:grid-cols-3">
             <FormField id="stuAy" label="Academic year">
               <Select
@@ -436,15 +599,22 @@ export function StudentEnrollmentPage() {
             <div className="flex items-end">
               <Button
                 type="button"
-                disabled={!academicYearId || startMutation.isPending}
-                onClick={() => startMutation.mutate()}
+                data-testid="student-enrollment-start"
+                disabled={
+                  mustChoose
+                    ? !picked || selectCourse.isPending
+                    : !academicYearId || startMutation.isPending
+                }
+                onClick={() => (mustChoose ? selectCourse.mutate() : startMutation.mutate())}
               >
-                Start enrollment
+                {mustChoose ? 'Continue enrollment' : 'Start enrollment'}
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+      </div>
+      ) : null}
       <QueryPage
         title="Enrollment"
         description="Term enrollment records"
@@ -1153,8 +1323,14 @@ export function StudentAssessmentsPage() {
   const student = useMyStudent()
   const assessControls = useListControls()
   const query = usePaginatedQuery({
-    queryKey: ['student', 'assessments', assessControls.page],
-    queryFn: () => fetchAssessments({ page: assessControls.page, limit: assessControls.pageSize }),
+    queryKey: ['student', 'assessments', assessControls.page, student.data?.id],
+    queryFn: () =>
+      fetchAssessments({
+        page: assessControls.page,
+        limit: assessControls.pageSize,
+        studentId: student.data?.id,
+      }),
+    enabled: Boolean(student.data?.id),
   })
   const monitor = useQuery({
     queryKey: ['student', 'account-monitor'],
@@ -1171,15 +1347,16 @@ export function StudentAssessmentsPage() {
     snapshot?: Record<string, unknown>
   } | null>(null)
 
+  const assessedEnrollment = enrollments.data?.data.find((row) =>
+    ['assessed', 'payment_verified', 'registrar_approved', 'registered'].includes(row.status)
+  )
+  const waitingForAssessment = enrollments.data?.data.some((row) =>
+    ['draft', 'advising', 'advised'].includes(row.status)
+  )
   const issue = useMutation({
     mutationFn: async () => {
-      const enrollmentId =
-        monitor.data?.latestAssessment?.enrollmentId ||
-        enrollments.data?.data.find((e) =>
-          ['assessed', 'payment_verified', 'registered'].includes(e.status)
-        )?.id ||
-        enrollments.data?.data[0]?.id
-      if (!enrollmentId) throw new Error('No enrollment available for assessment form')
+      const enrollmentId = monitor.data?.latestAssessment?.enrollmentId || assessedEnrollment?.id
+      if (!enrollmentId) throw new Error('The registrar prepares the assessment after advising is endorsed.')
       return issueRegistrationDocument({ enrollmentId, docType: 'assessment_form' })
     },
     onSuccess: (doc) => {
@@ -1329,7 +1506,11 @@ export function StudentAssessmentsPage() {
             flow is unchanged.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={() => issue.mutate()} disabled={issue.isPending}>
+            <Button
+              type="button"
+              onClick={() => issue.mutate()}
+              disabled={issue.isPending || !assessedEnrollment}
+            >
               Issue assessment form
             </Button>
             {printDoc ? (
@@ -1338,6 +1519,11 @@ export function StudentAssessmentsPage() {
               </Button>
             ) : null}
           </div>
+          {!assessedEnrollment && waitingForAssessment ? (
+            <p className="text-sm text-muted-foreground" data-testid="assessment-form-gate">
+              Advising is endorsed. The registrar prepares the assessment before this form can be issued.
+            </p>
+          ) : null}
           {printDoc ? <AssessmentFormPrintView doc={printDoc} /> : null}
           {monitor.data?.assessmentForms?.length ? (
             <DataTable

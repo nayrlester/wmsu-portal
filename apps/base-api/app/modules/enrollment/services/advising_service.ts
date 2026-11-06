@@ -148,6 +148,19 @@ export class AdvisingService {
       if (['registered'].includes(enrollment.status)) {
         throw new EnrollmentWorkflowError('Cannot advise a registered enrollment', 409, 'ALREADY_REGISTERED')
       }
+      const priorRegistration = await Enrollment.query({ client: trx })
+        .where('organization_id', enrollment.organizationId)
+        .where('student_id', enrollment.studentId)
+        .whereNot('id', enrollment.id)
+        .where('status', 'registered')
+        .first()
+      if (priorRegistration) {
+        throw new EnrollmentWorkflowError(
+          'Advising is not part of enrollment after a student already has a registered course',
+          409,
+          'ADVISING_NOT_REQUIRED'
+        )
+      }
 
       await this.ensureAdvisingPeriodOpen(
         enrollment.organizationId,
@@ -313,6 +326,39 @@ export class AdvisingService {
         .where('id', session.enrollmentId)
         .forUpdate()
         .firstOrFail()
+      const offered = Array.isArray(enrollment.advisedCurriculumIds) ? enrollment.advisedCurriculumIds : []
+      if (offered.length > 0 && !enrollment.curriculumId) {
+        session.useTransaction(trx)
+        session.status = 'endorsed'
+        session.remarks = input.remarks ?? session.remarks
+        session.underloadApproved = input.underloadApproved ?? session.underloadApproved
+        session.overloadApproved = input.overloadApproved ?? session.overloadApproved
+        session.endorsedAt = DateTime.now()
+        await session.save()
+
+        enrollment.useTransaction(trx)
+        enrollment.advisedAt = DateTime.now()
+        enrollment.advisedBy = input.actorUserId
+        enrollment.requiresReadvising = false
+        await EnrollmentLine.query({ client: trx }).where('enrollment_id', enrollment.id).delete()
+        await transitionEnrollment(
+          enrollment,
+          'advised',
+          input.actorUserId,
+          'Advising endorsed. The student selects one course.',
+          trx
+        )
+        await appendHistory(
+          enrollment.organizationId,
+          enrollment.id,
+          'session.endorse',
+          input.actorUserId,
+          { advisedCurriculumIds: offered },
+          session.id,
+          trx
+        )
+        return { session, enrollment, lines: 0 }
+      }
       const student = await Student.findOrFail(enrollment.studentId, { client: trx })
       const recommendations = await AdvisingRecommendation.query({ client: trx }).where(
         'advising_session_id',
@@ -481,6 +527,12 @@ export class AdvisingService {
       .preload('recommendations')
       .orderBy('created_at', 'desc')
       .limit(50)
+    const openSessionByEnrollment = new Map<string, string>()
+    for (const session of sessionRows) {
+      if (session.status === 'in_progress' && !openSessionByEnrollment.has(session.enrollmentId)) {
+        openSessionByEnrollment.set(session.enrollmentId, session.id)
+      }
+    }
     return {
       total: rows.length,
       advised: advised.length,
@@ -494,6 +546,7 @@ export class AdvisingService {
         semester: row.semester,
         studentNumber: row.student?.studentNumber ?? '',
         studentName: [row.student?.lastName, row.student?.firstName].filter(Boolean).join(', '),
+        openSessionId: openSessionByEnrollment.get(row.id) ?? null,
       })),
       recentSessions: sessionRows.map((row) => ({
         id: row.id,

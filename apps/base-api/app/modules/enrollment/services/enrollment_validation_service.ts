@@ -31,6 +31,7 @@ export type CurriculumEvaluation = {
   creditedInternal: string[]
   creditedExternal: string[]
   creditedEquivalent: string[]
+  assessedSubjects: string[]
   remaining: CurriculumRemainingSubject[]
   currentTermRemaining: CurriculumRemainingSubject[]
   planByTerm: Array<{
@@ -90,11 +91,26 @@ export async function evaluateCurriculum(input: {
     .filter((c) => c.credit_type === 'equivalent')
     .map((c) => c.subject_code)
 
+  const enrolledCodes =
+    enrollmentIds.length === 0
+      ? []
+      : (
+          await EnrollmentLine.query()
+            .whereIn('enrollment_id', enrollmentIds)
+            .where((query) => {
+              query.whereNull('status').orWhereNotIn('status', ['dropped', 'withdrawn'])
+            })
+        )
+          .map((line) => line.subjectCode)
+          .filter((code): code is string => Boolean(code))
+  const assessedSubjects = [...new Set(enrolledCodes)]
+
   const completed = new Set([
     ...passed,
     ...creditedInternal,
     ...creditedExternal,
     ...creditedEquivalent,
+    ...assessedSubjects,
   ])
 
   let remaining: CurriculumEvaluation['remaining'] = []
@@ -181,6 +197,7 @@ export async function evaluateCurriculum(input: {
     creditedInternal,
     creditedExternal,
     creditedEquivalent,
+    assessedSubjects,
     remaining,
     currentTermRemaining,
     planByTerm,

@@ -25,6 +25,9 @@ export default class UsisAcademicPolicy extends BaseModel {
   @column()
   declare gradeDisplayMode: GradeDisplayMode
 
+  @column()
+  declare nextTermEnrollmentOpen: boolean
+
   @column({
     prepare: (value: GradeDocumentSignatory[]) => JSON.stringify(value ?? []),
     consume: (value: string | GradeDocumentSignatory[]) =>
