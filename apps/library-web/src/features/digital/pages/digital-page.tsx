@@ -46,6 +46,44 @@ function accessLabel(method: string) {
   return method
 }
 
+function kindLabel(value?: string | null) {
+  const text = value?.trim()
+  if (!text || text === 'undefined' || text === 'null') return null
+  return text.replaceAll('_', ' ')
+}
+
+function unifiedSourceLabel(source?: string | null, fallback: 'Repository' | 'E-resource' = 'E-resource') {
+  if (source === 'repository') return 'Repository'
+  if (source === 'electronic') return 'E-resource'
+  return fallback
+}
+
+function formatUnifiedResultLabel(
+  source: 'Repository' | 'E-resource',
+  title?: string | null,
+  type?: string | null
+) {
+  const safeTitle = title?.trim() || 'Untitled'
+  const safeType = kindLabel(type)
+  return safeType ? `${source} · ${safeTitle} · ${safeType}` : `${source} · ${safeTitle}`
+}
+
+function resolveViewerUrl(fileUrl: string) {
+  const raw = fileUrl.trim()
+  if (!raw) return raw
+  try {
+    const url = new URL(raw, window.location.origin)
+    if (url.hostname === 'library.wmsu.edu.ph') {
+      const fileName = url.pathname.split('/').filter(Boolean).pop() || 'demo-repository.pdf'
+      return `${window.location.origin}/samples/${fileName}`
+    }
+    return url.toString()
+  } catch {
+    if (raw.startsWith('/')) return raw
+    return raw
+  }
+}
+
 function openExternal(url: string) {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
@@ -60,6 +98,7 @@ export function DigitalPage() {
   const [search, setSearch] = useState('')
   const [viewerUrl, setViewerUrl] = useState<string | null>(null)
   const [viewerTitle, setViewerTitle] = useState('')
+  const [viewerError, setViewerError] = useState<string | null>(null)
 
   const [repoTitle, setRepoTitle] = useState('')
   const [repoType, setRepoType] = useState<RepositoryResourceType>('thesis')
@@ -130,7 +169,7 @@ export function DigitalPage() {
     }
     try {
       const accessed = await accessRepositoryItem(item.id, mode)
-      const fileUrl = accessed.fileUrl?.trim()
+      const fileUrl = resolveViewerUrl(accessed.fileUrl?.trim() || '')
       if (!fileUrl) {
         toast.error('No file URL available for this item')
         return
@@ -144,6 +183,7 @@ export function DigitalPage() {
       }
 
       if (isPdfUrl(fileUrl)) {
+        setViewerError(null)
         setViewerTitle(accessed.title)
         setViewerUrl(fileUrl)
       } else {
@@ -188,8 +228,12 @@ export function DigitalPage() {
                 key={`repository-${item.id}`}
                 className="flex flex-col gap-2 border-b border-slate-100 py-2 sm:flex-row sm:items-center sm:justify-between"
               >
-                <p>
-                  <span className="text-slate-500">[repository]</span> {item.title} · {item.type}
+                <p className="text-[var(--color-ink)]">
+                  {formatUnifiedResultLabel(
+                    unifiedSourceLabel(item.source, 'Repository'),
+                    item.title,
+                    item.type
+                  )}
                   {item.accessLevel ? ` · ${item.accessLevel}` : ''}
                 </p>
                 {canAccess && (
@@ -229,8 +273,12 @@ export function DigitalPage() {
                 key={`electronic-${item.id}`}
                 className="flex flex-col gap-2 border-b border-slate-100 py-2 sm:flex-row sm:items-center sm:justify-between"
               >
-                <p>
-                  <span className="text-slate-500">[electronic]</span> {item.title} · {item.type}
+                <p className="text-[var(--color-ink)]">
+                  {formatUnifiedResultLabel(
+                    unifiedSourceLabel(item.source, 'E-resource'),
+                    item.title,
+                    item.type
+                  )}
                 </p>
                 {item.accessUrl ? (
                   <Button size="sm" variant="outline" onClick={() => openExternal(item.accessUrl!)}>
@@ -260,15 +308,30 @@ export function DigitalPage() {
                   <ExternalLink className="mr-1 h-3.5 w-3.5" />
                   Open tab
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setViewerUrl(null)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setViewerUrl(null)
+                    setViewerError(null)
+                  }}
+                >
                   Close
                 </Button>
               </div>
             </div>
+            {viewerError ? (
+              <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {viewerError}
+              </p>
+            ) : null}
             <iframe
               title={viewerTitle || 'PDF viewer'}
               src={viewerUrl}
               className="h-[70vh] w-full rounded-lg border border-slate-200 bg-white"
+              onError={() =>
+                setViewerError('Preview could not be loaded. Use Open tab or try again later.')
+              }
             />
           </CardContent>
         </Card>

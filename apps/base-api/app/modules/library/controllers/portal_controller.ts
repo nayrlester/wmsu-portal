@@ -69,7 +69,11 @@ export default class PortalController {
 
   private async member(ctx: HttpContext) {
     this.ensure(ctx)
-    return this.service.resolveMemberForUser(ctx.authUser!.id, ctx.authUser!.email)
+    return this.service.resolveMemberForUser(ctx.authUser!.id, ctx.authUser!.email, {
+      fullName: ctx.authUser!.fullName,
+      roles: ctx.authUser!.roles,
+      autoProvisionStudent: true,
+    })
   }
 
   async me(ctx: HttpContext) {

@@ -5,6 +5,33 @@ import { borrowingTenantId } from '#modules/library/services/borrowing/borrowing
 import BusinessRuleException from '#modules/library/exceptions/business_rule_exception'
 import OpacService from '#modules/library/services/opac/opac_service'
 
+function libraryWebPublicUrl() {
+  return (
+    process.env.LIBRARY_WEB_PUBLIC_URL ||
+    process.env.ULMIS_WEB_URL ||
+    'http://127.0.0.1:5183'
+  ).replace(/\/$/, '')
+}
+
+function resolveRepositoryFileUrl(fileUrl: string | null | undefined) {
+  const raw = fileUrl?.trim()
+  if (!raw) return null
+
+  try {
+    const url = new URL(raw)
+    if (url.hostname === 'library.wmsu.edu.ph') {
+      const fileName = url.pathname.split('/').filter(Boolean).pop() || 'demo-repository.pdf'
+      return `${libraryWebPublicUrl()}/samples/${fileName}`
+    }
+  } catch {
+    if (raw.startsWith('/')) {
+      return `${libraryWebPublicUrl()}${raw}`
+    }
+  }
+
+  return raw
+}
+
 export default class DigitalService {
   async listRepository(filters: { q?: string; resourceType?: string; page?: number; perPage?: number }) {
     const page = filters.page ?? 1
@@ -73,6 +100,7 @@ export default class DigitalService {
     else item.viewCount += 1
     await item.save()
 
+    item.fileUrl = resolveRepositoryFileUrl(item.fileUrl)
     return item
   }
 
@@ -243,7 +271,7 @@ export default class DigitalService {
       publicationYear: item.publicationYear,
       abstract: item.abstract,
       accessLevel: item.accessLevel,
-      fileUrl: item.fileUrl,
+      fileUrl: resolveRepositoryFileUrl(item.fileUrl),
       downloadCount: item.downloadCount,
       viewCount: item.viewCount,
       createdAt: item.createdAt.toISO(),

@@ -10,7 +10,11 @@ import BorrowingService from '#modules/library/services/borrowing/borrowing_serv
 import ReservationService from '#modules/library/services/reservations/reservation_service'
 import BusinessRuleException from '#modules/library/exceptions/business_rule_exception'
 import { borrowingTenantId } from '#modules/library/services/borrowing/borrowing_helpers'
-import { buildQrPayload } from '#modules/library/services/members/member_helpers'
+import {
+  buildMemberSearchText,
+  buildQrPayload,
+  generateLibraryCardNumber,
+} from '#modules/library/services/members/member_helpers'
 import { tenantContext } from '#modules/library/services/tenant/tenant_context'
 import type { AuditContext } from '#modules/library/services/audit/audit_service'
 
@@ -21,16 +25,82 @@ export default class PortalService {
     private reservationService = new ReservationService()
   ) {}
 
-  async resolveMemberForUser(_userId: string, email?: string | null) {
+  async resolveMemberForUser(
+    userId: string,
+    email?: string | null,
+    opts?: { fullName?: string | null; roles?: string[]; autoProvisionStudent?: boolean }
+  ) {
     const tid = borrowingTenantId()
-    // Prefer email match for self-service linkage
-    if (email) {
+    const normalizedEmail = email?.trim().toLowerCase() || null
+    if (normalizedEmail) {
       const byEmail = await Member.query()
         .where('tenant_id', tid)
         .whereNull('deleted_at')
-        .whereILike('email', email)
+        .whereILike('email', normalizedEmail)
         .first()
       if (byEmail) return byEmail
+    }
+
+    const roles = opts?.roles ?? []
+    const isStudent = roles.some((role) => role.toLowerCase() === 'student' || role.toLowerCase() === 'member')
+    if (opts?.autoProvisionStudent !== false && isStudent && normalizedEmail) {
+      const softDeleted = await Member.query()
+        .where('tenant_id', tid)
+        .whereILike('email', normalizedEmail)
+        .whereNotNull('deleted_at')
+        .orderBy('created_at', 'desc')
+        .first()
+      if (softDeleted) {
+        const fullName = (opts?.fullName?.trim() || softDeleted.fullName || normalizedEmail.split('@')[0]).slice(
+          0,
+          200
+        )
+        softDeleted.deletedAt = null
+        softDeleted.fullName = fullName
+        softDeleted.membershipStatus = 'approved'
+        softDeleted.isEnrolled = true
+        softDeleted.isBlacklisted = false
+        softDeleted.approvedAt = softDeleted.approvedAt ?? DateTime.now()
+        softDeleted.approvedBy = softDeleted.approvedBy ?? userId
+        softDeleted.searchText = buildMemberSearchText({
+          fullName,
+          email: normalizedEmail,
+          libraryCardNumber: softDeleted.libraryCardNumber,
+          memberType: softDeleted.memberType || 'student',
+        })
+        await softDeleted.save()
+        return softDeleted
+      }
+
+      const fullName = (opts?.fullName?.trim() || normalizedEmail.split('@')[0] || 'Library member').slice(
+        0,
+        200
+      )
+      const count = await Member.query().where('tenant_id', tid).count('* as total').first()
+      const libraryCardNumber = generateLibraryCardNumber(tid, Number(count?.$extras.total ?? 0) + 1)
+      const member = await Member.create({
+        tenantId: tid,
+        fullName,
+        email: normalizedEmail,
+        contact: null,
+        department: null,
+        memberType: 'student',
+        membershipStatus: 'approved',
+        libraryCardNumber,
+        notes: `Auto-linked from platform login ${userId}`,
+        isBlacklisted: false,
+        isEnrolled: true,
+        academicStatus: null,
+        approvedAt: DateTime.now(),
+        approvedBy: userId,
+        searchText: buildMemberSearchText({
+          fullName,
+          email: normalizedEmail,
+          libraryCardNumber,
+          memberType: 'student',
+        }),
+      })
+      return member
     }
 
     throw new BusinessRuleException(

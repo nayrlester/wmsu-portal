@@ -1,9 +1,12 @@
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
+import Book from '#modules/library/models/book'
 import RecentSearch from '#modules/library/models/recent_search'
 import SavedSearch, { type SearchFiltersPayload } from '#modules/library/models/saved_search'
+import SearchDocument from '#modules/library/models/search_document'
 import type { SearchEntityType, SearchPreset } from '#modules/library/services/search/search_helpers'
 import { searchTenantId } from '#modules/library/services/search/search_helpers'
+import SearchIndexerService from '#modules/library/services/search/search_indexer_service'
 
 export interface SearchQueryInput {
   q?: string
@@ -46,6 +49,7 @@ export default class SearchService {
     const perPage = Math.min(input.perPage ?? 20, 50)
     const offset = (page - 1) * perPage
     const query = (input.q ?? '').trim()
+    await this.ensureIndexPopulated(tenantId)
 
     const { sql, bindings, countSql, countBindings } = this.buildSearchQuery(
       tenantId,
@@ -101,8 +105,13 @@ export default class SearchService {
     const bindings: unknown[] = [tenantId]
 
     if (query.length > 0) {
-      conditions.push(`sd.search_vector @@ websearch_to_tsquery('english', ?)`)
-      bindings.push(query)
+      const like = `%${query.replace(/[%_]/g, '')}%`
+      conditions.push(`(
+        sd.search_vector @@ websearch_to_tsquery('english', ?)
+        OR sd.label ILIKE ?
+        OR COALESCE(sd.subtitle, '') ILIKE ?
+      )`)
+      bindings.push(query, like, like)
     }
 
     const types = this.resolveEntityTypes(input)
@@ -192,6 +201,23 @@ export default class SearchService {
     }
   }
 
+  private async ensureIndexPopulated(tenantId: string) {
+    const indexed = await SearchDocument.query()
+      .where('tenant_id', tenantId)
+      .count('* as total')
+      .first()
+    if (Number(indexed?.$extras.total ?? 0) > 0) return
+
+    const books = await Book.query()
+      .where('tenant_id', tenantId)
+      .whereNull('deleted_at')
+      .count('* as total')
+      .first()
+    if (Number(books?.$extras.total ?? 0) === 0) return
+
+    await new SearchIndexerService().reindexTenant(tenantId)
+  }
+
   private resolveEntityTypes(input: SearchQueryInput): SearchEntityType[] {
     if (input.preset === 'available' || input.preset === 'most_borrowed' || input.preset === 'new_arrivals') {
       return ['book']
@@ -210,8 +236,13 @@ export default class SearchService {
     const bindings: unknown[] = [tenantId]
 
     if (query.length > 0) {
-      baseConditions.push(`search_vector @@ websearch_to_tsquery('english', ?)`)
-      bindings.push(query)
+      const like = `%${query.replace(/[%_]/g, '')}%`
+      baseConditions.push(`(
+        search_vector @@ websearch_to_tsquery('english', ?)
+        OR label ILIKE ?
+        OR COALESCE(subtitle, '') ILIKE ?
+      )`)
+      bindings.push(query, like, like)
     }
 
     const where = baseConditions.join(' AND ')

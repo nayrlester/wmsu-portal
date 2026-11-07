@@ -130,5 +130,22 @@ export async function digitalUnifiedSearch(q: string) {
   const { data } = await apiClient.get<ApiResponse<UnifiedSearchResult>>('/digital/search', {
     params: { q },
   })
-  return data.data
+  const payload = data.data
+  return {
+    repository: (payload?.repository ?? []).map((item) => ({
+      ...item,
+      title: item.title || 'Untitled',
+      type: item.type || 'item',
+      source: 'repository' as const,
+    })),
+    electronic: (payload?.electronic ?? []).map((item) => {
+      const row = item as typeof item & { resourceKind?: string }
+      return {
+        ...item,
+        title: item.title || 'Untitled',
+        type: item.type || row.resourceKind || 'resource',
+        source: 'electronic' as const,
+      }
+    }),
+  }
 }
