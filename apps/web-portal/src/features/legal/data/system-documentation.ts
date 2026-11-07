@@ -21,7 +21,7 @@ export type DocResource = {
   label: string
   description: string
   href: string
-  kind: 'guide' | 'api' | 'swagger'
+  kind: 'guide' | 'api' | 'swagger' | 'srs' | 'pdf' | 'markdown'
   badge?: string
 }
 
@@ -44,6 +44,25 @@ function moduleSwagger(moduleLabel: string, pathPrefix: string, filterHint: stri
   }
 }
 
+function systemSpecBundle(exportName: string, productLabel: string): DocResource[] {
+  return [
+    {
+      kind: 'srs',
+      label: 'System Specification',
+      badge: 'SRS',
+      description: `${productLabel} — complete SRS, architecture, features, and LLD (HTML)`,
+      href: `/docs/${exportName}.html`,
+    },
+    {
+      kind: 'pdf',
+      label: 'System Specification PDF',
+      badge: 'PDF',
+      description: `${productLabel} — printable Complete System Specification`,
+      href: `/docs/${exportName}.pdf`,
+    },
+  ]
+}
+
 export const systemDocumentation: SystemDocLinks[] = [
   {
     id: 'identity',
@@ -52,6 +71,10 @@ export const systemDocumentation: SystemDocLinks[] = [
     logoSrc: platformBranding.identity.logoSrc,
     logoTone: platformBranding.identity.logoTone,
     resources: [
+      ...systemSpecBundle(
+        'Unified_Platform_Access-System-Specification',
+        'University Platform Access'
+      ),
       {
         kind: 'guide',
         label: 'User guide',
@@ -80,6 +103,7 @@ export const systemDocumentation: SystemDocLinks[] = [
     logoSrc: platformBranding.enrollment.logoSrc,
     logoTone: platformBranding.enrollment.logoTone,
     resources: [
+      ...systemSpecBundle('USiS-System-Specification', 'USiS'),
       {
         kind: 'guide',
         label: 'User guide',
@@ -102,6 +126,7 @@ export const systemDocumentation: SystemDocLinks[] = [
     logoSrc: platformBranding.records.logoSrc,
     logoTone: platformBranding.records.logoTone,
     resources: [
+      ...systemSpecBundle('TORMS-System-Specification', 'TORMS'),
       {
         kind: 'guide',
         label: 'User guide',
@@ -124,6 +149,7 @@ export const systemDocumentation: SystemDocLinks[] = [
     logoSrc: platformBranding.library.logoSrc,
     logoTone: platformBranding.library.logoTone,
     resources: [
+      ...systemSpecBundle('ULMIS-System-Specification', 'ULMIS'),
       {
         kind: 'guide',
         label: 'User guide',
@@ -146,6 +172,7 @@ export const systemDocumentation: SystemDocLinks[] = [
     logoSrc: platformBranding.finance.logoSrc,
     logoTone: platformBranding.finance.logoTone,
     resources: [
+      ...systemSpecBundle('UFMS-System-Specification', 'UFMS'),
       {
         kind: 'guide',
         label: 'User guide',
@@ -163,11 +190,12 @@ export const systemDocumentation: SystemDocLinks[] = [
   },
   {
     id: 'docstrack',
-    name: 'DocsTrack (UDMS)',
+    name: 'UDMS Documents',
     description: `Documents, workflows, approvals, UDMS reports — ${platformBranding.documents.localWeb}`,
     logoSrc: platformBranding.documents.logoSrc,
     logoTone: platformBranding.documents.logoTone,
     resources: [
+      ...systemSpecBundle('UDMS-System-Specification', 'UDMS'),
       {
         kind: 'guide',
         label: 'User guide',
@@ -180,7 +208,7 @@ export const systemDocumentation: SystemDocLinks[] = [
         description: 'Account dashboard, documents, workflows, UDMS module, platform billing',
         href: '/docs/DocsTrack-API-Specs-Manual.html',
       },
-      moduleSwagger('DocsTrack', '/api/v1/documents/*', 'In CIS Swagger, filter documents or /account/'),
+      moduleSwagger('UDMS', '/api/v1/documents/*', 'In CIS Swagger, filter documents or /account/'),
     ],
   },
   {
@@ -190,6 +218,7 @@ export const systemDocumentation: SystemDocLinks[] = [
     logoSrc: platformBranding.inventory.logoSrc,
     logoTone: platformBranding.inventory.logoTone,
     resources: [
+      ...systemSpecBundle('UIMS-System-Specification', 'UIMS'),
       {
         kind: 'guide',
         label: 'User guide',

@@ -2,6 +2,7 @@ import {
   ArrowUpRight,
   BookOpen,
   Code2,
+  FileText,
   HelpCircle,
   LayoutGrid,
   Shield,
@@ -57,6 +58,21 @@ const resourceMeta: Record<
     icon: Terminal,
     accent: 'bg-[#fff7ed] text-[#c2410c]',
     badge: 'Live',
+  },
+  srs: {
+    icon: FileText,
+    accent: 'bg-[#f5f3ff] text-[#5b21b6]',
+    badge: 'SRS',
+  },
+  pdf: {
+    icon: FileText,
+    accent: 'bg-[#fef2f2] text-[#b91c1c]',
+    badge: 'PDF',
+  },
+  markdown: {
+    icon: FileText,
+    accent: 'bg-[#f8fafc] text-[#334155]',
+    badge: 'MD',
   },
 }
 
@@ -150,7 +166,7 @@ export function SupportPage() {
 
               <div className="flex flex-1 flex-col gap-0.5 p-2 sm:p-3">
                 {system.resources.map((resource) => (
-                  <ResourceRow key={resource.kind} resource={resource} />
+                  <ResourceRow key={`${resource.kind}:${resource.href}`} resource={resource} />
                 ))}
               </div>
             </article>

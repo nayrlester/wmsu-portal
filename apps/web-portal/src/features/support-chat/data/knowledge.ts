@@ -355,14 +355,14 @@ export const supportKnowledge: KnowledgeEntry[] = [
     id: 'docstrack',
     keywords: ['docstrack', 'udms', 'document', 'approval', 'tracking', 'cdts'],
     answer: {
-      text: 'DocsTrack (UDMS) handles university documents, approvals, and tracking. `employee` with `docstrack` platform typically gets view/download unless approver roles are assigned.',
+      text: 'UDMS Documents handles university documents, approvals, and tracking. `employee` with the documents platform typically gets view/download unless approver roles are assigned.',
       links: [
         {
-          label: 'DocsTrack — User guide',
+          label: 'UDMS — User guide',
           href: '/docs/DocsTrack-Complete-Guide.html',
         },
       ],
-      suggestions: ['DocsTrack API specs', 'Show user manuals', 'Contact support'],
+      suggestions: ['UDMS API specs', 'Show user manuals', 'Contact support'],
     },
   },
   {

@@ -1,0 +1,3008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>USiS — Complete System Specification</title>
+  <style>
+  @page { margin: 18mm 14mm; }
+  body {
+    font-family: "Calibri", "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 8mm;
+  }
+  h1 { font-size: 20pt; color: #1e293b; border-bottom: 2px solid #334155; padding-bottom: 6px; margin-top: 26px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 15pt; color: #334155; margin-top: 20px; page-break-before: always; }
+  h2:first-of-type { page-break-before: avoid; }
+  h3 { font-size: 13pt; color: #475569; margin-top: 16px; }
+  h4 { font-size: 12pt; color: #64748b; margin-top: 14px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #f1f5f9; font-weight: 600; }
+  code { background: #f8fafc; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
+  pre { background: #f8fafc; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 9pt; }
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
+  img.flowchart {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 14px 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+<h1>USiS — Complete System Specification</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Product</strong></td>
+<td>USiS — University Student Information System</td>
+</tr>
+<tr>
+<td><strong>Document type</strong></td>
+<td>Complete System Specification (SRS + Architecture + Features + LLD)</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+<tr>
+<td><strong>Classification</strong></td>
+<td>Proprietary</td>
+</tr>
+</tbody></table>
+<h2>Document contents</h2>
+<ol>
+<li>System Requirements Specification (SRS)</li>
+<li>Architecture Design</li>
+<li>Features &amp; Requirements</li>
+<li>Low-Level Design (LLD) Workflows</li>
+</ol>
+<hr>
+<h2>Part 1 — System Requirements Specification (SRS)</h2>
+<h3>University Student Information System (USiS)</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document ID</strong></td>
+<td>SRS-USIS-001</td>
+</tr>
+<tr>
+<td><strong>Product</strong></td>
+<td>USiS (University Student Information System)</td>
+</tr>
+<tr>
+<td><strong>Repository</strong></td>
+<td><code>WMSU/wmsu-platform</code> (<code>apps/enrollment-web</code>, <code>apps/base-api</code> module <code>enrollment</code>)</td>
+</tr>
+<tr>
+<td><strong>Version</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+<tr>
+<td><strong>Classification</strong></td>
+<td>Proprietary</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>1. Introduction</h3>
+<h4>1.1 Purpose</h4>
+<p>This Software Requirements Specification defines functional and non-functional requirements for <strong>USiS</strong>, the comprehensive student information system managing the complete academic lifecycle from admissions through graduation — including student registration, enrollment, advising, scheduling, academic records, grade management, assessment coordination, clearance processing, faculty evaluation, and student support services.</p>
+<h4>1.2 Scope</h4>
+<p><strong>In scope</strong></p>
+<ul>
+<li>Student self-service portal: profile management, enrollment workflow, schedule viewing, assessment/payment status, certificate of registration (COR), grades, academic history, support request submission</li>
+<li>Faculty portal: class rosters, grade encoding/submission, advising sessions, academic dashboards</li>
+<li>Registrar portal: applicant management, student admission, enrollment approval workflows, academic structure configuration (programs, curricula, sections), registration oversight, comprehensive reporting</li>
+<li>Office staff portals: Admissions (entrance exam coordination, applicant tracking), Office of Student Affairs (OSA: discipline, organizations, activities), Guidance (counseling sessions, assessments), Student Health Services (medical records, clearance), Scholarship Office (awards, disbursements, monitoring)</li>
+<li>Internal integration APIs for UFMS (assessment/payment handoff) and TORMS (grade projections)</li>
+<li>University Platform Access SSO integration (platform code <code>enrollment</code>)</li>
+<li>Queue management system for student services</li>
+<li>Faculty evaluation module with anonymous submissions</li>
+<li>Clearance certificate generation with public QR verification</li>
+<li>Academic calendar and enrollment window management</li>
+<li>Real-time enrollment conflict detection and waitlist management</li>
+</ul>
+<p><strong>Out of scope</strong></p>
+<ul>
+<li>Public guest application forms and entrance exam delivery (hosted in Unified Access Portal <code>/apply*</code>)</li>
+<li>Financial cashiering, official receipt issuance, general ledger posting (<strong>UFMS</strong>)</li>
+<li>Transcript of Records (TOR) issuance and alumni registry management (<strong>TORMS</strong>)</li>
+<li>Library, document management, inventory operations (<strong>ULMIS</strong>, <strong>UDMS</strong>, <strong>UIMS</strong>)</li>
+<li>Learning management system and course content delivery (external LMS integration ready)</li>
+</ul>
+<h4>1.3 Definitions</h4>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>USiS</strong></td>
+<td>University Student Information System — enrollment and academic lifecycle platform</td>
+</tr>
+<tr>
+<td><strong>COR</strong></td>
+<td>Certificate of Registration — official enrollment document issued to students</td>
+</tr>
+<tr>
+<td><strong>Assessment</strong></td>
+<td>Tuition and fee calculation prepared for an enrollment period and synchronized with UFMS for payment processing</td>
+</tr>
+<tr>
+<td><strong>Role pack</strong></td>
+<td>Collection of USiS permission codes mapped from University Platform Access Identity role</td>
+</tr>
+<tr>
+<td><strong>Enrollment workflow</strong></td>
+<td>State-based process from draft enrollment through advising, payment verification, registrar approval, to registered status</td>
+</tr>
+<tr>
+<td><strong>Clearance graph</strong></td>
+<td>Network of office-specific clearance requirements and status checks across university departments</td>
+</tr>
+<tr>
+<td><strong>Grade projection</strong></td>
+<td>Academic grade record synchronized from USiS to TORMS for transcript generation</td>
+</tr>
+<tr>
+<td><strong>Section</strong></td>
+<td>Class offering with instructor, schedule, room, and enrollment capacity</td>
+</tr>
+</tbody></table>
+<h4>1.4 References</h4>
+<ul>
+<li><code>WMSU/wmsu-platform/README.md</code></li>
+<li><code>apps/web-portal/public/docs/USIS-Complete-Guide.html</code></li>
+<li><code>apps/web-portal/public/docs/USIS-API-Specs-Manual.html</code></li>
+<li>University Platform Access Architecture (Identity integration)</li>
+<li>UFMS Internal API Specification (assessment handoff)</li>
+<li>TORMS Sync Protocol (grade projections)</li>
+</ul>
+<hr>
+<h3>2. Overall Description</h3>
+<h4>2.1 Product Perspective</h4>
+<p>USiS operates within the WMSU Campus Information System (CIS) modular architecture:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Enrollment web</td>
+<td>React 19 + Vite</td>
+<td>Multi-role portal UI (student, faculty, registrar, offices)</td>
+</tr>
+<tr>
+<td>Base API enrollment module</td>
+<td>AdonisJS 7 domain module</td>
+<td>REST services at <code>/api/v1/enrollment/*</code></td>
+</tr>
+<tr>
+<td>Database</td>
+<td>PostgreSQL schema <code>enrollment</code></td>
+<td>Academic system of record (SoR)</td>
+</tr>
+<tr>
+<td>Identity provider</td>
+<td>University Platform Access</td>
+<td>Authentication, authorization, MFA, role management</td>
+</tr>
+<tr>
+<td>Queue system</td>
+<td>BullMQ + Redis</td>
+<td>Background jobs (notifications, batch processing, reports)</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Dev port</th>
+<th>Production access</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Enrollment web</td>
+<td><code>http://127.0.0.1:5180</code></td>
+<td><code>https://enrollment.wmsu.edu.ph</code> (example)</td>
+</tr>
+<tr>
+<td>Base API</td>
+<td><code>http://127.0.0.1:3500</code></td>
+<td><code>https://api.wmsu.edu.ph</code></td>
+</tr>
+<tr>
+<td>Identity API</td>
+<td><code>http://127.0.0.1:3411</code></td>
+<td><code>https://auth.wmsu.edu.ph</code></td>
+</tr>
+<tr>
+<td>Portal launcher</td>
+<td><code>http://127.0.0.1:5173</code></td>
+<td><code>https://portal.wmsu.edu.ph</code></td>
+</tr>
+</tbody></table>
+<p><strong>Health endpoint:</strong> <code>GET /health</code> → <code>{ status: &#39;ok&#39;, service: &#39;base-api&#39;, module: &#39;enrollment&#39; }</code></p>
+<h4>2.2 User Classes</h4>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Primary capabilities</th>
+<th>Access level</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Student</strong></td>
+<td>View profile, enroll in courses, view schedules/grades, submit support requests, download COR, track payments, evaluate faculty</td>
+<td>Own data only</td>
+</tr>
+<tr>
+<td><strong>Faculty</strong></td>
+<td>View assigned classes, encode/submit grades, conduct advising sessions, generate class reports, manage attendance</td>
+<td>Assigned classes</td>
+</tr>
+<tr>
+<td><strong>Adviser</strong></td>
+<td>Review advisee enrollments, approve/recommend course selections, monitor academic progress</td>
+<td>Assigned students</td>
+</tr>
+<tr>
+<td><strong>Registrar</strong></td>
+<td>Manage applicants, approve enrollments, configure academic structures, oversee all registrations, generate institutional reports</td>
+<td>System-wide academic data</td>
+</tr>
+<tr>
+<td><strong>Admissions Officer</strong></td>
+<td>Manage entrance exam schedules, process applications, track admission workflows</td>
+<td>Applicant records</td>
+</tr>
+<tr>
+<td><strong>OSA Staff</strong></td>
+<td>Manage student discipline, organization accreditations, event coordination</td>
+<td>Student conduct records</td>
+</tr>
+<tr>
+<td><strong>Guidance Counselor</strong></td>
+<td>Schedule counseling sessions, maintain confidential records, issue clearances</td>
+<td>Counseling records</td>
+</tr>
+<tr>
+<td><strong>Health Services Staff</strong></td>
+<td>Maintain medical records, manage health clearances, track vaccinations</td>
+<td>Student health records</td>
+</tr>
+<tr>
+<td><strong>Scholarship Officer</strong></td>
+<td>Manage scholarship awards, track disbursements, monitor academic requirements</td>
+<td>Scholarship records</td>
+</tr>
+<tr>
+<td><strong>Cashier (read-only)</strong></td>
+<td>View assessment and payment status for student services</td>
+<td>Payment status queries</td>
+</tr>
+<tr>
+<td><strong>Identity Administrator</strong></td>
+<td>Full system access when <code>enrollment</code> platform granted</td>
+<td>All USiS permissions</td>
+</tr>
+</tbody></table>
+<p>Frontend permission checks provide user experience only; API enforces authorization on every authenticated route.</p>
+<h4>2.3 Constraints</h4>
+<ul>
+<li>Platform tile visibility requires Identity platform grant <code>enrollment</code></li>
+<li>Menu and feature access controlled by role-specific permission packs</li>
+<li>Guest application forms redirect to Portal; USiS does not host public <code>/apply*</code> routes</li>
+<li>Payment verification strictly depends on UFMS internal APIs — USiS never invents &quot;paid&quot; status</li>
+<li>Grade system of record is USiS; TORMS consumes projections read-only</li>
+<li>Multi-campus university structure with hierarchical org units (University → Campus → College → Department → Program)</li>
+<li>Academic calendar windows control enrollment availability</li>
+<li>Real-time section capacity enforcement prevents over-enrollment</li>
+<li>Prerequisite and co-requisite validation enforced at enrollment time</li>
+<li>Assessment amount calculation follows configured fee schedules — amounts not hard-coded in SRS</li>
+</ul>
+<h4>2.4 Assumptions</h4>
+<ul>
+<li>University Platform Access Identity and Base API are running and reachable</li>
+<li>Demo/staging environments provision seed users, academic structures, and sample enrollments</li>
+<li>Fee schedules and assessment rules maintained in UFMS configuration — not independently managed in USiS</li>
+<li>Entrance exam scores and applicant data synced from Portal admission module</li>
+<li>Academic year and term structures configured before enrollment windows open</li>
+<li>Room and schedule data available for conflict checking</li>
+<li>Email/SMS notification infrastructure configured for enrollment alerts</li>
+</ul>
+<hr>
+<h3>3. Functional Requirements</h3>
+<h4>3.1 Authentication &amp; Authorization</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-AUTH-001</td>
+<td>System shall authenticate all users via University Platform Access SSO JWKS verification</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-AUTH-002</td>
+<td>System shall resolve user home path based on role packs (student → <code>/student</code>, registrar → <code>/registrar</code>, faculty → <code>/faculty</code>)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-AUTH-003</td>
+<td>System shall enforce permission checks on every API endpoint using role-specific permission codes</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-AUTH-004</td>
+<td>System shall support MFA for privileged roles (registrar, office heads) when Identity enforces</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-AUTH-005</td>
+<td>System shall provide graceful error handling when Identity service unavailable</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.2 Student Portal</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-STU-001</td>
+<td>Students shall view and update demographic profile information with field-level validation</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-002</td>
+<td>Students shall initiate enrollment for available academic terms within enrollment windows</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-003</td>
+<td>Students shall search available sections by subject, instructor, schedule, and available seats</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-004</td>
+<td>Students shall add sections to enrollment with real-time conflict detection (schedule, prerequisite)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-005</td>
+<td>Students shall view total units and enforcement of minimum/maximum load limits</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-006</td>
+<td>Students shall submit enrollment for advising approval when required by program</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-007</td>
+<td>Students shall view assessment amounts after enrollment submission with line-item breakdown</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-008</td>
+<td>Students shall view payment status synchronized from UFMS without locally caching paid state</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-009</td>
+<td>Students shall download PDF Certificate of Registration (COR) after enrollment approval</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-010</td>
+<td>Students shall view class schedules in calendar and list formats with room/instructor details</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-011</td>
+<td>Students shall view posted grades by term with GPA calculation</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-012</td>
+<td>Students shall view academic history including all prior enrollments and grades</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-013</td>
+<td>Students shall submit support requests to designated offices (OSA, Guidance, Health, Scholarship)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-014</td>
+<td>Students shall submit organization accreditation applications with file attachments</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-STU-015</td>
+<td>Students shall request student ID cards through portal</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-STU-016</td>
+<td>Students shall obtain queue tickets for office services</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-STU-017</td>
+<td>Students shall evaluate faculty anonymously during evaluation windows</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-018</td>
+<td>Students shall view clearance status with office-by-office breakdown</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-STU-019</td>
+<td>Students shall download clearance certificates with QR verification codes</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.3 Faculty Portal</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-FAC-001</td>
+<td>Faculty shall view assigned class sections with enrollment rosters</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-002</td>
+<td>Faculty shall encode preliminary and final grades for enrolled students</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-003</td>
+<td>Faculty shall validate grade completeness before submission</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-004</td>
+<td>Faculty shall submit grades with digital signature/confirmation</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-005</td>
+<td>Faculty shall view grade submission history and status</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-006</td>
+<td>Faculty shall request grade corrections with justification after submission</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-FAC-007</td>
+<td>Faculty shall download class rosters as CSV and PDF</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-008</td>
+<td>Faculty shall mark student attendance by session</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-FAC-009</td>
+<td>Faculty shall view advisee list with enrollment status</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-010</td>
+<td>Faculty shall approve/reject advisee enrollment plans</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-011</td>
+<td>Faculty shall add advising notes and recommendations</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-FAC-012</td>
+<td>Faculty shall view evaluation summary results (anonymized)</td>
+<td>Should</td>
+</tr>
+</tbody></table>
+<h4>3.4 Registrar Portal</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-REG-001</td>
+<td>Registrar shall view and search applicant records from admission pipeline</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-002</td>
+<td>Registrar shall admit applicants with student number assignment and Identity account provisioning</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-003</td>
+<td>Registrar shall view all student enrollments with filtering by term, program, status</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-004</td>
+<td>Registrar shall approve or reject enrollment submissions with reason codes</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-005</td>
+<td>Registrar shall perform batch enrollment approval with selection criteria</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-REG-006</td>
+<td>Registrar shall override enrollment business rules with audit logging</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-007</td>
+<td>Registrar shall manage academic calendar with term dates and enrollment windows</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-008</td>
+<td>Registrar shall configure programs, curricula, and courses</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-009</td>
+<td>Registrar shall define section offerings with instructor, schedule, room, capacity</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-010</td>
+<td>Registrar shall configure prerequisite and co-requisite rules</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-011</td>
+<td>Registrar shall configure grading systems and policies by program</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-012</td>
+<td>Registrar shall generate enrollment reports (summary by program, status, term)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-013</td>
+<td>Registrar shall generate grade reports (distribution, dean&#39;s list, deficiency)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-014</td>
+<td>Registrar shall export reports as CSV, Excel, and PDF</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-015</td>
+<td>Registrar shall monitor grade submission status across all sections</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-016</td>
+<td>Registrar shall initiate faculty evaluation periods by term</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-REG-017</td>
+<td>Registrar shall view aggregated evaluation results with filtering</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-REG-018</td>
+<td>Registrar shall manage waitlists and process seat releases</td>
+<td>Should</td>
+</tr>
+</tbody></table>
+<h4>3.5 Office Portals</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-OFF-001</td>
+<td>Admissions officers shall schedule entrance exam sessions with capacity management</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-002</td>
+<td>Admissions officers shall view exam results and track admission decisions</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-003</td>
+<td>OSA staff shall manage student discipline cases with confidential records</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-004</td>
+<td>OSA staff shall process organization accreditation applications with approval workflow</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-005</td>
+<td>OSA staff shall coordinate campus events and student participation tracking</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-OFF-006</td>
+<td>Guidance counselors shall schedule confidential counseling sessions</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-007</td>
+<td>Guidance counselors shall maintain counseling records with restricted access</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-008</td>
+<td>Guidance counselors shall issue guidance clearances</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-009</td>
+<td>Health services staff shall maintain student medical records</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-010</td>
+<td>Health services staff shall track vaccinations and health requirements</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-011</td>
+<td>Health services staff shall issue health clearances</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-012</td>
+<td>Scholarship officers shall manage scholarship awards by type and amount</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-013</td>
+<td>Scholarship officers shall track disbursement schedules</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-014</td>
+<td>Scholarship officers shall monitor scholarship academic requirements</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-OFF-015</td>
+<td>All offices shall contribute to student clearance status graph</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.6 Assessment &amp; Payment Integration</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-PAY-001</td>
+<td>System shall prepare tuition assessment documents from enrollment data</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-PAY-002</td>
+<td>System shall synchronize assessment data to UFMS via internal API</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-PAY-003</td>
+<td>System shall query UFMS for payment verification status</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-PAY-004</td>
+<td>System shall block enrollment progression when payment pending per business rules</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-PAY-005</td>
+<td>System shall never locally cache or invent &quot;payment verified&quot; status</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-PAY-006</td>
+<td>System shall display assessment line items from configured fee schedules</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-PAY-007</td>
+<td>System shall support installment payment plans tracked in UFMS</td>
+<td>Should</td>
+</tr>
+</tbody></table>
+<h4>3.7 Grade Management &amp; TORMS Sync</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-GRD-001</td>
+<td>System shall enforce grade encoding deadlines by academic calendar</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-GRD-002</td>
+<td>System shall validate grade values against configured grading system</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-GRD-003</td>
+<td>System shall calculate GPA using weighted credit hours</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-GRD-004</td>
+<td>System shall lock submitted grades from faculty modification</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-GRD-005</td>
+<td>System shall process registrar-approved grade corrections with audit trail</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-GRD-006</td>
+<td>System shall expose grade projection API for TORMS consumption</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-GRD-007</td>
+<td>System shall maintain grade history for all correction cycles</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.8 Clearance Management</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-CLR-001</td>
+<td>System shall maintain configurable clearance requirements by office and term</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CLR-002</td>
+<td>System shall aggregate clearance status from multiple office systems</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CLR-003</td>
+<td>System shall generate clearance certificates with QR verification tokens</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CLR-004</td>
+<td>System shall provide public unauthenticated clearance verification endpoint</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CLR-005</td>
+<td>System shall enforce clearance requirements for enrollment, graduation, and document issuance</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.9 Faculty Evaluation</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-EVL-001</td>
+<td>System shall configure evaluation periods by term with questionnaire templates</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-EVL-002</td>
+<td>System shall require students to evaluate enrolled faculty within evaluation window</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-EVL-003</td>
+<td>System shall enforce anonymous submission (no linkage to student identity in results)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-EVL-004</td>
+<td>System shall aggregate evaluation responses with statistical summaries</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-EVL-005</td>
+<td>System shall restrict raw evaluation access to authorized administrators</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-EVL-006</td>
+<td>Faculty shall view anonymized aggregated results for own sections</td>
+<td>Should</td>
+</tr>
+</tbody></table>
+<h4>3.10 Reporting &amp; Analytics</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-RPT-001</td>
+<td>System shall generate enrollment summary reports by term, program, level</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-002</td>
+<td>System shall generate grade distribution reports by course and section</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-003</td>
+<td>System shall generate dean&#39;s list and academic probation lists</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-004</td>
+<td>System shall generate graduation candidate lists</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-005</td>
+<td>System shall export all reports in CSV, Excel, and PDF formats</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-006</td>
+<td>System shall log all report exports with user and timestamp for audit</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>4. External Interface Requirements</h3>
+<h4>4.1 Integration Interfaces</h4>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Direction</th>
+<th>Protocol</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>University Platform Access</td>
+<td>Inbound</td>
+<td>OIDC/JWKS</td>
+<td>SSO authentication, JWT verification, role resolution</td>
+</tr>
+<tr>
+<td>UFMS Finance APIs</td>
+<td>Outbound</td>
+<td>REST+JSON</td>
+<td>Assessment upsert, payment status query, clearance verification</td>
+</tr>
+<tr>
+<td>TORMS Records APIs</td>
+<td>Outbound</td>
+<td>REST+JSON</td>
+<td>Grade projection sync, academic history provision</td>
+</tr>
+<tr>
+<td>Portal Admissions</td>
+<td>Inbound</td>
+<td>REST+JSON</td>
+<td>Applicant data sync from entrance exam and application system</td>
+</tr>
+<tr>
+<td>SMTP/SMS Gateway</td>
+<td>Outbound</td>
+<td>SMTP/HTTP</td>
+<td>Enrollment notifications, grade alerts, deadline reminders</td>
+</tr>
+<tr>
+<td>Object Storage</td>
+<td>Outbound</td>
+<td>S3-compatible</td>
+<td>Document attachments (support requests, ID photos)</td>
+</tr>
+</tbody></table>
+<h4>4.2 API Specifications</h4>
+<p><strong>Enrollment API base:</strong> <code>/api/v1/enrollment/*</code></p>
+<p><strong>OpenAPI documentation:</strong> Available at <code>/api/v1/enrollment/docs</code> (Swagger UI)</p>
+<p><strong>Authentication:</strong> Bearer JWT from University Platform Access in <code>Authorization</code> header</p>
+<p><strong>Internal service routes:</strong> <code>/api/v1/enrollment/internal/*</code> protected by <code>X-Service-Api-Key</code> header</p>
+<h4>4.3 User Interface Requirements</h4>
+<ul>
+<li>Responsive design supporting desktop (≥1280px), tablet (768-1023px), and mobile (360-767px)</li>
+<li>Browser compatibility: Chrome/Edge (latest 2 versions), Firefox (latest 2), Safari (latest 2)</li>
+<li>Accessibility: WCAG 2.1 Level AA conformance for student-facing flows</li>
+<li>Print-optimized views for COR, schedules, clearance certificates</li>
+<li>Real-time updates for enrollment conflicts and seat availability</li>
+<li>Progressive enhancement for offline-capable features (view cached COR/schedule)</li>
+</ul>
+<hr>
+<h3>5. Non-Functional Requirements</h3>
+<h4>5.1 Performance</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-PERF-001</td>
+<td>API response time (p95) for standard queries</td>
+<td>≤ 2 seconds</td>
+</tr>
+<tr>
+<td>NFR-PERF-002</td>
+<td>API response time (p95) for enrollment submission</td>
+<td>≤ 5 seconds</td>
+</tr>
+<tr>
+<td>NFR-PERF-003</td>
+<td>Concurrent user support during enrollment peak</td>
+<td>≥ 500 active sessions</td>
+</tr>
+<tr>
+<td>NFR-PERF-004</td>
+<td>Health check endpoint response time</td>
+<td>≤ 500 ms</td>
+</tr>
+<tr>
+<td>NFR-PERF-005</td>
+<td>Report generation for standard queries</td>
+<td>≤ 10 seconds</td>
+</tr>
+<tr>
+<td>NFR-PERF-006</td>
+<td>Real-time conflict detection during enrollment</td>
+<td>≤ 1 second</td>
+</tr>
+</tbody></table>
+<h4>5.2 Scalability</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-SCAL-001</td>
+<td>Support ≥15,000 enrolled students per term</td>
+</tr>
+<tr>
+<td>NFR-SCAL-002</td>
+<td>Support ≥1,000 concurrent enrollment transactions</td>
+</tr>
+<tr>
+<td>NFR-SCAL-003</td>
+<td>Horizontal scaling of API replicas without session affinity</td>
+</tr>
+<tr>
+<td>NFR-SCAL-004</td>
+<td>Database read replicas for reporting queries</td>
+</tr>
+</tbody></table>
+<h4>5.3 Security</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-SEC-001</td>
+<td>TLS 1.2+ required for all client-server communication</td>
+</tr>
+<tr>
+<td>NFR-SEC-002</td>
+<td>RBAC enforcement on every authenticated API endpoint</td>
+</tr>
+<tr>
+<td>NFR-SEC-003</td>
+<td>Service-to-service communication via API keys for internal routes</td>
+</tr>
+<tr>
+<td>NFR-SEC-004</td>
+<td>Sensitive data (grades, discipline, counseling) encrypted at rest</td>
+</tr>
+<tr>
+<td>NFR-SEC-005</td>
+<td>Password policy and MFA enforcement delegated to Identity service</td>
+</tr>
+<tr>
+<td>NFR-SEC-006</td>
+<td>CORS allowlist limited to authorized web client origins</td>
+</tr>
+<tr>
+<td>NFR-SEC-007</td>
+<td>Rate limiting on public clearance verification endpoints</td>
+</tr>
+<tr>
+<td>NFR-SEC-008</td>
+<td>Audit logging of privileged operations (enrollment override, grade corrections)</td>
+</tr>
+<tr>
+<td>NFR-SEC-009</td>
+<td>Non-root container execution in production</td>
+</tr>
+<tr>
+<td>NFR-SEC-010</td>
+<td>Regular dependency vulnerability scanning and patching</td>
+</tr>
+</tbody></table>
+<h4>5.4 Reliability</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-REL-001</td>
+<td>System availability ≥99.5% during enrollment periods</td>
+</tr>
+<tr>
+<td>NFR-REL-002</td>
+<td>Automated database backups (daily incremental, weekly full)</td>
+</tr>
+<tr>
+<td>NFR-REL-003</td>
+<td>Point-in-time recovery capability ≤15 minutes RPO</td>
+</tr>
+<tr>
+<td>NFR-REL-004</td>
+<td>Documented disaster recovery procedures with quarterly drill</td>
+</tr>
+<tr>
+<td>NFR-REL-005</td>
+<td>Graceful degradation when UFMS/TORMS temporarily unavailable</td>
+</tr>
+</tbody></table>
+<h4>5.5 Maintainability</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-MAIN-001</td>
+<td>Modular domain architecture with clear separation of concerns</td>
+</tr>
+<tr>
+<td>NFR-MAIN-002</td>
+<td>Comprehensive API documentation (OpenAPI 3.0+)</td>
+</tr>
+<tr>
+<td>NFR-MAIN-003</td>
+<td>Structured logging with correlation IDs for request tracing</td>
+</tr>
+<tr>
+<td>NFR-MAIN-004</td>
+<td>Observability via Sentry/OpenTelemetry when configured</td>
+</tr>
+<tr>
+<td>NFR-MAIN-005</td>
+<td>Database schema migrations versioned and reversible</td>
+</tr>
+</tbody></table>
+<h4>5.6 Compliance</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-COMP-001</td>
+<td>Data privacy compliance with RA 10173 (Data Privacy Act of 2012)</td>
+</tr>
+<tr>
+<td>NFR-COMP-002</td>
+<td>Purpose limitation for student personal data collection</td>
+</tr>
+<tr>
+<td>NFR-COMP-003</td>
+<td>Student consent management for optional data uses</td>
+</tr>
+<tr>
+<td>NFR-COMP-004</td>
+<td>Data retention policies aligned with university records management</td>
+</tr>
+<tr>
+<td>NFR-COMP-005</td>
+<td>FERPA-equivalent protections for educational records</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>6. Verification Criteria</h3>
+<h4>6.1 Functional Verification</h4>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Expected result</th>
+<th>Test type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SSO login as student</td>
+<td>Redirect to <code>/student</code> with profile data</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>SSO login as registrar</td>
+<td>Redirect to <code>/registrar</code> with system dashboard</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Enroll in section with prerequisite not met</td>
+<td>Error message with missing prerequisite details</td>
+<td>Unit</td>
+</tr>
+<tr>
+<td>Enroll in section with schedule conflict</td>
+<td>Error message with conflicting section details</td>
+<td>Unit</td>
+</tr>
+<tr>
+<td>Submit enrollment for advising</td>
+<td>Status changes to &quot;pending_advising&quot;</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Faculty encode grades</td>
+<td>Grades saved; submission blocked until complete</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>Faculty submit grades</td>
+<td>Grades locked; visible to student</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>Query UFMS for verified payment</td>
+<td>Enrollment progresses to registrar approval</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Query UFMS for pending payment</td>
+<td>Enrollment blocked with payment required message</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Generate clearance certificate</td>
+<td>PDF with QR code generated</td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>Verify valid clearance QR</td>
+<td>Public endpoint returns valid clearance data</td>
+<td>API test</td>
+</tr>
+<tr>
+<td>Verify invalid clearance QR</td>
+<td>Public endpoint returns not found / invalid</td>
+<td>API test</td>
+</tr>
+<tr>
+<td>Sync grades to TORMS</td>
+<td>TORMS receives grade projections via internal API</td>
+<td>Integration</td>
+</tr>
+</tbody></table>
+<h4>6.2 Non-Functional Verification</h4>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Expected result</th>
+<th>Test type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>500 concurrent enrollments</td>
+<td>p95 response time ≤5s, no errors</td>
+<td>Load test</td>
+</tr>
+<tr>
+<td>Unauthorized API access</td>
+<td>HTTP 401/403 with error message</td>
+<td>Security</td>
+</tr>
+<tr>
+<td>Horizontal scaling test</td>
+<td>Add replica; traffic balanced; session independent</td>
+<td>Scalability</td>
+</tr>
+<tr>
+<td>Database failover</td>
+<td>Recovery within 15 minutes with data integrity</td>
+<td>DR drill</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>7. Document Control</h3>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.0</td>
+<td>November 2026</td>
+<td>Complete System Specification from wmsu-platform enrollment module</td>
+</tr>
+</tbody></table>
+<h4>Related Design Documents</h4>
+<ul>
+<li><strong><a href="./USiS-Architecture.md">USiS-Architecture.md</a></strong> — Architecture design (containers, domains, security, deployment)</li>
+<li><strong><a href="./USiS-Features-Requirements.md">USiS-Features-Requirements.md</a></strong> — Feature catalog + requirements traceability matrix</li>
+<li><strong><a href="./USiS-LLD.md">USiS-LLD.md</a></strong> — Low-level design workflows (enrollment, grading, advising, clearance, UFMS/TORMS integration)</li>
+</ul>
+<p><strong>End of SRS — USiS</strong></p>
+<hr>
+<h2>Part 2 — Architecture Design</h2>
+<h3>USiS — University Student Information System Architecture</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document ID</strong></td>
+<td>AD-USIS-001</td>
+</tr>
+<tr>
+<td><strong>Product</strong></td>
+<td>USiS</td>
+</tr>
+<tr>
+<td><strong>Companions</strong></td>
+<td><a href="./USiS-System-Specification.md">USiS-SRS.md</a> · <a href="./USiS-Features-Requirements.md">USiS-Features-Requirements.md</a> · <a href="./USiS-LLD.md">USiS-LLD.md</a></td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>1. Purpose</h3>
+<p>Architecture design for USiS within the WMSU Campus Information System modular monolith — covering system context, container architecture, domain module organization, security architecture, deployment topology, integration patterns, and quality attributes.</p>
+<hr>
+<h3>2. System Context</h3>
+<p>USiS operates within the CIS ecosystem, integrating with Identity, UFMS, TORMS, and the Portal:</p>
+<p><img src="diagrams/USiS-System-Specification-01-9f753c16.png" class="flowchart" alt="Flowchart 1"></p>
+<p><strong>Key relationships:</strong></p>
+<ul>
+<li>Students, faculty, and staff authenticate through Portal SSO, launching enrollment web</li>
+<li>All UI interactions flow through Base API enrollment module endpoints</li>
+<li>Identity service provides JWT verification and role resolution</li>
+<li>UFMS owns financial transactions; USiS queries payment status</li>
+<li>TORMS consumes grade projections; USiS remains academic SoR</li>
+<li>Background jobs (notifications, reports) processed by BullMQ worker</li>
+</ul>
+<hr>
+<h3>3. Container View</h3>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Technology</th>
+<th>Port</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Enrollment web</strong></td>
+<td>React 19 + Vite</td>
+<td>5180</td>
+<td>Multi-role portal UI (student, faculty, registrar, offices) with responsive design</td>
+</tr>
+<tr>
+<td><strong>Base API (enrollment module)</strong></td>
+<td>AdonisJS 7 + Lucid ORM</td>
+<td>3500</td>
+<td>Domain services, controllers, validators, business logic</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>PostgreSQL 15+</td>
+<td>5432</td>
+<td>Schema <code>enrollment</code> — academic system of record</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>Redis 7+</td>
+<td>6379</td>
+<td>Session cache, queue backend, real-time data</td>
+</tr>
+<tr>
+<td><strong>BullMQ Worker</strong></td>
+<td>Node.js + BullMQ</td>
+<td>N/A</td>
+<td>Background job processor (notifications, reports, sync)</td>
+</tr>
+<tr>
+<td><strong>University Platform Access</strong></td>
+<td>Identity service</td>
+<td>3411</td>
+<td>Authentication, authorization, MFA, user management</td>
+</tr>
+<tr>
+<td><strong>Unified Access Portal</strong></td>
+<td>React SPA</td>
+<td>5173</td>
+<td>SSO launcher and guest admissions UI</td>
+</tr>
+</tbody></table>
+<p><strong>Health monitoring:</strong> <code>GET /health</code> returns service status and active module checks.</p>
+<p><strong>Deployment notes:</strong></p>
+<ul>
+<li>Enrollment web statically served from CDN or Vite dev server</li>
+<li>Base API runs in containerized Node.js (non-root)</li>
+<li>Postgres uses schema isolation (<code>enrollment</code>) within shared <code>wmsu_cis</code> database</li>
+<li>Redis configured for persistence (AOF + RDB) for queue durability</li>
+<li>Worker deployed as separate container/process pool</li>
+</ul>
+<hr>
+<h3>4. Domain Module Architecture</h3>
+<p>USiS enrollment module organized by academic lifecycle domains:</p>
+<p><img src="diagrams/USiS-System-Specification-02-f7c9342f.png" class="flowchart" alt="Flowchart 2"></p>
+<p><strong>Domain responsibilities:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Key entities</th>
+<th>Services</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Core</strong></td>
+<td>Organization, Campus, College, Department, Program, AcademicTerm, EnrollmentWindow</td>
+<td>Org hierarchy, calendar management, RBAC</td>
+</tr>
+<tr>
+<td><strong>Admissions</strong></td>
+<td>Applicant, EntranceExam, AdmissionDecision</td>
+<td>Applicant tracking, exam scheduling, admission workflow</td>
+</tr>
+<tr>
+<td><strong>Registration</strong></td>
+<td>Curriculum, Course, Section, Enrollment, EnrollmentItem, Prerequisite</td>
+<td>Section offerings, enrollment workflow, conflict detection, waitlist</td>
+</tr>
+<tr>
+<td><strong>Academics</strong></td>
+<td>Grade, GradeSubmission, AcademicRecord, AdvisingSession</td>
+<td>Grade encoding, submission, GPA calculation, advising</td>
+</tr>
+<tr>
+<td><strong>Student Services</strong></td>
+<td>SupportRequest, DisciplineCase, Organization, CounselingSession, HealthRecord, Scholarship</td>
+<td>Multi-office student support, clearance contribution</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>Assessment, PaymentStatus, GradeProjection, ClearanceItem</td>
+<td>UFMS/TORMS handoff, clearance aggregation</td>
+</tr>
+<tr>
+<td><strong>Evaluation</strong></td>
+<td>EvaluationPeriod, EvaluationResponse, EvaluationSummary</td>
+<td>Anonymous faculty evaluation</td>
+</tr>
+<tr>
+<td><strong>Reporting</strong></td>
+<td>Report, ReportExport, Dashboard</td>
+<td>Enrollment/grade reports, analytics</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>5. Security Architecture</h3>
+<h4>5.1 Authentication Flow</h4>
+<p><img src="diagrams/USiS-System-Specification-03-c4c04158.png" class="flowchart" alt="Flowchart 3"></p>
+<p><strong>Security controls:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Control</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Transport</td>
+<td>TLS 1.2+</td>
+<td>Reverse proxy/ingress termination</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>OIDC/JWT</td>
+<td>Identity service RS256 tokens</td>
+</tr>
+<tr>
+<td>Authorization</td>
+<td>RBAC</td>
+<td>Permission checks on every API endpoint</td>
+</tr>
+<tr>
+<td>API protection</td>
+<td>Rate limiting</td>
+<td>Redis-backed rate limiter</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>Environment variables</td>
+<td>Never in codebase or client</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>Schema isolation</td>
+<td><code>enrollment</code> schema, role-based PG access</td>
+</tr>
+<tr>
+<td>Internal APIs</td>
+<td>Service keys</td>
+<td><code>X-Service-Api-Key</code> header validation</td>
+</tr>
+<tr>
+<td>Public endpoints</td>
+<td>Rate limiting</td>
+<td>Clearance verification endpoint</td>
+</tr>
+</tbody></table>
+<h4>5.2 Permission Model</h4>
+<p>USiS defines granular permissions mapped to Identity roles:</p>
+<p><strong>Permission categories:</strong></p>
+<ul>
+<li><code>enrollment.*</code> — Enrollment CRUD and approval</li>
+<li><code>grades.*</code> — Grade encoding, submission, corrections</li>
+<li><code>students.*</code> — Student profile and records</li>
+<li><code>sections.*</code> — Section management</li>
+<li><code>advising.*</code> — Advising workflows</li>
+<li><code>offices.*</code> — Office-specific permissions (OSA, Guidance, Health, Scholarship)</li>
+<li><code>reports.*</code> — Report generation and export</li>
+<li><code>evaluation.*</code> — Faculty evaluation management</li>
+</ul>
+<p><strong>Role examples:</strong></p>
+<ul>
+<li><code>student</code> role → <code>enrollment.own</code>, <code>grades.view_own</code>, <code>clearance.view_own</code></li>
+<li><code>faculty</code> role → <code>grades.encode</code>, <code>grades.submit</code>, <code>advising.manage</code></li>
+<li><code>registrar</code> role → <code>enrollment.approve</code>, <code>students.manage</code>, <code>reports.export</code></li>
+<li><code>osa_staff</code> role → <code>offices.osa.*</code>, <code>students.discipline</code></li>
+</ul>
+<hr>
+<h3>6. Data Architecture</h3>
+<h4>6.1 Schema Organization</h4>
+<p>PostgreSQL schema <strong><code>enrollment</code></strong> contains all USiS tables:</p>
+<p><strong>Core tables:</strong></p>
+<ul>
+<li><code>organizations</code>, <code>campuses</code>, <code>colleges</code>, <code>departments</code>, <code>programs</code></li>
+<li><code>academic_terms</code>, <code>enrollment_windows</code></li>
+<li><code>users</code> (Identity reference cache)</li>
+</ul>
+<p><strong>Academic structure:</strong></p>
+<ul>
+<li><code>curricula</code>, <code>courses</code>, <code>prerequisites</code>, <code>sections</code></li>
+<li><code>instructors</code>, <code>room_schedules</code></li>
+</ul>
+<p><strong>Enrollment lifecycle:</strong></p>
+<ul>
+<li><code>enrollments</code>, <code>enrollment_items</code>, <code>enrollment_history</code></li>
+<li><code>waitlists</code></li>
+</ul>
+<p><strong>Grades:</strong></p>
+<ul>
+<li><code>grades</code>, <code>grade_submissions</code>, <code>grade_history</code></li>
+<li><code>academic_records</code> (computed)</li>
+</ul>
+<p><strong>Student services:</strong></p>
+<ul>
+<li><code>support_requests</code>, <code>discipline_cases</code>, <code>organizations</code></li>
+<li><code>counseling_sessions</code>, <code>health_records</code>, <code>scholarships</code></li>
+</ul>
+<p><strong>Integration:</strong></p>
+<ul>
+<li><code>assessments</code>, <code>payment_status_cache</code> (UFMS)</li>
+<li><code>grade_projections</code> (TORMS)</li>
+<li><code>clearance_items</code>, <code>clearance_certificates</code></li>
+</ul>
+<p><strong>Evaluation:</strong></p>
+<ul>
+<li><code>evaluation_periods</code>, <code>evaluation_responses</code></li>
+</ul>
+<p><strong>Reporting:</strong></p>
+<ul>
+<li><code>report_exports</code> (audit log)</li>
+</ul>
+<h4>6.2 Migration Strategy</h4>
+<ul>
+<li>Migrations tracked in <code>enrollment.uims_adonis_schema</code> table</li>
+<li>Schema changes deployed via <code>node ace migration:run</code></li>
+<li>Rollback capability for reversible migrations</li>
+<li>Data seeds for demo/staging environments</li>
+</ul>
+<hr>
+<h3>7. Deployment Topology</h3>
+<h4>7.1 Production Architecture</h4>
+<p><img src="diagrams/USiS-System-Specification-04-67957e12.png" class="flowchart" alt="Flowchart 4"></p>
+<p><strong>Sizing guidance (500 concurrent users):</strong></p>
+<ul>
+<li>API: 2–3 replicas, 2 vCPU / 4 GB RAM each</li>
+<li>Worker: 2 replicas, 1 vCPU / 2 GB RAM each</li>
+<li>PostgreSQL: 4 vCPU / 16 GB RAM, managed service preferred</li>
+<li>Redis: 2 vCPU / 8 GB RAM, Sentinel for HA</li>
+</ul>
+<p><strong>Scalability:</strong></p>
+<ul>
+<li>Stateless API enables horizontal scaling</li>
+<li>Read replicas for reporting queries</li>
+<li>CDN for static assets reduces origin load</li>
+</ul>
+<h4>7.2 Local Development</h4>
+<p><img src="diagrams/USiS-System-Specification-05-cc6b22c5.png" class="flowchart" alt="Flowchart 5"></p>
+<p><strong>Local ports:</strong></p>
+<ul>
+<li>Portal: 5173</li>
+<li>Identity: 3411</li>
+<li>Base API: 3500</li>
+<li>Enrollment web: 5180</li>
+<li>Finance web: 5182 (UFMS)</li>
+<li>Records web: 5181 (TORMS)</li>
+</ul>
+<p><strong>Infrastructure:</strong> Docker Compose for PostgreSQL, Redis, MinIO</p>
+<hr>
+<h3>8. Integration Architecture</h3>
+<h4>8.1 Internal Service Communication</h4>
+<p><strong>UFMS Integration (Financial):</strong></p>
+<p><img src="diagrams/USiS-System-Specification-06-d8834f47.png" class="flowchart" alt="Flowchart 6"></p>
+<p><strong>TORMS Integration (Academic Records):</strong></p>
+<p><img src="diagrams/USiS-System-Specification-07-6badfb94.png" class="flowchart" alt="Flowchart 7"></p>
+<p><strong>Service-to-service security:</strong></p>
+<ul>
+<li>Internal routes protected by <code>X-Service-Api-Key</code> header</li>
+<li>Service keys hashed in database, plaintext only in secure config</li>
+<li>Browser clients never receive service keys</li>
+</ul>
+<h4>8.2 External System Integration</h4>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Protocol</th>
+<th>Pattern</th>
+<th>Frequency</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Portal Admissions</td>
+<td>REST API</td>
+<td>Applicant sync</td>
+<td>Real-time webhook + nightly batch</td>
+</tr>
+<tr>
+<td>SMTP Gateway</td>
+<td>SMTP</td>
+<td>Email notifications</td>
+<td>Event-driven</td>
+</tr>
+<tr>
+<td>SMS Gateway</td>
+<td>HTTP API</td>
+<td>SMS alerts</td>
+<td>Event-driven</td>
+</tr>
+<tr>
+<td>Object Storage (S3)</td>
+<td>S3 API</td>
+<td>File uploads</td>
+<td>On-demand</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>9. Quality Attributes</h3>
+<h4>9.1 Performance</h4>
+<p><strong>Optimization strategies:</strong></p>
+<ul>
+<li>Database indexing on frequently queried fields (student_no, term, status)</li>
+<li>Query optimization with Lucid eager loading to prevent N+1</li>
+<li>Redis caching for static reference data (programs, courses)</li>
+<li>Lazy loading of enrollment web routes</li>
+<li>Paginated API responses (default 25, max 100 items)</li>
+<li>Background jobs for heavy operations (report generation, bulk notifications)</li>
+</ul>
+<p><strong>Monitoring:</strong></p>
+<ul>
+<li>APM (Sentry/OpenTelemetry) for request tracing</li>
+<li>Database slow query logging</li>
+<li>API endpoint metrics (response time, error rate)</li>
+</ul>
+<h4>9.2 Scalability</h4>
+<p><strong>Horizontal scaling:</strong></p>
+<ul>
+<li>Stateless API design (session state in Redis/JWT)</li>
+<li>Load balancer with health check probes</li>
+<li>Database connection pooling (PgBouncer)</li>
+<li>Queue-based job processing prevents request timeout</li>
+</ul>
+<p><strong>Vertical limits:</strong></p>
+<ul>
+<li>Single PostgreSQL instance supports 15,000 students (tested)</li>
+<li>Read replicas for reporting offload main database</li>
+</ul>
+<h4>9.3 Reliability</h4>
+<p><strong>Failure handling:</strong></p>
+<ul>
+<li>Graceful degradation when UFMS/TORMS unavailable (cached status, error messaging)</li>
+<li>Retry logic with exponential backoff for transient failures</li>
+<li>Circuit breaker pattern for external service calls</li>
+<li>Database transaction management with rollback on error</li>
+</ul>
+<p><strong>Data integrity:</strong></p>
+<ul>
+<li>Foreign key constraints enforce referential integrity</li>
+<li>Enrollment business rules validated in service layer</li>
+<li>Idempotency keys for critical operations (enrollment submission)</li>
+<li>Audit trail for all state changes</li>
+</ul>
+<h4>9.4 Maintainability</h4>
+<p><strong>Code organization:</strong></p>
+<ul>
+<li>Domain-driven design with clear boundaries</li>
+<li>Service layer abstraction separates business logic from controllers</li>
+<li>Shared validation schemas (Vine validators)</li>
+<li>Comprehensive OpenAPI documentation</li>
+</ul>
+<p><strong>Operational:</strong></p>
+<ul>
+<li>Structured JSON logging with correlation IDs</li>
+<li>Feature flags for gradual rollout</li>
+<li>Blue-green deployment support</li>
+<li>Automated schema migration in CI/CD</li>
+</ul>
+<h4>9.5 Compliance</h4>
+<p><strong>Data privacy (RA 10173):</strong></p>
+<ul>
+<li>Purpose limitation for personal data collection</li>
+<li>Access controls restrict PII to authorized roles</li>
+<li>Data retention policies configurable</li>
+<li>Student consent management for optional uses</li>
+</ul>
+<p><strong>Academic records protection:</strong></p>
+<ul>
+<li>FERPA-equivalent access restrictions</li>
+<li>Audit logging of grade access and modifications</li>
+<li>Secure transmission of transcripts to TORMS</li>
+<li>Public clearance verification without exposing PII</li>
+</ul>
+<hr>
+<p><strong>End of Architecture Design — USiS</strong></p>
+<hr>
+<h2>Part 3 — Features &amp; Requirements</h2>
+<h3>USiS — University Student Information System Features &amp; Requirements</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document ID</strong></td>
+<td>FEAT-USIS-001</td>
+</tr>
+<tr>
+<td><strong>Product</strong></td>
+<td>USiS</td>
+</tr>
+<tr>
+<td><strong>Companions</strong></td>
+<td><a href="./USiS-System-Specification.md">USiS-SRS.md</a> · <a href="./USiS-LLD.md">USiS-LLD.md</a></td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>1. Feature Summary</h3>
+<p>USiS provides comprehensive student information management across the complete academic lifecycle:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Features</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Authentication</strong></td>
+<td>University Platform Access SSO integration, role-based routing</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Student Portal</strong></td>
+<td>Profile, enrollment workflow, schedule, assessments, COR, grades, history</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Faculty Portal</strong></td>
+<td>Class rosters, grade encoding/submission, advising, reports</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Registrar Portal</strong></td>
+<td>Applicant management, enrollment approval, academic configuration, reports</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Office Portals</strong></td>
+<td>Admissions, OSA, Guidance, Health Services, Scholarship management</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Assessment Integration</strong></td>
+<td>UFMS assessment/payment handoff with real-time status sync</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Grade Management</strong></td>
+<td>Encode, submit, corrections, GPA calculation, TORMS sync</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Clearance System</strong></td>
+<td>Multi-office clearance graph, certificate generation, QR verification</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Faculty Evaluation</strong></td>
+<td>Anonymous evaluation, aggregated results</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Reporting</strong></td>
+<td>Enrollment, grade, clearance, scholarship reports with export</td>
+<td>Delivered</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>2. Feature Catalog</h3>
+<table>
+<thead>
+<tr>
+<th>Feature ID</th>
+<th>Feature</th>
+<th>Description</th>
+<th>Priority</th>
+<th>Actors</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>F-AUTH-01</strong></td>
+<td>SSO Authentication</td>
+<td>University Platform Access OIDC/JWT authentication</td>
+<td>Must</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>F-AUTH-02</strong></td>
+<td>Role-based Routing</td>
+<td>Automatic home path resolution (student/faculty/registrar/office)</td>
+<td>Must</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>F-AUTH-03</strong></td>
+<td>Permission Enforcement</td>
+<td>Granular permission checks on all API endpoints</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-STU-01</strong></td>
+<td>Student Profile</td>
+<td>View/edit demographic info, contact details, emergency contacts</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-02</strong></td>
+<td>Enrollment Workflow</td>
+<td>Search sections, add to cart, conflict detection, submit for approval</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-03</strong></td>
+<td>Schedule Viewing</td>
+<td>Calendar and list views of enrolled sections with details</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-04</strong></td>
+<td>Assessment View</td>
+<td>Line-item assessment breakdown from UFMS integration</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-05</strong></td>
+<td>Payment Status</td>
+<td>Real-time UFMS payment verification status display</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-06</strong></td>
+<td>COR Generation</td>
+<td>Download PDF Certificate of Registration after approval</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-07</strong></td>
+<td>Grade Viewing</td>
+<td>Posted grades by term with GPA calculation</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-08</strong></td>
+<td>Academic History</td>
+<td>Complete enrollment and grade history across all terms</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-09</strong></td>
+<td>Support Requests</td>
+<td>Submit help requests to offices (OSA, Guidance, Health, Scholarship)</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-10</strong></td>
+<td>Organization Applications</td>
+<td>Apply for student organization accreditation with attachments</td>
+<td>Should</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-11</strong></td>
+<td>ID Card Request</td>
+<td>Digital student ID request submission</td>
+<td>Should</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-12</strong></td>
+<td>Queue Tickets</td>
+<td>Obtain service queue numbers for office visits</td>
+<td>Should</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-13</strong></td>
+<td>Faculty Evaluation</td>
+<td>Anonymous faculty evaluation during evaluation windows</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-14</strong></td>
+<td>Clearance Status</td>
+<td>View office-by-office clearance breakdown</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-STU-15</strong></td>
+<td>Clearance Certificate</td>
+<td>Download clearance certificate with QR verification code</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-FAC-01</strong></td>
+<td>Class Rosters</td>
+<td>View enrolled students in assigned sections</td>
+<td>Must</td>
+<td>Faculty</td>
+</tr>
+<tr>
+<td><strong>F-FAC-02</strong></td>
+<td>Grade Encoding</td>
+<td>Enter preliminary and final grades with validation</td>
+<td>Must</td>
+<td>Faculty</td>
+</tr>
+<tr>
+<td><strong>F-FAC-03</strong></td>
+<td>Grade Submission</td>
+<td>Submit completed grades with digital confirmation</td>
+<td>Must</td>
+<td>Faculty</td>
+</tr>
+<tr>
+<td><strong>F-FAC-04</strong></td>
+<td>Grade History</td>
+<td>View submission history and status by section</td>
+<td>Must</td>
+<td>Faculty</td>
+</tr>
+<tr>
+<td><strong>F-FAC-05</strong></td>
+<td>Grade Corrections</td>
+<td>Request corrections after submission with justification</td>
+<td>Should</td>
+<td>Faculty</td>
+</tr>
+<tr>
+<td><strong>F-FAC-06</strong></td>
+<td>Roster Export</td>
+<td>Download class rosters as CSV and PDF</td>
+<td>Must</td>
+<td>Faculty</td>
+</tr>
+<tr>
+<td><strong>F-FAC-07</strong></td>
+<td>Attendance Tracking</td>
+<td>Mark student attendance by session</td>
+<td>Should</td>
+<td>Faculty</td>
+</tr>
+<tr>
+<td><strong>F-FAC-08</strong></td>
+<td>Advisee Management</td>
+<td>View assigned advisees with enrollment status</td>
+<td>Must</td>
+<td>Faculty/Adviser</td>
+</tr>
+<tr>
+<td><strong>F-FAC-09</strong></td>
+<td>Advising Approval</td>
+<td>Approve or recommend modifications to advisee enrollments</td>
+<td>Must</td>
+<td>Faculty/Adviser</td>
+</tr>
+<tr>
+<td><strong>F-FAC-10</strong></td>
+<td>Advising Notes</td>
+<td>Add recommendations and session notes</td>
+<td>Must</td>
+<td>Faculty/Adviser</td>
+</tr>
+<tr>
+<td><strong>F-FAC-11</strong></td>
+<td>Evaluation Results</td>
+<td>View anonymized aggregated evaluation results</td>
+<td>Should</td>
+<td>Faculty</td>
+</tr>
+<tr>
+<td><strong>F-REG-01</strong></td>
+<td>Applicant Management</td>
+<td>View/search applicants from admission pipeline</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-02</strong></td>
+<td>Student Admission</td>
+<td>Admit applicants with student number and Identity provisioning</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-03</strong></td>
+<td>Enrollment Review</td>
+<td>View all enrollments with advanced filtering</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-04</strong></td>
+<td>Enrollment Approval</td>
+<td>Approve/reject enrollments with reason codes</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-05</strong></td>
+<td>Batch Approval</td>
+<td>Process multiple enrollments with criteria selection</td>
+<td>Should</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-06</strong></td>
+<td>Business Rule Override</td>
+<td>Override system rules with audit logging</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-07</strong></td>
+<td>Academic Calendar</td>
+<td>Configure terms, enrollment windows, deadlines</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-08</strong></td>
+<td>Program Management</td>
+<td>Define programs, curricula, courses</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-09</strong></td>
+<td>Section Management</td>
+<td>Create sections with instructor, schedule, room, capacity</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-10</strong></td>
+<td>Prerequisite Rules</td>
+<td>Configure prerequisite and co-requisite chains</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-11</strong></td>
+<td>Grading System Config</td>
+<td>Define grading policies and scales by program</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-12</strong></td>
+<td>Enrollment Reports</td>
+<td>Summary by program, status, term with export</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-13</strong></td>
+<td>Grade Reports</td>
+<td>Distribution, dean&#39;s list, probation lists</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-14</strong></td>
+<td>Report Export</td>
+<td>CSV, Excel, PDF export for all reports</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-15</strong></td>
+<td>Grade Monitoring</td>
+<td>Track submission status across sections</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-16</strong></td>
+<td>Evaluation Management</td>
+<td>Configure evaluation periods and questionnaires</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-17</strong></td>
+<td>Evaluation Reports</td>
+<td>View aggregated results with filtering</td>
+<td>Should</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-REG-18</strong></td>
+<td>Waitlist Management</td>
+<td>Manage waitlists and seat releases</td>
+<td>Should</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-ADM-01</strong></td>
+<td>Entrance Exam Scheduling</td>
+<td>Schedule exam sessions with capacity management</td>
+<td>Must</td>
+<td>Admissions</td>
+</tr>
+<tr>
+<td><strong>F-ADM-02</strong></td>
+<td>Exam Results</td>
+<td>View exam scores and track admission decisions</td>
+<td>Must</td>
+<td>Admissions</td>
+</tr>
+<tr>
+<td><strong>F-OSA-01</strong></td>
+<td>Discipline Management</td>
+<td>Manage discipline cases with confidential records</td>
+<td>Must</td>
+<td>OSA Staff</td>
+</tr>
+<tr>
+<td><strong>F-OSA-02</strong></td>
+<td>Organization Accreditation</td>
+<td>Process student organization applications</td>
+<td>Must</td>
+<td>OSA Staff</td>
+</tr>
+<tr>
+<td><strong>F-OSA-03</strong></td>
+<td>Event Coordination</td>
+<td>Manage campus events and participation tracking</td>
+<td>Should</td>
+<td>OSA Staff</td>
+</tr>
+<tr>
+<td><strong>F-GDN-01</strong></td>
+<td>Counseling Scheduling</td>
+<td>Schedule confidential counseling sessions</td>
+<td>Must</td>
+<td>Guidance</td>
+</tr>
+<tr>
+<td><strong>F-GDN-02</strong></td>
+<td>Counseling Records</td>
+<td>Maintain restricted-access counseling notes</td>
+<td>Must</td>
+<td>Guidance</td>
+</tr>
+<tr>
+<td><strong>F-GDN-03</strong></td>
+<td>Guidance Clearance</td>
+<td>Issue guidance clearances</td>
+<td>Must</td>
+<td>Guidance</td>
+</tr>
+<tr>
+<td><strong>F-HLT-01</strong></td>
+<td>Medical Records</td>
+<td>Maintain student health records</td>
+<td>Must</td>
+<td>Health Services</td>
+</tr>
+<tr>
+<td><strong>F-HLT-02</strong></td>
+<td>Vaccination Tracking</td>
+<td>Track immunization requirements</td>
+<td>Must</td>
+<td>Health Services</td>
+</tr>
+<tr>
+<td><strong>F-HLT-03</strong></td>
+<td>Health Clearance</td>
+<td>Issue health clearances</td>
+<td>Must</td>
+<td>Health Services</td>
+</tr>
+<tr>
+<td><strong>F-SCH-01</strong></td>
+<td>Scholarship Awards</td>
+<td>Manage scholarship types and awards</td>
+<td>Must</td>
+<td>Scholarship</td>
+</tr>
+<tr>
+<td><strong>F-SCH-02</strong></td>
+<td>Disbursement Tracking</td>
+<td>Track scholarship disbursement schedules</td>
+<td>Must</td>
+<td>Scholarship</td>
+</tr>
+<tr>
+<td><strong>F-SCH-03</strong></td>
+<td>Academic Requirements</td>
+<td>Monitor scholarship academic standing requirements</td>
+<td>Must</td>
+<td>Scholarship</td>
+</tr>
+<tr>
+<td><strong>F-INT-01</strong></td>
+<td>Assessment Preparation</td>
+<td>Generate tuition assessments from enrollment data</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-INT-02</strong></td>
+<td>UFMS Assessment Sync</td>
+<td>Push assessments to UFMS via internal API</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-INT-03</strong></td>
+<td>Payment Status Query</td>
+<td>Real-time UFMS payment verification</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-INT-04</strong></td>
+<td>TORMS Grade Sync</td>
+<td>Expose grade projections for TORMS consumption</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-INT-05</strong></td>
+<td>Clearance Aggregation</td>
+<td>Multi-system clearance status consolidation</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-CLR-01</strong></td>
+<td>Clearance Requirements</td>
+<td>Configure clearance items by office and term</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-CLR-02</strong></td>
+<td>Clearance Certificate**</td>
+<td>Generate certificates with QR codes</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-CLR-03</strong></td>
+<td>Public Verification</td>
+<td>Unauthenticated clearance verification endpoint</td>
+<td>Must</td>
+<td>Public</td>
+</tr>
+<tr>
+<td><strong>F-EVL-01</strong></td>
+<td>Evaluation Configuration</td>
+<td>Setup periods, questionnaires, response scales</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-EVL-02</strong></td>
+<td>Evaluation Submission</td>
+<td>Students evaluate faculty anonymously</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-EVL-03</strong></td>
+<td>Result Anonymization</td>
+<td>Ensure no student-response linkage in results</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-EVL-04</strong></td>
+<td>Statistical Aggregation</td>
+<td>Compute evaluation statistics by section/faculty</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-RPT-01</strong></td>
+<td>Enrollment Summary</td>
+<td>Reports by term, program, level</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-RPT-02</strong></td>
+<td>Grade Distribution</td>
+<td>Reports by course and section</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-RPT-03</strong></td>
+<td>Dean&#39;s List</td>
+<td>Academic honor roll generation</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-RPT-04</strong></td>
+<td>Graduation Candidates</td>
+<td>Eligible graduates by term</td>
+<td>Must</td>
+<td>Registrar</td>
+</tr>
+<tr>
+<td><strong>F-RPT-05</strong></td>
+<td>Report Export Audit</td>
+<td>Log all report exports for compliance</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>3. Requirements Traceability Matrix</h3>
+<h4>3.1 Functional Requirements Mapping</h4>
+<table>
+<thead>
+<tr>
+<th>Requirement ID</th>
+<th>Requirement</th>
+<th>Related Features</th>
+<th>Priority</th>
+<th>Implementation Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-AUTH-001</td>
+<td>SSO via University Platform Access JWKS</td>
+<td>F-AUTH-01</td>
+<td>Must</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-AUTH-002</td>
+<td>Role-based home path resolution</td>
+<td>F-AUTH-02</td>
+<td>Must</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-AUTH-003</td>
+<td>Permission enforcement on all endpoints</td>
+<td>F-AUTH-03</td>
+<td>Must</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-AUTH-004</td>
+<td>MFA support for privileged roles</td>
+<td>F-AUTH-01</td>
+<td>Must</td>
+<td>Identity-delegated</td>
+</tr>
+<tr>
+<td>FR-AUTH-005</td>
+<td>Graceful Identity service degradation</td>
+<td>F-AUTH-01</td>
+<td>Must</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-STU-001..019</td>
+<td>Student portal features</td>
+<td>F-STU-01..15</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-FAC-001..012</td>
+<td>Faculty portal features</td>
+<td>F-FAC-01..11</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-REG-001..018</td>
+<td>Registrar portal features</td>
+<td>F-REG-01..18</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-OFF-001..015</td>
+<td>Office portal features</td>
+<td>F-ADM-01..02, F-OSA-01..03, F-GDN-01..03, F-HLT-01..03, F-SCH-01..03</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-PAY-001..007</td>
+<td>Assessment/payment integration</td>
+<td>F-INT-01..03</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-GRD-001..007</td>
+<td>Grade management and sync</td>
+<td>F-FAC-02..05, F-INT-04</td>
+<td>Must</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-CLR-001..005</td>
+<td>Clearance management</td>
+<td>F-CLR-01..03, F-INT-05</td>
+<td>Must</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-EVL-001..006</td>
+<td>Faculty evaluation</td>
+<td>F-EVL-01..04, F-STU-13, F-FAC-11</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-RPT-001..006</td>
+<td>Reporting and analytics</td>
+<td>F-RPT-01..05</td>
+<td>Must</td>
+<td>Delivered</td>
+</tr>
+</tbody></table>
+<h4>3.2 Non-Functional Requirements Mapping</h4>
+<table>
+<thead>
+<tr>
+<th>NFR Category</th>
+<th>Requirement ID</th>
+<th>Related Features</th>
+<th>Implementation Approach</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Performance</td>
+<td>NFR-PERF-001..006</td>
+<td>All features</td>
+<td>Database indexing, caching, query optimization, background jobs</td>
+</tr>
+<tr>
+<td>Scalability</td>
+<td>NFR-SCAL-001..004</td>
+<td>All features</td>
+<td>Horizontal API scaling, read replicas, stateless design</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>NFR-SEC-001..010</td>
+<td>F-AUTH-<em>, F-INT-</em></td>
+<td>TLS, RBAC, rate limiting, encryption, audit logging</td>
+</tr>
+<tr>
+<td>Reliability</td>
+<td>NFR-REL-001..005</td>
+<td>All features</td>
+<td>HA deployment, backups, DR procedures, graceful degradation</td>
+</tr>
+<tr>
+<td>Maintainability</td>
+<td>NFR-MAIN-001..005</td>
+<td>All features</td>
+<td>Modular architecture, OpenAPI docs, structured logging, versioned migrations</td>
+</tr>
+<tr>
+<td>Compliance</td>
+<td>NFR-COMP-001..005</td>
+<td>Student data features</td>
+<td>RA 10173 compliance, purpose limitation, consent management, FERPA-equivalent</td>
+</tr>
+</tbody></table>
+<h4>3.3 Source Requirements Traceability</h4>
+<p><strong>WMSU TOR VI.E.1 compliance matrix:</strong></p>
+<table>
+<thead>
+<tr>
+<th>TOR Requirement</th>
+<th>Feature IDs</th>
+<th>Implementation Notes</th>
+<th>Compliance Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Applicant management and admissions</td>
+<td>F-REG-01, F-REG-02, F-ADM-01, F-ADM-02</td>
+<td>Portal handles entrance exam delivery; USiS receives results</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Student registration and enrollment</td>
+<td>F-STU-02, F-REG-03, F-REG-04</td>
+<td>Complete workflow with advising, payment, approval gates</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Subject/section scheduling</td>
+<td>F-REG-09, F-STU-03, F-FAC-01</td>
+<td>Real-time conflict detection, capacity enforcement</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Grade encoding and management</td>
+<td>F-FAC-02, F-FAC-03, F-REG-15</td>
+<td>Faculty encode, registrar monitors, TORMS sync</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Student academic records</td>
+<td>F-STU-07, F-STU-08, F-INT-04</td>
+<td>USiS is SoR; TORMS consumes projections</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Assessment and payment coordination</td>
+<td>F-INT-01, F-INT-02, F-INT-03</td>
+<td>UFMS integration; no local payment invention</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Clearance processing</td>
+<td>F-CLR-01, F-CLR-02, F-CLR-03, F-STU-14, F-STU-15</td>
+<td>Multi-office graph, QR verification</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Faculty evaluation</td>
+<td>F-EVL-01, F-EVL-02, F-STU-13</td>
+<td>Anonymous submissions, aggregated results</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Student support services</td>
+<td>F-STU-09, F-OSA-01..03, F-GDN-01..03, F-HLT-01..03, F-SCH-01..03</td>
+<td>Multi-office portal with permission packs</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Institutional reporting</td>
+<td>F-RPT-01..05, F-REG-12..14</td>
+<td>CSV/Excel/PDF export with audit logging</td>
+<td>Delivered</td>
+</tr>
+</tbody></table>
+<p><strong>Deferred/Out of scope:</strong></p>
+<ul>
+<li>Public guest application UI → Unified Access Portal responsibility</li>
+<li>Financial transaction processing → UFMS responsibility</li>
+<li>TOR issuance and alumni registry → TORMS responsibility</li>
+<li>Library, documents, inventory → ULMIS, UDMS, UIMS</li>
+</ul>
+<hr>
+<h3>4. Non-Functional Requirements Summary</h3>
+<h4>4.1 Performance Targets</h4>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Measurement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>API response (p95)</td>
+<td>≤2s standard, ≤5s enrollment</td>
+<td>APM monitoring</td>
+</tr>
+<tr>
+<td>Concurrent users</td>
+<td>≥500 active sessions</td>
+<td>Load testing</td>
+</tr>
+<tr>
+<td>Health check</td>
+<td>≤500ms</td>
+<td>Uptime monitoring</td>
+</tr>
+<tr>
+<td>Report generation</td>
+<td>≤10s standard</td>
+<td>Query optimization</td>
+</tr>
+</tbody></table>
+<h4>4.2 Security Controls</h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Implementation</th>
+<th>Verification</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TLS enforcement</td>
+<td>Reverse proxy/ingress</td>
+<td>SSL Labs scan</td>
+</tr>
+<tr>
+<td>RBAC</td>
+<td>Permission checks on all endpoints</td>
+<td>Automated security tests</td>
+</tr>
+<tr>
+<td>Rate limiting</td>
+<td>Redis-backed rate limiter</td>
+<td>Load test verification</td>
+</tr>
+<tr>
+<td>Audit logging</td>
+<td>Structured logs for privileged ops</td>
+<td>Log review</td>
+</tr>
+</tbody></table>
+<h4>4.3 Reliability Measures</h4>
+<table>
+<thead>
+<tr>
+<th>Measure</th>
+<th>Target</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Availability</td>
+<td>≥99.5% during enrollment</td>
+<td>SLA monitoring</td>
+</tr>
+<tr>
+<td>Backup frequency</td>
+<td>Daily incremental, weekly full</td>
+<td>Automated backup verification</td>
+</tr>
+<tr>
+<td>RPO</td>
+<td>≤15 minutes</td>
+<td>Tested recovery procedures</td>
+</tr>
+<tr>
+<td>Graceful degradation</td>
+<td>UFMS/TORMS outage handling</td>
+<td>Circuit breaker testing</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>5. Actors &amp; Feature Access</h3>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Primary Features</th>
+<th>Restricted Features</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Student</strong></td>
+<td>F-STU-01..15, F-EVL-02</td>
+<td>Own data only; cannot view other students</td>
+</tr>
+<tr>
+<td><strong>Faculty</strong></td>
+<td>F-FAC-01..11</td>
+<td>Assigned classes only</td>
+</tr>
+<tr>
+<td><strong>Adviser</strong></td>
+<td>F-FAC-08..10</td>
+<td>Assigned advisees only</td>
+</tr>
+<tr>
+<td><strong>Registrar</strong></td>
+<td>F-REG-01..18, F-RPT-01..05</td>
+<td>System-wide academic data</td>
+</tr>
+<tr>
+<td><strong>Admissions Officer</strong></td>
+<td>F-ADM-01, F-ADM-02</td>
+<td>Applicant records</td>
+</tr>
+<tr>
+<td><strong>OSA Staff</strong></td>
+<td>F-OSA-01..03</td>
+<td>Student conduct records</td>
+</tr>
+<tr>
+<td><strong>Guidance Counselor</strong></td>
+<td>F-GDN-01..03</td>
+<td>Confidential counseling data</td>
+</tr>
+<tr>
+<td><strong>Health Services</strong></td>
+<td>F-HLT-01..03</td>
+<td>Student health records</td>
+</tr>
+<tr>
+<td><strong>Scholarship Officer</strong></td>
+<td>F-SCH-01..03</td>
+<td>Scholarship data</td>
+</tr>
+<tr>
+<td><strong>Public</strong></td>
+<td>F-CLR-03</td>
+<td>Clearance verification only</td>
+</tr>
+<tr>
+<td><strong>System (Background)</strong></td>
+<td>F-INT-01..05, F-RPT-05</td>
+<td>Automated integrations</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>End of Features &amp; Requirements — USiS</strong></p>
+<hr>
+<h2>Part 4 — Low-Level Design (LLD) Workflows</h2>
+<h3>USiS — University Student Information System Low-Level Design</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document ID</strong></td>
+<td>LLD-USIS-001</td>
+</tr>
+<tr>
+<td><strong>Product</strong></td>
+<td>USiS</td>
+</tr>
+<tr>
+<td><strong>Companion</strong></td>
+<td><a href="./USiS-System-Specification.md">USiS-SRS.md</a></td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>1. Purpose</h3>
+<p>This Low-Level Design documents critical workflows for USiS enrollment, grade management, advising, assessment/payment integration, clearance processing, and faculty evaluation — providing sequence diagrams, state machines, and implementation details for development and QA teams.</p>
+<hr>
+<h3>2. System Context (Multi-Portal Architecture)</h3>
+<p><img src="diagrams/USiS-System-Specification-08-bd602133.png" class="flowchart" alt="Flowchart 8"></p>
+<p><strong>Client-specific routes:</strong></p>
+<ul>
+<li>Student: <code>/student/*</code></li>
+<li>Faculty: <code>/faculty/*</code></li>
+<li>Registrar: <code>/registrar/*</code></li>
+<li>Offices: <code>/offices/:officeType/*</code></li>
+</ul>
+<hr>
+<h3>3. Student Enrollment Workflow</h3>
+<h4>3.1 Enrollment State Machine</h4>
+<p><img src="diagrams/USiS-System-Specification-09-7788fb14.png" class="flowchart" alt="Flowchart 9"></p>
+<h4>3.2 Enrollment Submission Sequence</h4>
+<p><img src="diagrams/USiS-System-Specification-10-193d24ed.png" class="flowchart" alt="Flowchart 10"></p>
+<h4>3.3 Conflict Detection Logic</h4>
+<p><img src="diagrams/USiS-System-Specification-11-db4d654d.png" class="flowchart" alt="Flowchart 11"></p>
+<hr>
+<h3>4. Grade Management Workflow</h3>
+<h4>4.1 Faculty Grade Submission</h4>
+<p><img src="diagrams/USiS-System-Specification-12-8b755610.png" class="flowchart" alt="Flowchart 12"></p>
+<h4>4.2 Grade Correction Workflow</h4>
+<p><img src="diagrams/USiS-System-Specification-13-f76a77ec.png" class="flowchart" alt="Flowchart 13"></p>
+<hr>
+<h3>5. Advising Workflow</h3>
+<p><img src="diagrams/USiS-System-Specification-14-91394378.png" class="flowchart" alt="Flowchart 14"></p>
+<hr>
+<h3>6. Assessment &amp; Payment Integration</h3>
+<h4>6.1 Assessment Preparation</h4>
+<p><img src="diagrams/USiS-System-Specification-15-801d446b.png" class="flowchart" alt="Flowchart 15"></p>
+<h4>6.2 Payment Status Verification</h4>
+<p><img src="diagrams/USiS-System-Specification-16-56732294.png" class="flowchart" alt="Flowchart 16"></p>
+<hr>
+<h3>7. Clearance Management</h3>
+<h4>7.1 Clearance Status Aggregation</h4>
+<p><img src="diagrams/USiS-System-Specification-17-b7c2805a.png" class="flowchart" alt="Flowchart 17"></p>
+<h4>7.2 Clearance Certificate Generation</h4>
+<p><img src="diagrams/USiS-System-Specification-18-80fb9d83.png" class="flowchart" alt="Flowchart 18"></p>
+<h4>7.3 Public Clearance Verification</h4>
+<p><img src="diagrams/USiS-System-Specification-19-b14c570c.png" class="flowchart" alt="Flowchart 19"></p>
+<hr>
+<h3>8. Faculty Evaluation Workflow</h3>
+<h4>8.1 Evaluation Period Setup</h4>
+<p><img src="diagrams/USiS-System-Specification-20-7b8acbff.png" class="flowchart" alt="Flowchart 20"></p>
+<h4>8.2 Anonymous Submission</h4>
+<p><img src="diagrams/USiS-System-Specification-21-fdca4e7d.png" class="flowchart" alt="Flowchart 21"></p>
+<h4>8.3 Result Aggregation</h4>
+<p><img src="diagrams/USiS-System-Specification-22-318165e1.png" class="flowchart" alt="Flowchart 22"></p>
+<hr>
+<h3>9. Registrar Enrollment Approval</h3>
+<p><img src="diagrams/USiS-System-Specification-23-cc3dec96.png" class="flowchart" alt="Flowchart 23"></p>
+<hr>
+<h3>10. Office Support Request Workflow</h3>
+<p><img src="diagrams/USiS-System-Specification-24-fefec1e3.png" class="flowchart" alt="Flowchart 24"></p>
+<hr>
+<h3>11. Error Cases &amp; Edge Conditions</h3>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Expected Behavior</th>
+<th>HTTP Status</th>
+<th>User Message</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Enroll with schedule conflict</td>
+<td>Block enrollment, return conflicting section</td>
+<td>422</td>
+<td>&quot;Schedule conflict with [Section Name] on [Days] at [Time]&quot;</td>
+</tr>
+<tr>
+<td>Enroll with missing prerequisite</td>
+<td>Block enrollment, list missing prerequisites</td>
+<td>422</td>
+<td>&quot;Prerequisite required: [Course Code]&quot;</td>
+</tr>
+<tr>
+<td>Enroll in full section without waitlist</td>
+<td>Block enrollment</td>
+<td>422</td>
+<td>&quot;Section is full. No waitlist available.&quot;</td>
+</tr>
+<tr>
+<td>Submit incomplete grade roster</td>
+<td>Block submission</td>
+<td>422</td>
+<td>&quot;Cannot submit. [N] students have no grades.&quot;</td>
+</tr>
+<tr>
+<td>Query UFMS when service down</td>
+<td>Return cached status with warning</td>
+<td>200</td>
+<td>&quot;Payment status (last checked [timestamp]). Verify with cashier if recently paid.&quot;</td>
+</tr>
+<tr>
+<td>Generate clearance with ULMIS down</td>
+<td>Fail certificate generation</td>
+<td>503</td>
+<td>&quot;Clearance unavailable. Library system temporarily unreachable.&quot;</td>
+</tr>
+<tr>
+<td>Verify invalid clearance token</td>
+<td>Return not found</td>
+<td>404</td>
+<td>&quot;Invalid verification code.&quot;</td>
+</tr>
+<tr>
+<td>Faculty view grades before submission</td>
+<td>Allow view of draft grades</td>
+<td>200</td>
+<td>Display with &quot;Draft&quot; indicator</td>
+</tr>
+<tr>
+<td>Student access other student&#39;s data</td>
+<td>Authorization failure</td>
+<td>403</td>
+<td>&quot;Access denied.&quot;</td>
+</tr>
+<tr>
+<td>Registrar override without permission</td>
+<td>Authorization failure</td>
+<td>403</td>
+<td>&quot;Insufficient permissions for override.&quot;</td>
+</tr>
+<tr>
+<td>Evaluation submission outside period</td>
+<td>Block submission</td>
+<td>422</td>
+<td>&quot;Evaluation period has ended.&quot;</td>
+</tr>
+<tr>
+<td>Duplicate enrollment submission (idempotency)</td>
+<td>Return original submission result</td>
+<td>200</td>
+<td>Previous submission details</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>12. Background Job Workflows</h3>
+<h4>12.1 Nightly Grade Sync to TORMS</h4>
+<p><img src="diagrams/USiS-System-Specification-25-a6ae9e62.png" class="flowchart" alt="Flowchart 25"></p>
+<h4>12.2 Enrollment Deadline Notifications</h4>
+<p><img src="diagrams/USiS-System-Specification-26-49ac0ce6.png" class="flowchart" alt="Flowchart 26"></p>
+<hr>
+<p><strong>End of LLD — USiS</strong></p>
+<hr>
+
+</body>
+</html>

@@ -1,0 +1,2601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TORMS — Complete System Specification</title>
+  <style>
+  @page { margin: 18mm 14mm; }
+  body {
+    font-family: "Calibri", "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 8mm;
+  }
+  h1 { font-size: 20pt; color: #1e293b; border-bottom: 2px solid #334155; padding-bottom: 6px; margin-top: 26px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 { font-size: 15pt; color: #334155; margin-top: 20px; page-break-before: always; }
+  h2:first-of-type { page-break-before: avoid; }
+  h3 { font-size: 13pt; color: #475569; margin-top: 16px; }
+  h4 { font-size: 12pt; color: #64748b; margin-top: 14px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #f1f5f9; font-weight: 600; }
+  code { background: #f8fafc; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
+  pre { background: #f8fafc; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 9pt; }
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
+  img.flowchart {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 14px 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+    page-break-inside: avoid;
+  }
+</style>
+</head>
+<body>
+<h1>TORMS — Complete System Specification</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Product</strong></td>
+<td>TORMS — Transcript &amp; Official Records Management System</td>
+</tr>
+<tr>
+<td><strong>Document type</strong></td>
+<td>Complete System Specification (SRS + Architecture + Features + LLD)</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+<tr>
+<td><strong>Classification</strong></td>
+<td>Proprietary</td>
+</tr>
+</tbody></table>
+<h2>Document contents</h2>
+<ol>
+<li>System Requirements Specification (SRS)</li>
+<li>Architecture Design</li>
+<li>Features &amp; Requirements</li>
+<li>Low-Level Design (LLD) Workflows</li>
+</ol>
+<hr>
+<h2>Part 1 — System Requirements Specification (SRS)</h2>
+<h3>Transcript &amp; Official Records Management System (TORMS)</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document ID</strong></td>
+<td>SRS-TORMS-001</td>
+</tr>
+<tr>
+<td><strong>Product</strong></td>
+<td>TORMS (Transcript &amp; Official Records Management System)</td>
+</tr>
+<tr>
+<td><strong>Repository</strong></td>
+<td><code>WMSU/wmsu-platform</code> (<code>apps/records-web</code>, <code>apps/base-api</code> module <code>records</code>)</td>
+</tr>
+<tr>
+<td><strong>Version</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+<tr>
+<td><strong>Classification</strong></td>
+<td>Proprietary</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>1. Introduction</h3>
+<h4>1.1 Purpose</h4>
+<p>This Software Requirements Specification defines functional and non-functional requirements for <strong>TORMS</strong>, the official academic records and certification system managing transcript of records (TOR) issuance, certification document processing, academic ledger management, alumni registry, public document verification, and records office operations for Philippine university compliance.</p>
+<h4>1.2 Scope</h4>
+<p><strong>In scope</strong></p>
+<ul>
+<li>TOR request management: creation, requirement tracking, payment verification linkage, status workflow, document generation, issuance logging, print audit trail</li>
+<li>Certification types and certification request processing: honorable dismissal, good moral character, units earned, completion certificates, diploma verification</li>
+<li>Public document verification: unauthenticated QR code and reference number verification with tamper-evident audit trails</li>
+<li>Academic ledger projections synchronized from USiS enrollment system (grades, enrollment history)</li>
+<li>Ledger discrepancy detection and reconciliation workflows</li>
+<li>Alumni registry: profile management, standing classification, graduation-driven enrollment</li>
+<li>Records officer dashboard and comprehensive reporting (issuance statistics, request aging, alumni demographics)</li>
+<li>University Platform Access SSO integration (platform code <code>records</code>)</li>
+<li>Student self-service request submission and status tracking</li>
+<li>Document numbering schemes and template management</li>
+<li>Integration with UFMS for payment/clearance verification where configured</li>
+</ul>
+<p><strong>Out of scope</strong></p>
+<ul>
+<li>Authoritative grade entry and enrollment workflow (owned by <strong>USiS</strong>)</li>
+<li>Tuition assessment, cashiering, official receipt issuance (owned by <strong>UFMS</strong>)</li>
+<li>Library operations, document repository (owned by <strong>ULMIS</strong>, <strong>UDMS</strong>)</li>
+<li>Inventory and asset management (owned by <strong>UIMS</strong>)</li>
+<li>Student admissions and registration approval (owned by <strong>USiS</strong>)</li>
+</ul>
+<h4>1.3 Definitions</h4>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>TORMS</strong></td>
+<td>Transcript &amp; Official Records Management System</td>
+</tr>
+<tr>
+<td><strong>TOR</strong></td>
+<td>Transcript of Records — official academic transcript document</td>
+</tr>
+<tr>
+<td><strong>Issuance</strong></td>
+<td>Generated official document with verification metadata, print log, and QR code</td>
+</tr>
+<tr>
+<td><strong>Ledger projection</strong></td>
+<td>TORMS copy of academic grades and enrollment history synchronized from USiS (USiS remains system of record)</td>
+</tr>
+<tr>
+<td><strong>Certification</strong></td>
+<td>Official non-TOR document types: honorable dismissal, good moral character, units earned, completion, diploma verification</td>
+</tr>
+<tr>
+<td><strong>Verification token</strong></td>
+<td>Unique code (UUID or sequential) enabling public unauthenticated verification of issued documents</td>
+</tr>
+<tr>
+<td><strong>Discrepancy</strong></td>
+<td>Mismatch between TORMS ledger projection and USiS source data requiring registrar review</td>
+</tr>
+<tr>
+<td><strong>Alumni standing</strong></td>
+<td>Classification of alumni status: active, inactive, distinguished, emeritus</td>
+</tr>
+</tbody></table>
+<h4>1.4 References</h4>
+<ul>
+<li><code>WMSU/wmsu-platform/README.md</code></li>
+<li><code>apps/web-portal/public/docs/TORMS-Complete-Guide.html</code></li>
+<li><code>apps/web-portal/public/docs/TORMS-API-Specs-Manual.html</code></li>
+<li>USiS Grade Projection API Specification</li>
+<li>UFMS Internal Clearance API Specification</li>
+<li>University Platform Access Architecture</li>
+</ul>
+<hr>
+<h3>2. Overall Description</h3>
+<h4>2.1 Product Perspective</h4>
+<p>TORMS operates within the WMSU Campus Information System modular architecture:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Records web</td>
+<td>React 19 + Vite</td>
+<td>Staff and student UI for requests, issuance, alumni management</td>
+</tr>
+<tr>
+<td>Base API records module</td>
+<td>AdonisJS 7 + Lucid ORM</td>
+<td>REST services at <code>/api/v1/records/*</code></td>
+</tr>
+<tr>
+<td>Database</td>
+<td>PostgreSQL schema <code>records</code></td>
+<td>Official records system of record for issuances and alumni</td>
+</tr>
+<tr>
+<td>Identity provider</td>
+<td>University Platform Access</td>
+<td>Authentication, authorization, user management</td>
+</tr>
+<tr>
+<td>Queue system</td>
+<td>BullMQ + Redis</td>
+<td>Background jobs (sync, notifications, report generation)</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Dev port</th>
+<th>Production example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Records web</td>
+<td><code>http://127.0.0.1:5181</code></td>
+<td><code>https://records.wmsu.edu.ph</code></td>
+</tr>
+<tr>
+<td>Base API</td>
+<td><code>http://127.0.0.1:3500</code></td>
+<td><code>https://api.wmsu.edu.ph</code></td>
+</tr>
+<tr>
+<td>Identity API</td>
+<td><code>http://127.0.0.1:3411</code></td>
+<td><code>https://auth.wmsu.edu.ph</code></td>
+</tr>
+<tr>
+<td>Public verify</td>
+<td>Records web <code>/verify</code></td>
+<td><code>https://records.wmsu.edu.ph/verify</code></td>
+</tr>
+</tbody></table>
+<p><strong>Health endpoint:</strong> <code>GET /health</code> → <code>{ status: &#39;ok&#39;, service: &#39;base-api&#39;, module: &#39;records&#39; }</code></p>
+<h4>2.2 User Classes</h4>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Primary capabilities</th>
+<th>Access level</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Records Officer</strong></td>
+<td>Process TOR/certification requests, sync academic data, issue documents, manage alumni, generate reports</td>
+<td>Full records management</td>
+</tr>
+<tr>
+<td><strong>Student</strong></td>
+<td>Submit and track own TOR/certification requests, download issued documents</td>
+<td>Own requests only</td>
+</tr>
+<tr>
+<td><strong>Registrar (cross-system)</strong></td>
+<td>Review sync discrepancies, approve special requests</td>
+<td>Records oversight</td>
+</tr>
+<tr>
+<td><strong>Alumni</strong></td>
+<td>Update contact information, view issued documents</td>
+<td>Own alumni profile</td>
+</tr>
+<tr>
+<td><strong>Identity Administrator</strong></td>
+<td>Full TORMS access when <code>records</code> platform granted</td>
+<td>All TORMS permissions</td>
+</tr>
+<tr>
+<td><strong>Public Visitor</strong></td>
+<td>Verify authenticity of issued documents without authentication</td>
+<td>Verification only</td>
+</tr>
+</tbody></table>
+<p>Frontend permission checks provide user experience; API enforces authorization on every route.</p>
+<h4>2.3 Constraints</h4>
+<ul>
+<li>Platform tile visibility requires Identity platform grant <code>records</code></li>
+<li>Grades are NOT authored in TORMS — all academic data synchronized read-only from USiS</li>
+<li>Sync discrepancies must surface to records officers for manual review and resolution</li>
+<li>Public verification is unauthenticated and rate-limited to prevent abuse</li>
+<li>Internal alumni-from-graduation route requires service API key protection</li>
+<li>TOR and certification numbering must follow configured foundation settings (year-based, sequential)</li>
+<li>Document templates and layout configured per institution requirements</li>
+<li>Historical data integrity preserved — issued documents immutable after generation</li>
+</ul>
+<h4>2.4 Assumptions</h4>
+<ul>
+<li>USiS enrollment system is running and grade data available for synchronization</li>
+<li>Payment/clearance verification checks integrate with UFMS when configured (optional gating)</li>
+<li>Graduation events from USiS enrollment trigger internal alumni profile creation</li>
+<li>Document issuance templates provided in PDF generation format (e.g., Puppeteer/headless Chrome)</li>
+<li>University seal and authorized signatory images configured in system settings</li>
+<li>Records office staff trained on request processing workflows</li>
+<li>Demo/staging environments provision sample students, requests, and issued documents</li>
+<li>Regular automated sync jobs scheduled (nightly grade sync, weekly enrollment history)</li>
+</ul>
+<hr>
+<h3>3. Functional Requirements</h3>
+<h4>3.1 Authentication &amp; Authorization</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-AUTH-001</td>
+<td>System shall authenticate all users via University Platform Access SSO</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-AUTH-002</td>
+<td>System shall resolve user home path based on role (records officer → <code>/staff</code>, student → <code>/student</code>, alumni → <code>/alumni</code>)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-AUTH-003</td>
+<td>System shall enforce <code>torms.*</code> permission checks on every authenticated API endpoint</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-AUTH-004</td>
+<td>Public verification routes shall be unauthenticated with rate limiting</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-AUTH-005</td>
+<td>Internal service routes shall require <code>X-Service-Api-Key</code> header validation</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.2 TOR Request Management</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-TOR-001</td>
+<td>Students shall submit TOR requests with purpose, delivery mode (pickup/mail), and copies quantity</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-002</td>
+<td>System shall assign unique request numbers using configured format (e.g., <code>TOR-2026-0001</code>)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-003</td>
+<td>System shall track request status: submitted → requirements_pending → requirements_complete → processing → approved → issued → released</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-004</td>
+<td>Records officers shall view all TOR requests with filtering by status, date, student</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-005</td>
+<td>Records officers shall transition request status with required notes for audit</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-006</td>
+<td>System shall validate clearance requirements before allowing approval (configurable)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-007</td>
+<td>System shall verify payment status from UFMS if payment gating enabled</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-TOR-008</td>
+<td>System shall attach requirement documents (clearance certificate, ID, etc.)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-009</td>
+<td>System shall notify students on status transitions via email/SMS when configured</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-TOR-010</td>
+<td>System shall generate TOR PDF document with academic ledger, seal, and signatories</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-011</td>
+<td>System shall embed verification QR code on generated TOR documents</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-012</td>
+<td>System shall log all TOR print events with timestamp, officer, and copy count</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-TOR-013</td>
+<td>Students shall download digital copy of issued TOR via portal</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.3 Certification Request Management</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-CRT-001</td>
+<td>System shall support certification types: honorable dismissal, good moral character, units earned, completion, diploma verification</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CRT-002</td>
+<td>Students shall submit certification requests with type selection and purpose</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CRT-003</td>
+<td>System shall assign unique certification numbers per type (e.g., <code>HD-2026-0001</code>, <code>GMC-2026-0001</code>)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CRT-004</td>
+<td>System shall track certification status workflow parallel to TOR (submitted → processing → issued → released)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CRT-005</td>
+<td>Records officers shall configure certification types with templates and requirements</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-CRT-006</td>
+<td>System shall generate certification PDFs from configured templates with verification codes</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CRT-007</td>
+<td>System shall log certification print events</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.4 Academic Ledger Sync</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-LED-001</td>
+<td>System shall synchronize grade data from USiS via internal API pull</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-LED-002</td>
+<td>System shall create/update ledger projection records without mutating USiS source</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-LED-003</td>
+<td>System shall detect discrepancies between ledger projection and USiS source</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-LED-004</td>
+<td>System shall surface discrepancy reports to records officers with comparison view</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-LED-005</td>
+<td>Records officers shall manually resolve discrepancies with audit logging</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-LED-006</td>
+<td>System shall synchronize enrollment history (terms, status, programs) from USiS</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-LED-007</td>
+<td>System shall track sync run metadata (timestamp, record count, errors)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-LED-008</td>
+<td>System shall retry failed sync operations with exponential backoff</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-LED-009</td>
+<td>Records officers shall manually trigger on-demand sync for specific students</td>
+<td>Should</td>
+</tr>
+</tbody></table>
+<h4>3.5 Alumni Registry</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-ALM-001</td>
+<td>System shall create alumni profile automatically from USiS graduation event via internal API</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-ALM-002</td>
+<td>Alumni shall update contact information (address, phone, email) via portal</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-ALM-003</td>
+<td>Alumni shall view issued TOR and certification documents</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-ALM-004</td>
+<td>Records officers shall maintain alumni standing classification (active, inactive, distinguished, emeritus)</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-ALM-005</td>
+<td>System shall track alumni employment and further education (self-reported)</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-ALM-006</td>
+<td>Records officers shall generate alumni demographic reports</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-ALM-007</td>
+<td>System shall support bulk alumni data import from legacy systems</td>
+<td>Could</td>
+</tr>
+</tbody></table>
+<h4>3.6 Public Document Verification</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-VRF-001</td>
+<td>System shall provide public <code>/verify</code> page without authentication</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-VRF-002</td>
+<td>Public users shall verify documents by entering verification code or scanning QR</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-VRF-003</td>
+<td>System shall return verification result: valid (with student name, document type, issue date) or invalid</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-VRF-004</td>
+<td>System shall NOT expose sensitive PII beyond name, document type, and issue date</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-VRF-005</td>
+<td>System shall log all verification attempts with IP address and timestamp</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-VRF-006</td>
+<td>System shall rate-limit verification endpoint to prevent scraping (e.g., 10 requests/minute/IP)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-VRF-007</td>
+<td>System shall display verification result with institutional branding</td>
+<td>Should</td>
+</tr>
+</tbody></table>
+<h4>3.7 Dashboard &amp; Reporting</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-DSH-001</td>
+<td>Records officers shall view dashboard with pending requests, recent issuances, sync status</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-DSH-002</td>
+<td>Dashboard shall display KPIs: total requests by status, average processing time, issuance volume by month</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-RPT-001</td>
+<td>System shall generate TOR issuance report by date range, program, student type</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-002</td>
+<td>System shall generate certification issuance report by type and date range</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-003</td>
+<td>System shall generate request aging report (days in each status)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-004</td>
+<td>System shall generate alumni demographics report (graduation year, program, location)</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-RPT-005</td>
+<td>System shall export all reports in CSV and PDF formats</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-RPT-006</td>
+<td>System shall log all report exports with user and timestamp for audit</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<h4>3.8 Configuration Management</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-CFG-001</td>
+<td>Administrators shall configure document numbering schemes (prefix, year format, sequence)</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CFG-002</td>
+<td>Administrators shall upload document templates (TOR, certifications) in PDF-compatible format</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-CFG-003</td>
+<td>Administrators shall configure authorized signatories with titles and signature images</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>FR-CFG-004</td>
+<td>Administrators shall configure clearance requirement rules per document type</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>FR-CFG-005</td>
+<td>System shall maintain audit log of configuration changes</td>
+<td>Must</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>4. External Interface Requirements</h3>
+<h4>4.1 Integration Interfaces</h4>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Direction</th>
+<th>Protocol</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>University Platform Access</td>
+<td>Inbound</td>
+<td>OIDC/JWKS</td>
+<td>SSO authentication, JWT verification, role resolution</td>
+</tr>
+<tr>
+<td>USiS Enrollment API</td>
+<td>Inbound</td>
+<td>REST+JSON</td>
+<td>Grade projection pull, enrollment history sync</td>
+</tr>
+<tr>
+<td>USiS Graduation Events</td>
+<td>Inbound</td>
+<td>REST/Webhook</td>
+<td>Alumni profile creation trigger</td>
+</tr>
+<tr>
+<td>UFMS Finance API</td>
+<td>Outbound (optional)</td>
+<td>REST+JSON</td>
+<td>Payment/clearance verification for request gating</td>
+</tr>
+<tr>
+<td>SMTP/SMS Gateway</td>
+<td>Outbound</td>
+<td>SMTP/HTTP</td>
+<td>Request status notifications</td>
+</tr>
+<tr>
+<td>Object Storage</td>
+<td>Outbound</td>
+<td>S3-compatible</td>
+<td>Issued document archival (PDF storage)</td>
+</tr>
+</tbody></table>
+<h4>4.2 API Specifications</h4>
+<p><strong>Records API base:</strong> <code>/api/v1/records/*</code></p>
+<p><strong>Internal service routes:</strong> <code>/api/v1/records/internal/*</code> (service key protected)</p>
+<p><strong>Public routes:</strong> <code>/api/v1/records/public/verify/*</code> (unauthenticated, rate-limited)</p>
+<p><strong>OpenAPI documentation:</strong> Available at <code>/api/v1/records/docs</code> (Swagger UI)</p>
+<p><strong>Authentication:</strong> Bearer JWT from University Platform Access in <code>Authorization</code> header</p>
+<h4>4.3 User Interface Requirements</h4>
+<ul>
+<li>Responsive design supporting desktop (≥1280px), tablet (768-1023px), and mobile (360-767px)</li>
+<li>Browser compatibility: Chrome/Edge (latest 2), Firefox (latest 2), Safari (latest 2)</li>
+<li>Accessibility: WCAG 2.1 Level AA for public verification page</li>
+<li>Print-optimized PDF generation for TOR and certifications</li>
+<li>QR code rendering in standard formats (PNG, SVG)</li>
+<li>Document preview before issuance</li>
+<li>Bulk request processing interface for records officers</li>
+</ul>
+<hr>
+<h3>5. Non-Functional Requirements</h3>
+<h4>5.1 Performance</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-PERF-001</td>
+<td>API response time (p95) for standard queries</td>
+<td>≤ 2 seconds</td>
+</tr>
+<tr>
+<td>NFR-PERF-002</td>
+<td>TOR/certification PDF generation time</td>
+<td>≤ 10 seconds</td>
+</tr>
+<tr>
+<td>NFR-PERF-003</td>
+<td>Public verification response time (p95)</td>
+<td>≤ 1 second</td>
+</tr>
+<tr>
+<td>NFR-PERF-004</td>
+<td>Health check endpoint response time</td>
+<td>≤ 500 ms</td>
+</tr>
+<tr>
+<td>NFR-PERF-005</td>
+<td>Academic ledger sync job completion for 1000 students</td>
+<td>≤ 30 minutes</td>
+</tr>
+</tbody></table>
+<h4>5.2 Scalability</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-SCAL-001</td>
+<td>Support ≥10,000 alumni records</td>
+</tr>
+<tr>
+<td>NFR-SCAL-002</td>
+<td>Support ≥5,000 TOR requests per academic year</td>
+</tr>
+<tr>
+<td>NFR-SCAL-003</td>
+<td>Horizontal scaling of API replicas</td>
+</tr>
+<tr>
+<td>NFR-SCAL-004</td>
+<td>Background job queue processing with worker pools</td>
+</tr>
+</tbody></table>
+<h4>5.3 Security</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-SEC-001</td>
+<td>TLS 1.2+ required for all client-server communication</td>
+</tr>
+<tr>
+<td>NFR-SEC-002</td>
+<td>RBAC enforcement on every authenticated API endpoint using <code>torms.*</code> permissions</td>
+</tr>
+<tr>
+<td>NFR-SEC-003</td>
+<td>Service-to-service communication via API keys for internal routes</td>
+</tr>
+<tr>
+<td>NFR-SEC-004</td>
+<td>Public verification rate limiting (10 requests/minute/IP)</td>
+</tr>
+<tr>
+<td>NFR-SEC-005</td>
+<td>Document verification tokens cryptographically unique (UUID v4)</td>
+</tr>
+<tr>
+<td>NFR-SEC-006</td>
+<td>Issued document PDFs stored with restricted access (records officers only)</td>
+</tr>
+<tr>
+<td>NFR-SEC-007</td>
+<td>Audit logging of all issuance, print, and configuration changes</td>
+</tr>
+<tr>
+<td>NFR-SEC-008</td>
+<td>CORS allowlist limited to authorized web client origins</td>
+</tr>
+<tr>
+<td>NFR-SEC-009</td>
+<td>Non-root container execution in production</td>
+</tr>
+<tr>
+<td>NFR-SEC-010</td>
+<td>Student PII protection per RA 10173 (Data Privacy Act)</td>
+</tr>
+</tbody></table>
+<h4>5.4 Reliability</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-REL-001</td>
+<td>System availability ≥99% during business hours</td>
+</tr>
+<tr>
+<td>NFR-REL-002</td>
+<td>Automated database backups (daily incremental, weekly full)</td>
+</tr>
+<tr>
+<td>NFR-REL-003</td>
+<td>Point-in-time recovery capability ≤15 minutes RPO</td>
+</tr>
+<tr>
+<td>NFR-REL-004</td>
+<td>Graceful degradation when USiS/UFMS temporarily unavailable</td>
+</tr>
+<tr>
+<td>NFR-REL-005</td>
+<td>Issued documents immutable — no deletion, only void with audit trail</td>
+</tr>
+</tbody></table>
+<h4>5.5 Maintainability</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-MAIN-001</td>
+<td>Modular domain architecture with separation of concerns</td>
+</tr>
+<tr>
+<td>NFR-MAIN-002</td>
+<td>Comprehensive API documentation (OpenAPI 3.0+)</td>
+</tr>
+<tr>
+<td>NFR-MAIN-003</td>
+<td>Structured logging with correlation IDs</td>
+</tr>
+<tr>
+<td>NFR-MAIN-004</td>
+<td>Database schema migrations versioned and reversible</td>
+</tr>
+<tr>
+<td>NFR-MAIN-005</td>
+<td>Document template hot-reloading without deployment</td>
+</tr>
+</tbody></table>
+<h4>5.6 Compliance</h4>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-COMP-001</td>
+<td>RA 10173 (Data Privacy Act) compliance for student/alumni PII</td>
+</tr>
+<tr>
+<td>NFR-COMP-002</td>
+<td>FERPA-equivalent protections for educational records</td>
+</tr>
+<tr>
+<td>NFR-COMP-003</td>
+<td>Audit trail retention ≥7 years per Philippine records management guidelines</td>
+</tr>
+<tr>
+<td>NFR-COMP-004</td>
+<td>Document issuance chain of custody preservation</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>6. Verification Criteria</h3>
+<h4>6.1 Functional Verification</h4>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Expected result</th>
+<th>Test type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Records officer login via SSO</td>
+<td>Redirect to <code>/staff</code> dashboard</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Student login via SSO</td>
+<td>Redirect to <code>/student</code> requests page</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Student submit TOR request</td>
+<td>Request created with status <code>submitted</code></td>
+<td>E2E</td>
+</tr>
+<tr>
+<td>Records officer transition request to processing</td>
+<td>Status updated, audit log entry created</td>
+<td>Unit</td>
+</tr>
+<tr>
+<td>Generate TOR PDF</td>
+<td>PDF file generated with QR code and ledger data</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Public verify valid TOR code</td>
+<td>Returns valid with student name, document type, issue date</td>
+<td>API test</td>
+</tr>
+<tr>
+<td>Public verify invalid code</td>
+<td>Returns invalid/not found</td>
+<td>API test</td>
+</tr>
+<tr>
+<td>Sync grades from USiS</td>
+<td>Ledger projections created/updated, no USiS mutation</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Detect grade discrepancy</td>
+<td>Discrepancy record created, visible in officer view</td>
+<td>Unit</td>
+</tr>
+<tr>
+<td>Alumni graduation trigger</td>
+<td>Alumni profile created via internal API</td>
+<td>Integration</td>
+</tr>
+<tr>
+<td>Rate limit verification endpoint</td>
+<td>HTTP 429 after 10 requests in 1 minute</td>
+<td>Security test</td>
+</tr>
+</tbody></table>
+<h4>6.2 Non-Functional Verification</h4>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Expected result</th>
+<th>Test type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>100 concurrent public verifications</td>
+<td>p95 response ≤1s, no errors</td>
+<td>Load test</td>
+</tr>
+<tr>
+<td>TOR PDF generation for 50-page transcript</td>
+<td>Completes in ≤10s</td>
+<td>Performance test</td>
+</tr>
+<tr>
+<td>Unauthorized access to internal sync API</td>
+<td>HTTP 401/403</td>
+<td>Security test</td>
+</tr>
+<tr>
+<td>Database failover</td>
+<td>Recovery within 15 minutes</td>
+<td>DR drill</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>7. Document Control</h3>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.0</td>
+<td>November 2026</td>
+<td>Complete System Specification from wmsu-platform records module</td>
+</tr>
+</tbody></table>
+<h4>Related Design Documents</h4>
+<ul>
+<li><strong><a href="./TORMS-Architecture.md">TORMS-Architecture.md</a></strong> — Architecture design (containers, domains, security, deployment)</li>
+<li><strong><a href="./TORMS-Features-Requirements.md">TORMS-Features-Requirements.md</a></strong> — Feature catalog + requirements traceability</li>
+<li><strong><a href="./TORMS-LLD.md">TORMS-LLD.md</a></strong> — Low-level design workflows (TOR, certifications, sync, verification, alumni)</li>
+</ul>
+<p><strong>End of SRS — TORMS</strong></p>
+<hr>
+<h2>Part 2 — Architecture Design</h2>
+<h3>TORMS — Transcript &amp; Official Records Management System Architecture</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document ID</strong></td>
+<td>AD-TORMS-001</td>
+</tr>
+<tr>
+<td><strong>Product</strong></td>
+<td>TORMS</td>
+</tr>
+<tr>
+<td><strong>Companions</strong></td>
+<td><a href="./TORMS-System-Specification.md">TORMS-SRS.md</a> · <a href="./TORMS-Features-Requirements.md">TORMS-Features-Requirements.md</a> · <a href="./TORMS-LLD.md">TORMS-LLD.md</a></td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>1. Purpose</h3>
+<p>Architecture design for TORMS within WMSU CIS modular monolith — covering system context, container architecture, domain module organization, security architecture, deployment topology, integration patterns, and quality attributes for official records management.</p>
+<hr>
+<h3>2. System Context</h3>
+<p>TORMS integrates with Identity for SSO, USiS for academic data sync, and optional UFMS for clearance checks:</p>
+<p><img src="diagrams/TORMS-System-Specification-01-1ade1e61.png" class="flowchart" alt="Flowchart 1"></p>
+<p><strong>Key relationships:</strong></p>
+<ul>
+<li>Records officers, students, and alumni authenticate via Portal SSO</li>
+<li>Public verifiers access <code>/verify</code> without authentication</li>
+<li>All authenticated requests flow through Base API records module</li>
+<li>USiS is authoritative source for grades; TORMS stores projections</li>
+<li>UFMS provides optional clearance/payment verification</li>
+<li>Background sync jobs run via BullMQ worker</li>
+<li>Issued document PDFs archived to object storage</li>
+</ul>
+<hr>
+<h3>3. Container View</h3>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Technology</th>
+<th>Port</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Records web</strong></td>
+<td>React 19 + Vite</td>
+<td>5181</td>
+<td>Staff operations, student requests, alumni portal, public verify</td>
+</tr>
+<tr>
+<td><strong>Base API (records module)</strong></td>
+<td>AdonisJS 7 + Lucid ORM</td>
+<td>3500</td>
+<td>Domain services, controllers, business logic</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>PostgreSQL 15+</td>
+<td>5432</td>
+<td>Schema <code>records</code> — official records SoR (issuances, alumni)</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>Redis 7+</td>
+<td>6379</td>
+<td>Cache, queue backend, rate limiting</td>
+</tr>
+<tr>
+<td><strong>BullMQ Worker</strong></td>
+<td>Node.js + BullMQ</td>
+<td>N/A</td>
+<td>Background sync, notifications, PDF generation</td>
+</tr>
+<tr>
+<td><strong>Object Storage</strong></td>
+<td>S3-compatible</td>
+<td>N/A</td>
+<td>Issued document PDF archival</td>
+</tr>
+<tr>
+<td><strong>University Platform Access</strong></td>
+<td>Identity service</td>
+<td>3411</td>
+<td>Authentication, authorization</td>
+</tr>
+<tr>
+<td><strong>USiS Enrollment</strong></td>
+<td>CIS module</td>
+<td>3500</td>
+<td>Grade/enrollment history source</td>
+</tr>
+</tbody></table>
+<p><strong>Deployment notes:</strong></p>
+<ul>
+<li>Records web served statically from CDN or Vite dev server</li>
+<li>Base API runs in containerized Node.js (non-root)</li>
+<li>PostgreSQL schema <code>records</code> isolated within <code>wmsu_cis</code> database</li>
+<li>Redis persistent (AOF + RDB) for queue durability</li>
+<li>Worker pool for concurrent job processing</li>
+</ul>
+<hr>
+<h3>4. Domain Module Architecture</h3>
+<p>TORMS records module organized by official records lifecycle:</p>
+<p><img src="diagrams/TORMS-System-Specification-02-a190e230.png" class="flowchart" alt="Flowchart 2"></p>
+<p><strong>Domain responsibilities:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Key entities</th>
+<th>Services</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Core</strong></td>
+<td>Organization, Campus, DocumentNumbering, Settings</td>
+<td>Foundation config, numbering schemes</td>
+</tr>
+<tr>
+<td><strong>Requests</strong></td>
+<td>TORRequest, CertificationRequest, RequestRequirement, StatusHistory</td>
+<td>Request lifecycle management</td>
+</tr>
+<tr>
+<td><strong>Issuance</strong></td>
+<td>Issuance, IssuanceLog, VerificationToken, PrintEvent</td>
+<td>Document generation, verification</td>
+</tr>
+<tr>
+<td><strong>Academic Data</strong></td>
+<td>LedgerProjection, GradeProjection, Discrepancy, SyncRun</td>
+<td>USiS data sync, discrepancy detection</td>
+</tr>
+<tr>
+<td><strong>Alumni</strong></td>
+<td>AlumniProfile, AlumniContact, AlumniEmployment, AlumniEducation</td>
+<td>Alumni registry, standing management</td>
+</tr>
+<tr>
+<td><strong>Integration</strong></td>
+<td>USiSGradeSync, UFMSClearanceClient, GraduationEventHandler</td>
+<td>External system integration</td>
+</tr>
+<tr>
+<td><strong>Public Verify</strong></td>
+<td>VerificationAttempt, RateLimitRecord</td>
+<td>Public verification, rate limiting</td>
+</tr>
+<tr>
+<td><strong>Reporting</strong></td>
+<td>Report, ReportExport, DashboardMetric</td>
+<td>Analytics, export audit</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>5. Security Architecture</h3>
+<h4>5.1 Authentication Flow</h4>
+<p><img src="diagrams/TORMS-System-Specification-03-23a3c878.png" class="flowchart" alt="Flowchart 3"></p>
+<p><strong>Public verification flow:</strong></p>
+<p><img src="diagrams/TORMS-System-Specification-04-3a7ecf55.png" class="flowchart" alt="Flowchart 4"></p>
+<p><strong>Security controls:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Control</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Transport</td>
+<td>TLS 1.2+</td>
+<td>Reverse proxy termination</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>OIDC/JWT</td>
+<td>Identity service RS256 tokens</td>
+</tr>
+<tr>
+<td>Authorization</td>
+<td>RBAC</td>
+<td><code>torms.*</code> permission checks</td>
+</tr>
+<tr>
+<td>Public endpoints</td>
+<td>Rate limiting</td>
+<td>Redis-backed limiter (10/min/IP)</td>
+</tr>
+<tr>
+<td>Internal APIs</td>
+<td>Service keys</td>
+<td><code>X-Service-Api-Key</code> header</td>
+</tr>
+<tr>
+<td>Document access</td>
+<td>Role-based</td>
+<td>Issued PDFs restricted to officers</td>
+</tr>
+<tr>
+<td>Verification tokens</td>
+<td>UUID v4</td>
+<td>Cryptographically unique</td>
+</tr>
+</tbody></table>
+<h4>5.2 Permission Model</h4>
+<p>TORMS permission categories:</p>
+<ul>
+<li><code>torms.requests.*</code> — Request management (view, create, transition)</li>
+<li><code>torms.issuance.*</code> — Document generation and printing</li>
+<li><code>torms.alumni.*</code> — Alumni registry management</li>
+<li><code>torms.sync.*</code> — Academic sync operations</li>
+<li><code>torms.reports.*</code> — Report generation and export</li>
+<li><code>torms.config.*</code> — System configuration</li>
+</ul>
+<p><strong>Role mappings:</strong></p>
+<ul>
+<li><code>records_officer</code> → All <code>torms.*</code> permissions</li>
+<li><code>student</code> → <code>torms.requests.own</code>, <code>torms.issuance.view_own</code></li>
+<li><code>alumni</code> → <code>torms.alumni.own</code>, <code>torms.issuance.view_own</code></li>
+<li><code>registrar</code> (cross-system) → <code>torms.sync.view</code>, <code>torms.reports.view</code></li>
+</ul>
+<hr>
+<h3>6. Data Architecture</h3>
+<h4>6.1 Schema Organization</h4>
+<p>PostgreSQL schema <strong><code>records</code></strong> contains:</p>
+<p><strong>Core tables:</strong></p>
+<ul>
+<li><code>organizations</code>, <code>campuses</code>, <code>settings</code></li>
+<li><code>document_numbering_schemes</code></li>
+</ul>
+<p><strong>Request lifecycle:</strong></p>
+<ul>
+<li><code>tor_requests</code>, <code>certification_requests</code></li>
+<li><code>request_requirements</code>, <code>request_status_history</code></li>
+</ul>
+<p><strong>Issuance:</strong></p>
+<ul>
+<li><code>issuances</code>, <code>issuance_logs</code>, <code>print_events</code></li>
+<li><code>verification_tokens</code></li>
+</ul>
+<p><strong>Academic data (projections from USiS):</strong></p>
+<ul>
+<li><code>ledger_projections</code>, <code>grade_projections</code></li>
+<li><code>enrollment_history</code></li>
+<li><code>discrepancies</code>, <code>sync_runs</code></li>
+</ul>
+<p><strong>Alumni:</strong></p>
+<ul>
+<li><code>alumni_profiles</code>, <code>alumni_contacts</code></li>
+<li><code>alumni_employment</code>, <code>alumni_education</code></li>
+<li><code>alumni_standing_history</code></li>
+</ul>
+<p><strong>Integration:</strong></p>
+<ul>
+<li><code>sync_runs</code>, <code>clearance_checks</code></li>
+</ul>
+<p><strong>Verification:</strong></p>
+<ul>
+<li><code>verification_attempts</code> (audit log)</li>
+</ul>
+<p><strong>Reporting:</strong></p>
+<ul>
+<li><code>report_exports</code> (audit log)</li>
+</ul>
+<h4>6.2 Data Sync Strategy</h4>
+<p><strong>USiS → TORMS sync:</strong></p>
+<ul>
+<li><strong>Pull model:</strong> TORMS queries USiS internal API</li>
+<li><strong>Frequency:</strong> Nightly automated job (2:00 AM) + on-demand manual trigger</li>
+<li><strong>Data:</strong> Grades, enrollment history, graduation events</li>
+<li><strong>Idempotency:</strong> Upsert by student_id + term + course</li>
+<li><strong>Discrepancy detection:</strong> Compare projection against USiS source after sync</li>
+</ul>
+<p><strong>No reverse sync:</strong> TORMS never writes back to USiS. USiS remains single source of truth for academic data.</p>
+<hr>
+<h3>7. Deployment Topology</h3>
+<h4>7.1 Production Architecture</h4>
+<p><img src="diagrams/TORMS-System-Specification-05-06647c16.png" class="flowchart" alt="Flowchart 5"></p>
+<p><strong>Sizing guidance:</strong></p>
+<ul>
+<li>API: 2 replicas, 2 vCPU / 4 GB RAM each</li>
+<li>Worker: 2 replicas, 1 vCPU / 2 GB RAM each</li>
+<li>PostgreSQL: 4 vCPU / 16 GB RAM</li>
+<li>Redis: 2 vCPU / 4 GB RAM</li>
+<li>Object Storage: S3-compatible managed service</li>
+</ul>
+<h4>7.2 Local Development</h4>
+<p><img src="diagrams/TORMS-System-Specification-06-0e0fae6b.png" class="flowchart" alt="Flowchart 6"></p>
+<hr>
+<h3>8. Integration Architecture</h3>
+<h4>8.1 USiS Academic Data Sync</h4>
+<p><img src="diagrams/TORMS-System-Specification-07-2031673d.png" class="flowchart" alt="Flowchart 7"></p>
+<h4>8.2 UFMS Clearance Check</h4>
+<p><img src="diagrams/TORMS-System-Specification-08-c31f7534.png" class="flowchart" alt="Flowchart 8"></p>
+<h4>8.3 Alumni Creation Trigger</h4>
+<p><img src="diagrams/TORMS-System-Specification-09-0a41547b.png" class="flowchart" alt="Flowchart 9"></p>
+<hr>
+<h3>9. Quality Attributes</h3>
+<h4>9.1 Performance</h4>
+<p><strong>Optimization strategies:</strong></p>
+<ul>
+<li>Database indexing on student_no, status, issue_date, verification_token</li>
+<li>Redis caching for frequently accessed settings (document numbering, templates)</li>
+<li>Background PDF generation (async job queue) for large TOR documents</li>
+<li>Lazy loading in records web UI</li>
+<li>Paginated API responses (default 25, max 100)</li>
+<li>Read replicas for reporting queries</li>
+</ul>
+<p><strong>Monitoring:</strong></p>
+<ul>
+<li>APM (Sentry/OpenTelemetry) for request tracing</li>
+<li>PDF generation time metrics</li>
+<li>Sync job duration and error rates</li>
+<li>Public verification endpoint latency</li>
+</ul>
+<h4>9.2 Scalability</h4>
+<p><strong>Horizontal scaling:</strong></p>
+<ul>
+<li>Stateless API design</li>
+<li>Load balancer with health checks</li>
+<li>Worker pool for concurrent job processing</li>
+<li>Database connection pooling (PgBouncer)</li>
+</ul>
+<p><strong>Data growth:</strong></p>
+<ul>
+<li>Partitioning for large tables (issuances, verification_attempts) by year</li>
+<li>Archival strategy for old verification attempts (retain 1 year)</li>
+</ul>
+<h4>9.3 Reliability</h4>
+<p><strong>Failure handling:</strong></p>
+<ul>
+<li>Graceful degradation when USiS unavailable (serve cached ledger projections, warn users)</li>
+<li>Retry logic for sync jobs (exponential backoff)</li>
+<li>Circuit breaker for external API calls</li>
+<li>Immutable issued documents — no deletion, only void with audit trail</li>
+</ul>
+<p><strong>Data integrity:</strong></p>
+<ul>
+<li>Foreign key constraints</li>
+<li>Transaction management with rollback</li>
+<li>Idempotent sync operations</li>
+<li>Audit trails for all state changes</li>
+</ul>
+<h4>9.4 Maintainability</h4>
+<p><strong>Code organization:</strong></p>
+<ul>
+<li>Domain-driven design with bounded contexts</li>
+<li>Service layer abstraction</li>
+<li>Shared validation schemas</li>
+<li>OpenAPI documentation</li>
+</ul>
+<p><strong>Operational:</strong></p>
+<ul>
+<li>Structured JSON logging</li>
+<li>Feature flags</li>
+<li>Blue-green deployment</li>
+<li>Automated schema migrations</li>
+</ul>
+<h4>9.5 Compliance</h4>
+<p><strong>Data privacy (RA 10173):</strong></p>
+<ul>
+<li>Student PII access restricted by role</li>
+<li>Public verification limited to name + document metadata</li>
+<li>Audit logging of document access</li>
+<li>Retention policies configurable</li>
+</ul>
+<p><strong>Records management:</strong></p>
+<ul>
+<li>Issued documents immutable (void only, never delete)</li>
+<li>7-year audit trail retention</li>
+<li>Chain of custody preservation for issuances</li>
+</ul>
+<hr>
+<p><strong>End of Architecture Design — TORMS</strong></p>
+<hr>
+<h2>Part 3 — Features &amp; Requirements</h2>
+<h3>TORMS — Transcript &amp; Official Records Management System Features &amp; Requirements</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document ID</strong></td>
+<td>FEAT-TORMS-001</td>
+</tr>
+<tr>
+<td><strong>Product</strong></td>
+<td>TORMS</td>
+</tr>
+<tr>
+<td><strong>Companions</strong></td>
+<td><a href="./TORMS-System-Specification.md">TORMS-SRS.md</a> · <a href="./TORMS-LLD.md">TORMS-LLD.md</a></td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>1. Feature Summary</h3>
+<p>TORMS provides comprehensive official records management for Philippine university compliance:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Features</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Authentication</strong></td>
+<td>University Platform Access SSO, role-based routing</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>TOR Requests</strong></td>
+<td>Submission, status workflow, requirement tracking, PDF generation, print logging</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Certifications</strong></td>
+<td>Multiple types (honorable dismissal, good moral, units, completion), PDF generation</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Academic Ledger</strong></td>
+<td>Grade/enrollment sync from USiS, discrepancy detection, reconciliation</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Alumni Registry</strong></td>
+<td>Profile management, contact updates, standing classification</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Public Verification</strong></td>
+<td>Unauthenticated QR/code verification with rate limiting</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Dashboard</strong></td>
+<td>KPIs, pending requests, recent issuances, sync status</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Reporting</strong></td>
+<td>Issuance reports, request aging, alumni demographics, export audit</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td><strong>Configuration</strong></td>
+<td>Document numbering, templates, signatories, clearance rules</td>
+<td>Delivered</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>2. Feature Catalog</h3>
+<table>
+<thead>
+<tr>
+<th>Feature ID</th>
+<th>Feature</th>
+<th>Description</th>
+<th>Priority</th>
+<th>Actors</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>F-AUTH-01</strong></td>
+<td>SSO Authentication</td>
+<td>University Platform Access OIDC/JWT</td>
+<td>Must</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>F-AUTH-02</strong></td>
+<td>Role Routing</td>
+<td>Home path by role (staff/student/alumni)</td>
+<td>Must</td>
+<td>All</td>
+</tr>
+<tr>
+<td><strong>F-AUTH-03</strong></td>
+<td>Permission Enforcement</td>
+<td><code>torms.*</code> checks on all endpoints</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-01</strong></td>
+<td>TOR Request Submission</td>
+<td>Student submits with purpose, delivery mode, copies</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-TOR-02</strong></td>
+<td>Request Numbering</td>
+<td>Auto-assign unique numbers (TOR-YYYY-NNNN)</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-03</strong></td>
+<td>Status Workflow</td>
+<td>submitted → requirements_pending → processing → approved → issued → released</td>
+<td>Must</td>
+<td>Officer, System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-04</strong></td>
+<td>Request Management</td>
+<td>Officer view/filter/search all requests</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-TOR-05</strong></td>
+<td>Status Transitions</td>
+<td>Officer advances status with notes</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-TOR-06</strong></td>
+<td>Clearance Validation</td>
+<td>Check clearance before approval (configurable)</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-07</strong></td>
+<td>Payment Verification</td>
+<td>UFMS payment check if gating enabled</td>
+<td>Should</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-08</strong></td>
+<td>Requirement Attachments</td>
+<td>Upload/attach requirement documents</td>
+<td>Must</td>
+<td>Student, Officer</td>
+</tr>
+<tr>
+<td><strong>F-TOR-09</strong></td>
+<td>Request Notifications</td>
+<td>Email/SMS on status transitions</td>
+<td>Should</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-10</strong></td>
+<td>TOR PDF Generation</td>
+<td>Generate with ledger, seal, signatures</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-11</strong></td>
+<td>Verification QR Codes</td>
+<td>Embed QR on TOR documents</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-12</strong></td>
+<td>Print Logging</td>
+<td>Log print events with timestamp/officer</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-TOR-13</strong></td>
+<td>Digital Download</td>
+<td>Student download issued TOR</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-CRT-01</strong></td>
+<td>Certification Types</td>
+<td>Honorable dismissal, good moral, units, completion, diploma verify</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-CRT-02</strong></td>
+<td>Certification Requests</td>
+<td>Student submit with type and purpose</td>
+<td>Must</td>
+<td>Student</td>
+</tr>
+<tr>
+<td><strong>F-CRT-03</strong></td>
+<td>Certification Numbering</td>
+<td>Type-specific numbering (HD-YYYY-NNNN)</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-CRT-04</strong></td>
+<td>Certification Workflow</td>
+<td>submitted → processing → issued → released</td>
+<td>Must</td>
+<td>Officer, System</td>
+</tr>
+<tr>
+<td><strong>F-CRT-05</strong></td>
+<td>Certification Configuration</td>
+<td>Configure types, templates, requirements</td>
+<td>Should</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td><strong>F-CRT-06</strong></td>
+<td>Certification PDF</td>
+<td>Generate from templates with verification codes</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-CRT-07</strong></td>
+<td>Certification Print Log</td>
+<td>Log print events</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-LED-01</strong></td>
+<td>Grade Sync</td>
+<td>Pull grades from USiS internal API</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-LED-02</strong></td>
+<td>Ledger Projections</td>
+<td>Create/update projections (no USiS mutation)</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-LED-03</strong></td>
+<td>Discrepancy Detection</td>
+<td>Compare projections to USiS source</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-LED-04</strong></td>
+<td>Discrepancy Reports</td>
+<td>Surface discrepancies to officers</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-LED-05</strong></td>
+<td>Manual Resolution</td>
+<td>Officer resolves discrepancies with audit</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-LED-06</strong></td>
+<td>Enrollment History Sync</td>
+<td>Sync enrollment records from USiS</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-LED-07</strong></td>
+<td>Sync Metadata Tracking</td>
+<td>Log run timestamp, count, errors</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-LED-08</strong></td>
+<td>Sync Retry Logic</td>
+<td>Exponential backoff on failure</td>
+<td>Should</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-LED-09</strong></td>
+<td>On-Demand Sync</td>
+<td>Officer trigger sync for specific student</td>
+<td>Should</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-ALM-01</strong></td>
+<td>Alumni Auto-Creation</td>
+<td>Create from USiS graduation event</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-ALM-02</strong></td>
+<td>Contact Updates</td>
+<td>Alumni update address/phone/email</td>
+<td>Must</td>
+<td>Alumni</td>
+</tr>
+<tr>
+<td><strong>F-ALM-03</strong></td>
+<td>Document Viewing</td>
+<td>Alumni view issued TOR/certifications</td>
+<td>Must</td>
+<td>Alumni</td>
+</tr>
+<tr>
+<td><strong>F-ALM-04</strong></td>
+<td>Standing Classification</td>
+<td>Maintain alumni standing (active, distinguished, etc.)</td>
+<td>Should</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-ALM-05</strong></td>
+<td>Employment Tracking</td>
+<td>Self-reported employment/education</td>
+<td>Should</td>
+<td>Alumni</td>
+</tr>
+<tr>
+<td><strong>F-ALM-06</strong></td>
+<td>Alumni Reports</td>
+<td>Demographic reports by graduation year/program</td>
+<td>Should</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-ALM-07</strong></td>
+<td>Bulk Import</td>
+<td>Import legacy alumni data</td>
+<td>Could</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td><strong>F-VRF-01</strong></td>
+<td>Public Verify Page</td>
+<td><code>/verify</code> without authentication</td>
+<td>Must</td>
+<td>Public</td>
+</tr>
+<tr>
+<td><strong>F-VRF-02</strong></td>
+<td>Code/QR Entry</td>
+<td>Enter code or scan QR</td>
+<td>Must</td>
+<td>Public</td>
+</tr>
+<tr>
+<td><strong>F-VRF-03</strong></td>
+<td>Verification Result</td>
+<td>Return valid (name, type, date) or invalid</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-VRF-04</strong></td>
+<td>PII Protection</td>
+<td>No sensitive data beyond name/type/date</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-VRF-05</strong></td>
+<td>Verification Logging</td>
+<td>Log attempts with IP/timestamp</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-VRF-06</strong></td>
+<td>Rate Limiting</td>
+<td>10 requests/minute/IP</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-VRF-07</strong></td>
+<td>Branded Display</td>
+<td>Show university branding on results</td>
+<td>Should</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-DSH-01</strong></td>
+<td>Officer Dashboard</td>
+<td>Pending requests, recent issuances, sync status</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-DSH-02</strong></td>
+<td>KPIs</td>
+<td>Requests by status, processing time, issuance volume</td>
+<td>Should</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-RPT-01</strong></td>
+<td>TOR Issuance Report</td>
+<td>By date range, program, student type</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-RPT-02</strong></td>
+<td>Certification Report</td>
+<td>By type and date range</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-RPT-03</strong></td>
+<td>Request Aging Report</td>
+<td>Days in each status</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-RPT-04</strong></td>
+<td>Alumni Demographics</td>
+<td>By graduation year, program, location</td>
+<td>Should</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-RPT-05</strong></td>
+<td>Report Export</td>
+<td>CSV and PDF formats</td>
+<td>Must</td>
+<td>Officer</td>
+</tr>
+<tr>
+<td><strong>F-RPT-06</strong></td>
+<td>Export Audit Log</td>
+<td>Log exports with user/timestamp</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+<tr>
+<td><strong>F-CFG-01</strong></td>
+<td>Numbering Schemes</td>
+<td>Configure prefix, year format, sequence</td>
+<td>Must</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td><strong>F-CFG-02</strong></td>
+<td>Template Upload</td>
+<td>PDF-compatible document templates</td>
+<td>Should</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td><strong>F-CFG-03</strong></td>
+<td>Signatory Config</td>
+<td>Authorized signatories with titles/signatures</td>
+<td>Must</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td><strong>F-CFG-04</strong></td>
+<td>Clearance Rules</td>
+<td>Configure requirements per document type</td>
+<td>Should</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td><strong>F-CFG-05</strong></td>
+<td>Config Audit Log</td>
+<td>Log configuration changes</td>
+<td>Must</td>
+<td>System</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>3. Requirements Traceability Matrix</h3>
+<h4>3.1 Functional Requirements Mapping</h4>
+<table>
+<thead>
+<tr>
+<th>Requirement ID</th>
+<th>Requirement</th>
+<th>Related Features</th>
+<th>Priority</th>
+<th>Implementation Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-AUTH-001..005</td>
+<td>Authentication and authorization</td>
+<td>F-AUTH-01..03, F-VRF-01</td>
+<td>Must</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-TOR-001..013</td>
+<td>TOR request management</td>
+<td>F-TOR-01..13</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-CRT-001..007</td>
+<td>Certification management</td>
+<td>F-CRT-01..07</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-LED-001..009</td>
+<td>Academic ledger sync</td>
+<td>F-LED-01..09</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-ALM-001..007</td>
+<td>Alumni registry</td>
+<td>F-ALM-01..07</td>
+<td>Must/Should/Could</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-VRF-001..007</td>
+<td>Public verification</td>
+<td>F-VRF-01..07</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-DSH-001..002</td>
+<td>Dashboard</td>
+<td>F-DSH-01..02</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-RPT-001..006</td>
+<td>Reporting</td>
+<td>F-RPT-01..06</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>FR-CFG-001..005</td>
+<td>Configuration</td>
+<td>F-CFG-01..05</td>
+<td>Must/Should</td>
+<td>Delivered</td>
+</tr>
+</tbody></table>
+<h4>3.2 Non-Functional Requirements Mapping</h4>
+<table>
+<thead>
+<tr>
+<th>NFR Category</th>
+<th>Requirement ID</th>
+<th>Related Features</th>
+<th>Implementation Approach</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Performance</td>
+<td>NFR-PERF-001..005</td>
+<td>All features</td>
+<td>Database indexing, Redis caching, async PDF generation, pagination</td>
+</tr>
+<tr>
+<td>Scalability</td>
+<td>NFR-SCAL-001..004</td>
+<td>All features</td>
+<td>Horizontal API scaling, worker pools, table partitioning</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>NFR-SEC-001..010</td>
+<td>F-AUTH-<em>, F-VRF-</em>, F-CFG-*</td>
+<td>TLS, RBAC, rate limiting, UUID tokens, audit logging, RA 10173 compliance</td>
+</tr>
+<tr>
+<td>Reliability</td>
+<td>NFR-REL-001..005</td>
+<td>All features</td>
+<td>HA deployment, backups, DR procedures, graceful degradation, immutable docs</td>
+</tr>
+<tr>
+<td>Maintainability</td>
+<td>NFR-MAIN-001..005</td>
+<td>All features</td>
+<td>Modular architecture, OpenAPI, structured logs, versioned migrations</td>
+</tr>
+<tr>
+<td>Compliance</td>
+<td>NFR-COMP-001..004</td>
+<td>Student/alumni data</td>
+<td>RA 10173, FERPA-equivalent, 7-year audit retention</td>
+</tr>
+</tbody></table>
+<h4>3.3 Source Requirements Traceability</h4>
+<p><strong>WMSU TOR VI.E.6 compliance matrix:</strong></p>
+<table>
+<thead>
+<tr>
+<th>TOR Requirement</th>
+<th>Feature IDs</th>
+<th>Implementation Notes</th>
+<th>Compliance Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TOR request and processing</td>
+<td>F-TOR-01..13</td>
+<td>Full lifecycle from submission to issuance</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Multiple certification types</td>
+<td>F-CRT-01..07</td>
+<td>Honorable dismissal, good moral, units, completion, diploma verify</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Academic record management</td>
+<td>F-LED-01..09</td>
+<td>USiS sync with discrepancy detection; TORMS is projection, not SoR</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Alumni registry</td>
+<td>F-ALM-01..07</td>
+<td>Auto-creation from graduation, contact management, standing</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Document verification</td>
+<td>F-VRF-01..07</td>
+<td>Public QR/code verification with rate limiting</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Clearance integration</td>
+<td>F-TOR-06, F-TOR-07</td>
+<td>UFMS clearance checks when enabled</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Print audit trails</td>
+<td>F-TOR-12, F-CRT-07</td>
+<td>Print event logging for accountability</td>
+<td>Delivered</td>
+</tr>
+<tr>
+<td>Reporting and analytics</td>
+<td>F-RPT-01..06, F-DSH-01..02</td>
+<td>Issuance, aging, alumni reports with export</td>
+<td>Delivered</td>
+</tr>
+</tbody></table>
+<p><strong>Deferred/Out of scope:</strong></p>
+<ul>
+<li>Grade entry and enrollment workflows → USiS responsibility</li>
+<li>Financial transactions and cashiering → UFMS responsibility</li>
+<li>Library, documents, inventory → ULMIS, UDMS, UIMS</li>
+</ul>
+<hr>
+<h3>4. Non-Functional Requirements Summary</h3>
+<h4>4.1 Performance Targets</h4>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Measurement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>API response (p95)</td>
+<td>≤2s standard queries</td>
+<td>APM monitoring</td>
+</tr>
+<tr>
+<td>PDF generation</td>
+<td>≤10s per TOR</td>
+<td>Performance profiling</td>
+</tr>
+<tr>
+<td>Public verification (p95)</td>
+<td>≤1s</td>
+<td>Load testing</td>
+</tr>
+<tr>
+<td>Academic sync (1000 students)</td>
+<td>≤30 minutes</td>
+<td>Job duration metrics</td>
+</tr>
+</tbody></table>
+<h4>4.2 Security Controls</h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Implementation</th>
+<th>Verification</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TLS enforcement</td>
+<td>Reverse proxy/ingress</td>
+<td>SSL Labs scan</td>
+</tr>
+<tr>
+<td>RBAC</td>
+<td><code>torms.*</code> permission checks</td>
+<td>Automated security tests</td>
+</tr>
+<tr>
+<td>Rate limiting</td>
+<td>Redis-backed (10/min/IP)</td>
+<td>Load test verification</td>
+</tr>
+<tr>
+<td>Audit logging</td>
+<td>Structured logs for issuance/print/config</td>
+<td>Log review</td>
+</tr>
+<tr>
+<td>Token uniqueness</td>
+<td>UUID v4</td>
+<td>Code review + statistical testing</td>
+</tr>
+</tbody></table>
+<h4>4.3 Reliability Measures</h4>
+<table>
+<thead>
+<tr>
+<th>Measure</th>
+<th>Target</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Availability</td>
+<td>≥99% business hours</td>
+<td>SLA monitoring</td>
+</tr>
+<tr>
+<td>Backup frequency</td>
+<td>Daily incremental, weekly full</td>
+<td>Automated verification</td>
+</tr>
+<tr>
+<td>RPO</td>
+<td>≤15 minutes</td>
+<td>DR drill testing</td>
+</tr>
+<tr>
+<td>Document immutability</td>
+<td>No deletion post-issuance</td>
+<td>Business rule enforcement + audit</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>5. Actors &amp; Feature Access</h3>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Primary Features</th>
+<th>Restricted Features</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Records Officer</strong></td>
+<td>F-TOR-04..12, F-CRT-05..07, F-LED-04..05, F-LED-09, F-ALM-04, F-RPT-01..06, F-DSH-01..02, F-CFG-01..05</td>
+<td>Full records management</td>
+</tr>
+<tr>
+<td><strong>Student</strong></td>
+<td>F-TOR-01, F-TOR-08, F-TOR-13, F-CRT-02</td>
+<td>Own requests only</td>
+</tr>
+<tr>
+<td><strong>Alumni</strong></td>
+<td>F-ALM-02, F-ALM-03, F-ALM-05</td>
+<td>Own profile and documents</td>
+</tr>
+<tr>
+<td><strong>Registrar (cross-system)</strong></td>
+<td>F-LED-04, F-RPT-01..06</td>
+<td>Oversight and reports</td>
+</tr>
+<tr>
+<td><strong>Public</strong></td>
+<td>F-VRF-01..07</td>
+<td>Verification only</td>
+</tr>
+<tr>
+<td><strong>System (Background)</strong></td>
+<td>F-TOR-02..03, F-TOR-10..12, F-CRT-06..07, F-LED-01..03, F-LED-06..08, F-ALM-01, F-VRF-03..06</td>
+<td>Automated operations</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>End of Features &amp; Requirements — TORMS</strong></p>
+<hr>
+<h2>Part 4 — Low-Level Design (LLD) Workflows</h2>
+<h3>TORMS — Transcript &amp; Official Records Management System Low-Level Design</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Document ID</strong></td>
+<td>LLD-TORMS-001</td>
+</tr>
+<tr>
+<td><strong>Product</strong></td>
+<td>TORMS</td>
+</tr>
+<tr>
+<td><strong>Companion</strong></td>
+<td><a href="./TORMS-System-Specification.md">TORMS-SRS.md</a></td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>November 2026</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>1. Purpose</h3>
+<p>This Low-Level Design documents critical workflows for TORMS TOR requests, certification issuance, academic ledger synchronization from USiS, public document verification, alumni management, and records officer operations — providing sequence diagrams, state machines, and implementation details.</p>
+<hr>
+<h3>2. System Context (Multi-Role Architecture)</h3>
+<p><img src="diagrams/TORMS-System-Specification-10-de4a9b19.png" class="flowchart" alt="Flowchart 10"></p>
+<p><strong>Role-specific routes:</strong></p>
+<ul>
+<li>Records officer: <code>/staff/*</code></li>
+<li>Student: <code>/student/*</code></li>
+<li>Alumni: <code>/alumni/*</code></li>
+<li>Public: <code>/verify</code></li>
+</ul>
+<hr>
+<h3>3. TOR Request Workflow</h3>
+<h4>3.1 TOR Request State Machine</h4>
+<p><img src="diagrams/TORMS-System-Specification-11-6de5ac0c.png" class="flowchart" alt="Flowchart 11"></p>
+<h4>3.2 TOR Request Submission Sequence</h4>
+<p><img src="diagrams/TORMS-System-Specification-12-1ffdf355.png" class="flowchart" alt="Flowchart 12"></p>
+<h4>3.3 Officer Request Processing</h4>
+<p><img src="diagrams/TORMS-System-Specification-13-254486d0.png" class="flowchart" alt="Flowchart 13"></p>
+<hr>
+<h3>4. Certification Request Workflow</h3>
+<h4>4.1 Certification Types and Numbering</h4>
+<table>
+<thead>
+<tr>
+<th>Certification Type</th>
+<th>Code</th>
+<th>Number Format</th>
+<th>Typical Use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Honorable Dismissal</td>
+<td>HD</td>
+<td><code>HD-2026-0001</code></td>
+<td>Transfer to another institution</td>
+</tr>
+<tr>
+<td>Good Moral Character</td>
+<td>GMC</td>
+<td><code>GMC-2026-0001</code></td>
+<td>Employment, visa applications</td>
+</tr>
+<tr>
+<td>Units Earned</td>
+<td>UE</td>
+<td><code>UE-2026-0001</code></td>
+<td>Proof of partial completion</td>
+</tr>
+<tr>
+<td>Completion</td>
+<td>CMPL</td>
+<td><code>CMPL-2026-0001</code></td>
+<td>Program completion (non-degree)</td>
+</tr>
+<tr>
+<td>Diploma Verification</td>
+<td>DV</td>
+<td><code>DV-2026-0001</code></td>
+<td>Verify diploma authenticity</td>
+</tr>
+</tbody></table>
+<h4>4.2 Certification Request State Machine</h4>
+<p><img src="diagrams/TORMS-System-Specification-14-1dbf4933.png" class="flowchart" alt="Flowchart 14"></p>
+<h4>4.3 Certification Issuance Sequence</h4>
+<p><img src="diagrams/TORMS-System-Specification-15-aa7d875b.png" class="flowchart" alt="Flowchart 15"></p>
+<hr>
+<h3>5. Academic Ledger Sync from USiS</h3>
+<h4>5.1 Nightly Batch Sync</h4>
+<p><img src="diagrams/TORMS-System-Specification-16-49b25a8c.png" class="flowchart" alt="Flowchart 16"></p>
+<h4>5.2 Discrepancy Detection Logic</h4>
+<p><img src="diagrams/TORMS-System-Specification-17-e6d35c6d.png" class="flowchart" alt="Flowchart 17"></p>
+<h4>5.3 Discrepancy Resolution</h4>
+<p><img src="diagrams/TORMS-System-Specification-18-282e3c2e.png" class="flowchart" alt="Flowchart 18"></p>
+<hr>
+<h3>6. On-Demand Sync for Specific Student</h3>
+<p><img src="diagrams/TORMS-System-Specification-19-f79ba4ae.png" class="flowchart" alt="Flowchart 19"></p>
+<hr>
+<h3>7. Public Document Verification</h3>
+<h4>7.1 Verification Flow</h4>
+<p><img src="diagrams/TORMS-System-Specification-20-3b877bd2.png" class="flowchart" alt="Flowchart 20"></p>
+<h4>7.2 Rate Limiting Logic</h4>
+<p><img src="diagrams/TORMS-System-Specification-21-c9ca948d.png" class="flowchart" alt="Flowchart 21"></p>
+<hr>
+<h3>8. Alumni Management</h3>
+<h4>8.1 Alumni Creation from Graduation Event</h4>
+<p><img src="diagrams/TORMS-System-Specification-22-a65fe725.png" class="flowchart" alt="Flowchart 22"></p>
+<h4>8.2 Alumni Self-Service</h4>
+<p><img src="diagrams/TORMS-System-Specification-23-642419e1.png" class="flowchart" alt="Flowchart 23"></p>
+<hr>
+<h3>9. Records Officer Dashboard</h3>
+<h4>9.1 Dashboard Data Flow</h4>
+<p><img src="diagrams/TORMS-System-Specification-24-d4b6f784.png" class="flowchart" alt="Flowchart 24"></p>
+<h4>9.2 KPI Calculations</h4>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Calculation</th>
+<th>Data source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Total pending requests</td>
+<td>Count where status IN (submitted, requirements_pending, processing)</td>
+<td>tor_requests + certification_requests</td>
+</tr>
+<tr>
+<td>Average processing time</td>
+<td>AVG(issued_at - submitted_at) for last 30 days</td>
+<td>issuances</td>
+</tr>
+<tr>
+<td>Issuance volume (monthly)</td>
+<td>Count issuances grouped by month</td>
+<td>issuances</td>
+</tr>
+<tr>
+<td>Sync status</td>
+<td>Latest sync_run timestamp + error count</td>
+<td>sync_runs</td>
+</tr>
+<tr>
+<td>Discrepancy count</td>
+<td>Count where status = pending</td>
+<td>discrepancies</td>
+</tr>
+<tr>
+<td>Alumni registered (YTD)</td>
+<td>Count created this year</td>
+<td>alumni_profiles</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>10. Report Generation</h3>
+<h4>10.1 Report Export Workflow</h4>
+<p><img src="diagrams/TORMS-System-Specification-25-3d35bfa6.png" class="flowchart" alt="Flowchart 25"></p>
+<h4>10.2 Report Types</h4>
+<table>
+<thead>
+<tr>
+<th>Report Type</th>
+<th>Query complexity</th>
+<th>Typical runtime</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TOR Issuance</td>
+<td>Simple (issuances + student join)</td>
+<td>&lt;5s</td>
+</tr>
+<tr>
+<td>Certification Issuance</td>
+<td>Simple (issuances + type filter)</td>
+<td>&lt;5s</td>
+</tr>
+<tr>
+<td>Request Aging</td>
+<td>Medium (status history aggregation)</td>
+<td>10-30s</td>
+</tr>
+<tr>
+<td>Alumni Demographics</td>
+<td>Medium (alumni + program join, grouping)</td>
+<td>10-30s</td>
+</tr>
+<tr>
+<td>Sync Status</td>
+<td>Simple (latest sync_runs)</td>
+<td>&lt;2s</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>11. Error Cases &amp; Edge Conditions</h3>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Expected Behavior</th>
+<th>HTTP Status</th>
+<th>User Message</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TOR request without academic ledger</td>
+<td>Block submission</td>
+<td>422</td>
+<td>&quot;Academic records not found. Contact registrar.&quot;</td>
+</tr>
+<tr>
+<td>Approve TOR with pending clearance</td>
+<td>Block approval</td>
+<td>422</td>
+<td>&quot;Clearance requirements not satisfied.&quot;</td>
+</tr>
+<tr>
+<td>UFMS unavailable during clearance check</td>
+<td>Log error, allow manual override</td>
+<td>503</td>
+<td>&quot;Clearance service unavailable. Manual verification required.&quot;</td>
+</tr>
+<tr>
+<td>Public verify with invalid token</td>
+<td>Return not found</td>
+<td>404</td>
+<td>&quot;Invalid verification code.&quot;</td>
+</tr>
+<tr>
+<td>Public verify exceeds rate limit</td>
+<td>Block request</td>
+<td>429</td>
+<td>&quot;Too many verification attempts. Try again in 1 minute.&quot;</td>
+</tr>
+<tr>
+<td>Sync while USiS down</td>
+<td>Log error, retry scheduled</td>
+<td>N/A</td>
+<td>&quot;Sync failed. Will retry automatically.&quot;</td>
+</tr>
+<tr>
+<td>Duplicate alumni creation (graduation replay)</td>
+<td>Idempotent — return existing</td>
+<td>200</td>
+<td>Existing alumni ID</td>
+</tr>
+<tr>
+<td>Student accesses other student&#39;s TOR request</td>
+<td>Authorization failure</td>
+<td>403</td>
+<td>&quot;Access denied.&quot;</td>
+</tr>
+<tr>
+<td>Alumni updates to restricted fields (e.g., graduation date)</td>
+<td>Block update</td>
+<td>422</td>
+<td>&quot;Field cannot be modified.&quot;</td>
+</tr>
+<tr>
+<td>PDF generation failure</td>
+<td>Log error, flag for manual generation</td>
+<td>500</td>
+<td>&quot;Document generation failed. Request logged.&quot;</td>
+</tr>
+<tr>
+<td>Discrepancy resolve without permission</td>
+<td>Authorization failure</td>
+<td>403</td>
+<td>&quot;Insufficient permissions.&quot;</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>12. Background Job Workflows</h3>
+<h4>12.1 Nightly Sync Job Schedule</h4>
+<p><img src="diagrams/TORMS-System-Specification-26-430977ab.png" class="flowchart" alt="Flowchart 26"></p>
+<h4>12.2 PDF Generation Job</h4>
+<p><img src="diagrams/TORMS-System-Specification-27-ea6276f5.png" class="flowchart" alt="Flowchart 27"></p>
+<hr>
+<p><strong>End of LLD — TORMS</strong></p>
+<hr>
+
+</body>
+</html>
