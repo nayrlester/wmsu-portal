@@ -1,8 +1,8 @@
 import { useLocation } from 'react-router-dom'
-import { Menu, LogOut, User } from 'lucide-react'
+import { LayoutGrid, Menu, LogOut, User } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth-store'
 import { clearQueryCache } from '@/lib/query-client'
-import { redirectToPortalLogout } from '@/lib/portal'
+import { portalHomeUrl, redirectToPortalLogout } from '@/lib/portal'
 import { useState, useRef, useEffect } from 'react'
 
 const pageTitles: Record<string, string> = {
@@ -75,6 +75,25 @@ export function Header({ onMenuToggle }: HeaderProps) {
           </h1>
         </div>
 
+        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          title="Back to Platforms"
+          className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[var(--color-ink)] shadow-[var(--shadow-soft)] hover:bg-[var(--color-primary-soft)]"
+          onClick={() => {
+            const { accessToken, refreshToken } = useAuthStore.getState()
+            if (accessToken && refreshToken) {
+              window.location.assign(
+                `${portalHomeUrl()}/sso/callback#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}`
+              )
+              return
+            }
+            window.location.assign(portalHomeUrl())
+          }}
+        >
+          <LayoutGrid className="h-4 w-4" aria-hidden />
+          <span className="hidden sm:inline">Platforms</span>
+        </button>
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
@@ -109,6 +128,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
               </button>
             </div>
           )}
+        </div>
         </div>
       </div>
     </header>

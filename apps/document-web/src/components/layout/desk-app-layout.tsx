@@ -1,11 +1,13 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Outlet, Navigate } from 'react-router-dom'
+import { LayoutGrid } from 'lucide-react'
 import { SkipLink } from '@/components/shared/skip-link'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { GlobalSearch } from '@/components/desk/global-search'
 import { NotificationCenter } from '@/components/desk/notification-center'
 import { AppLayout, AppNavbar, AppSidebar } from '@/components/desk-app/layout'
 import { MobileBottomNav } from '@/components/desk-app/responsive/mobile-bottom-nav'
+import { Button } from '@/components/ui/button'
 import { buildAppNavGroups, buildMobileNavItems } from '@/config/app-navigation'
 import { PERMISSIONS } from '@/shared/constants/env'
 import { APP_BRAND_NAME } from '@/shared/constants/branding'
@@ -17,7 +19,7 @@ import { useRealtimeSync } from '@/hooks/use-realtime'
 import { authApi, permissionsApi, settingsApi } from '@/lib/api'
 
 import { bootstrapSuperAdminWorkspace } from '@/shared/lib/tenant-session'
-import { redirectToPortalLogout } from '@/shared/lib/portal'
+import { redirectToPortalLogout, returnToPlatforms } from '@/shared/lib/portal'
 
 const AIAssistantRoot = lazy(() =>
   import('@/features/copilot/components/ai-assistant-root').then((module) => ({
@@ -154,7 +156,28 @@ export function DeskAppLayout() {
         <AppNavbar
           searchSlot={<GlobalSearch />}
           notificationSlot={canViewNotifications ? <NotificationCenter /> : undefined}
-          actionsSlot={<ThemeToggle />}
+          actionsSlot={
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="hidden sm:inline-flex"
+                title="Back to Platforms"
+                onClick={() => {
+                  const tokens = useAuthStore.getState().tokens
+                  returnToPlatforms({
+                    accessToken: tokens?.accessToken,
+                    refreshToken: tokens?.refreshToken,
+                  })
+                }}
+              >
+                <LayoutGrid className="h-4 w-4" aria-hidden />
+                Platforms
+              </Button>
+              <ThemeToggle />
+            </>
+          }
           user={{
             displayName: user?.fullName ?? user?.email ?? 'User',
             roleLabel: user?.roles?.[0]?.name ?? (user?.isSuperAdmin ? 'Super Admin' : 'Member'),

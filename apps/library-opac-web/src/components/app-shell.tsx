@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { LayoutGrid } from 'lucide-react'
 import { getAppName } from '@librastack/client-config'
+import { returnToPlatforms } from '@/lib/portal'
+import { useOpacSessionStore } from '@/stores/opac-session-store'
 
 export function AppShell({
   children,
@@ -9,6 +12,9 @@ export function AppShell({
   children: ReactNode
   nav?: ReactNode
 }) {
+  const accessToken = useOpacSessionStore((s) => s.accessToken)
+  const refreshToken = useOpacSessionStore((s) => s.refreshToken)
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--color-canvas)]">
       <div className="pointer-events-none absolute -left-28 -top-24 h-80 w-80 rounded-full bg-[#b8b3ff]/55" />
@@ -32,36 +38,47 @@ export function AppShell({
               Online Public Access Catalog
             </p>
           </div>
-          <nav className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium">
-            {nav ?? (
-              <>
-                <Link to="/" className="shrink-0 whitespace-nowrap text-[var(--color-primary)] hover:underline">
-                  Search
-                </Link>
-                <Link to="/lists" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
-                  My lists
-                </Link>
-                <Link to="/loans" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
-                  My loans
-                </Link>
-                <Link to="/card" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
-                  My card
-                </Link>
-                <Link to="/request" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
-                  Request a title
-                </Link>
-                <Link to="/elibrary" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
-                  E-library
-                </Link>
-                <Link to="/locate" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
-                  Find a shelf
-                </Link>
-                <Link to="/queue" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
-                  Queue board
-                </Link>
-              </>
-            )}
-          </nav>
+          <div className="flex flex-col items-end gap-3">
+            <button
+              type="button"
+              title="Back to Platforms"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[var(--color-ink)] shadow-[var(--shadow-soft)] hover:bg-[var(--color-primary-soft)]"
+              onClick={() => returnToPlatforms({ accessToken, refreshToken })}
+            >
+              <LayoutGrid className="h-4 w-4" aria-hidden />
+              Platforms
+            </button>
+            <nav className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 text-sm font-medium">
+              {nav ?? (
+                <>
+                  <Link to="/" className="shrink-0 whitespace-nowrap text-[var(--color-primary)] hover:underline">
+                    Search
+                  </Link>
+                  <Link to="/lists" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                    My lists
+                  </Link>
+                  <Link to="/loans" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                    My loans
+                  </Link>
+                  <Link to="/card" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                    My card
+                  </Link>
+                  <Link to="/request" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                    Request a title
+                  </Link>
+                  <Link to="/elibrary" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                    E-library
+                  </Link>
+                  <Link to="/locate" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                    Find a shelf
+                  </Link>
+                  <Link to="/queue" className="shrink-0 whitespace-nowrap text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)]">
+                    Queue board
+                  </Link>
+                </>
+              )}
+            </nav>
+          </div>
         </header>
         {children}
       </div>
