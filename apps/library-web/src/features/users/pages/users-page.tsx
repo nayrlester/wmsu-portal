@@ -106,34 +106,47 @@ export function UsersPage() {
             <p className="font-medium">Invite user</p>
             <form onSubmit={handleInvite} className="grid gap-3 sm:grid-cols-2">
               <Input
-                placeholder="Full name"
+                id="invite-full-name"
+                label="Full name"
+                placeholder="Jane Librarian"
                 value={invite.fullName}
                 onChange={(e) => setInvite((s) => ({ ...s, fullName: e.target.value }))}
                 required
               />
               <Input
+                id="invite-email"
+                label="Email"
                 type="email"
-                placeholder="Email"
+                placeholder="staff@university.library"
                 value={invite.email}
                 onChange={(e) => setInvite((s) => ({ ...s, email: e.target.value }))}
                 required
               />
-              <select
-                className="h-11 rounded-full border-0 bg-[var(--color-primary-soft)] px-4 text-sm"
-                value={invite.roleCode}
-                onChange={(e) =>
-                  setInvite((s) => ({ ...s, roleCode: e.target.value as UserRoleCode }))
-                }
-              >
-                {ROLE_OPTIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-1.5">
+                <label htmlFor="invite-role" className="block text-sm font-medium text-[var(--color-ink)]">
+                  Role
+                  <span className="ml-1 text-rose-600">*</span>
+                </label>
+                <select
+                  id="invite-role"
+                  className="h-11 w-full rounded-full border-0 bg-[var(--color-primary-soft)] px-4 text-sm"
+                  value={invite.roleCode}
+                  onChange={(e) =>
+                    setInvite((s) => ({ ...s, roleCode: e.target.value as UserRoleCode }))
+                  }
+                >
+                  {ROLE_OPTIONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <Input
+                id="invite-password"
+                label="Password"
                 type="password"
-                placeholder="Password (optional — invited if empty)"
+                placeholder="Optional — invited if empty"
                 value={invite.password}
                 onChange={(e) => setInvite((s) => ({ ...s, password: e.target.value }))}
               />
@@ -156,36 +169,50 @@ export function UsersPage() {
             <p className="font-medium">Edit {editing.email}</p>
             <form onSubmit={handleUpdate} className="grid gap-3 sm:grid-cols-3">
               <Input
+                id="edit-full-name"
+                label="Full name"
                 value={editForm.fullName}
                 onChange={(e) => setEditForm((s) => ({ ...s, fullName: e.target.value }))}
                 required
               />
-              <select
-                className="h-11 rounded-full border-0 bg-[var(--color-primary-soft)] px-4 text-sm"
-                value={editForm.roleCode}
-                onChange={(e) =>
-                  setEditForm((s) => ({ ...s, roleCode: e.target.value as UserRoleCode }))
-                }
-              >
-                {ROLE_OPTIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="h-11 rounded-full border-0 bg-[var(--color-primary-soft)] px-4 text-sm"
-                value={editForm.status}
-                onChange={(e) =>
-                  setEditForm((s) => ({ ...s, status: e.target.value as UserStatus }))
-                }
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-1.5">
+                <label htmlFor="edit-role" className="block text-sm font-medium text-[var(--color-ink)]">
+                  Role
+                </label>
+                <select
+                  id="edit-role"
+                  className="h-11 w-full rounded-full border-0 bg-[var(--color-primary-soft)] px-4 text-sm"
+                  value={editForm.roleCode}
+                  onChange={(e) =>
+                    setEditForm((s) => ({ ...s, roleCode: e.target.value as UserRoleCode }))
+                  }
+                >
+                  {ROLE_OPTIONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="edit-status" className="block text-sm font-medium text-[var(--color-ink)]">
+                  Status
+                </label>
+                <select
+                  id="edit-status"
+                  className="h-11 w-full rounded-full border-0 bg-[var(--color-primary-soft)] px-4 text-sm"
+                  value={editForm.status}
+                  onChange={(e) =>
+                    setEditForm((s) => ({ ...s, status: e.target.value as UserStatus }))
+                  }
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex gap-2 sm:col-span-3">
                 <Button type="button" variant="outline" onClick={() => setEditing(null)}>
                   Cancel

@@ -187,13 +187,17 @@ export function SettingsPage() {
             </label>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Input
-                placeholder="Cron (default Mon 07:00)"
+                id="report-cron"
+                label="Schedule (cron)"
+                placeholder="Default Mon 07:00"
                 value={form.reportScheduleCron}
                 disabled={!canUpdate}
                 onChange={(e) => setForm((s) => ({ ...s, reportScheduleCron: e.target.value }))}
               />
               <Input
-                placeholder="Emails (comma-separated)"
+                id="report-emails"
+                label="Report emails"
+                placeholder="Comma-separated addresses"
                 value={form.reportScheduleEmails}
                 disabled={!canUpdate}
                 onChange={(e) => setForm((s) => ({ ...s, reportScheduleEmails: e.target.value }))}

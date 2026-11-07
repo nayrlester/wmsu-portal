@@ -281,31 +281,39 @@ export function KioskPlatformPage() {
               )}
               <form className="space-y-3" onSubmit={submitDevice}>
                 <Input
+                  id="kiosk-name"
+                  label="Display name"
                   required
                   disabled={!canManage}
-                  placeholder="Display name"
+                  placeholder="KIOSK-1"
                   value={form.name}
                   onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
                 />
                 <Input
+                  id="kiosk-device-code"
+                  label="Device code"
                   required
                   disabled={!canManage}
-                  placeholder="Device code (e.g. KIOSK-01)"
+                  placeholder="KIOSK-01"
                   value={form.deviceCode}
                   onChange={(e) => setForm((s) => ({ ...s, deviceCode: e.target.value }))}
                 />
                 <Input
+                  id="kiosk-location"
+                  label="Location"
                   disabled={!canManage}
-                  placeholder="Location"
+                  placeholder="Library"
                   value={form.location}
                   onChange={(e) => setForm((s) => ({ ...s, location: e.target.value }))}
                 />
                 <Input
+                  id="kiosk-idle-timeout"
+                  label="Idle timeout (seconds)"
                   disabled={!canManage}
                   type="number"
                   min={15}
                   max={600}
-                  placeholder="Idle timeout (seconds)"
+                  placeholder="60"
                   value={form.idleTimeoutSeconds}
                   onChange={(e) => setForm((s) => ({ ...s, idleTimeoutSeconds: e.target.value }))}
                 />
@@ -366,12 +374,16 @@ export function KioskPlatformPage() {
                 Service desk console
               </h2>
               <Input
-                placeholder="Service type"
+                id="queue-service-type"
+                label="Service type"
+                placeholder="circulation"
                 value={ticketForm.serviceType}
                 onChange={(e) => setTicketForm((s) => ({ ...s, serviceType: e.target.value }))}
               />
               <Input
-                placeholder="Patron name (optional)"
+                id="queue-patron-name"
+                label="Patron name"
+                placeholder="Optional"
                 value={ticketForm.patronName}
                 onChange={(e) => setTicketForm((s) => ({ ...s, patronName: e.target.value }))}
               />
@@ -454,35 +466,45 @@ export function KioskPlatformPage() {
                 }}
               >
                 <Input
+                  id="shelf-code"
+                  label="Code"
                   required
                   disabled={!canEditLoc}
-                  placeholder="Code"
+                  placeholder="MAIN-A1"
                   value={locForm.code}
                   onChange={(e) => setLocForm((s) => ({ ...s, code: e.target.value }))}
                 />
                 <Input
+                  id="shelf-label"
+                  label="Label"
                   required
                   disabled={!canEditLoc}
-                  placeholder="Label"
+                  placeholder="Main aisle A1"
                   value={locForm.label}
                   onChange={(e) => setLocForm((s) => ({ ...s, label: e.target.value }))}
                 />
                 <div className="grid grid-cols-3 gap-2">
                   <Input
+                    id="shelf-floor"
+                    label="Floor"
                     disabled={!canEditLoc}
-                    placeholder="Floor"
+                    placeholder="1"
                     value={locForm.floor}
                     onChange={(e) => setLocForm((s) => ({ ...s, floor: e.target.value }))}
                   />
                   <Input
+                    id="shelf-aisle"
+                    label="Aisle"
                     disabled={!canEditLoc}
-                    placeholder="Aisle"
+                    placeholder="A"
                     value={locForm.aisle}
                     onChange={(e) => setLocForm((s) => ({ ...s, aisle: e.target.value }))}
                   />
                   <Input
+                    id="shelf-shelf"
+                    label="Shelf"
                     disabled={!canEditLoc}
-                    placeholder="Shelf"
+                    placeholder="1"
                     value={locForm.shelf}
                     onChange={(e) => setLocForm((s) => ({ ...s, shelf: e.target.value }))}
                   />
@@ -506,17 +528,21 @@ export function KioskPlatformPage() {
             <CardContent className="space-y-3 p-4">
               <h2 className="font-semibold">Locate item</h2>
               <form
-                className="flex gap-2"
+                className="flex items-end gap-2"
                 onSubmit={(e) => {
                   e.preventDefault()
                   setLocateSearch(locateQ.trim())
                 }}
               >
-                <Input
-                  value={locateQ}
-                  onChange={(e) => setLocateQ(e.target.value)}
-                  placeholder="Barcode or shelf location"
-                />
+                <div className="min-w-0 flex-1">
+                  <Input
+                    id="locate-query"
+                    label="Barcode or shelf location"
+                    value={locateQ}
+                    onChange={(e) => setLocateQ(e.target.value)}
+                    placeholder="Scan or type a barcode"
+                  />
+                </div>
                 <Button type="submit">Find</Button>
               </form>
               <div className="space-y-2 text-sm">

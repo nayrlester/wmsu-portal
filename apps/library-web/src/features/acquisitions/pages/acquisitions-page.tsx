@@ -444,12 +444,16 @@ export function AcquisitionsPage() {
             </div>
 
             {canRoute && (openItem.status === 'routed' || openItem.status === 'acknowledged') && (
-              <div className="flex gap-2">
-                <Input
-                  placeholder="UFMS PR number"
-                  value={ufmsPrRef}
-                  onChange={(e) => setUfmsPrRef(e.target.value)}
-                />
+              <div className="flex items-end gap-2">
+                <div className="min-w-0 flex-1">
+                  <Input
+                    id="acq-ufms-pr"
+                    label="UFMS PR number"
+                    placeholder="PR-2026-0001"
+                    value={ufmsPrRef}
+                    onChange={(e) => setUfmsPrRef(e.target.value)}
+                  />
+                </div>
                 <Button
                   size="sm"
                   disabled={!ufmsPrRef.trim() || ackMut.isPending}
@@ -464,12 +468,16 @@ export function AcquisitionsPage() {
               (openItem.status === 'routed' ||
                 openItem.status === 'acknowledged' ||
                 openItem.status === 'cataloged') && (
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Catalog book UUID"
-                    value={catalogBookId}
-                    onChange={(e) => setCatalogBookId(e.target.value)}
-                  />
+                <div className="flex items-end gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Input
+                      id="acq-catalog-book"
+                      label="Catalog book ID"
+                      placeholder="Book UUID"
+                      value={catalogBookId}
+                      onChange={(e) => setCatalogBookId(e.target.value)}
+                    />
+                  </div>
                   <Button
                     size="sm"
                     disabled={!catalogBookId.trim() || catalogMut.isPending}

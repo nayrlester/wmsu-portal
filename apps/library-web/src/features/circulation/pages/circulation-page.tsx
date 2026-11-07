@@ -175,19 +175,25 @@ export function CirculationPage() {
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
+              id="batch-library-card"
+              label="Library card"
               value={batchCard}
               onChange={(event) => setBatchCard(event.target.value)}
-              placeholder="Library card"
-              aria-label="Batch library card"
+              placeholder="Patron library card"
             />
-            <textarea
-              value={batchBarcodes}
-              onChange={(event) => setBatchBarcodes(event.target.value)}
-              placeholder="One barcode per line"
-              aria-label="Batch barcodes"
-              rows={3}
-              className="w-full rounded-2xl border border-transparent bg-[var(--color-primary-soft)] px-4 py-2 text-sm text-[var(--color-ink)] placeholder:text-[#9aa0c3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/35"
-            />
+            <div className="space-y-1.5">
+              <label htmlFor="batch-barcodes" className="block text-sm font-medium text-[var(--color-ink)]">
+                Barcodes
+              </label>
+              <textarea
+                id="batch-barcodes"
+                value={batchBarcodes}
+                onChange={(event) => setBatchBarcodes(event.target.value)}
+                placeholder="One barcode per line"
+                rows={3}
+                className="w-full rounded-2xl border border-transparent bg-[var(--color-primary-soft)] px-4 py-2 text-sm text-[var(--color-ink)] placeholder:text-[#9aa0c3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/35"
+              />
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button

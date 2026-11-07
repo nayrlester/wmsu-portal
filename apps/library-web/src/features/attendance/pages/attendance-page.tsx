@@ -81,28 +81,44 @@ export function AttendancePage() {
         <Card>
           <CardContent className="grid gap-3 p-4 sm:grid-cols-4">
             <Input
-              placeholder="Library card number"
+              id="attendance-card"
+              label="Library card number"
+              placeholder="Scan or type card number"
               value={cardNumber}
               onChange={(e) => setCardNumber(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && cardNumber.trim()) logMut.mutate()
               }}
             />
-            <select
-              className="rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
-              value={direction}
-              onChange={(e) => setDirection(e.target.value as 'in' | 'out')}
-            >
-              <option value="in">Check in</option>
-              <option value="out">Check out</option>
-            </select>
-            <Button
-              onClick={() => logMut.mutate()}
-              disabled={!cardNumber.trim() || logMut.isPending}
-            >
-              Log attendance
-            </Button>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <div className="space-y-1.5">
+              <label htmlFor="attendance-direction" className="block text-sm font-medium text-[var(--color-ink)]">
+                Direction
+              </label>
+              <select
+                id="attendance-direction"
+                className="h-11 w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+                value={direction}
+                onChange={(e) => setDirection(e.target.value as 'in' | 'out')}
+              >
+                <option value="in">Check in</option>
+                <option value="out">Check out</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <Button
+                onClick={() => logMut.mutate()}
+                disabled={!cardNumber.trim() || logMut.isPending}
+              >
+                Log attendance
+              </Button>
+            </div>
+            <Input
+              id="attendance-date"
+              label="Date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
           </CardContent>
         </Card>
       )}

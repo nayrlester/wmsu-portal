@@ -189,29 +189,33 @@ export function RfidPage() {
         <CardContent className="space-y-3 p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
+              id="rfid-tag-uid"
+              label="Tag UID"
               value={tagUid}
               onChange={(event) => setTagUid(event.target.value)}
-              placeholder="Tag UID"
-              aria-label="Tag UID"
+              placeholder="Scan or type tag UID"
             />
             <Input
+              id="rfid-barcode"
+              label="Copy barcode"
               value={barcode}
               onChange={(event) => setBarcode(event.target.value)}
               placeholder="Copy barcode"
-              aria-label="Copy barcode"
             />
           </div>
           <Input
+            id="rfid-card"
+            label="Library card"
             value={cardNumber}
             onChange={(event) => setCardNumber(event.target.value)}
-            placeholder="Library card for checkout"
-            aria-label="Library card"
+            placeholder="Required for checkout"
           />
           <Input
+            id="rfid-gate"
+            label="Gate code"
             value={gateCode}
             onChange={(event) => setGateCode(event.target.value)}
             placeholder="Gate code"
-            aria-label="Gate code"
           />
           <div className="flex flex-wrap gap-2">
             <Button
@@ -309,16 +313,18 @@ export function RfidPage() {
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
+              id="rfid-shelf-code"
+              label="Shelf code"
               value={shelfCode}
               onChange={(event) => setShelfCode(event.target.value)}
               placeholder="Shelf code"
-              aria-label="Shelf code"
             />
             <Input
+              id="rfid-shelf-scan"
+              label="Tag or barcode"
               value={scanValue}
               onChange={(event) => setScanValue(event.target.value)}
-              placeholder="Tag or barcode"
-              aria-label="Shelf scan"
+              placeholder="Scan tag or barcode"
             />
           </div>
           <div className="flex flex-wrap gap-2">

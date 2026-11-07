@@ -17,8 +17,10 @@ const ACTIVE_ENROLLMENT_STATUSES = [
   'registrar_approved',
   'registered',
 ]
-const ENROLLMENT_HOLD =
+const NEXT_TERM_HOLD =
   'You are enrolled for the current semester. The registrar opens enrollment for the next term after this semester ends.'
+const IN_PROGRESS_HOLD =
+  'You already have an enrollment in progress for this term. Continue with advising, assessment, and registration.'
 
 export class AcademicPoliciesService {
   async getOrCreate(organizationId: string) {
@@ -44,10 +46,15 @@ export class AcademicPoliciesService {
       .first()
     const nextTermEnrollmentOpen = Boolean(policy.nextTermEnrollmentOpen)
     const blocked = Boolean(current) && !nextTermEnrollmentOpen
+    const holdReason = !blocked
+      ? null
+      : current?.status === 'registered'
+        ? NEXT_TERM_HOLD
+        : IN_PROGRESS_HOLD
     return {
       nextTermEnrollmentOpen,
       canStartEnrollment: !blocked,
-      enrollmentHoldReason: blocked ? ENROLLMENT_HOLD : null,
+      enrollmentHoldReason: holdReason,
     }
   }
 

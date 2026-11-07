@@ -479,6 +479,10 @@ export function StudentEnrollmentPage() {
     if (selected) setCourseId(selected)
     if (courseChoice.data?.semester) setSemester(String(courseChoice.data.semester))
   }, [courseChoice.data?.selectedCourse?.id, courseChoice.data?.semester])
+  useEffect(() => {
+    if (academicYearId || !years.data?.length) return
+    setAcademicYearId(years.data[0].id)
+  }, [academicYearId, years.data])
   const query = usePaginatedQuery({
     queryKey: ['student', 'enrollments', student.data?.id, controls.page, controls.pageSize],
     queryFn: () =>
@@ -500,6 +504,8 @@ export function StudentEnrollmentPage() {
       notify({ tone: 'success', title: 'Enrollment draft started' })
       void qc.invalidateQueries({ queryKey: ['student', 'enrollments'] })
       void qc.invalidateQueries({ queryKey: ['student', 'enrollment-workflow'] })
+      void qc.invalidateQueries({ queryKey: ['student', 'enrollment-window'] })
+      void qc.invalidateQueries({ queryKey: ['student', 'course-choice'] })
     },
     onError: (err) =>
       notify({
@@ -510,8 +516,8 @@ export function StudentEnrollmentPage() {
   })
   const offered = courseChoice.data?.adviserCourses ?? []
   const mustChoose = Boolean(courseChoice.data?.requiresCourseSelection)
-  const nextTermOpen = enrollmentWindow.data?.nextTermEnrollmentOpen === true
-  const showStartCard = mustChoose || nextTermOpen
+  const canStartEnrollment = enrollmentWindow.data?.canStartEnrollment === true
+  const showStartCard = mustChoose || canStartEnrollment
   const picked = offered.find((course) => course.id === courseId) ?? null
   const selectCourse = useMutation({
     mutationFn: () => selectStudentCourse(courseId),
@@ -536,6 +542,11 @@ export function StudentEnrollmentPage() {
     <div className="space-y-6">
       {workflow.isLoading ? <LoadingState label="Enrollment workflow" /> : null}
       {workflow.data ? <EnrollmentWorkflowPanel data={workflow.data} showSchedule={false} /> : null}
+      {!showStartCard && enrollmentWindow.data?.enrollmentHoldReason ? (
+        <Alert variant="warning" title="Enrollment hold">
+          {enrollmentWindow.data.enrollmentHoldReason}
+        </Alert>
+      ) : null}
       {showStartCard ? (
       <div data-testid="start-term-enrollment">
       <Card>
@@ -544,9 +555,9 @@ export function StudentEnrollmentPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-[var(--color-muted-foreground)]">
-            {offered.length > 0
+            {mustChoose && offered.length > 0
               ? `Your adviser listed ${offered.map((course) => course.code).join(', ')}. Select one course before this enrollment continues.`
-              : 'Open a draft for the active academic year, then complete advising, assessment, cashier payment, and registrar registration.'}
+              : 'Start your enrollment draft for this term. After this, complete advising, assessment, cashier payment, and registrar registration.'}
           </p>
           {offered.length > 0 ? (
             <FormField id="student-enrollment-course" label="Course">
