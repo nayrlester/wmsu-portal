@@ -1,5 +1,4 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { udmsRepositoryService } from '#modules/documents/services/udms/udms_repository_service'
 import { udmsFilePlanService } from '#modules/documents/services/udms/udms_file_plan_service'
 import {
   createFilePlanNodeValidator,
@@ -9,30 +8,39 @@ import {
   updateUdmsMetadataValidator,
 } from '#modules/documents/validators/udms_repository'
 
+async function repositoryService() {
+  const mod = await import('#modules/documents/services/udms/udms_repository_service')
+  return mod.udmsRepositoryService
+}
+
 export default class UdmsRepositoryController {
   async list({ request, auth, response }: HttpContext) {
     const filters = await request.validateUsing(listUdmsRepositoryValidator, {
       data: request.qs(),
     })
-    const page = await udmsRepositoryService.list(filters, auth.user!.id)
-    return response.ok(udmsRepositoryService.serializePage(page))
+    const service = await repositoryService()
+    const page = await service.list(filters, auth.user!.id)
+    return response.ok(service.serializePage(page))
   }
 
   async register({ request, auth, response }: HttpContext) {
     const payload = await request.validateUsing(registerUdmsDocumentValidator)
-    const document = await udmsRepositoryService.register(payload, auth.user!)
-    return response.created(udmsRepositoryService.serialize(document))
+    const service = await repositoryService()
+    const document = await service.register(payload, auth.user!)
+    return response.created(service.serialize(document))
   }
 
   async show({ params, auth, response }: HttpContext) {
-    const document = await udmsRepositoryService.show(params.id, auth.user!)
-    return response.ok(udmsRepositoryService.serialize(document))
+    const service = await repositoryService()
+    const document = await service.show(params.id, auth.user!)
+    return response.ok(service.serialize(document))
   }
 
   async updateMetadata({ params, request, auth, response }: HttpContext) {
     const payload = await request.validateUsing(updateUdmsMetadataValidator)
-    const document = await udmsRepositoryService.updateMetadata(params.id, payload, auth.user!)
-    return response.ok(udmsRepositoryService.serialize(document))
+    const service = await repositoryService()
+    const document = await service.updateMetadata(params.id, payload, auth.user!)
+    return response.ok(service.serialize(document))
   }
 
   async listFilePlan({ request, response }: HttpContext) {

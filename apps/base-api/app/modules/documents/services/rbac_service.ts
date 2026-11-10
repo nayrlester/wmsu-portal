@@ -181,14 +181,15 @@ export class RbacService {
     tenantId: string,
     platformPermissions?: string[]
   ): Promise<string[]> {
-    if (platformPermissions?.length) {
-      if (platformPermissions.includes('*')) {
-        const all = await Permission.all()
-        return all.map((p) => p.slug)
-      }
-      return platformPermissions
+    const local = await this.getUserPermissions(user, tenantId)
+    if (!platformPermissions?.length) {
+      return local
     }
-    return this.getUserPermissions(user, tenantId)
+    if (platformPermissions.includes('*')) {
+      const all = await Permission.all()
+      return all.map((p) => p.slug)
+    }
+    return [...new Set([...local, ...platformPermissions])]
   }
 
   async hasPermission(user: User, permissionSlug: string, tenantId: string): Promise<boolean> {

@@ -36,6 +36,7 @@
     "#config/*": "./config/*.js",
     "#modules/*": "./app/modules/*.js",
     "#infrastructure/*": "./app/modules/documents/infrastructure/*.js",
+    "#presentation/*": "./app/modules/documents/presentation/*.js",
     "#domain/*": "./app/modules/enrollment/domain/*.js",
     "#helpers/*": "./app/modules/enrollment/helpers/*.js",
     "#commands/*": "./app/modules/enrollment/commands/*.js"
@@ -64,13 +65,25 @@
     "@adonisjs/core": "^7.3.3",
     "@adonisjs/cors": "^3.0.0",
     "@adonisjs/lucid": "^22.4.2",
+    "@aws-sdk/client-s3": "^3.1165.0",
+    "@aws-sdk/client-textract": "^3.1165.0",
+    "@aws-sdk/s3-request-presigner": "^3.1165.0",
+    "@socket.io/redis-adapter": "^8.3.0",
     "@vinejs/vine": "^4.4.0",
     "bullmq": "^5.34.5",
     "ioredis": "^5.4.2",
     "jose": "^6.2.3",
+    "jszip": "^3.10.2",
     "luxon": "^3.7.2",
+    "mammoth": "^1.13.0",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^2.4.5",
     "pg": "^8.21.0",
-    "reflect-metadata": "^0.2.2"
+    "qrcode": "^1.5.4",
+    "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.8.4",
+    "stripe": "^23.1.0",
+    "xlsx": "^0.18.5"
   },
   "hotHook": {
     "boundaries": [
