@@ -751,6 +751,18 @@ export async function fetchStudents(params: PageParams = {}) {
     mdmCampusId?: string | null
     yearLevel?: number
     programId?: string
+    platformUserId?: string | null
+  }>(data)
+}
+
+export async function retryStudentPlatformLogin(studentId: string) {
+  const { data } = await apiClient.post(`/students/${studentId}/retry-platform-login`)
+  return asData<{
+    loginEmail: string
+    temporaryPassword: string | null
+    provisioned: boolean
+    provisionError: string | null
+    student: { id: string; platformUserId: string | null; email: string }
   }>(data)
 }
 
@@ -1289,6 +1301,7 @@ export type AdvisingSubjectChoice = {
   units: number
   yearLevel?: number | null
   semester?: number | null
+  sectionId?: string | null
 }
 
 export async function fetchAdvisingRecommendations(sessionId: string) {

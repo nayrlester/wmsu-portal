@@ -139,6 +139,7 @@ import {
   createEmployeeAssignment,
   fetchStudents,
   fetchStudentClassifications,
+  retryStudentPlatformLogin,
   updateStudentProfile,
   fetchStudentMergeJobs,
   mergeStudentAccounts,
@@ -1168,6 +1169,31 @@ function RegistrarStudentsInner() {
         description: getApiErrorMessage(err),
       }),
   })
+  const [provisionBusyId, setProvisionBusyId] = useState('')
+  const provisionLogin = useMutation({
+    mutationFn: (id: string) => retryStudentPlatformLogin(id),
+    onMutate: (id) => setProvisionBusyId(id),
+    onSettled: () => setProvisionBusyId(''),
+    onSuccess: (result) => {
+      if (result.provisioned) {
+        notify({
+          tone: 'success',
+          title: 'Student login ready',
+          description: result.temporaryPassword
+            ? `Email ${result.loginEmail}. Temporary password issued.`
+            : `Email ${result.loginEmail}. Account already linked.`,
+        })
+      } else {
+        notify({
+          tone: 'danger',
+          title: 'Login could not be created',
+          description: result.provisionError ?? 'Identity provisioning failed.',
+        })
+      }
+      void qc.invalidateQueries({ queryKey: ['reg', 'students'] })
+    },
+    onError: (err) => notify(notifyGenericError(err)),
+  })
   return (
     <div className="space-y-6">
       <RegistrarStudentImportPanel />
@@ -1218,6 +1244,28 @@ function RegistrarStudentsInner() {
                 render: (r) => r.mdmCampusId?.slice(0, 8) ?? '—',
               },
               { key: 'status', header: 'Status', render: (r) => <Badge>{r.status}</Badge> },
+              {
+                key: 'login',
+                header: 'Portal login',
+                render: (r) =>
+                  r.platformUserId ? (
+                    <Badge variant="success">Linked</Badge>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="warning">Not linked</Badge>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        data-testid={`retry-platform-login-${r.studentNumber}`}
+                        disabled={provisionLogin.isPending && provisionBusyId === r.id}
+                        onClick={() => provisionLogin.mutate(r.id)}
+                      >
+                        Create login
+                      </Button>
+                    </div>
+                  ),
+              },
             ]}
             data={page.data}
             keyExtractor={(r) => r.id}
@@ -6299,6 +6347,7 @@ function RegistrarRegistrationInner() {
             <Button
               type="button"
               variant="secondary"
+              data-testid="registration-verify-payment"
               disabled={!enrollmentId || busy || enrollment?.status !== 'assessed'}
               onClick={() => verifyMutation.mutate()}
             >
@@ -6307,6 +6356,7 @@ function RegistrarRegistrationInner() {
             <Button
               type="button"
               variant="secondary"
+              data-testid="registration-registrar-approve"
               disabled={!enrollmentId || busy || enrollment?.status !== 'payment_verified'}
               onClick={() => approveMutation.mutate()}
             >
@@ -6314,6 +6364,7 @@ function RegistrarRegistrationInner() {
             </Button>
             <Button
               type="button"
+              data-testid="registration-register"
               disabled={
                 !enrollmentId ||
                 busy ||

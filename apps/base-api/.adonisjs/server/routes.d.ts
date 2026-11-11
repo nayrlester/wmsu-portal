@@ -107,6 +107,7 @@ export type ScannedRoutes = {
     'enrollment.students.violations.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.students.violations.update': { paramsTuple: [ParamValue,ParamValue]; params: {'id': ParamValue,'violationId': ParamValue} }
     'enrollment.students.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.retry_platform_login': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.students.curriculum_evaluation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.students.subject_credits.index': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.students.subject_credits.auto_internal': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
@@ -2462,6 +2463,7 @@ export type ScannedRoutes = {
     'enrollment.students.merge': { paramsTuple?: []; params?: {} }
     'enrollment.students.import.run': { paramsTuple?: []; params?: {} }
     'enrollment.students.violations.store': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.students.retry_platform_login': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.students.subject_credits.auto_internal': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.students.subject_credits.external': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'enrollment.students.subject_credits.apply_equivalencies': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }

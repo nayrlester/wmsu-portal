@@ -4,6 +4,7 @@ import Student from '#modules/enrollment/models/student'
 import { STUDENT_CLASSIFICATIONS } from '#modules/enrollment/domain/enrollment_workflow'
 import { studentMergeService } from '#modules/enrollment/services/student_merge_service'
 import { studentProfileService } from '#modules/enrollment/services/student_profile_service'
+import { StudentAccountService } from '#modules/enrollment/services/student_account_service'
 import { rbacService } from '#modules/enrollment/services/rbac_service'
 
 const violationValidator = vine.compile(
@@ -278,5 +279,28 @@ export default class StudentsController {
       user.id
     )
     return ctx.response.ok({ data })
+  }
+
+  async retryPlatformLogin(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const student = await Student.query()
+      .where('id', ctx.params.id)
+      .where('organization_id', user.organizationId)
+      .whereNull('deleted_at')
+      .first()
+    if (!student) {
+      return ctx.response.notFound({ message: 'Student not found' })
+    }
+    const service = new StudentAccountService()
+    const result = await service.retryPlatformLogin(student.id)
+    return ctx.response.ok({
+      data: {
+        student: serializeStudent(result.student),
+        loginEmail: result.loginEmail,
+        provisioned: result.provisioned,
+        provisionError: result.provisionError,
+        temporaryPassword: result.temporaryPassword,
+      },
+    })
   }
 }

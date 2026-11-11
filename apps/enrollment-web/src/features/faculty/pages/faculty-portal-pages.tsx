@@ -1089,6 +1089,7 @@ function FacultyAdvisingSessionInner() {
   const [remarks, setRemarks] = useState('')
   const [remarksSeeded, setRemarksSeeded] = useState(false)
   const [underloadApproved, setUnderloadApproved] = useState(false)
+  const [sectionPickByCode, setSectionPickByCode] = useState<Record<string, string>>({})
   const session = useQuery({
     queryKey: ['faculty', 'advising-session', sessionId],
     queryFn: () => fetchAdvisingSession(sessionId),
@@ -1099,6 +1100,18 @@ function FacultyAdvisingSessionInner() {
     queryFn: () => fetchAdvisingRecommendations(sessionId),
     enabled: Boolean(sessionId),
   })
+  useEffect(() => {
+    const recs = recommendations.data ?? []
+    if (!recs.length) return
+    setSectionPickByCode((prev) => {
+      const next = { ...prev }
+      for (const row of recs) {
+        const code = row.subjectCode?.trim()
+        if (code && row.sectionId && !next[code]) next[code] = row.sectionId
+      }
+      return next
+    })
+  }, [recommendations.data])
   useEffect(() => {
     if (courseSeeded || !session.data) return
     const saved = session.data.enrollment?.advisedCurriculumIds
@@ -1156,8 +1169,14 @@ function FacultyAdvisingSessionInner() {
         const match = eligible.find(
           (row) => row.subjectCode === subject.subjectCode || row.id === subject.id
         )
-        const openSections = (match as { openSections?: Array<{ id: string }> } | undefined)?.openSections
-        const sectionId = openSections?.[0]?.id
+        const openSections = (match as { openSections?: Array<{ id: string; code?: string }> } | undefined)
+          ?.openSections
+        const picked = sectionPickByCode[subject.subjectCode]?.trim()
+        const sectionId =
+          picked || (openSections?.length === 1 ? openSections[0]?.id : undefined)
+        if (openSections?.length && !sectionId) {
+          throw new Error(`Pick a section for ${subject.subjectCode} before endorsing.`)
+        }
         await addAdvisingRecommendation(sessionId, {
           subjectCode: subject.subjectCode,
           subjectId: subject.id,
@@ -1199,6 +1218,11 @@ function FacultyAdvisingSessionInner() {
           (item) => item.id === row.enrollment?.curriculumId && courseIds.includes(item.id)
         )
         const subjects = chosen?.subjects ?? []
+        const eligibleSubjects =
+          (row.curriculumEvaluation?.eligibleSubjects as Array<{
+            subjectCode: string
+            openSections?: Array<{ id: string; code: string }>
+          }>) ?? []
         const assessed = row.curriculumEvaluation?.assessedSubjects ?? []
         const load = row.curriculumEvaluation?.allowableUnitLoad
         const selectedUnits = subjects.reduce((sum, subject) => sum + Number(subject.units), 0)
@@ -1213,7 +1237,20 @@ function FacultyAdvisingSessionInner() {
               ? `Below the minimum load of ${load?.minUnits} units.`
               : ''
         const coursesReady = courseIds.length > 0 && sameCourseIds(savedCourseIds, courseIds) && !assignCourses.isPending
-        const chosenLoadBlocked = Boolean(chosen) && (selectedUnits === 0 || overMax || (underMin && !underloadApproved))
+        const missingSectionPick =
+          editable &&
+          Boolean(chosen) &&
+          subjects.some((subject) => {
+            const opens =
+              eligibleSubjects.find((e) => e.subjectCode === subject.subjectCode)?.openSections ?? []
+            return opens.length > 0 && !sectionPickByCode[subject.subjectCode]?.trim()
+          })
+        const chosenLoadBlocked =
+          Boolean(chosen) &&
+          (selectedUnits === 0 ||
+            overMax ||
+            (underMin && !underloadApproved) ||
+            missingSectionPick)
         const toggleCourse = (curriculumId: string) => {
           const next = courseIds.includes(curriculumId)
             ? courseIds.filter((id) => id !== curriculumId)
@@ -1265,13 +1302,49 @@ function FacultyAdvisingSessionInner() {
                             {load?.maxUnits != null ? ` · maximum ${load.maxUnits}` : ''}.
                           </p>
                           <ul className="mt-2 space-y-2 text-sm" data-testid={`advising-course-subjects-${item.code}`}>
-                            {item.subjects.map((subject) => (
-                              <li key={subject.subjectCode} className="flex flex-wrap items-center gap-3">
-                                <span className="font-mono">{subject.subjectCode}</span>
-                                <span>{subject.title ?? subject.subjectTitle}</span>
-                                <span className="text-[var(--color-muted-foreground)]">{subject.units} units</span>
-                              </li>
-                            ))}
+                            {item.subjects.map((subject) => {
+                              const opens =
+                                eligibleSubjects.find((e) => e.subjectCode === subject.subjectCode)
+                                  ?.openSections ?? []
+                              return (
+                                <li
+                                  key={subject.subjectCode}
+                                  className="flex flex-col gap-2 rounded-lg border border-[var(--color-border)]/60 p-2 sm:flex-row sm:flex-wrap sm:items-center"
+                                >
+                                  <span className="font-mono">{subject.subjectCode}</span>
+                                  <span>{subject.title ?? subject.subjectTitle}</span>
+                                  <span className="text-[var(--color-muted-foreground)]">
+                                    {subject.units} units
+                                  </span>
+                                  {editable && opens.length > 0 ? (
+                                    <label className="flex min-w-[200px] flex-1 flex-col gap-1 text-xs">
+                                      <span className="text-[var(--color-muted-foreground)]">Section</span>
+                                      <select
+                                        data-testid={`advising-section-${subject.subjectCode}`}
+                                        className="h-10 rounded-full border border-[var(--color-border)] bg-white px-3 text-sm"
+                                        value={sectionPickByCode[subject.subjectCode] ?? ''}
+                                        disabled={endorse.isPending}
+                                        onChange={(e) =>
+                                          setSectionPickByCode((prev) => ({
+                                            ...prev,
+                                            [subject.subjectCode]: e.target.value,
+                                          }))
+                                        }
+                                      >
+                                        <option value="">Select section…</option>
+                                        {opens.map((sec) => (
+                                          <option key={sec.id} value={sec.id}>
+                                            {sec.code}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                  ) : editable && opens.length === 0 ? (
+                                    <span className="text-xs text-amber-700">No open section</span>
+                                  ) : null}
+                                </li>
+                              )
+                            })}
                           </ul>
                         </>
                       ) : (
@@ -1310,6 +1383,10 @@ function FacultyAdvisingSessionInner() {
                 {loadIssue ? (
                   <p className="text-sm text-[var(--color-destructive)]" data-testid="advising-load-issue" role="alert">
                     {loadIssue}
+                  </p>
+                ) : missingSectionPick ? (
+                  <p className="text-sm text-[var(--color-destructive)]" data-testid="advising-section-picks">
+                    Select a section for each subject before endorsing.
                   </p>
                 ) : (
                   <p className="text-sm text-[var(--color-muted-foreground)]" data-testid="advising-awaiting-student">

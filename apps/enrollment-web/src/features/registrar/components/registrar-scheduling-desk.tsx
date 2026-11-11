@@ -12,8 +12,10 @@ import {
   fetchSections,
   recordAdvisingBlockWaiver,
   replicateAcademicSchedules,
+  searchAlternateSections,
   upsertAdvisingPeriod,
 } from '@/lib/usis-api'
+import { exportReport, fetchReport } from '@/lib/usis-reports-api'
 import { getApiErrorMessage } from '@/lib/api-client'
 
 export function RegistrarSchedulingDesk() {
@@ -51,6 +53,11 @@ export function RegistrarSchedulingDesk() {
   const [waiverRef, setWaiverRef] = useState('')
   const [waiverRole, setWaiverRole] = useState('Registrar')
   const [exportSectionId, setExportSectionId] = useState('')
+  const [altSubjectCode, setAltSubjectCode] = useState('')
+  const [altConflictSectionId, setAltConflictSectionId] = useState('')
+  const [altResults, setAltResults] = useState<
+    Awaited<ReturnType<typeof searchAlternateSections>>['alternatives'] | null
+  >(null)
 
   const replicateMutation = useMutation({
     mutationFn: () =>
@@ -135,6 +142,61 @@ export function RegistrarSchedulingDesk() {
     onSuccess: () => notify({ tone: 'success', title: 'Advising waiver recorded' }),
     onError: (err) =>
       notify({ tone: 'danger', title: 'Waiver failed', description: getApiErrorMessage(err) }),
+  })
+
+  const utilizationMutation = useMutation({
+    mutationFn: async () => {
+      if (!filterYearId) throw new Error('Select an academic year first')
+      return fetchReport('class-utilization', { academicYearId: filterYearId, semester: Number(replicateSem) || 1 })
+    },
+    onSuccess: (payload) => {
+      notify({
+        tone: 'success',
+        title: 'Utilization loaded',
+        description: `${payload.rows.length} section row(s) · ${payload.validation.message}`,
+      })
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Utilization failed', description: getApiErrorMessage(err) }),
+  })
+
+  const utilizationExportMutation = useMutation({
+    mutationFn: async () => {
+      if (!filterYearId) throw new Error('Select an academic year first')
+      return exportReport('class-utilization', 'csv', {
+        academicYearId: filterYearId,
+        semester: Number(replicateSem) || 1,
+      })
+    },
+    onSuccess: (blob) => {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'class-utilization.csv'
+      link.click()
+      URL.revokeObjectURL(url)
+      notify({ tone: 'success', title: 'Utilization CSV downloaded' })
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Export failed', description: getApiErrorMessage(err) }),
+  })
+
+  const alternateMutation = useMutation({
+    mutationFn: () =>
+      searchAlternateSections({
+        subjectCode: altSubjectCode.trim() || undefined,
+        conflictingSectionId: altConflictSectionId.trim() || undefined,
+      }),
+    onSuccess: (data) => {
+      setAltResults(data.alternatives)
+      notify({
+        tone: 'success',
+        title: 'Alternates found',
+        description: `${data.alternatives.length} section(s)`,
+      })
+    },
+    onError: (err) =>
+      notify({ tone: 'danger', title: 'Alternate search failed', description: getApiErrorMessage(err) }),
   })
 
   const exportMutation = useMutation({
@@ -380,6 +442,72 @@ export function RegistrarSchedulingDesk() {
         </CardContent>
       </Card>
 
+      <Card data-testid="desk-utilization">
+        <CardHeader>
+          <CardTitle>Class utilization (ENR-039)</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-3 items-end">
+          <p className="text-sm text-[var(--color-muted-foreground)] w-full">
+            Uses the filtered academic year above and semester {replicateSem || '1'}.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!filterYearId || utilizationMutation.isPending}
+            onClick={() => utilizationMutation.mutate()}
+          >
+            Preview utilization
+          </Button>
+          <Button
+            type="button"
+            disabled={!filterYearId || utilizationExportMutation.isPending}
+            onClick={() => utilizationExportMutation.mutate()}
+          >
+            Export CSV
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card data-testid="desk-alternate-sections">
+        <CardHeader>
+          <CardTitle>Alternate sections (ENR-039)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <FormField id="altSubject" label="Subject code">
+            <Input
+              id="altSubject"
+              data-testid="alt-subject-code"
+              value={altSubjectCode}
+              onChange={(e) => setAltSubjectCode(e.target.value)}
+              placeholder="IT101"
+            />
+          </FormField>
+          <FormField id="altConflict" label="Conflicting section id (optional)">
+            <Input
+              id="altConflict"
+              value={altConflictSectionId}
+              onChange={(e) => setAltConflictSectionId(e.target.value)}
+            />
+          </FormField>
+          <Button
+            type="button"
+            disabled={!altSubjectCode.trim() || alternateMutation.isPending}
+            onClick={() => alternateMutation.mutate()}
+          >
+            Search alternates
+          </Button>
+          {altResults?.length ? (
+            <ul className="text-sm space-y-1">
+              {altResults.map((row) => (
+                <li key={row.sectionId}>
+                  {row.sectionCode} — {row.sectionName} · seats {row.seatsAvailable ?? '—'}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Class roster export (ENR-012)</CardTitle>
@@ -401,6 +529,7 @@ export function RegistrarSchedulingDesk() {
           </FormField>
           <Button
             type="button"
+            data-testid="desk-roster-export"
             disabled={!exportSectionId || exportMutation.isPending}
             onClick={() => exportMutation.mutate()}
           >

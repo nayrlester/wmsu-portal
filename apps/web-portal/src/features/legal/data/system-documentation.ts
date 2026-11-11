@@ -65,6 +65,28 @@ function systemSpecBundle(exportName: string, productLabel: string): DocResource
 
 export const systemDocumentation: SystemDocLinks[] = [
   {
+    id: 'user-journeys',
+    name: 'Platform user journeys (all apps)',
+    description: 'Step-by-step sign-in and navigation for Portal, USiS, UFMS, TORMS, ULMIS, UIMS, and DocsTrack',
+    logoSrc: platformBranding.identity.logoSrc,
+    logoTone: platformBranding.identity.logoTone,
+    resources: [
+      {
+        kind: 'pdf',
+        label: 'User journey guide (PDF)',
+        badge: 'PDF',
+        description: 'Printable reference — roles, URLs, and end-to-end enrollment checklist',
+        href: '/docs/WMSU-Platform-User-Journeys.pdf',
+      },
+      {
+        kind: 'guide',
+        label: 'User journey guide (HTML)',
+        description: 'Same content in the browser for quick search and copy-paste URLs',
+        href: '/docs/WMSU-Platform-User-Journeys.html',
+      },
+    ],
+  },
+  {
     id: 'identity',
     name: 'University Platform Access',
     description: 'Identity login, MFA, SSO, Portal Admin (roles + platforms), and launcher',

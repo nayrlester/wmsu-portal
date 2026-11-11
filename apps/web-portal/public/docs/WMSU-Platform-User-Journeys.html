@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WMSU CIS — Platform User Journey Guide</title>
+  <style>
+  @page { margin: 20mm 16mm; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 10mm;
+  }
+  h1 { font-size: 22pt; color: #2f2a6b; border-bottom: 2px solid #635bff; padding-bottom: 6px; page-break-before: always; }
+  h1:first-of-type { page-break-before: avoid; margin-top: 0; }
+  h2 { font-size: 15pt; color: #3d3780; margin-top: 20px; }
+  h3 { font-size: 12pt; color: #4a4494; margin-top: 14px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #c8d0f0; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #eef0ff; font-weight: 600; }
+  ol, ul { margin: 8px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  code { background: #f4f6ff; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; word-break: break-all; }
+  .meta { font-size: 10pt; color: #444; margin-bottom: 16px; }
+  hr { border: none; border-top: 1px solid #dde4ea; margin: 20px 0; }
+  .toc ol { list-style: decimal; }
+  .note { background: #f7f8ff; border-left: 4px solid #635bff; padding: 8px 12px; margin: 12px 0; font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<h1>WMSU CIS Platform User Journey Guide</h1>
+<p class="meta"><strong>Version 1.0</strong> · November 2026 · Audience: students, faculty, registrar, finance, library, records, inventory, and campus IT</p>
+<p>This document is a <strong>step-by-step reference</strong> for signing in and reaching the right screens in each campus system. Use it with the per-system Complete Guides in the same folder for deeper detail.</p>
+
+<div class="toc">
+<h2>Contents</h2>
+<ol>
+  <li>Universal access (Portal &amp; Identity)</li>
+  <li>Local URLs and platform codes</li>
+  <li>Demo sign-in accounts</li>
+  <li>USiS (Enrollment) — by role</li>
+  <li>UFMS (Finance)</li>
+  <li>TORMS (Records)</li>
+  <li>ULMIS (Library)</li>
+  <li>UIMS (Inventory)</li>
+  <li>DocsTrack (Documents)</li>
+  <li>Portal Admin &amp; MDM</li>
+  <li>Core enrollment-to-registration checklist</li>
+  <li>Troubleshooting quick reference</li>
+</ol>
+</div>
+
+<hr />
+
+<h1>1. Universal access (Portal &amp; Identity)</h1>
+
+<h2>1.1 Recommended path (SSO)</h2>
+<ol>
+  <li>Start the stack: Base API (<code>3500</code>), Identity (<code>3411</code>), Portal (<code>5173</code>), and the app you need (see section 2).</li>
+  <li>Open <strong>WMSU Unified Access Portal</strong>: <code>http://127.0.0.1:5173</code></li>
+  <li>Sign in with your <strong>University Identity</strong> email and password.</li>
+  <li>Complete <strong>MFA</strong> if your account requires it.</li>
+  <li>On the <strong>launcher</strong>, click the platform tile (USiS, UFMS, TORMS, etc.). SSO opens the app in a new tab with your session.</li>
+  <li>Inside the app, menus depend on your <strong>Identity role</strong>, not only the platform tile (see section 1.3).</li>
+</ol>
+
+<h2>1.2 Direct URL (per app)</h2>
+<p>You may open each web client directly (e.g. <code>http://127.0.0.1:5180/login</code>). You still authenticate through Identity when dual-auth is enabled.</p>
+
+<h2>1.3 Two layers of access</h2>
+<table>
+<tr><th>Layer</th><th>Who sets it</th><th>What it controls</th></tr>
+<tr><td><strong>Platform</strong></td><td>Portal Admin → user platforms</td><td>Launcher tile + ability to SSO into that product (<code>enrollment</code>, <code>finance</code>, …)</td></tr>
+<tr><td><strong>Role</strong></td><td>Portal Admin → user roles</td><td>Menus and API permissions inside the product (<code>student</code>, <code>registrar</code>, <code>cashier</code>, …)</td></tr>
+</table>
+<div class="note">Example: <code>student</code> role + <code>enrollment</code> platform → USiS student portal only. <code>identity_admin</code> → broad USiS registrar/faculty menus when enrollment is assigned.</div>
+
+<hr />
+
+<h1>2. Local URLs and platform codes</h1>
+<table>
+<tr><th>System</th><th>Platform code</th><th>Web URL (default)</th><th>API prefix (Base API)</th></tr>
+<tr><td>Unified Access Portal</td><td>—</td><td><code>http://127.0.0.1:5173</code></td><td>—</td></tr>
+<tr><td>Platform Admin (MDM)</td><td>—</td><td><code>http://127.0.0.1:5174</code></td><td>—</td></tr>
+<tr><td>Identity Service</td><td>—</td><td>via Portal</td><td><code>http://127.0.0.1:3411/api/v1</code></td></tr>
+<tr><td>USiS (Enrollment)</td><td><code>enrollment</code></td><td><code>http://127.0.0.1:5180</code></td><td><code>/api/v1/enrollment</code></td></tr>
+<tr><td>TORMS (Records)</td><td><code>records</code></td><td><code>http://127.0.0.1:5181</code></td><td><code>/api/v1/records</code></td></tr>
+<tr><td>UFMS (Finance)</td><td><code>finance</code></td><td><code>http://127.0.0.1:5182</code></td><td><code>/api/v1/finance</code></td></tr>
+<tr><td>ULMIS staff</td><td><code>library</code></td><td><code>http://127.0.0.1:5183</code></td><td><code>/api/v1/library</code></td></tr>
+<tr><td>UIMS (Inventory)</td><td><code>inventory</code></td><td><code>http://127.0.0.1:5184</code></td><td><code>/api/v1/inventory</code></td></tr>
+<tr><td>DocsTrack (UDMS)</td><td><code>docstrack</code> / documents</td><td><code>http://127.0.0.1:5185</code></td><td><code>/api/v1/documents</code></td></tr>
+<tr><td>ULMIS OPAC</td><td>—</td><td><code>http://127.0.0.1:5186</code></td><td>—</td></tr>
+<tr><td>ULMIS kiosk</td><td>—</td><td><code>http://127.0.0.1:5187</code></td><td>—</td></tr>
+<tr><td>Base API (all modules)</td><td>—</td><td>—</td><td><code>http://127.0.0.1:3500</code></td></tr>
+</table>
+<p>If Vite picks another port, read the terminal <code>Local:</code> line when starting <code>pnpm run dev</code>.</p>
+
+<hr />
+
+<h1>3. Demo sign-in accounts</h1>
+<p>Demo password is usually <code>ChangeMe123!</code> (or your <code>DEMO_SEED_PASSWORD</code> from Identity seed).</p>
+<table>
+<tr><th>Email</th><th>Role (typical)</th><th>Use for</th></tr>
+<tr><td><code>admin@identity.local</code></td><td>identity_admin</td><td>Portal Admin, all platforms, USiS registrar/faculty</td></tr>
+<tr><td><code>student@identity.local</code></td><td>student</td><td>USiS student portal; linked to seed student <code>DEMO-2026-001</code></td></tr>
+<tr><td><code>employee@identity.local</code></td><td>employee</td><td>Launcher only unless more roles assigned</td></tr>
+</table>
+<p>Module-local users (e.g. <code>admin@uims.local</code>) apply only where that app allows local login — prefer Identity for SSO training.</p>
+
+<hr />
+
+<h1>4. USiS (Enrollment) — by role</h1>
+
+<h2>4.1 Student journey</h2>
+<ol>
+  <li>Portal → <strong>Enrollment (USiS)</strong> or <code>5180/login</code> as <code>student@identity.local</code>.</li>
+  <li><strong>Dashboard</strong> <code>/student</code></li>
+  <li><strong>Enrollment</strong> <code>/student/enrollment</code> — start/continue term.</li>
+  <li><strong>Academic advising</strong> <code>/student/advising</code> — after faculty endorses, pick one advised course if multiple are offered.</li>
+  <li><strong>Subject selection</strong> <code>/student/subjects</code> — irregular picks / alternates when allowed.</li>
+  <li><strong>Assessment forms</strong> <code>/student/assessments</code> — after registrar assesses.</li>
+  <li><strong>Payment status</strong> <code>/student/payments</code> — pay at UFMS cashier (production).</li>
+  <li><strong>Enrollment status</strong> <code>/student/status</code> — confirm <strong>registered</strong>.</li>
+  <li><strong>COR</strong> <code>/student/cor</code> · <strong>Schedule</strong> <code>/student/schedule</code></li>
+</ol>
+
+<h2>4.2 Faculty / adviser journey</h2>
+<ol>
+  <li>Sign in with <code>advising.write</code> (demo: <code>admin@identity.local</code>).</li>
+  <li><strong>Academic advising</strong> <code>/faculty/advising</code> — start or open session.</li>
+  <li>Session <code>/faculty/advising/{sessionId}</code>: check advisable courses, pick a <strong>section</strong> per subject, approve underload if needed, <strong>Endorse advising</strong>.</li>
+  <li><strong>Grade encoding</strong> <code>/faculty/grades/encode</code> after classes are registered.</li>
+</ol>
+
+<h2>4.3 Registrar journey</h2>
+<ol>
+  <li><strong>Applicants</strong> <code>/registrar/applicants</code> — admit (creates student + optional login).</li>
+  <li><strong>Student records</strong> <code>/registrar/students</code> — <strong>Create login</strong> if Portal link missing.</li>
+  <li><strong>Academic structure</strong> <code>/registrar/academic</code> — sections, meetings, <strong>Scheduling desk</strong> (block encode, utilization, roster CSV).</li>
+  <li><strong>Registration approval</strong> <code>/registrar/registration</code> — Assess → Verify payment → Registrar approve → Register.</li>
+  <li><strong>Enrollments</strong> <code>/registrar/enrollments</code> · <strong>Reports</strong> <code>/registrar/reports</code></li>
+</ol>
+
+<h2>4.4 Administrative offices (USiS)</h2>
+<table>
+<tr><th>Office</th><th>Path</th></tr>
+<tr><td>Admissions</td><td><code>/offices/admissions</code></td></tr>
+<tr><td>Guidance</td><td><code>/offices/guidance</code></td></tr>
+<tr><td>Student Affairs (OSA)</td><td><code>/offices/osa</code></td></tr>
+<tr><td>Health</td><td><code>/offices/health</code></td></tr>
+<tr><td>Scholarship</td><td><code>/offices/scholarship</code></td></tr>
+</table>
+
+<h2>4.5 Demo academic data (Core TOR)</h2>
+<p>Year <code>AY2025-26</code>, block <code>BSIT-1A</code>, student <code>DEMO-2026-001</code>, sections <code>IT101-A</code>, <code>IT102-A</code>, <code>GE101-A</code>.</p>
+
+<hr />
+
+<h1>5. UFMS (Finance)</h1>
+<ol>
+  <li>Portal → <strong>Finance</strong> or <code>http://127.0.0.1:5182</code> with finance platform + role (<code>cashier</code>, finance staff, or <code>admin@identity.local</code>).</li>
+  <li><strong>Dashboard</strong> — budget and collections overview.</li>
+  <li><strong>Tuition &amp; payment plans</strong> — configure plans (admin).</li>
+  <li><strong>Cashier / POS</strong> — record payment against USiS assessment number.</li>
+  <li>Return to USiS <code>/registrar/registration</code> → <strong>Verify payment</strong>.</li>
+</ol>
+<p>Local dev: optional <code>USIS_DEV_PAYMENT_BYPASS=true</code> in base-api <code>.env</code> (restart API) — not for production.</p>
+
+<hr />
+
+<h1>6. TORMS (Records)</h1>
+<ol>
+  <li>Portal → <strong>Records</strong> or <code>http://127.0.0.1:5181</code> with <code>records</code> platform.</li>
+  <li>Staff: transcript requests, certifications, document verification workflows per your role pack.</li>
+  <li>Students: self-service only if role includes student records permissions (usually staff-facing).</li>
+</ol>
+
+<hr />
+
+<h1>7. ULMIS (Library)</h1>
+<ol>
+  <li><strong>Staff</strong>: Portal → Library → <code>http://127.0.0.1:5183</code> (<code>library</code> platform).</li>
+  <li>Cataloging, circulation, acquisitions, member services — menus by library role pack.</li>
+  <li><strong>Public OPAC</strong>: <code>http://127.0.0.1:5186</code> (no staff login).</li>
+  <li><strong>Kiosk</strong>: <code>http://127.0.0.1:5187</code> for self-check / quick patron tasks.</li>
+</ol>
+
+<hr />
+
+<h1>8. UIMS (Inventory)</h1>
+<ol>
+  <li>Portal → <strong>Inventory</strong> or <code>http://127.0.0.1:5184</code> (<code>inventory</code> platform).</li>
+  <li>Items &amp; catalog → stock &amp; warehouses → assets → requisitions / counts — Supply Office workflows.</li>
+</ol>
+
+<hr />
+
+<h1>9. DocsTrack (Documents)</h1>
+<ol>
+  <li>Portal → <strong>Documents</strong> or <code>http://127.0.0.1:5185</code>.</li>
+  <li>Create/track documents, routing, approvals, public track link, records lifecycle per role.</li>
+</ol>
+
+<hr />
+
+<h1>10. Portal Admin &amp; MDM</h1>
+<ol>
+  <li><strong>Portal Admin</strong> (Identity console from launcher or Identity app): users, roles, platforms, MFA.</li>
+  <li><strong>MDM Admin</strong> <code>http://127.0.0.1:5174</code> — master data / platform ops (separate from day-to-day USiS work).</li>
+</ol>
+
+<hr />
+
+<h1>11. Core enrollment-to-registration checklist</h1>
+<table>
+<tr><th>Step</th><th>Role</th><th>Where</th><th>Action</th></tr>
+<tr><td>1</td><td>Registrar</td><td><code>/registrar/applicants</code></td><td>Admit applicant</td></tr>
+<tr><td>2</td><td>Registrar</td><td><code>/registrar/academic</code></td><td>Open sections &amp; meetings</td></tr>
+<tr><td>3</td><td>Faculty</td><td><code>/faculty/advising</code></td><td>Section picks + endorse</td></tr>
+<tr><td>4</td><td>Student</td><td><code>/student/advising</code></td><td>Choose advised course if required</td></tr>
+<tr><td>5</td><td>Registrar</td><td><code>/registrar/registration</code></td><td>Assess → pay verify → approve → register</td></tr>
+<tr><td>6</td><td>Registrar</td><td>Scheduling desk</td><td>Roster CSV / utilization</td></tr>
+<tr><td>7</td><td>Student</td><td><code>/student/cor</code></td><td>COR &amp; schedule</td></tr>
+</table>
+
+<hr />
+
+<h1>12. Troubleshooting quick reference</h1>
+<table>
+<tr><th>Symptom</th><th>Check</th></tr>
+<tr><td>Platform tile missing</td><td>Portal Admin → assign platform code to user</td></tr>
+<tr><td>Wrong menus inside USiS</td><td>Identity role (<code>student</code> vs <code>registrar</code>)</td></tr>
+<tr><td>SSO fails</td><td>Identity <code>3411</code> and Base API <code>3500</code> running; sign out and in again</td></tr>
+<tr><td>“No student profile linked”</td><td>Registrar admit + Identity email match; <strong>Create login</strong> on students</td></tr>
+<tr><td>Verify payment fails</td><td>UFMS cashier payment, or dev bypass in local <code>.env</code></td></tr>
+<tr><td>403 on API</td><td>Role lacks permission — expected for students on registrar routes</td></tr>
+</table>
+
+<p><strong>Related manuals:</strong> Identity-Complete-Guide.html · USIS-Complete-Guide.html · UFMS-Complete-Guide.html · ULMIS-Complete-Guide.html · TORMS-Complete-Guide.html · UIMS-Complete-Guide.html · DocsTrack-Complete-Guide.html</p>
+<p><strong>Support page:</strong> <code>http://127.0.0.1:5173/support</code> (links to HTML and this PDF)</p>
+
+</body>
+</html>

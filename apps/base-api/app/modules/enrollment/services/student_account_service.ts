@@ -92,4 +92,56 @@ export class StudentAccountService {
 
     return { student, loginEmail: email, temporaryPassword, provisioned, provisionError }
   }
+
+  async retryPlatformLogin(studentId: string): Promise<{
+    student: Student
+    loginEmail: string
+    temporaryPassword: string | null
+    provisioned: boolean
+    provisionError: string | null
+  }> {
+    const student = await Student.findOrFail(studentId)
+    const email = student.email?.trim() || `${student.studentNumber}@${env.get('STUDENT_EMAIL_DOMAIN') ?? 'demo.edu.ph'}`
+
+    if (student.platformUserId) {
+      return {
+        student,
+        loginEmail: email,
+        temporaryPassword: null,
+        provisioned: true,
+        provisionError: null,
+      }
+    }
+
+    let temporaryPassword: string | null = null
+    let provisioned = false
+    let provisionError: string | null = null
+    try {
+      const result = await this.provisionClient.provisionStudent({
+        studentNumber: student.studentNumber,
+        email,
+        firstName: student.firstName,
+        middleName: student.middleName,
+        lastName: student.lastName,
+        mobile: student.mobile,
+      })
+      student.platformUserId = result.userId
+      if (!student.email?.trim()) {
+        student.email = email
+      }
+      temporaryPassword = result.temporaryPassword
+      provisioned = true
+      await student.save()
+    } catch (error) {
+      provisioned = false
+      provisionError =
+        error instanceof Error ? error.message : 'Identity student provision failed'
+      logger.error(
+        { err: error, studentId, studentNumber: student.studentNumber },
+        'Identity student provision retry failed'
+      )
+    }
+
+    return { student, loginEmail: email, temporaryPassword, provisioned, provisionError }
+  }
 }

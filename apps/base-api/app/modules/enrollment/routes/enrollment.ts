@@ -189,6 +189,10 @@ router
       .use(middleware.permission(['students.write']))
       .as('students.update')
     router
+      .post('/students/:id/retry-platform-login', [StudentsController, 'retryPlatformLogin'])
+      .use(middleware.permission(['students.write']))
+      .as('students.retry_platform_login')
+    router
       .get('/students/:studentId/curriculum-evaluation', [SubjectCreditsController, 'evaluate'])
       .use(middleware.permission(['students.read', 'academic.read', 'advising.read']))
       .as('students.curriculum_evaluation')

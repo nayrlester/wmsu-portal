@@ -44,6 +44,35 @@ export function getAllDocLinks(): SupportLink[] {
 
 export const supportKnowledge: KnowledgeEntry[] = [
   {
+    id: 'user-journey-pdf',
+    keywords: [
+      'user journey',
+      'user journeys',
+      'step by step',
+      'how to access',
+      'platform access guide',
+      'journey guide',
+      'journey pdf',
+      'printable guide',
+    ],
+    answer: {
+      text: 'The **Platform user journey guide** is a printable PDF with sign-in steps, local URLs, demo accounts, and role-by-role paths for USiS, UFMS, TORMS, ULMIS, UIMS, and DocsTrack — plus the enrollment-to-registration checklist.',
+      links: [
+        {
+          label: 'User journey guide (PDF)',
+          href: '/docs/WMSU-Platform-User-Journeys.pdf',
+          description: 'Download or print — all campus apps',
+        },
+        {
+          label: 'User journey guide (HTML)',
+          href: '/docs/WMSU-Platform-User-Journeys.html',
+          description: 'Same content in the browser',
+        },
+      ],
+      suggestions: ['Show user manuals', 'I cannot sign in', 'Wrong menus after SSO'],
+    },
+  },
+  {
     id: 'greeting',
     keywords: [
       'hi',
