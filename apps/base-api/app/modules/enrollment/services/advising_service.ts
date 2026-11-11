@@ -179,7 +179,7 @@ export class AdvisingService {
       const openSections = await Section.query({ client: trx })
         .where('organization_id', enrollment.organizationId)
         .where('academic_year_id', enrollment.academicYearId)
-        .where('status', 'active')
+        .whereIn('status', ['active', 'open'])
         .where('semester', enrollment.semester)
 
       const eligible = evaluation.remaining.map((subject) => {

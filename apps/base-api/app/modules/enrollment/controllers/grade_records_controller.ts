@@ -7,6 +7,7 @@ import GradeCorrectionRequest from '#modules/enrollment/models/grade_correction_
 import GradeEntryHistory from '#modules/enrollment/models/grade_entry_history'
 import Student from '#modules/enrollment/models/student'
 import { rbacService } from '#modules/enrollment/services/rbac_service'
+import { personnelService } from '#modules/enrollment/services/personnel_service'
 import {
   gradingSchemeValidator,
   gradeDeadlineValidator,
@@ -64,11 +65,22 @@ export default class GradeRecordsController {
   async assignFaculty({ request, response, auth }: HttpContext) {
     const user = auth.user!
     const payload = await request.validateUsing(facultyAssignValidator)
+    const facultyUserId =
+      payload.facultyUserId ??
+      (payload.facultyEmail
+        ? await personnelService.resolveUserId(user.organizationId, { email: payload.facultyEmail })
+        : null)
+    if (!facultyUserId) {
+      return response.unprocessableEntity({ error: 'Select faculty by name or email' })
+    }
     const service = new GradeRecordsService()
     const row = await service.assignFaculty({
       organizationId: user.organizationId,
       assignedBy: user.id,
-      ...payload,
+      sectionId: payload.sectionId,
+      facultyUserId,
+      academicYearId: payload.academicYearId,
+      semester: payload.semester,
     })
     return response.created({ data: row })
   }

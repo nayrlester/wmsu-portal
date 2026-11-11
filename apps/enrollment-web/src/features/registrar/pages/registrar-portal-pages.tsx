@@ -24,11 +24,14 @@ import {
 import { QueryPage, useListControls } from '@/components/query-page'
 import { ApplicantSearchSelect } from '@/components/applicant-search-select'
 import { StudentSearchSelect } from '@/components/student-search-select'
+import { PersonnelSearchSelect } from '@/components/personnel-search-select'
 import { EnrollmentWorkflowPanel } from '@/components/enrollment-workflow-panel'
 import { usePaginatedQuery } from '@/lib/list-query'
 import { RequirePermission } from '@/components/auth/require-permission'
 import { useHasPermission } from '@/lib/permissions'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { admitSuccessNotification } from '@/lib/admit-notice'
+import { admitErrorNotification, notifyGenericError } from '@/lib/user-messages'
 import { formatCurrency, formatNumber } from '@/lib/utils'
 import { SAMPLE_ENTRANCE_EXAM_BANK } from '@/features/admissions/entrance-exam-sample-bank'
 import {
@@ -175,7 +178,9 @@ import {
   verifyEnrollmentPayment,
   approveRegistrarEnrollment,
   type UsisCurriculum,
+  assignFacultyToSection,
 } from '@/lib/usis-api'
+import { RegistrarSchedulingDesk } from '@/features/registrar/components/registrar-scheduling-desk'
 
 export function RegistrarDashboardPage() {
   return (
@@ -243,21 +248,17 @@ function RegistrarApplicantsInner() {
   const admit = useMutation({
     mutationFn: (id: string) => admitApplicant(id, `STU-${Date.now().toString().slice(-8)}`),
     onSuccess: (result) => {
-      const notice = (result as { accountNotice?: { sent?: boolean; to?: string | null; reason?: string | null } })
-        .accountNotice
-      notify({
-        tone: 'success',
-        title: 'Applicant admitted',
-        description: notice?.sent
-          ? `Account email sent to ${notice.to}`
-          : `Student record created. Account email was not sent${notice?.reason ? `: ${notice.reason}` : ''}.`,
-      })
+      const notice = (result as { accountNotice?: Parameters<typeof admitSuccessNotification>[0] }).accountNotice
+      const toast = admitSuccessNotification(notice)
+      notify({ tone: toast.tone, title: toast.title, description: toast.description })
       void qc.invalidateQueries({ queryKey: ['reg', 'applicants'] })
       void qc.invalidateQueries({ queryKey: ['reg', 'students'] })
       void qc.invalidateQueries({ queryKey: ['reg', 'enrollments'] })
     },
-    onError: (err) =>
-      notify({ tone: 'danger', title: 'Admit failed', description: getApiErrorMessage(err) }),
+    onError: (err) => {
+      const toast = admitErrorNotification(err)
+      notify(toast)
+    },
   })
   const classify = useMutation({
     mutationFn: ({ id, classification }: { id: string; classification: string }) =>
@@ -406,7 +407,7 @@ function RegistrarAdmissionFormPanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'admission-form-active'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Activate failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const applyMutation = useMutation({
@@ -436,7 +437,7 @@ function RegistrarAdmissionFormPanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'applicants'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Apply failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -722,7 +723,7 @@ function RegistrarAdmissionEventsPanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'admission-events'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Schedule failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const publishQuestionsMutation = useMutation({
@@ -761,7 +762,7 @@ function RegistrarAdmissionEventsPanel() {
         void qc.invalidateQueries({ queryKey: ['reg', 'applicant-status-history'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Assign failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const resultMutation = useMutation({
@@ -779,7 +780,7 @@ function RegistrarAdmissionEventsPanel() {
         void qc.invalidateQueries({ queryKey: ['reg', 'applicant-status-history'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Result failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -1248,7 +1249,7 @@ function RegistrarStudentProfilePanel() {
       void profile.refetch()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'GWA failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const violationMutation = useMutation({
@@ -1263,7 +1264,7 @@ function RegistrarStudentProfilePanel() {
       void profile.refetch()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Violation failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -1404,7 +1405,7 @@ function RegistrarStudentMergePanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'student-merge-jobs'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Merge failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -1544,7 +1545,7 @@ function RegistrarStudentImportPanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'students'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Import failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const downloadMutation = useMutation({
@@ -1558,7 +1559,7 @@ function RegistrarStudentImportPanel() {
       URL.revokeObjectURL(url)
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Download failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -1709,7 +1710,7 @@ function RegistrarSubjectCreditsPanel() {
       refreshStudent()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Auto-credit failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const externalMutation = useMutation({
@@ -1771,7 +1772,7 @@ function RegistrarSubjectCreditsPanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'subject-equivalencies'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Equivalency failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -2069,7 +2070,7 @@ function RegistrarEnrollmentsInner() {
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Assess failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const verifyMutation = useMutation({
     mutationFn: (id: string) => verifyEnrollmentPayment(id),
@@ -2382,7 +2383,7 @@ function AcademicStructureEditor({
       onClose()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Update failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const title =
@@ -2538,7 +2539,7 @@ function RegistrarAcademicInner() {
       void qc.invalidateQueries({ queryKey: ['reg', 'programs'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Course create failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const createSectionMutation = useMutation({
@@ -2558,7 +2559,7 @@ function RegistrarAcademicInner() {
       void qc.invalidateQueries({ queryKey: ['reg', 'sections'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Section create failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   useEffect(() => {
@@ -2777,6 +2778,7 @@ function RegistrarAcademicInner() {
           />
         )}
       </QueryPage>
+      <RegistrarSchedulingDesk />
       <RegistrarAcademicStructurePanel />
       <RegistrarFacilitiesPanel />
       <RegistrarAcademicPoliciesPanel />
@@ -2808,7 +2810,7 @@ function RegistrarBlockEncodePanel(props: {
   const qc = useQueryClient()
   const [sectionId, setSectionId] = useState('')
   const [blockGroupCode, setBlockGroupCode] = useState('')
-  const [enrollmentId, setEnrollmentId] = useState('')
+  const [studentRef, setStudentRef] = useState('')
   const [encodeCode, setEncodeCode] = useState('')
 
   const patchMutation = useMutation({
@@ -2826,11 +2828,11 @@ function RegistrarBlockEncodePanel(props: {
       void qc.invalidateQueries({ queryKey: ['reg', 'sections'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Patch failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const encodeMutation = useMutation({
-    mutationFn: () => encodeBlockGroup(enrollmentId.trim(), encodeCode.trim()),
+    mutationFn: () => encodeBlockGroup(studentRef.trim(), encodeCode.trim()),
     onSuccess: (data) => {
       notify({
         tone: 'success',
@@ -2839,7 +2841,7 @@ function RegistrarBlockEncodePanel(props: {
       })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Encode failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -2887,12 +2889,8 @@ function RegistrarBlockEncodePanel(props: {
           Save block tag
         </Button>
         <div className="grid gap-3 md:grid-cols-2">
-          <FormField id="blockEnrollmentId" label="Enrollment ID">
-            <Input
-              id="blockEnrollmentId"
-              value={enrollmentId}
-              onChange={(e) => setEnrollmentId(e.target.value)}
-            />
+          <FormField id="blockStudentRef" label="Student">
+            <StudentSearchSelect value={studentRef} onChange={setStudentRef} />
           </FormField>
           <FormField id="blockEncodeCode" label="Encode block group">
             <Input
@@ -2905,7 +2903,7 @@ function RegistrarBlockEncodePanel(props: {
         </div>
         <Button
           type="button"
-          disabled={!enrollmentId.trim() || !encodeCode.trim() || encodeMutation.isPending}
+          disabled={!studentRef.trim() || !encodeCode.trim() || encodeMutation.isPending}
           onClick={() => encodeMutation.mutate()}
         >
           Encode onto enrollment
@@ -2945,7 +2943,7 @@ function RegistrarAcademicStructurePanel() {
   const [areaCode, setAreaCode] = useState('')
   const [areaName, setAreaName] = useState('')
   const [areaCollegeId, setAreaCollegeId] = useState('')
-  const [assignUserId, setAssignUserId] = useState('')
+  const [assignPersonnelId, setAssignPersonnelId] = useState('')
   const [assignName, setAssignName] = useState('')
   const [assignCollegeId, setAssignCollegeId] = useState('')
   const [assignDeptId, setAssignDeptId] = useState('')
@@ -2967,7 +2965,7 @@ function RegistrarAcademicStructurePanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'colleges'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'College failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const createDeptMutation = useMutation({
@@ -2986,7 +2984,7 @@ function RegistrarAcademicStructurePanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'academic-departments'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Department failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const createPositionMutation = useMutation({
@@ -2998,7 +2996,7 @@ function RegistrarAcademicStructurePanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'positions'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Position failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const createAreaMutation = useMutation({
@@ -3025,7 +3023,7 @@ function RegistrarAcademicStructurePanel() {
   const createAssignMutation = useMutation({
     mutationFn: () =>
       createEmployeeAssignment({
-        platformUserId: assignUserId.trim(),
+        userId: assignPersonnelId.trim() || undefined,
         displayName: assignName.trim() || undefined,
         collegeId: assignCollegeId || undefined,
         academicDepartmentId: assignDeptId || undefined,
@@ -3034,14 +3032,14 @@ function RegistrarAcademicStructurePanel() {
       }),
     onSuccess: () => {
       notify({ tone: 'success', title: 'Employee assignment saved' })
-      setAssignUserId('')
+      setAssignPersonnelId('')
       setAssignName('')
       setAssignHead(false)
       void qc.invalidateQueries({ queryKey: ['reg', 'employee-assignments'] })
       void qc.invalidateQueries({ queryKey: ['reg', 'academic-departments'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Assignment failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -3245,11 +3243,11 @@ function RegistrarAcademicStructurePanel() {
         <div className="space-y-3">
           <h3 className="text-sm font-semibold">Employee assignments</h3>
           <div className="grid gap-3 md:grid-cols-3">
-            <FormField id="assignUserId" label="Platform user id">
-              <Input
-                id="assignUserId"
-                value={assignUserId}
-                onChange={(e) => setAssignUserId(e.target.value)}
+            <FormField id="assignPersonnel" label="Personnel">
+              <PersonnelSearchSelect
+                id="assignPersonnel"
+                value={assignPersonnelId}
+                onChange={setAssignPersonnelId}
               />
             </FormField>
             <FormField id="assignName" label="Display name">
@@ -3312,7 +3310,7 @@ function RegistrarAcademicStructurePanel() {
               </label>
               <Button
                 type="button"
-                disabled={!assignUserId.trim() || createAssignMutation.isPending}
+                disabled={!assignPersonnelId.trim() || createAssignMutation.isPending}
                 onClick={() => createAssignMutation.mutate()}
               >
                 Assign employee
@@ -3322,7 +3320,7 @@ function RegistrarAcademicStructurePanel() {
           <DataTable
             label="Employee assignments"
             columns={[
-              { key: 'platformUserId', header: 'User id' },
+              { key: 'personnelEmail', header: 'Email', render: (r) => r.personnelEmail || '—' },
               { key: 'displayName', header: 'Name', render: (r) => r.displayName || '—' },
               { key: 'collegeCode', header: 'College', render: (r) => r.collegeCode || '—' },
               {
@@ -3394,7 +3392,7 @@ function RegistrarInstitutionalProfilePanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'institution'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Profile failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const uploadMutation = useMutation({
@@ -3553,7 +3551,7 @@ function RegistrarFacilitiesPanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'room-categories'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Category failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const createBuildingMutation = useMutation({
@@ -3569,7 +3567,7 @@ function RegistrarFacilitiesPanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'buildings'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Building failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const createRoomMutation = useMutation({
@@ -3588,7 +3586,7 @@ function RegistrarFacilitiesPanel() {
       void qc.invalidateQueries({ queryKey: ['reg', 'rooms'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Room failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -3782,7 +3780,7 @@ function RegistrarAcademicPoliciesPanel() {
       }),
     onSuccess: () => notify({ tone: 'success', title: 'Academic policies saved' }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Policies failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const toggleNextTerm = useMutation({
     mutationFn: (open: boolean) =>
@@ -3887,7 +3885,13 @@ function RegistrarAcademicPoliciesPanel() {
 }
 
 function RegistrarSectionSlotTools(props: {
-  sections: Array<{ id: string; code: string; name: string }>
+  sections: Array<{
+    id: string
+    code: string
+    name: string
+    academicYearId?: string
+    semester?: number
+  }>
 }) {
   const { notify } = useNotification()
   const queryClient = useQueryClient()
@@ -3899,6 +3903,10 @@ function RegistrarSectionSlotTools(props: {
   const [startMinute, setStartMinute] = useState('480')
   const [endMinute, setEndMinute] = useState('570')
   const [roomCode, setRoomCode] = useState('')
+  const [facultyUserId, setFacultyUserId] = useState('')
+  const [meetingFacultyLabel, setMeetingFacultyLabel] = useState<string | null>(null)
+  const [primaryFacultyId, setPrimaryFacultyId] = useState('')
+  const [primaryFacultyLabel, setPrimaryFacultyLabel] = useState<string | null>(null)
   const [editMeetingId, setEditMeetingId] = useState<string | null>(null)
   const [capacityEdit, setCapacityEdit] = useState('40')
   const [waitlistOn, setWaitlistOn] = useState(false)
@@ -3924,6 +3932,10 @@ function RegistrarSectionSlotTools(props: {
     queryKey: ['reg', 'section-waitlist', sectionId],
     queryFn: () => fetchSectionWaitlist(sectionId),
     enabled: Boolean(sectionId),
+  })
+  const rooms = useQuery({
+    queryKey: ['reg', 'rooms', 'slot'],
+    queryFn: () => fetchRooms(),
   })
 
   useEffect(() => {
@@ -3951,7 +3963,7 @@ function RegistrarSectionSlotTools(props: {
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Save failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const promoteMutation = useMutation({
@@ -3965,7 +3977,7 @@ function RegistrarSectionSlotTools(props: {
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Promote failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const storedConflictMutation = useMutation({
@@ -3993,6 +4005,7 @@ function RegistrarSectionSlotTools(props: {
         startMinute: Number(startMinute),
         endMinute: Number(endMinute),
         roomCode: roomCode.trim() || undefined,
+        facultyUserId: facultyUserId.trim() || undefined,
       }),
     onSuccess: (data) => {
       if (data.ok) notify({ tone: 'success', title: 'No room/faculty conflict for this slot' })
@@ -4011,6 +4024,26 @@ function RegistrarSectionSlotTools(props: {
       }),
   })
 
+  const facultyAssignMutation = useMutation({
+    mutationFn: () => {
+      const row = props.sections.find((s) => s.id === sectionId)
+      const yearId = row?.academicYearId
+      const sem = row?.semester ?? 1
+      if (!yearId) throw new Error('Section row missing academic year — refresh sections list')
+      return assignFacultyToSection({
+        sectionId,
+        facultyUserId: primaryFacultyId.trim(),
+        academicYearId: yearId,
+        semester: sem,
+      })
+    },
+    onSuccess: () => {
+      notify({ tone: 'success', title: 'Primary faculty assigned to section' })
+    },
+    onError: (err) =>
+      notify(notifyGenericError(err)),
+  })
+
   const addMeetingMutation = useMutation({
     mutationFn: () =>
       addSectionMeeting(sectionId, {
@@ -4018,13 +4051,14 @@ function RegistrarSectionSlotTools(props: {
         startMinute: Number(startMinute),
         endMinute: Number(endMinute),
         roomCode: roomCode.trim() || undefined,
+        facultyUserId: facultyUserId.trim() || undefined,
       }),
     onSuccess: () => {
       notify({ tone: 'success', title: 'Meeting slot added — students/faculty notified' })
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Add failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const updateMeetingMutation = useMutation({
@@ -4034,6 +4068,7 @@ function RegistrarSectionSlotTools(props: {
         startMinute: Number(startMinute),
         endMinute: Number(endMinute),
         roomCode: roomCode.trim() || null,
+        facultyUserId: facultyUserId.trim() || null,
       }),
     onSuccess: () => {
       notify({ tone: 'success', title: 'Meeting updated — students/faculty notified' })
@@ -4041,7 +4076,7 @@ function RegistrarSectionSlotTools(props: {
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Update failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const deleteMeetingMutation = useMutation({
@@ -4051,7 +4086,7 @@ function RegistrarSectionSlotTools(props: {
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Remove failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const dropMutation = useMutation({
@@ -4067,7 +4102,7 @@ function RegistrarSectionSlotTools(props: {
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Drop failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const transferMutation = useMutation({
@@ -4082,7 +4117,7 @@ function RegistrarSectionSlotTools(props: {
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Transfer failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const dissolveMutation = useMutation({
@@ -4092,7 +4127,7 @@ function RegistrarSectionSlotTools(props: {
       refresh()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Dissolve failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -4190,13 +4225,48 @@ function RegistrarSectionSlotTools(props: {
                   onChange={(e) => setDayOfWeek(e.target.value)}
                 />
               </FormField>
-              <FormField id="slotRoom" label="Room code">
-                <Input
-                  id="slotRoom"
-                  value={roomCode}
-                  onChange={(e) => setRoomCode(e.target.value)}
+              <FormField id="slotRoom" label="Room">
+                <Select id="slotRoom" value={roomCode} onChange={(e) => setRoomCode(e.target.value)}>
+                  <option value="">Select room</option>
+                  {(rooms.data ?? []).map((r) => (
+                    <option key={r.id} value={r.code}>
+                      {r.code} — {r.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+              <FormField id="slotFaculty" label="Meeting faculty">
+                <PersonnelSearchSelect
+                  id="slotFaculty"
+                  value={facultyUserId}
+                  valueLabel={meetingFacultyLabel}
+                  onChange={(id) => {
+                    setFacultyUserId(id)
+                    setMeetingFacultyLabel(null)
+                  }}
                 />
               </FormField>
+              <FormField id="slotPrimaryFaculty" label="Primary faculty (class record)">
+                <PersonnelSearchSelect
+                  id="slotPrimaryFaculty"
+                  value={primaryFacultyId}
+                  valueLabel={primaryFacultyLabel}
+                  onChange={(id) => {
+                    setPrimaryFacultyId(id)
+                    setPrimaryFacultyLabel(null)
+                  }}
+                />
+              </FormField>
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!sectionId || !primaryFacultyId.trim() || facultyAssignMutation.isPending}
+                  onClick={() => facultyAssignMutation.mutate()}
+                >
+                  Assign primary faculty
+                </Button>
+              </div>
               <FormField id="slotStart" label="Start minute">
                 <Input
                   id="slotStart"
@@ -4261,6 +4331,14 @@ function RegistrarSectionSlotTools(props: {
                   { key: 'endMinute', header: 'End' },
                   { key: 'roomCode', header: 'Room', render: (r) => r.roomCode ?? '—' },
                   {
+                    key: 'facultyName',
+                    header: 'Faculty',
+                    render: (r) =>
+                      r.facultyName
+                        ? `${r.facultyName}${r.facultyEmail ? ` · ${r.facultyEmail}` : ''}`
+                        : '—',
+                  },
+                  {
                     key: 'id',
                     header: 'Action',
                     render: (r) => (
@@ -4275,6 +4353,11 @@ function RegistrarSectionSlotTools(props: {
                             setStartMinute(String(r.startMinute))
                             setEndMinute(String(r.endMinute))
                             setRoomCode(r.roomCode ?? '')
+                            setFacultyUserId(r.facultyUserId ?? '')
+                            const facultyLabel = [r.facultyName, r.facultyEmail]
+                              .filter(Boolean)
+                              .join(' · ')
+                            setMeetingFacultyLabel(facultyLabel || null)
                           }}
                         >
                           Edit
@@ -4329,13 +4412,16 @@ function RegistrarSectionSlotTools(props: {
                 No enrolled students in this section.
               </p>
             )}
-            <FormField id="enrollmentLineId" label="Enrollment line ID (drop / transfer)">
-              <Input
-                id="enrollmentLineId"
-                value={lineId}
-                onChange={(e) => setLineId(e.target.value)}
-              />
-            </FormField>
+            {lineId ? (
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                Student selected from roster for drop or transfer. Use &quot;Use for drop/transfer&quot; on
+                the roster to change selection.
+              </p>
+            ) : (
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                Choose a student from the roster below before drop or transfer.
+              </p>
+            )}
             <div className="flex flex-wrap items-end gap-2">
               <Button
                 type="button"
@@ -4466,7 +4552,7 @@ function CurriculumCatalogEditor({
       onClose()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Update failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -4559,7 +4645,7 @@ function SubjectEditModal({
       onClose()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Update failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -4677,7 +4763,7 @@ function SubjectLinkModal({
       onClose()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Link failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -4973,7 +5059,7 @@ function RegistrarCurriculumInner() {
       void qc.invalidateQueries({ queryKey: ['reg', 'curricula'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Duplicate failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const activateMutation = useMutation({
@@ -4983,7 +5069,7 @@ function RegistrarCurriculumInner() {
       void qc.invalidateQueries({ queryKey: ['reg', 'curricula'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Activate failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const addLineMutation = useMutation({
@@ -5000,7 +5086,7 @@ function RegistrarCurriculumInner() {
       })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Add subject failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const deleteCurriculumMutation = useMutation({
@@ -5813,7 +5899,7 @@ function RegistrarRequirementsInner() {
       void qc.invalidateQueries({ queryKey: ['reg', 'requirements-compliance'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Create failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const refresh = () => {
@@ -6094,7 +6180,7 @@ function RegistrarRegistrationInner() {
       refreshEnrollment()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Assess failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const registerMutation = useMutation({
     mutationFn: () => registerEnrollment(enrollmentId),
@@ -6389,7 +6475,7 @@ function RegistrarAnnouncementsInner() {
       qc.invalidateQueries({ queryKey: ['reg', 'announcements'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Could not save', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const smsDispatch = useMutation({
     mutationFn: (id: string) => dispatchAnnouncement(id, ['sms']),
@@ -6433,7 +6519,7 @@ function RegistrarAnnouncementsInner() {
       qc.invalidateQueries({ queryKey: ['reg', 'announcements'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Pin failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const publishMutation = useMutation({
     mutationFn: (id: string) => publishAnnouncement(id),
@@ -6442,7 +6528,7 @@ function RegistrarAnnouncementsInner() {
       qc.invalidateQueries({ queryKey: ['reg', 'announcements'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Publish failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const archiveMutation = useMutation({
     mutationFn: (id: string) => archiveAnnouncement(id),
@@ -6451,7 +6537,7 @@ function RegistrarAnnouncementsInner() {
       qc.invalidateQueries({ queryKey: ['reg', 'announcements'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Archive failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const settingsMutation = useMutation({
     mutationFn: (enabled: boolean) =>
@@ -6464,7 +6550,7 @@ function RegistrarAnnouncementsInner() {
       qc.invalidateQueries({ queryKey: ['reg', 'announcement-settings'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Settings failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const campaigns = useQuery({
@@ -6507,7 +6593,7 @@ function RegistrarAnnouncementsInner() {
       )
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Preview failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const sendSms = useMutation({
     mutationFn: () =>
@@ -6534,7 +6620,7 @@ function RegistrarAnnouncementsInner() {
       qc.invalidateQueries({ queryKey: ['reg', 'mass-sms'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Queue failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const createPoll = useMutation({
     mutationFn: () =>
@@ -6559,7 +6645,7 @@ function RegistrarAnnouncementsInner() {
       qc.invalidateQueries({ queryKey: ['reg', 'surveys'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Poll failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const publishMode = form.watch('publishMode')
@@ -6996,7 +7082,7 @@ function RegistrarFacultyEvalInner() {
       codes.refetch()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Save failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const createQuestion = useMutation({
     mutationFn: (v: { prompt: string }) => createFacultyEvalQuestion(v),
@@ -7005,7 +7091,7 @@ function RegistrarFacultyEvalInner() {
       questions.refetch()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Save failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const createSchedule = useMutation({
     mutationFn: async (v: { title: string; optionIndex: string; closesAt: string }) => {
@@ -7038,7 +7124,7 @@ function RegistrarFacultyEvalInner() {
       invalidateSchedules()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Schedule failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const closeSchedule = useMutation({
     mutationFn: (id: string) => closeFacultyEvalSchedule(id),
@@ -7048,7 +7134,7 @@ function RegistrarFacultyEvalInner() {
       invalidateSchedules()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Close failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const reopenSchedule = useMutation({
     mutationFn: (id: string) => openFacultyEvalSchedule(id),
@@ -7058,7 +7144,7 @@ function RegistrarFacultyEvalInner() {
       invalidateSchedules()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Open failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const loadReport = useMutation({
     mutationFn: (id: string) => fetchFacultyEvalReport(id),
@@ -7067,7 +7153,7 @@ function RegistrarFacultyEvalInner() {
       setReport(data)
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Report failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const exportReport = useMutation({
     mutationFn: async ({ id, format }: { id: string; format: 'csv' | 'xlsx' | 'pdf' }) => {
@@ -7079,7 +7165,7 @@ function RegistrarFacultyEvalInner() {
     },
     onSuccess: (format) => notify({ tone: 'success', title: `Exported ${format.toUpperCase()}` }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Export failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -7150,7 +7236,7 @@ function RegistrarFacultyEvalInner() {
             <FormField id="assignPick" label="Faculty / section target">
               <Select id="assignPick" {...scheduleForm.register('optionIndex')}>
                 {(options.data ?? []).map((o, idx) => (
-                  <option key={`${o.facultyUserId}-${o.sectionId}-${idx}`} value={String(idx)}>
+                  <option key={`${o.sectionId}-${o.sectionCode}-${idx}`} value={String(idx)}>
                     {o.facultyName} · {o.sectionCode ?? o.sectionId}
                   </option>
                 ))}

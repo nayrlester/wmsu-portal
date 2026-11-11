@@ -127,6 +127,7 @@ export type ScannedRoutes = {
     'enrollment.scheduling.meetings.conflicts': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.list_meetings': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.export_section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.update_meeting': { paramsTuple: [ParamValue]; params: {'meetingId': ParamValue} }
     'enrollment.scheduling.delete_meeting': { paramsTuple: [ParamValue]; params: {'meetingId': ParamValue} }
     'enrollment.scheduling.drop_line': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
@@ -151,6 +152,8 @@ export type ScannedRoutes = {
     'enrollment.academic_setup.create_section': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.update_section': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.academic_setup.delete_section': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_setup.replicate_schedules': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_setup.bulk_update_section_status': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_categories': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_category': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_buildings': { paramsTuple?: []; params?: {} }
@@ -174,6 +177,7 @@ export type ScannedRoutes = {
     'enrollment.academic_structure.list_subject_areas': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.create_subject_area': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.update_subject_area': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.academic_structure.search_personnel': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.create_assignment': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.update_assignment': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -218,6 +222,7 @@ export type ScannedRoutes = {
     'enrollment.advising.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.advising.assign_adviser': { paramsTuple?: []; params?: {} }
     'enrollment.advising.reassign_adviser': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'enrollment.advising.list_periods': { paramsTuple?: []; params?: {} }
     'enrollment.advising.upsert_period': { paramsTuple?: []; params?: {} }
     'enrollment.advising.start_session': { paramsTuple?: []; params?: {} }
     'enrollment.advising.session_show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1336,6 +1341,7 @@ export type ScannedRoutes = {
     'enrollment.scheduling.section_waitlist': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.list_meetings': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.export_section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.my_schedule_notifications': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.faculty_schedule_notifications': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_academic_years': { paramsTuple?: []; params?: {} }
@@ -1350,6 +1356,7 @@ export type ScannedRoutes = {
     'enrollment.academic_structure.list_departments': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.list_positions': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.list_subject_areas': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.search_personnel': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.subjects.index': { paramsTuple?: []; params?: {} }
     'enrollment.academic.subjects.prerequisites.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1362,6 +1369,7 @@ export type ScannedRoutes = {
     'enrollment.enrollments.workflow': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.enrollments.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.list_assignments': { paramsTuple?: []; params?: {} }
+    'enrollment.advising.list_periods': { paramsTuple?: []; params?: {} }
     'enrollment.advising.session_show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.list_recommendations': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.curriculum_evaluation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
@@ -1924,6 +1932,7 @@ export type ScannedRoutes = {
     'enrollment.scheduling.section_waitlist': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.list_meetings': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
+    'enrollment.scheduling.export_section_roster': { paramsTuple: [ParamValue]; params: {'sectionId': ParamValue} }
     'enrollment.scheduling.my_schedule_notifications': { paramsTuple?: []; params?: {} }
     'enrollment.scheduling.faculty_schedule_notifications': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_academic_years': { paramsTuple?: []; params?: {} }
@@ -1938,6 +1947,7 @@ export type ScannedRoutes = {
     'enrollment.academic_structure.list_departments': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.list_positions': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.list_subject_areas': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_structure.search_personnel': { paramsTuple?: []; params?: {} }
     'enrollment.academic_structure.list_assignments': { paramsTuple?: []; params?: {} }
     'enrollment.subjects.index': { paramsTuple?: []; params?: {} }
     'enrollment.academic.subjects.prerequisites.index': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -1950,6 +1960,7 @@ export type ScannedRoutes = {
     'enrollment.enrollments.workflow': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.enrollments.show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.list_assignments': { paramsTuple?: []; params?: {} }
+    'enrollment.advising.list_periods': { paramsTuple?: []; params?: {} }
     'enrollment.advising.session_show': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.list_recommendations': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.advising.curriculum_evaluation': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
@@ -2472,6 +2483,8 @@ export type ScannedRoutes = {
     'enrollment.academic_setup.create_academic_year': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.create_program': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.create_section': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_setup.replicate_schedules': { paramsTuple?: []; params?: {} }
+    'enrollment.academic_setup.bulk_update_section_status': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_category': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_building': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_room': { paramsTuple?: []; params?: {} }

@@ -58,8 +58,11 @@ export class IdentityProvisionClient {
       },
       body: JSON.stringify(payload),
     })
-    const body = (await res.json()) as { data?: T; error?: string }
-    if (!res.ok) throw new Error(body.error ?? `Identity provision POST ${path} failed`)
+    const body = (await res.json()) as { data?: T; error?: string; message?: string }
+    if (!res.ok) {
+      const detail = body.message ?? body.error ?? `HTTP ${res.status}`
+      throw new Error(`Identity provision POST ${path} failed: ${detail}`)
+    }
     if (!body.data) throw new Error(`Identity provision POST ${path} missing data`)
     return body.data
   }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -31,11 +31,14 @@ import {
 } from '../api/requisitions-api'
 import type { Requisition, RequisitionFormData } from '../types'
 import type { Column } from '@/components/ui/data-table'
+import { ItemSearchSelect } from '@/components/item-search-select'
+import { WarehouseSearchSelect } from '@/components/warehouse-search-select'
+import { LabeledSearchField } from '@/components/labeled-search-field'
 
 const schema = z.object({
   department: z.string().min(1, 'Department is required'),
   purpose: z.string().min(1, 'Purpose is required'),
-  itemId: z.string().uuid('Valid item UUID required'),
+  itemId: z.string().min(1, 'Select an item'),
   quantity: z.number().min(1),
   lineNotes: z.string(),
 })
@@ -201,7 +204,7 @@ function CreateModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
     onSuccess: onSaved,
   })
 
-  const { register, formState: { errors } } = form
+  const { register, control, formState: { errors } } = form
 
   return (
     <Modal open onClose={onClose} title="New Requisition">
@@ -214,7 +217,15 @@ function CreateModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
         <Input label="Department" error={errors.department?.message} {...register('department')} />
         <Textarea label="Purpose" rows={2} error={errors.purpose?.message} {...register('purpose')} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Item ID" error={errors.itemId?.message} {...register('itemId')} />
+          <Controller
+            name="itemId"
+            control={control}
+            render={({ field }) => (
+              <LabeledSearchField label="Item" error={errors.itemId?.message}>
+                <ItemSearchSelect id="requisition-item" value={field.value} onChange={field.onChange} />
+              </LabeledSearchField>
+            )}
+          />
           <Input label="Quantity" type="number" min={1} error={errors.quantity?.message} {...register('quantity', { valueAsNumber: true })} />
         </div>
         <Input label="Line Notes" {...register('lineNotes')} />
@@ -305,12 +316,9 @@ function FulfillModal({
         <div className="flex justify-center py-6"><Spinner /></div>
       ) : (
         <div className="space-y-4">
-          <Input
-            label="Warehouse ID"
-            value={warehouseId}
-            onChange={(e) => setWarehouseId(e.target.value)}
-            placeholder="UUID of issuing warehouse"
-          />
+          <LabeledSearchField label="Issuing warehouse">
+            <WarehouseSearchSelect id="requisition-wh" value={warehouseId} onChange={setWarehouseId} />
+          </LabeledSearchField>
           <p className="text-xs text-muted-foreground">
             {(detailQuery.data?.lines.length ?? item.lines.length)} line(s) will be issued from this warehouse.
           </p>

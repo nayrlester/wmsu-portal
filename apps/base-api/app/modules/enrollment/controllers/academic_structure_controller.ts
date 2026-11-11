@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import vine from '@vinejs/vine'
 import { academicStructureService } from '#modules/enrollment/services/academic_structure_service'
+import { personnelService } from '#modules/enrollment/services/personnel_service'
 
 const codeName = {
   code: vine.string().trim().minLength(1).maxLength(32),
@@ -79,7 +80,8 @@ const updateSubjectAreaValidator = vine.compile(
 
 const createAssignmentValidator = vine.compile(
   vine.object({
-    platformUserId: vine.string().trim().minLength(1).maxLength(64),
+    userId: vine.string().uuid().optional(),
+    email: vine.string().email().optional(),
     displayName: vine.string().trim().maxLength(255).optional(),
     collegeId: vine.string().uuid().optional(),
     academicDepartmentId: vine.string().uuid().optional(),
@@ -280,34 +282,69 @@ export default class AcademicStructureController {
     })
   }
 
+  async searchPersonnel(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const search = String(ctx.request.input('search', ctx.request.input('q', '')))
+    const limit = Number(ctx.request.input('limit', 20))
+    const data = await personnelService.search(user.organizationId, { q: search, limit })
+    return ctx.response.ok({ data })
+  }
+
   async listAssignments(ctx: HttpContext) {
-    const rows = await academicStructureService.listAssignments(ctx.auth.user!.organizationId)
+    const orgId = ctx.auth.user!.organizationId
+    const rows = await academicStructureService.listAssignments(orgId)
+    const labelMap = await personnelService.labelsForUserIds(
+      orgId,
+      [...new Set(rows.map((r) => r.platformUserId))]
+    )
     return ctx.response.ok({
-      data: rows.map((r) => ({
-        id: r.id,
-        platformUserId: r.platformUserId,
-        displayName: r.displayName,
-        collegeId: r.collegeId,
-        collegeCode: r.college?.code ?? null,
-        academicDepartmentId: r.academicDepartmentId,
-        academicDepartmentCode: r.academicDepartment?.code ?? null,
-        positionId: r.positionId,
-        positionCode: r.position?.code ?? null,
-        isDepartmentHead: r.isDepartmentHead,
-        isActive: r.isActive,
-      })),
+      data: rows.map((r) => {
+        const person = labelMap.get(r.platformUserId)
+        return {
+          id: r.id,
+          displayName: r.displayName || person?.fullName || null,
+          personnelEmail: person?.email ?? null,
+          collegeId: r.collegeId,
+          collegeCode: r.college?.code ?? null,
+          academicDepartmentId: r.academicDepartmentId,
+          academicDepartmentCode: r.academicDepartment?.code ?? null,
+          positionId: r.positionId,
+          positionCode: r.position?.code ?? null,
+          isDepartmentHead: r.isDepartmentHead,
+          isActive: r.isActive,
+        }
+      }),
     })
   }
 
   async createAssignment(ctx: HttpContext) {
     const user = ctx.auth.user!
     const body = await ctx.request.validateUsing(createAssignmentValidator)
-    const row = await academicStructureService.createAssignment(user.organizationId, body, user.id)
+    const platformUserId = await personnelService.resolveUserId(user.organizationId, {
+      userId: body.userId,
+      email: body.email,
+    })
+    const row = await academicStructureService.createAssignment(
+      user.organizationId,
+      {
+        platformUserId,
+        displayName: body.displayName,
+        collegeId: body.collegeId,
+        academicDepartmentId: body.academicDepartmentId,
+        positionId: body.positionId,
+        isDepartmentHead: body.isDepartmentHead,
+        isActive: body.isActive,
+      },
+      user.id
+    )
+    const person = (await personnelService.labelsForUserIds(user.organizationId, [row.platformUserId])).get(
+      row.platformUserId
+    )
     return ctx.response.created({
       data: {
         id: row.id,
-        platformUserId: row.platformUserId,
-        displayName: row.displayName,
+        displayName: row.displayName || person?.fullName || null,
+        personnelEmail: person?.email ?? null,
         collegeId: row.collegeId,
         academicDepartmentId: row.academicDepartmentId,
         positionId: row.positionId,
@@ -326,11 +363,14 @@ export default class AcademicStructureController {
       body,
       user.id
     )
+    const person = (await personnelService.labelsForUserIds(user.organizationId, [row.platformUserId])).get(
+      row.platformUserId
+    )
     return ctx.response.ok({
       data: {
         id: row.id,
-        platformUserId: row.platformUserId,
-        displayName: row.displayName,
+        displayName: row.displayName || person?.fullName || null,
+        personnelEmail: person?.email ?? null,
         collegeId: row.collegeId,
         academicDepartmentId: row.academicDepartmentId,
         positionId: row.positionId,

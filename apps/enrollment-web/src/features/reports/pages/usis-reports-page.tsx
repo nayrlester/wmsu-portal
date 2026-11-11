@@ -151,12 +151,12 @@ function UsisReportsInner() {
               <option value="3">3</option>
             </Select>
           </FormField>
-          <FormField id="campusId" label="Campus ID">
+          <FormField id="campusCode" label="Campus code (optional)">
             <Input
-              id="campusId"
+              id="campusCode"
               value={filters.campusId ?? ''}
-              onChange={(e) => setFilters((f) => ({ ...f, campusId: e.target.value }))}
-              placeholder="Campus UUID"
+              onChange={(e) => setFilters((f) => ({ ...f, campusId: e.target.value.trim() }))}
+              placeholder="e.g. MAIN"
             />
           </FormField>
           <FormField id="collegeCode" label="College code">

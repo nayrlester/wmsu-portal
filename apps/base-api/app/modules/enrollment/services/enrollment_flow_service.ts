@@ -70,10 +70,29 @@ export async function resolveEnrollmentId(organizationId: string, ref: string) {
       .where('organization_id', organizationId)
       .where('id', value)
       .first()
-    if (!row) {
-      throw new EnrollmentWorkflowError('Enrollment not found', 404, 'ENROLLMENT_NOT_FOUND')
+    if (row) return row.id
+
+    const studentById = await Student.query()
+      .where('organization_id', organizationId)
+      .where('id', value)
+      .whereNull('deleted_at')
+      .first()
+    if (studentById) {
+      const enrollment = await Enrollment.query()
+        .where('organization_id', organizationId)
+        .where('student_id', studentById.id)
+        .orderByRaw("case when status = 'registered' then 1 else 0 end")
+        .orderBy('created_at', 'desc')
+        .first()
+      if (enrollment) return enrollment.id
+      throw new EnrollmentWorkflowError(
+        `No enrollment found for student ${studentById.studentNumber}`,
+        404,
+        'ENROLLMENT_NOT_FOUND'
+      )
     }
-    return row.id
+
+    throw new EnrollmentWorkflowError('Enrollment not found', 404, 'ENROLLMENT_NOT_FOUND')
   }
 
   const student = await Student.query()
@@ -113,6 +132,7 @@ export type AccountNotice = {
   to: string | null
   loginEmail: string
   provisioned: boolean
+  provisionError: string | null
   reason: string | null
 }
 
@@ -138,6 +158,7 @@ async function sendAccountMail(input: {
       to: null,
       loginEmail: '',
       provisioned: false,
+      provisionError: null,
       reason: 'No email address is on the application',
     }
   }
@@ -147,6 +168,7 @@ async function sendAccountMail(input: {
       to,
       loginEmail: '',
       provisioned: false,
+      provisionError: null,
       reason: 'Email delivery is not configured',
     }
   }
@@ -162,6 +184,7 @@ async function sendAccountMail(input: {
     to,
     loginEmail: '',
     provisioned: false,
+    provisionError: null,
     reason: result.success ? null : result.error || 'Email was not delivered',
   }
 }
@@ -212,24 +235,31 @@ export class EnrollmentFlowService {
       loginEmail: string
       temporaryPassword: string | null
       provisioned: boolean
+      provisionError: string | null
       student: { studentNumber: string }
     }
   ): Promise<AccountNotice> {
     const name = `${applicant.firstName} ${applicant.lastName}`.trim()
-    const lines = [
-      `Hi ${name},`,
-      '',
-      'The registrar admitted your application. Your student account is ready so you can continue enrollment.',
+    const lines = [`Hi ${name},`, '']
+    if (account.provisioned) {
+      lines.push(
+        'The registrar admitted your application. You can continue enrollment using the sign-in details below.'
+      )
+    } else {
+      lines.push(
+        'The registrar admitted your application and created your student record.',
+        'Your sign-in account is not ready yet. Contact the registrar before you try to sign in.'
+      )
+    }
+    lines.push(
       `Student number: ${account.student.studentNumber}`,
-      `Sign-in email: ${account.loginEmail}`,
-    ]
+      `Sign-in email: ${account.loginEmail}`
+    )
     if (account.provisioned && account.temporaryPassword) {
       lines.push(`Temporary password: ${account.temporaryPassword}`)
       lines.push('Change this password after you sign in.')
     } else if (account.provisioned) {
       lines.push('This sign-in already exists. Use the password you already have. A new password was not issued.')
-    } else {
-      lines.push('The sign-in account could not be issued. Contact the registrar before you try to sign in.')
     }
     lines.push(portalLine(), '', 'WMSU Student Information')
     const notice = await sendAccountMail({
@@ -243,6 +273,7 @@ export class EnrollmentFlowService {
       ...notice,
       loginEmail: account.loginEmail,
       provisioned: account.provisioned,
+      provisionError: account.provisioned ? null : account.provisionError,
     }
   }
 
@@ -367,6 +398,23 @@ export class EnrollmentFlowService {
   }
 
   async verifyPayment(enrollmentId: string, actorUserId: string) {
+    const env = (await import('#start/env')).default
+    const devBypass =
+      process.env.USIS_DEV_PAYMENT_BYPASS === 'true' ||
+      env.get('USIS_DEV_PAYMENT_BYPASS') === true ||
+      process.env.FINANCE_MOCK === 'true' ||
+      env.get('FINANCE_MOCK') === true
+    if (devBypass) {
+      const enrollment = await Enrollment.findOrFail(enrollmentId)
+      await assertAssessmentGate(enrollment)
+      enrollment.paymentVerified = true
+      enrollment.paymentVerifiedAt = DateTime.now()
+      enrollment.paymentVerifiedBy = actorUserId
+      enrollment.status = 'payment_verified'
+      await enrollment.save()
+      await statusHistory(enrollment, 'payment_verified', actorUserId, 'Dev payment bypass')
+      return enrollment
+    }
     const { AssessmentService } = await import('#modules/enrollment/services/assessment_service')
     const service = new AssessmentService()
     const enrollment = await service.verifyPaymentFromUfms(enrollmentId, actorUserId)
@@ -478,7 +526,7 @@ export class EnrollmentFlowService {
       message,
       channel: 'official_enrollment',
     })
-    return { ...notice, loginEmail: student.email, provisioned: true }
+    return { ...notice, loginEmail: student.email, provisioned: true, provisionError: null }
   }
 
   async reject(enrollmentId: string, actorUserId: string, reason: string) {

@@ -44,7 +44,18 @@ export async function fetchApplicants() {
 
 export async function admitApplicant(id: string, studentNumber: string) {
   const { data } = await apiClient.post(`/applicants/${id}/admit`, { studentNumber })
-  return data.data as { applicant: Applicant; student: Student }
+  return data.data as {
+    applicant: Applicant
+    student: Student
+    accountNotice?: {
+      sent: boolean
+      to: string | null
+      loginEmail: string
+      provisioned: boolean
+      provisionError: string | null
+      reason: string | null
+    }
+  }
 }
 
 export async function fetchStudents() {

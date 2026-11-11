@@ -52,7 +52,14 @@ export default class ItemsController {
     const page = request.input('page', 1)
     const limit = request.input('limit', 25)
     const categoryId = request.input('categoryId')
-    const items = await itemService.listItems(auth.user!.organizationId, page, limit, categoryId)
+    const search = request.input('search')
+    const items = await itemService.listItems(
+      auth.user!.organizationId,
+      page,
+      limit,
+      categoryId,
+      search ? String(search) : undefined
+    )
     return response.ok({ data: items.all(), meta: items.getMeta() })
   }
 

@@ -15,7 +15,14 @@ export default class AssetsController {
     const page = request.input('page', 1)
     const limit = request.input('limit', 25)
     const status = request.input('status')
-    const assets = await assetService.list(auth.user!.organizationId, page, limit, status)
+    const search = request.input('search')
+    const assets = await assetService.list(
+      auth.user!.organizationId,
+      page,
+      limit,
+      status ? String(status) : undefined,
+      search ? String(search) : undefined
+    )
     return response.ok({ data: assets.all(), meta: assets.getMeta() })
   }
 

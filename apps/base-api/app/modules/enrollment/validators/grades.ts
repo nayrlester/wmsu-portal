@@ -39,7 +39,8 @@ export const gradeDeadlineValidator = vine.compile(
 export const facultyAssignValidator = vine.compile(
   vine.object({
     sectionId: vine.string().uuid(),
-    facultyUserId: vine.string().uuid(),
+    facultyUserId: vine.string().uuid().optional(),
+    facultyEmail: vine.string().email().optional(),
     academicYearId: vine.string().uuid(),
     semester: vine.number().min(1).max(3),
   })

@@ -1,16 +1,16 @@
 {
-  "phase": "phase3c-search-path-cutover",
+  "phase": "phase3b-module-restore",
   "targetDatabase": "wmsu_cis",
   "completedModules": [
     {
-      "module": "enrollment",
-      "targetSchema": "enrollment",
+      "module": "common",
+      "targetSchema": "common",
       "sourceDatabase": "librastack",
-      "sourceSchema": "wmsu_enr",
-      "tableCount": 114,
-      "restoredAt": "2026-11-04T01:28:16.592Z",
+      "sourceSchema": "wmsu_identity",
+      "tableCount": 12,
+      "restoredAt": "2026-11-04T01:51:13.972Z",
       "satelliteUntouched": true,
-      "notes": "USiS schema dump/rewrite/restore into wmsu_cis.enrollment; satellite wmsu_enr left intact"
+      "notes": "librastack.wmsu_identity → wmsu_cis.common; restore scripts ignore apps/base-api DB_DATABASE (prefer POSTGRES_DB/CIS_*); satellite untouched"
     },
     {
       "module": "finance",
@@ -18,25 +18,31 @@
       "sourceDatabase": "librastack",
       "sourceSchema": "wmsu_fin",
       "tableCount": 82,
-      "restoredAt": "2026-11-04T01:30:38.546Z",
-      "satelliteUntouched": true
+      "restoredAt": "2026-11-11T11:47:27.500Z",
+      "satelliteUntouched": true,
+      "method": "migrations-absorb",
+      "dataCopied": false,
+      "notes": "Remote Supabase dump failed (tenant not found); structure absorbed via wmsu-inventory Lucid migrations into wmsu_cis.inventory"
+    },
+    {
+      "module": "enrollment",
+      "targetSchema": "enrollment",
+      "sourceDatabase": "librastack",
+      "sourceSchema": "wmsu_enr",
+      "tableCount": 157,
+      "restoredAt": "2026-11-11T11:47:56.217Z",
+      "satelliteUntouched": true,
+      "method": "migrations-absorb",
+      "dataCopied": false,
+      "notes": "Remote Supabase dump failed (tenant not found); structure absorbed via wmsu-inventory Lucid migrations into wmsu_cis.inventory"
     },
     {
       "module": "records",
       "targetSchema": "records",
       "sourceDatabase": "librastack",
       "sourceSchema": "wmsu_tor",
-      "tableCount": 60,
-      "restoredAt": "2026-11-04T01:32:28.987Z",
-      "satelliteUntouched": true
-    },
-    {
-      "module": "inventory",
-      "targetSchema": "inventory",
-      "sourceDatabase": "postgres",
-      "sourceSchema": "wmsu_inv",
-      "tableCount": 36,
-      "restoredAt": "2026-11-04T01:37:43.592Z",
+      "tableCount": 58,
+      "restoredAt": "2026-11-11T11:48:04.041Z",
       "satelliteUntouched": true,
       "method": "migrations-absorb",
       "dataCopied": false,
@@ -47,30 +53,36 @@
       "targetSchema": "library",
       "sourceDatabase": "librastack",
       "sourceSchema": "public",
-      "tableCount": 55,
-      "restoredAt": "2026-11-04T01:44:12.821Z",
+      "tableCount": 49,
+      "restoredAt": "2026-11-11T11:48:12.981Z",
       "satelliteUntouched": true,
-      "notes": "librastack.public → wmsu_cis.library via SOURCE_PG* overrides (satellite .env Supabase tenant dead); satellite public left intact"
+      "method": "migrations-absorb",
+      "dataCopied": false,
+      "notes": "Remote Supabase dump failed (tenant not found); structure absorbed via wmsu-inventory Lucid migrations into wmsu_cis.inventory"
     },
     {
       "module": "documents",
       "targetSchema": "documents",
       "sourceDatabase": "cdts",
       "sourceSchema": "public",
-      "tableCount": 66,
-      "restoredAt": "2026-11-04T01:48:18.278Z",
+      "tableCount": 64,
+      "restoredAt": "2026-11-11T11:48:24.213Z",
       "satelliteUntouched": true,
-      "notes": "cdts.public → wmsu_cis.documents via SOURCE_PG* (:5435); blobs remain in object storage; satellite untouched"
+      "method": "migrations-absorb",
+      "dataCopied": false,
+      "notes": "Remote Supabase dump failed (tenant not found); structure absorbed via wmsu-inventory Lucid migrations into wmsu_cis.inventory"
     },
     {
-      "module": "common",
-      "targetSchema": "common",
-      "sourceDatabase": "librastack",
-      "sourceSchema": "wmsu_identity",
-      "tableCount": 12,
-      "restoredAt": "2026-11-04T01:51:13.972Z",
+      "module": "inventory",
+      "targetSchema": "inventory",
+      "sourceDatabase": "postgres",
+      "sourceSchema": "wmsu_inv",
+      "tableCount": 36,
+      "restoredAt": "2026-11-11T11:48:31.186Z",
       "satelliteUntouched": true,
-      "notes": "librastack.wmsu_identity → wmsu_cis.common; restore scripts ignore apps/base-api DB_DATABASE (prefer POSTGRES_DB/CIS_*); satellite untouched"
+      "method": "migrations-absorb",
+      "dataCopied": false,
+      "notes": "Remote Supabase dump failed (tenant not found); structure absorbed via wmsu-inventory Lucid migrations into wmsu_cis.inventory"
     }
   ],
   "pendingModules": [],

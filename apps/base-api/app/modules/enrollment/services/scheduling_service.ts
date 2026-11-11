@@ -49,6 +49,8 @@ export class SchedulingService {
     return {
       sectionId: section.id,
       sectionCode: section.code,
+      academicYearId: section.academicYearId,
+      semester: section.semester,
       capacity,
       seated,
       seatsAvailable: capacity > 0 ? Math.max(0, capacity - seated) : null,

@@ -236,10 +236,13 @@ export class FacultyEvalService {
       }))
     }
 
-    const records = await ClassRecord.query().where('organization_id', organizationId).limit(200)
+    const records = await ClassRecord.query()
+      .where('organization_id', organizationId)
+      .preload('faculty')
+      .limit(200)
     return records.map((r) => ({
       facultyUserId: r.facultyUserId,
-      facultyName: r.facultyUserId,
+      facultyName: r.faculty?.fullName ?? r.faculty?.email ?? 'Faculty',
       sectionId: r.sectionId,
       sectionCode: r.subjectCode,
       sectionName: r.subjectTitle,

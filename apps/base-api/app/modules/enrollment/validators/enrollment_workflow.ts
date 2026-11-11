@@ -44,7 +44,8 @@ export const endorseAdvisingValidator = vine.compile(
 
 export const advisingWaiverValidator = vine.compile(
   vine.object({
-    enrollmentId: vine.string().uuid(),
+    enrollmentId: vine.string().trim().minLength(1).maxLength(128).optional(),
+    enrollmentRef: vine.string().trim().minLength(1).maxLength(128).optional(),
     authorityRole: vine.string().trim().minLength(2).maxLength(80),
     reason: vine.string().trim().optional(),
     effectiveTo: vine.string().optional(),

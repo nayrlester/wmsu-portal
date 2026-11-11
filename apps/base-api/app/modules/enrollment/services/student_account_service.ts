@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon'
+import logger from '@adonisjs/core/services/logger'
 import Student from '#modules/enrollment/models/student'
 import env from '#start/env'
 import { IdentityProvisionClient } from '#modules/enrollment/services/platform/identity_provision_client'
@@ -42,6 +43,7 @@ export class StudentAccountService {
     loginEmail: string
     temporaryPassword: string | null
     provisioned: boolean
+    provisionError: string | null
   }> {
     const emailDomain = env.get('STUDENT_EMAIL_DOMAIN') ?? 'demo.edu.ph'
     const email = `${data.studentNumber}@${emailDomain}`
@@ -64,6 +66,7 @@ export class StudentAccountService {
 
     let temporaryPassword: string | null = null
     let provisioned = false
+    let provisionError: string | null = null
     try {
       const result = await this.provisionClient.provisionStudent({
         studentNumber: data.studentNumber,
@@ -77,10 +80,16 @@ export class StudentAccountService {
       temporaryPassword = result.temporaryPassword
       provisioned = true
       await student.save()
-    } catch {
+    } catch (error) {
       provisioned = false
+      provisionError =
+        error instanceof Error ? error.message : 'Identity student provision failed'
+      logger.error(
+        { err: error, studentNumber: data.studentNumber, loginEmail: email },
+        'Identity student provision failed on admit'
+      )
     }
 
-    return { student, loginEmail: email, temporaryPassword, provisioned }
+    return { student, loginEmail: email, temporaryPassword, provisioned, provisionError }
   }
 }

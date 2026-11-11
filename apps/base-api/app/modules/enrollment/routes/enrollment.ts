@@ -264,6 +264,9 @@ router
     router.get('/scheduling/sections/:sectionId/roster', [SchedulingController, 'sectionRoster']).use(
       middleware.permission(['enrollments.read', 'academic.read'])
     )
+    router
+      .get('/scheduling/sections/:sectionId/roster/export', [SchedulingController, 'exportSectionRoster'])
+      .use(middleware.permission(['enrollments.read', 'academic.read', 'reports.export']))
     router.patch('/scheduling/meetings/:meetingId', [SchedulingController, 'updateMeeting']).use(
       middleware.permission(['academic.write'])
     )
@@ -313,6 +316,12 @@ router
     router.post('/academic/sections', [AcademicSetupController, 'createSection']).use(middleware.permission(['academic.write']))
     router.patch('/academic/sections/:id', [AcademicSetupController, 'updateSection']).use(middleware.permission(['academic.write']))
     router.delete('/academic/sections/:id', [AcademicSetupController, 'deleteSection']).use(middleware.permission(['academic.write']))
+    router
+      .post('/academic/schedules/replicate', [AcademicSetupController, 'replicateSchedules'])
+      .use(middleware.permission(['academic.write']))
+    router
+      .post('/academic/sections/bulk-status', [AcademicSetupController, 'bulkUpdateSectionStatus'])
+      .use(middleware.permission(['academic.write']))
 
     router.get('/academic/room-categories', [AcademicFacilitiesController, 'listCategories']).use(
       middleware.permission(['academic.read'])
@@ -385,6 +394,9 @@ router
     )
     router.patch('/academic/subject-areas/:id', [AcademicStructureController, 'updateSubjectArea']).use(
       middleware.permission(['academic.write'])
+    )
+    router.get('/academic/personnel/search', [AcademicStructureController, 'searchPersonnel']).use(
+      middleware.permission(['academic.read', 'enrollments.read', 'users.read'])
     )
     router.get('/academic/employee-assignments', [AcademicStructureController, 'listAssignments']).use(
       middleware.permission(['academic.read'])
@@ -528,6 +540,7 @@ router
     router.post('/advising/assignments/:id/reassign', [AdvisingController, 'reassignAdviser']).use(
       middleware.permission(['advising.write'])
     )
+    router.get('/advising/periods', [AdvisingController, 'listPeriods']).use(middleware.permission(['advising.read', 'advising.write']))
     router.post('/advising/periods', [AdvisingController, 'upsertPeriod']).use(middleware.permission(['advising.write']))
     router.post('/advising/sessions', [AdvisingController, 'startSession']).use(middleware.permission(['advising.write']))
     router.get('/advising/sessions/:id', [AdvisingController, 'sessionShow']).use(middleware.permission(['advising.read']))

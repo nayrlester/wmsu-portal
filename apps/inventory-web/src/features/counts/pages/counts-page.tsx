@@ -17,9 +17,11 @@ import { formatNumber } from '@/lib/utils'
 import { fetchCounts, createCount, reconcileCount, closeCount } from '../api/counts-api'
 import type { PhysicalCount, CountFormData } from '../types'
 import type { Column } from '@/components/ui/data-table'
+import { WarehouseSearchSelect } from '@/components/warehouse-search-select'
+import { LabeledSearchField } from '@/components/labeled-search-field'
 
 const schema = z.object({
-  warehouseId: z.string().min(1, 'Warehouse ID is required'),
+  warehouseId: z.string().min(1, 'Select a warehouse'),
   scheduledDate: z.string().min(1, 'Date is required'),
   notes: z.string(),
 })
@@ -196,7 +198,15 @@ function CreateCountModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
         </div>
       )}
       <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
-        <Input label="Warehouse ID" error={errors.warehouseId?.message} {...register('warehouseId')} />
+        <Controller
+          name="warehouseId"
+          control={control}
+          render={({ field }) => (
+            <LabeledSearchField label="Warehouse" error={errors.warehouseId?.message}>
+              <WarehouseSearchSelect id="count-warehouse" value={field.value} onChange={field.onChange} />
+            </LabeledSearchField>
+          )}
+        />
         <Controller
           name="scheduledDate"
           control={control}

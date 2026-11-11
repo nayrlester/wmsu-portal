@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import { Exception } from '@adonisjs/core/exceptions'
+import vine from '@vinejs/vine'
 import db from '@adonisjs/lucid/services/db'
 import AcademicYear from '#modules/enrollment/models/academic_year'
 import Program from '#modules/enrollment/models/program'
@@ -12,7 +13,10 @@ import {
   createSectionValidator,
   updateAcademicYearValidator,
   updateProgramValidator,
+  updateSectionValidator,
+  replicateSchedulesValidator,
 } from '#modules/enrollment/validators/enrollment'
+import { academicScheduleReplicationService } from '#modules/enrollment/services/academic_schedule_replication_service'
 
 export default class AcademicSetupController {
   async listAcademicYears({ request, response, auth }: HttpContext) {
@@ -154,10 +158,17 @@ export default class AcademicSetupController {
     const page = request.input('page', 1)
     const limit = request.input('limit', 20)
     const academicYearId = request.input('academicYearId')
+    const search = String(request.input('search', '')).trim()
 
     const query = Section.query().where('organization_id', user.organizationId).orderBy('year_level', 'asc')
 
     if (academicYearId) query.where('academic_year_id', academicYearId)
+    if (search) {
+      const pattern = `%${search}%`
+      query.where((group) => {
+        group.whereILike('code', pattern).orWhereILike('name', pattern)
+      })
+    }
 
     const sections = await query.paginate(page, limit)
     return response.ok({ data: sections })
@@ -179,7 +190,7 @@ export default class AcademicSetupController {
       subjectId: payload.subjectId ?? null,
       isBlockSection: payload.isBlockSection ?? false,
       blockGroupCode: payload.blockGroupCode?.trim().toUpperCase() || null,
-      status: 'open',
+      status: 'active',
       enrolledCount: 0,
       waitlistEnabled: false,
     })
@@ -189,44 +200,71 @@ export default class AcademicSetupController {
 
   async updateSection(ctx: HttpContext) {
     const user = ctx.auth.user!
+    const payload = await ctx.request.validateUsing(updateSectionValidator)
     const section = await Section.query()
       .where('organization_id', user.organizationId)
       .where('id', ctx.params.id)
       .firstOrFail()
-    const body = ctx.request.all()
-    const waitlistEnabled = body.waitlistEnabled
-    const capacity = body.capacity
-    const isBlockSection = body.isBlockSection
-    const blockGroupCode = body.blockGroupCode
-    const subjectId = body.subjectId
-    if (typeof body.code === 'string' && body.code.trim()) section.code = body.code.trim()
-    if (typeof body.name === 'string' && body.name.trim()) section.name = body.name.trim()
-    if (body.yearLevel !== undefined && body.yearLevel !== null && body.yearLevel !== '') {
-      section.yearLevel = Number(body.yearLevel)
+    if (payload.code !== undefined) section.code = payload.code.trim()
+    if (payload.name !== undefined) section.name = payload.name.trim()
+    if (payload.yearLevel !== undefined) section.yearLevel = payload.yearLevel
+    if (payload.semester !== undefined) section.semester = payload.semester
+    if (payload.waitlistEnabled !== undefined) section.waitlistEnabled = payload.waitlistEnabled
+    if (payload.capacity !== undefined) section.capacity = payload.capacity
+    if (payload.isBlockSection !== undefined) section.isBlockSection = payload.isBlockSection
+    if (payload.blockGroupCode !== undefined) {
+      section.blockGroupCode = payload.blockGroupCode?.trim().toUpperCase() || null
     }
-    if (body.semester !== undefined && body.semester !== null && body.semester !== '') {
-      section.semester = Number(body.semester)
-    }
-    if (waitlistEnabled !== undefined && waitlistEnabled !== null) {
-      section.waitlistEnabled = Boolean(waitlistEnabled)
-    }
-    if (capacity !== undefined && capacity !== null) {
-      section.capacity = Number(capacity)
-    }
-    if (isBlockSection !== undefined && isBlockSection !== null) {
-      section.isBlockSection = Boolean(isBlockSection)
-    }
-    if (blockGroupCode !== undefined) {
-      section.blockGroupCode =
-        blockGroupCode === null || blockGroupCode === ''
-          ? null
-          : String(blockGroupCode).trim().toUpperCase()
-    }
-    if (subjectId !== undefined) {
-      section.subjectId = subjectId ? String(subjectId) : null
+    if (payload.subjectId !== undefined) section.subjectId = payload.subjectId
+    if (payload.status !== undefined) {
+      if (payload.status === 'dissolved' && section.status !== 'dissolved') {
+        throw new Exception('Use scheduling dissolve to mark a section dissolved', {
+          status: 422,
+          code: 'E_SECTION_STATUS',
+        })
+      }
+      section.status = payload.status
     }
     await section.save()
     return ctx.response.ok({ data: section })
+  }
+
+  async replicateSchedules(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const payload = await ctx.request.validateUsing(replicateSchedulesValidator)
+    try {
+      const data = await academicScheduleReplicationService.replicate({
+        organizationId: user.organizationId,
+        sourceAcademicYearId: payload.sourceAcademicYearId,
+        targetAcademicYearId: payload.targetAcademicYearId,
+        semester: payload.semester,
+        actorUserId: user.id,
+      })
+      return ctx.response.created({ data })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Replication failed'
+      return ctx.response.unprocessableEntity({ error: message })
+    }
+  }
+
+  async bulkUpdateSectionStatus(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const body = await ctx.request.validateUsing(
+      vine.compile(
+        vine.object({
+          sectionIds: vine.array(vine.string().uuid()).minLength(1),
+          status: vine.enum(['draft', 'open', 'active', 'closed'] as const),
+        })
+      )
+    )
+    const rows = await Section.query()
+      .where('organization_id', user.organizationId)
+      .whereIn('id', body.sectionIds)
+    for (const section of rows) {
+      section.status = body.status
+      await section.save()
+    }
+    return ctx.response.ok({ data: { updated: rows.length, status: body.status } })
   }
 
   async deleteSection(ctx: HttpContext) {

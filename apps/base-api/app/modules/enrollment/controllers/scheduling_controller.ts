@@ -6,6 +6,8 @@ import { waitlistService } from '#modules/enrollment/services/waitlist_service'
 import { slotAdminService } from '#modules/enrollment/services/slot_admin_service'
 import { schedulingNotificationService } from '#modules/enrollment/services/scheduling_notification_service'
 import { enrollmentClassScheduleService } from '#modules/enrollment/services/enrollment_class_schedule_service'
+import { resolveEnrollmentId } from '#modules/enrollment/services/enrollment_flow_service'
+import { personnelService } from '#modules/enrollment/services/personnel_service'
 import { resolveSelfStudent, effectivePermissions, hasStaffEnrollmentAccess } from '#modules/enrollment/services/enrollment_access_service'
 import { facultyEvalService } from '#modules/enrollment/services/faculty_eval_service'
 
@@ -70,7 +72,8 @@ const alternateSectionsValidator = vine.compile(
 
 const applyClassCodesValidator = vine.compile(
   vine.object({
-    enrollmentId: vine.string().uuid(),
+    enrollmentId: vine.string().trim().minLength(1).maxLength(128).optional(),
+    enrollmentRef: vine.string().trim().minLength(1).maxLength(128).optional(),
     line: vine.string().trim().minLength(1).maxLength(500),
     mode: vine.enum(['irregular', 'block'] as const).optional(),
   })
@@ -78,7 +81,8 @@ const applyClassCodesValidator = vine.compile(
 
 const encodeBlockGroupValidator = vine.compile(
   vine.object({
-    enrollmentId: vine.string().uuid(),
+    enrollmentId: vine.string().trim().minLength(1).maxLength(128).optional(),
+    enrollmentRef: vine.string().trim().minLength(1).maxLength(128).optional(),
     blockGroupCode: vine.string().trim().minLength(1).maxLength(64),
   })
 )
@@ -109,6 +113,21 @@ export default class SchedulingController {
     const user = ctx.auth.user!
     const data = await slotAdminService.listSectionRoster(user.organizationId, ctx.params.sectionId)
     return ctx.response.ok({ data })
+  }
+
+  async exportSectionRoster(ctx: HttpContext) {
+    const user = ctx.auth.user!
+    const format = String(ctx.request.input('format', 'csv')).toLowerCase()
+    if (format !== 'csv') {
+      return ctx.response.unprocessableEntity({ error: 'Only csv export is supported' })
+    }
+    const data = await slotAdminService.exportSectionRosterCsv(user.organizationId, ctx.params.sectionId)
+    ctx.response.header('Content-Type', 'text/csv; charset=utf-8')
+    ctx.response.header(
+      'Content-Disposition',
+      `attachment; filename="section-${data.sectionCode}-roster.csv"`
+    )
+    return ctx.response.send(data.csv)
   }
 
   async sectionSummary(ctx: HttpContext) {
@@ -257,15 +276,22 @@ export default class SchedulingController {
   async listMeetings(ctx: HttpContext) {
     const user = ctx.auth.user!
     const rows = await slotAdminService.listMeetings(user.organizationId, ctx.params.sectionId)
+    const facultyIds = [...new Set(rows.map((m) => m.facultyUserId).filter(Boolean) as string[])]
+    const labels = await personnelService.labelsForUserIds(user.organizationId, facultyIds)
     return ctx.response.ok({
-      data: rows.map((m) => ({
-        id: m.id,
-        dayOfWeek: m.dayOfWeek,
-        startMinute: m.startMinute,
-        endMinute: m.endMinute,
-        roomCode: m.roomCode,
-        facultyUserId: m.facultyUserId,
-      })),
+      data: rows.map((m) => {
+        const faculty = m.facultyUserId ? labels.get(m.facultyUserId) : null
+        return {
+          id: m.id,
+          dayOfWeek: m.dayOfWeek,
+          startMinute: m.startMinute,
+          endMinute: m.endMinute,
+          roomCode: m.roomCode,
+          facultyUserId: m.facultyUserId,
+          facultyName: faculty?.fullName ?? null,
+          facultyEmail: faculty?.email ?? null,
+        }
+      }),
     })
   }
 
@@ -477,8 +503,13 @@ export default class SchedulingController {
   async applyClassCodes(ctx: HttpContext) {
     const user = ctx.auth.user!
     const body = await ctx.request.validateUsing(applyClassCodesValidator)
+    const ref = body.enrollmentRef ?? body.enrollmentId
+    if (!ref) {
+      return ctx.response.unprocessableEntity({ error: 'enrollmentRef or enrollmentId is required' })
+    }
+    const enrollmentId = await resolveEnrollmentId(user.organizationId, ref)
     const enrollment = await Enrollment.query()
-      .where('id', body.enrollmentId)
+      .where('id', enrollmentId)
       .where('organization_id', user.organizationId)
       .firstOrFail()
     const self = await resolveSelfStudent(user)
@@ -490,7 +521,7 @@ export default class SchedulingController {
     try {
       const result = await enrollmentClassScheduleService.applyClassCodeLine({
         organizationId: user.organizationId,
-        enrollmentId: body.enrollmentId,
+        enrollmentId,
         classCodesLine: body.line,
         actorUserId: user.id,
         mode: body.mode ?? 'irregular',
@@ -515,8 +546,13 @@ export default class SchedulingController {
   async encodeBlockGroup(ctx: HttpContext) {
     const user = ctx.auth.user!
     const body = await ctx.request.validateUsing(encodeBlockGroupValidator)
+    const ref = body.enrollmentRef ?? body.enrollmentId
+    if (!ref) {
+      return ctx.response.unprocessableEntity({ error: 'enrollmentRef or enrollmentId is required' })
+    }
+    const enrollmentId = await resolveEnrollmentId(user.organizationId, ref)
     const enrollment = await Enrollment.query()
-      .where('id', body.enrollmentId)
+      .where('id', enrollmentId)
       .where('organization_id', user.organizationId)
       .firstOrFail()
     const self = await resolveSelfStudent(user)
@@ -528,7 +564,7 @@ export default class SchedulingController {
     try {
       const result = await enrollmentClassScheduleService.encodeBlockGroup({
         organizationId: user.organizationId,
-        enrollmentId: body.enrollmentId,
+        enrollmentId,
         blockGroupCode: body.blockGroupCode,
         actorUserId: user.id,
       })

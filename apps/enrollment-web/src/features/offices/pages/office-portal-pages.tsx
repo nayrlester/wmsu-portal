@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
+import { StudentSearchSelect } from '@/components/student-search-select'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ClipboardList, HeartHandshake, Ticket } from 'lucide-react'
@@ -24,6 +25,8 @@ import { QueryPage, useListControls } from '@/components/query-page'
 import { usePaginatedQuery } from '@/lib/list-query'
 import { RequirePermission } from '@/components/auth/require-permission'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { admitSuccessNotification } from '@/lib/admit-notice'
+import { admitErrorNotification, notifyGenericError } from '@/lib/user-messages'
 import {
   admitApplicant,
   addHealthCondition,
@@ -78,7 +81,6 @@ import {
   fetchStudentIdRequests,
   fetchStudentOrganizations,
   fetchStudentParticipation,
-  fetchStudents,
   fileDisciplineComplaint,
   recordDisciplineSanction,
   issueQueueTicket,
@@ -121,19 +123,15 @@ function AdmissionsInner() {
   const admit = useMutation({
     mutationFn: (id: string) => admitApplicant(id, `ADM-${Date.now().toString().slice(-8)}`),
     onSuccess: (result) => {
-      const notice = (result as { accountNotice?: { sent?: boolean; to?: string | null; reason?: string | null } })
-        .accountNotice
-      notify({
-        tone: 'success',
-        title: 'Applicant admitted',
-        description: notice?.sent
-          ? `Account email sent to ${notice.to}`
-          : `Student record created. Account email was not sent${notice?.reason ? `: ${notice.reason}` : ''}.`,
-      })
+      const notice = (result as { accountNotice?: Parameters<typeof admitSuccessNotification>[0] }).accountNotice
+      const toast = admitSuccessNotification(notice)
+      notify({ tone: toast.tone, title: toast.title, description: toast.description })
       qc.invalidateQueries({ queryKey: ['office', 'applicants'] })
     },
-    onError: (err) =>
-      notify({ tone: 'danger', title: 'Admit failed', description: getApiErrorMessage(err) }),
+    onError: (err) => {
+      const toast = admitErrorNotification(err)
+      notify(toast)
+    },
   })
   return (
     <QueryPage
@@ -188,7 +186,7 @@ export function GuidanceOfficePage() {
 }
 
 const guidanceRequestSchema = z.object({
-  studentRef: z.string().min(2, 'Enter student number or UUID'),
+  studentRef: z.string().min(1, 'Select a student'),
   channel: z.enum(['online', 'walk_in']),
 })
 
@@ -240,12 +238,7 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'guidance-queue-tickets'] })
       void qc.invalidateQueries({ queryKey: ['office', 'guidance-queue-analytics'] })
     },
-    onError: (err) =>
-      notify({
-        tone: 'danger',
-        title: 'Queue advance failed',
-        description: getApiErrorMessage(err),
-      }),
+    onError: (err) => notify(notifyGenericError(err)),
   })
   const slipQueue = useMutation({
     mutationFn: async (id: string) => {
@@ -258,7 +251,7 @@ function GuidanceInner() {
       URL.revokeObjectURL(url)
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Slip PDF failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const psychSchedules = useQuery({
     queryKey: ['office', 'psych-schedules'],
@@ -278,12 +271,12 @@ function GuidanceInner() {
     new Date(Date.now() + 86400000).toISOString().slice(0, 16)
   )
   const [psychVenue, setPsychVenue] = useState('Guidance Testing Room')
-  const [psychStudentRef, setPsychStudentRef] = useState('')
+  const [psychStudentId, setPsychStudentId] = useState('')
   const [psychTestCode, setPsychTestCode] = useState<
     'ENTRANCE_PSYCH' | 'SHIFTING_PSYCH' | 'COUNSELING_INTAKE'
   >('ENTRANCE_PSYCH')
   const [psychScheduleId, setPsychScheduleId] = useState('')
-  const [shiftStudentRef, setShiftStudentRef] = useState('')
+  const [shiftStudentId, setShiftStudentId] = useState('')
   const [fromProgram, setFromProgram] = useState('BSCS')
   const [toProgram, setToProgram] = useState('BSIT')
   const [shiftWhen, setShiftWhen] = useState(() =>
@@ -301,19 +294,8 @@ function GuidanceInner() {
 
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof guidanceRequestSchema>) => {
-      const ref = values.studentRef.trim()
-      let studentId = ref
-      const uuidLike =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ref)
-      if (!uuidLike) {
-        const matches = await fetchStudents({ search: ref, limit: 5 })
-        const hit =
-          matches.data.find((s) => s.studentNumber?.toLowerCase() === ref.toLowerCase()) ??
-          matches.data.find((s) => s.id === ref) ??
-          matches.data[0]
-        if (!hit?.id) throw new Error('Student not found. Use student number or student UUID.')
-        studentId = hit.id
-      }
+      const studentId = values.studentRef.trim()
+      if (!studentId) throw new Error('Select a student')
       return createCounselingRequest({ studentId, channel: values.channel })
     },
     onSuccess: () => {
@@ -324,7 +306,7 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'counseling-report'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const invalidateCounseling = () => {
@@ -341,7 +323,7 @@ function GuidanceInner() {
       invalidateCounseling()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Intake failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const assignCounseling = useMutation({
@@ -351,7 +333,7 @@ function GuidanceInner() {
       invalidateCounseling()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Assign failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const sessionCounseling = useMutation({
@@ -367,7 +349,7 @@ function GuidanceInner() {
       invalidateCounseling()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Session failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const referCounseling = useMutation({
@@ -386,7 +368,7 @@ function GuidanceInner() {
       invalidateCounseling()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Referral failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const resolveCounseling = useMutation({
@@ -396,22 +378,12 @@ function GuidanceInner() {
       invalidateCounseling()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Resolve failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const queueMutation = useMutation({
     mutationFn: async () => {
-      const ref = form.getValues('studentRef').trim()
-      let studentId: string | undefined
-      if (ref) {
-        const uuidLike =
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ref)
-        if (uuidLike) studentId = ref
-        else {
-          const matches = await fetchStudents({ search: ref, limit: 5 })
-          studentId = matches.data[0]?.id
-        }
-      }
+      const studentId = form.getValues('studentRef').trim() || undefined
       return issueQueueTicket({ office: 'guidance', serviceCode: 'counseling', studentId })
     },
     onSuccess: (data) => {
@@ -422,22 +394,8 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'guidance-queue-analytics'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Queue failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
-
-  async function resolveStudentId(ref: string) {
-    const trimmed = ref.trim()
-    if (!trimmed) throw new Error('Student number required')
-    const uuidLike =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed)
-    if (uuidLike) return trimmed
-    const matches = await fetchStudents({ search: trimmed, limit: 5 })
-    const hit =
-      matches.data.find((s) => s.studentNumber?.toLowerCase() === trimmed.toLowerCase()) ??
-      matches.data[0]
-    if (!hit?.id) throw new Error('Student not found')
-    return hit.id
-  }
 
   const schedulePsych = useMutation({
     mutationFn: () =>
@@ -453,14 +411,14 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'psych-schedules'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Schedule failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const encodePsych = useMutation({
     mutationFn: async () => {
-      const studentId = await resolveStudentId(psychStudentRef)
+      if (!psychStudentId.trim()) throw new Error('Select a student')
       return encodePsychResult({
-        studentId,
+        studentId: psychStudentId,
         testCode: psychTestCode,
         scheduleId: psychScheduleId || undefined,
       })
@@ -470,7 +428,7 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'psych-results'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Encode failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const releasePsych = useMutation({
@@ -480,14 +438,14 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'psych-results'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Release failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const applyShift = useMutation({
     mutationFn: async () => {
-      const studentId = await resolveStudentId(shiftStudentRef)
+      if (!shiftStudentId.trim()) throw new Error('Select a student')
       return applyShiftingExam({
-        studentId,
+        studentId: shiftStudentId,
         fromProgramCode: fromProgram.trim() || undefined,
         toProgramCode: toProgram.trim() || undefined,
       })
@@ -497,7 +455,7 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'shifting-exams'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Apply failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const validateShiftReqs = useMutation({
@@ -512,12 +470,7 @@ function GuidanceInner() {
       notify({ tone: 'success', title: 'Requirements validated' })
       void qc.invalidateQueries({ queryKey: ['office', 'shifting-exams'] })
     },
-    onError: (err) =>
-      notify({
-        tone: 'danger',
-        title: 'Requirements failed',
-        description: getApiErrorMessage(err),
-      }),
+    onError: (err) => notify(notifyGenericError(err)),
   })
 
   const scheduleShift = useMutation({
@@ -527,7 +480,7 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'shifting-exams'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Schedule failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const tagShiftPay = useMutation({
@@ -538,7 +491,7 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'shifting-exams'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Payment tag failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const readyShift = useMutation({
@@ -548,12 +501,7 @@ function GuidanceInner() {
       notify({ tone: 'success', title: 'Result marked ready' })
       void qc.invalidateQueries({ queryKey: ['office', 'shifting-exams'] })
     },
-    onError: (err) =>
-      notify({
-        tone: 'danger',
-        title: 'Result ready failed',
-        description: getApiErrorMessage(err),
-      }),
+    onError: (err) => notify(notifyGenericError(err)),
   })
 
   const releaseShift = useMutation({
@@ -563,7 +511,7 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'shifting-exams'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Release failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const endorseShift = useMutation({
@@ -576,7 +524,7 @@ function GuidanceInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'shifting-exams'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Endorse failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -634,15 +582,20 @@ function GuidanceInner() {
             <form className="grid gap-3" onSubmit={form.handleSubmit((v) => mutation.mutate(v))}>
               <FormField
                 id="studentRef"
-                label="Student number"
+                label="Student"
                 required
                 error={form.formState.errors.studentRef?.message}
               >
-                <Input
-                  id="studentRef"
-                  placeholder="e.g. 2024-12345"
-                  autoComplete="off"
-                  {...form.register('studentRef')}
+                <Controller
+                  name="studentRef"
+                  control={form.control}
+                  render={({ field }) => (
+                    <StudentSearchSelect
+                      id="studentRef"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </FormField>
               <FormField id="channel" label="Channel">
@@ -1014,12 +967,11 @@ function GuidanceInner() {
             </ul>
           ) : null}
           <div className="grid gap-3 md:grid-cols-3">
-            <FormField id="psychStudentRef" label="Student number">
-              <Input
+            <FormField id="psychStudentRef" label="Student">
+              <StudentSearchSelect
                 id="psychStudentRef"
-                value={psychStudentRef}
-                onChange={(e) => setPsychStudentRef(e.target.value)}
-                placeholder="e.g. 2026-00001"
+                value={psychStudentId}
+                onChange={setPsychStudentId}
               />
             </FormField>
             <FormField id="psychTestCode" label="Battery">
@@ -1055,7 +1007,7 @@ function GuidanceInner() {
           </div>
           <Button
             type="button"
-            disabled={!canWrite || encodePsych.isPending || !psychStudentRef.trim()}
+            disabled={!canWrite || encodePsych.isPending || !psychStudentId.trim()}
             onClick={() => encodePsych.mutate()}
           >
             Encode result
@@ -1100,12 +1052,11 @@ function GuidanceInner() {
             thresholds and UFMS fee codes remain [CONFIRM].
           </Alert>
           <div className="grid gap-3 md:grid-cols-3">
-            <FormField id="shiftStudentRef" label="Student number">
-              <Input
+            <FormField id="shiftStudentRef" label="Student">
+              <StudentSearchSelect
                 id="shiftStudentRef"
-                value={shiftStudentRef}
-                onChange={(e) => setShiftStudentRef(e.target.value)}
-                placeholder="e.g. 2026-00001"
+                value={shiftStudentId}
+                onChange={setShiftStudentId}
               />
             </FormField>
             <FormField id="fromProgram" label="From program">
@@ -1125,7 +1076,7 @@ function GuidanceInner() {
           </div>
           <Button
             type="button"
-            disabled={!canWrite || applyShift.isPending || !shiftStudentRef.trim()}
+            disabled={!canWrite || applyShift.isPending || !shiftStudentId.trim()}
             onClick={() => applyShift.mutate()}
           >
             Submit shifting application
@@ -1268,7 +1219,6 @@ function HealthInner() {
     queryKey: ['office', 'health-report'],
     queryFn: () => fetchOfficeReport('health'),
   })
-  const [ehrStudentRef, setEhrStudentRef] = useState('')
   const [ehrStudentId, setEhrStudentId] = useState('')
   const [conditionCode, setConditionCode] = useState('ASTHMA')
   const [conditionLabel, setConditionLabel] = useState('Asthma')
@@ -1307,37 +1257,17 @@ function HealthInner() {
       createHealthClearance(values),
     onSuccess: () => notify({ tone: 'success', title: 'Health clearance updated' }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
-  async function resolveHealthStudentId(ref: string) {
-    const trimmed = ref.trim()
-    if (!trimmed) throw new Error('Student number required')
-    const uuidLike =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed)
-    if (uuidLike) return trimmed
-    const matches = await fetchStudents({ search: trimmed, limit: 5 })
-    const hit =
-      matches.data.find((s) => s.studentNumber?.toLowerCase() === trimmed.toLowerCase()) ??
-      matches.data[0]
-    if (!hit?.id) throw new Error('Student not found')
-    return hit.id
+  const requireEhrStudent = () => {
+    if (!ehrStudentId.trim()) throw new Error('Select a student')
+    return ehrStudentId
   }
-
-  const loadEhr = useMutation({
-    mutationFn: async () => resolveHealthStudentId(ehrStudentRef),
-    onSuccess: (id) => {
-      setEhrStudentId(id)
-      notify({ tone: 'success', title: 'EHR profile loaded' })
-    },
-    onError: (err) =>
-      notify({ tone: 'danger', title: 'Lookup failed', description: getApiErrorMessage(err) }),
-  })
 
   const addCondition = useMutation({
     mutationFn: async () => {
-      const studentId = ehrStudentId || (await resolveHealthStudentId(ehrStudentRef))
-      setEhrStudentId(studentId)
+      const studentId = requireEhrStudent()
       return addHealthCondition({
         studentId,
         conditionCode,
@@ -1350,13 +1280,12 @@ function HealthInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'health-ehr', ehrStudentId] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Condition failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const addAlert = useMutation({
     mutationFn: async () => {
-      const studentId = ehrStudentId || (await resolveHealthStudentId(ehrStudentRef))
-      setEhrStudentId(studentId)
+      const studentId = requireEhrStudent()
       return addMedicalAlert({ studentId, alertCode, severity: 'warning' })
     },
     onSuccess: () => {
@@ -1364,13 +1293,12 @@ function HealthInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'health-ehr', ehrStudentId] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Alert failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const recordEncounter = useMutation({
     mutationFn: async () => {
-      const studentId = ehrStudentId || (await resolveHealthStudentId(ehrStudentRef))
-      setEhrStudentId(studentId)
+      const studentId = requireEhrStudent()
       return recordHealthEncounter({
         studentId,
         encounterType: 'outpatient',
@@ -1387,13 +1315,12 @@ function HealthInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'health-ehr'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Encounter failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const recordProgram = useMutation({
     mutationFn: async () => {
-      const studentId = ehrStudentId || (await resolveHealthStudentId(ehrStudentRef))
-      setEhrStudentId(studentId)
+      const studentId = requireEhrStudent()
       return recordHealthProgramParticipation({ studentId, programCode, status: 'completed' })
     },
     onSuccess: () => {
@@ -1402,13 +1329,12 @@ function HealthInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'health-stats'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Program failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const assessMedical = useMutation({
     mutationFn: async () => {
-      const studentId = ehrStudentId || (await resolveHealthStudentId(ehrStudentRef))
-      setEhrStudentId(studentId)
+      const studentId = requireEhrStudent()
       return recordMedicalAssessment({
         studentId,
         assessmentContext,
@@ -1422,7 +1348,7 @@ function HealthInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'health-stats'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Assessment failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -1448,8 +1374,15 @@ function HealthInner() {
             className="grid max-w-md gap-3"
             onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
           >
-            <FormField id="studentId" label="Student ID" required>
-              <Input id="studentId" {...form.register('studentId', { required: true })} />
+            <FormField id="studentId" label="Student" required>
+              <Controller
+                name="studentId"
+                control={form.control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <StudentSearchSelect id="studentId" value={field.value} onChange={field.onChange} />
+                )}
+              />
             </FormField>
             <FormField id="status" label="Status">
               <Select id="status" {...form.register('status')}>
@@ -1474,12 +1407,11 @@ function HealthInner() {
             health.clinical.* permissions.
           </Alert>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <FormField id="ehrStudentRef" label="Student number">
-              <Input
+            <FormField id="ehrStudentRef" label="Student">
+              <StudentSearchSelect
                 id="ehrStudentRef"
-                value={ehrStudentRef}
-                onChange={(e) => setEhrStudentRef(e.target.value)}
-                placeholder="e.g. 2026-00001"
+                value={ehrStudentId}
+                onChange={setEhrStudentId}
               />
             </FormField>
             <FormField id="conditionCode" label="Condition code">
@@ -1513,15 +1445,7 @@ function HealthInner() {
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              variant="secondary"
-              disabled={loadEhr.isPending || !ehrStudentRef.trim()}
-              onClick={() => loadEhr.mutate()}
-            >
-              Load EHR profile
-            </Button>
-            <Button
-              type="button"
-              disabled={addCondition.isPending || !ehrStudentRef.trim()}
+              disabled={addCondition.isPending || !ehrStudentId.trim()}
               onClick={() => addCondition.mutate()}
             >
               Add chronic condition
@@ -1529,14 +1453,14 @@ function HealthInner() {
             <Button
               type="button"
               variant="outline"
-              disabled={addAlert.isPending || !ehrStudentRef.trim()}
+              disabled={addAlert.isPending || !ehrStudentId.trim()}
               onClick={() => addAlert.mutate()}
             >
               Add medical alert
             </Button>
             <Button
               type="button"
-              disabled={recordEncounter.isPending || !ehrStudentRef.trim()}
+              disabled={recordEncounter.isPending || !ehrStudentId.trim()}
               onClick={() => recordEncounter.mutate()}
             >
               Record emergency + Rx + hospital referral
@@ -1657,7 +1581,7 @@ function HealthInner() {
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              disabled={recordProgram.isPending || !ehrStudentRef.trim()}
+              disabled={recordProgram.isPending || !ehrStudentId.trim()}
               onClick={() => recordProgram.mutate()}
             >
               Record program participation
@@ -1665,7 +1589,7 @@ function HealthInner() {
             <Button
               type="button"
               variant="secondary"
-              disabled={assessMedical.isPending || !ehrStudentRef.trim()}
+              disabled={assessMedical.isPending || !ehrStudentId.trim()}
               onClick={() => assessMedical.mutate()}
             >
               Clear medical assessment (requires programs)
@@ -1750,7 +1674,7 @@ function OsaInner() {
   const [idStudentId, setIdStudentId] = useState('')
   const [paymentRef, setPaymentRef] = useState('')
   const [rfidRef, setRfidRef] = useState('')
-  const [disciplineStudentRef, setDisciplineStudentRef] = useState('')
+  const [disciplineHistoryStudentId, setDisciplineHistoryStudentId] = useState('')
   const [sanctionCode, setSanctionCode] = useState('WARNING')
   const form = useForm<{ respondentStudentId: string; summary: string }>({
     defaultValues: { respondentStudentId: '', summary: '' },
@@ -1758,18 +1682,10 @@ function OsaInner() {
   const orgForm = useForm<{ proposedName: string; applicationType: 'new' | 'renewal' }>({
     defaultValues: { proposedName: '', applicationType: 'new' },
   })
-  const resolveDisciplineStudent = async (ref: string) => {
-    const trimmed = ref.trim()
-    if (!trimmed) throw new Error('Student required')
-    if (/^[0-9a-f-]{36}$/i.test(trimmed)) return trimmed
-    const matches = await fetchStudents({ search: trimmed, limit: 5 })
-    const hit = matches.data.find((s) => s.studentNumber === trimmed) ?? matches.data[0]
-    if (!hit?.id) throw new Error('Student not found')
-    return hit.id
-  }
   const mutation = useMutation({
     mutationFn: async (values: { respondentStudentId: string; summary: string }) => {
-      const respondentStudentId = await resolveDisciplineStudent(values.respondentStudentId)
+      const respondentStudentId = values.respondentStudentId.trim()
+      if (!respondentStudentId) throw new Error('Select a student')
       return fileDisciplineComplaint({
         respondentStudentId,
         summary: values.summary,
@@ -1782,7 +1698,7 @@ function OsaInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'osa-discipline-report'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const advanceDiscipline = useMutation({
     mutationFn: (input: { id: string; workflowStatus: string }) =>
@@ -1793,7 +1709,7 @@ function OsaInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'osa-discipline-report'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Advance failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const sanction = useMutation({
     mutationFn: (input: { id: string }) => recordDisciplineSanction(input.id, { sanctionCode }),
@@ -1807,12 +1723,12 @@ function OsaInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'osa-discipline-report'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Sanction failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const history = useMutation({
     mutationFn: async () => {
-      const studentId = await resolveDisciplineStudent(disciplineStudentRef)
-      return fetchDisciplinaryHistory(studentId)
+      if (!disciplineHistoryStudentId.trim()) throw new Error('Select a student')
+      return fetchDisciplinaryHistory(disciplineHistoryStudentId)
     },
     onSuccess: (data) =>
       notify({
@@ -1821,7 +1737,7 @@ function OsaInner() {
         description: `${data.cases.length} case(s); ${data.sanctions.length} sanction(s)`,
       }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'History failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const submitOrg = useMutation({
     mutationFn: (values: { proposedName: string; applicationType: 'new' | 'renewal' }) =>
@@ -1843,7 +1759,7 @@ function OsaInner() {
       orgForm.reset({ proposedName: '', applicationType: 'new' })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Submit failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const advance = useMutation({
     mutationFn: (input: { id: string; workflowStatus: string }) =>
@@ -1854,7 +1770,7 @@ function OsaInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'osa-orgs'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Advance failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const cert = useMutation({
     mutationFn: async (studentOrgId: string) => {
@@ -1867,7 +1783,7 @@ function OsaInner() {
       URL.revokeObjectURL(url)
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Certificate failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const submitId = useMutation({
     mutationFn: () =>
@@ -1884,7 +1800,7 @@ function OsaInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'osa-id-requests'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'ID request failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const advanceId = useMutation({
     mutationFn: (input: { id: string; status: string }) =>
@@ -1898,7 +1814,7 @@ function OsaInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'osa-id-requests'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Advance failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const participation = useMutation({
     mutationFn: () => fetchStudentParticipation(idStudentId.trim()),
@@ -1909,7 +1825,7 @@ function OsaInner() {
         description: `Orgs ${data.organizations.length}; open discipline ${data.openDisciplineCases.length}`,
       }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Profile failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const digitalPdf = useMutation({
     mutationFn: async (requestId: string) => {
@@ -1923,7 +1839,7 @@ function OsaInner() {
     },
     onSuccess: () => notify({ tone: 'success', title: 'Digital ID PDF downloaded' }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Digital PDF failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   return (
     <div className="space-y-4">
@@ -1960,14 +1876,21 @@ function OsaInner() {
             className="grid max-w-xl gap-3 sm:grid-cols-2"
             onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
           >
-            <FormField id="respondentStudentId" label="Respondent student number or UUID" required>
-              <Input
-                id="respondentStudentId"
-                {...form.register('respondentStudentId', { required: true })}
-                onChange={(e) => {
-                  form.setValue('respondentStudentId', e.target.value)
-                  setDisciplineStudentRef(e.target.value)
-                }}
+            <FormField id="respondentStudentId" label="Respondent student" required>
+              <Controller
+                name="respondentStudentId"
+                control={form.control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <StudentSearchSelect
+                    id="respondentStudentId"
+                    value={field.value}
+                    onChange={(id) => {
+                      field.onChange(id)
+                      setDisciplineHistoryStudentId(id)
+                    }}
+                  />
+                )}
               />
             </FormField>
             <FormField id="summary" label="Complaint summary">
@@ -1980,7 +1903,7 @@ function OsaInner() {
               <Button
                 type="button"
                 variant="secondary"
-                disabled={!disciplineStudentRef.trim() || history.isPending}
+                disabled={!disciplineHistoryStudentId.trim() || history.isPending}
                 onClick={() => history.mutate()}
               >
                 Load disciplinary history
@@ -2172,12 +2095,8 @@ function OsaInner() {
             university-confirmed references (not live hardware).
           </Alert>
           <div className="grid max-w-xl gap-3 sm:grid-cols-2">
-            <FormField id="idStudentId" label="Student ID (UUID)" required>
-              <Input
-                id="idStudentId"
-                value={idStudentId}
-                onChange={(e) => setIdStudentId(e.target.value)}
-              />
+            <FormField id="idStudentId" label="Student" required>
+              <StudentSearchSelect id="idStudentId" value={idStudentId} onChange={setIdStudentId} />
             </FormField>
             <FormField id="paymentRef" label="Payment validation ref">
               <Input
@@ -2315,9 +2234,9 @@ function ScholarshipInner() {
     defaultValues: { sourceType: 'internal', code: '', name: '' },
   })
   const [programId, setProgramId] = useState('')
-  const [scholarStudentRef, setScholarStudentRef] = useState('2026-PH-NEW001')
+  const [scholarStudentId, setScholarStudentId] = useState('')
   const [awardResult, setAwardResult] = useState('')
-  const [saStudentRef, setSaStudentRef] = useState('')
+  const [saStudentId, setSaStudentId] = useState('')
   const [deployOffice, setDeployOffice] = useState('Registrar')
   const createProgram = useMutation({
     mutationFn: (values: z.infer<typeof scholarshipProgramSchema>) =>
@@ -2333,30 +2252,16 @@ function ScholarshipInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'scholarship-assistance'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
-
-  async function resolveScholarStudentId(ref: string) {
-    const trimmed = ref.trim()
-    if (!trimmed) throw new Error('Student number required')
-    const uuidLike =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed)
-    if (uuidLike) return trimmed
-    const matches = await fetchStudents({ search: trimmed, limit: 5 })
-    const hit =
-      matches.data.find((s) => s.studentNumber?.toLowerCase() === trimmed.toLowerCase()) ??
-      matches.data[0]
-    if (!hit?.id) throw new Error('Student not found')
-    return hit.id
-  }
 
   const apply = useMutation({
     mutationFn: async () => {
       if (!programId) throw new Error('Create/select a program first')
-      const studentId = await resolveScholarStudentId(scholarStudentRef)
+      if (!scholarStudentId.trim()) throw new Error('Select a student')
       return applyScholarship({
         programId,
-        studentId,
+        studentId: scholarStudentId,
         incomeClassification: 'office_band',
         requirementsJson: { docs: ['doc://income'] },
       })
@@ -2367,7 +2272,7 @@ function ScholarshipInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'scholarship-assistance'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Apply failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const decide = useMutation({
@@ -2375,7 +2280,7 @@ function ScholarshipInner() {
       decideScholarshipApplication(id, { approve: true, awardAmount: 1000 }),
     onSuccess: () => {
       setAwardResult(
-        `Scholarship awarded for ${scholarStudentRef.trim()}. Tuition aid tagged. No cashier payment was posted.`
+        'Scholarship awarded. Tuition aid tagged. No cashier payment was posted.'
       )
       notify({ tone: 'success', title: 'Scholarship awarded' })
       void qc.invalidateQueries({ queryKey: ['office', 'scholarship-applications'] })
@@ -2383,20 +2288,20 @@ function ScholarshipInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'scholarship-assistance'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Decide failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const submitSa = useMutation({
     mutationFn: async () => {
-      const studentId = await resolveScholarStudentId(saStudentRef)
-      return submitSaApplication({ studentId })
+      if (!saStudentId.trim()) throw new Error('Select a student')
+      return submitSaApplication({ studentId: saStudentId })
     },
     onSuccess: () => {
       notify({ tone: 'success', title: 'SA application submitted' })
       void qc.invalidateQueries({ queryKey: ['office', 'sa-applications'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'SA apply failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const completeSaReqs = useMutation({
@@ -2411,12 +2316,7 @@ function ScholarshipInner() {
       notify({ tone: 'success', title: 'SA requirements complete' })
       void qc.invalidateQueries({ queryKey: ['office', 'sa-applications'] })
     },
-    onError: (err) =>
-      notify({
-        tone: 'danger',
-        title: 'SA requirements failed',
-        description: getApiErrorMessage(err),
-      }),
+    onError: (err) => notify(notifyGenericError(err)),
   })
 
   const advanceSa = useMutation({
@@ -2438,7 +2338,7 @@ function ScholarshipInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'scholarship-assistance'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'SA advance failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const interviewSa = useMutation({
@@ -2449,7 +2349,7 @@ function ScholarshipInner() {
       void qc.invalidateQueries({ queryKey: ['office', 'sa-applications'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Interview failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   function nextSaStatus(status: string) {
@@ -2525,19 +2425,18 @@ function ScholarshipInner() {
               <Alert variant="success" title="Program ready">
                 {programId}
               </Alert>
-              <FormField id="scholarStudentRef" label="Student number">
-                <Input
+              <FormField id="scholarStudentRef" label="Student">
+                <StudentSearchSelect
                   id="scholarStudentRef"
-                  value={scholarStudentRef}
-                  onChange={(e) => setScholarStudentRef(e.target.value)}
-                  placeholder="e.g. 2026-00001"
+                  value={scholarStudentId}
+                  onChange={setScholarStudentId}
                 />
               </FormField>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => apply.mutate()}
-                disabled={apply.isPending || !scholarStudentRef.trim()}
+                disabled={apply.isPending || !scholarStudentId.trim()}
               >
                 Submit scholarship application
               </Button>
@@ -2599,11 +2498,11 @@ function ScholarshipInner() {
             advancing.
           </Alert>
           <div className="grid gap-3 md:grid-cols-2">
-            <FormField id="saStudentRef" label="Student number">
-              <Input
+            <FormField id="saStudentRef" label="Student">
+              <StudentSearchSelect
                 id="saStudentRef"
-                value={saStudentRef}
-                onChange={(e) => setSaStudentRef(e.target.value)}
+                value={saStudentId}
+                onChange={setSaStudentId}
               />
             </FormField>
             <FormField id="deployOffice" label="Deployment office">
@@ -2616,7 +2515,7 @@ function ScholarshipInner() {
           </div>
           <Button
             type="button"
-            disabled={submitSa.isPending || !saStudentRef.trim()}
+            disabled={submitSa.isPending || !saStudentId.trim()}
             onClick={() => submitSa.mutate()}
           >
             Submit SA application

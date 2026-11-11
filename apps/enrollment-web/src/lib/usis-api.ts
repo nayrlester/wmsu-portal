@@ -1305,7 +1305,13 @@ export async function removeAdvisingRecommendation(sessionId: string, recommenda
 
 export async function addAdvisingRecommendation(
   sessionId: string,
-  body: { subjectCode: string; subjectId?: string; subjectTitle?: string; units?: number }
+  body: {
+    subjectCode: string
+    subjectId?: string
+    subjectTitle?: string
+    units?: number
+    sectionId?: string
+  }
 ) {
   const { data } = await apiClient.post(`/advising/sessions/${sessionId}/recommendations`, {
     ...body,
@@ -2915,6 +2921,12 @@ export async function fetchSections(params: PageParams = {}) {
     name: string
     yearLevel: number
     semester: number
+    status?: string
+    capacity?: number | null
+    enrolledCount?: number
+    academicYearId?: string
+    programId?: string
+    subjectId?: string | null
     isBlockSection?: boolean
     blockGroupCode?: string | null
   }>(data)
@@ -2945,6 +2957,7 @@ export async function patchSection(
     name?: string
     yearLevel?: number
     semester?: number
+    status?: 'draft' | 'open' | 'active' | 'closed' | 'dissolved'
   }
 ) {
   const { data } = await apiClient.patch(`/academic/sections/${sectionId}`, payload)
@@ -2955,6 +2968,74 @@ export async function patchSection(
 export async function deleteSection(sectionId: string) {
   const { data } = await apiClient.delete(`/academic/sections/${sectionId}`)
   return asData<{ id: string; deleted: boolean }>(data)
+}
+
+export async function replicateAcademicSchedules(payload: {
+  sourceAcademicYearId: string
+  targetAcademicYearId: string
+  semester: number
+}) {
+  const { data } = await apiClient.post('/academic/schedules/replicate', payload)
+  return asData<{ created: number; skipped: number; meetingsCopied: number; sourceCount: number }>(data)
+}
+
+export async function bulkUpdateSectionStatus(sectionIds: string[], status: 'draft' | 'open' | 'active' | 'closed') {
+  const { data } = await apiClient.post('/academic/sections/bulk-status', { sectionIds, status })
+  return asData<{ updated: number; status: string }>(data)
+}
+
+export async function assignFacultyToSection(payload: {
+  sectionId: string
+  facultyUserId: string
+  academicYearId: string
+  semester: number
+}) {
+  const { data } = await apiClient.post('/grades/faculty-assignments', payload)
+  return asData<{ id: string }>(data)
+}
+
+export async function fetchAdvisingPeriods(params?: { academicYearId?: string; semester?: number }) {
+  const { data } = await apiClient.get('/advising/periods', { params })
+  return asArray<{
+    id: string
+    academicYearId: string
+    semester: number
+    startsAt: string
+    endsAt: string
+    enforceCutoff: boolean
+  }>(data)
+}
+
+export async function upsertAdvisingPeriod(payload: {
+  academicYearId: string
+  semester: number
+  startsAt: string
+  endsAt: string
+  enforceCutoff?: boolean
+}) {
+  const { data } = await apiClient.post('/advising/periods', payload)
+  return asData<{ id: string }>(data)
+}
+
+export async function recordAdvisingBlockWaiver(payload: {
+  enrollmentRef: string
+  authorityRole: string
+  reason?: string
+  effectiveTo?: string
+}) {
+  const { data } = await apiClient.post('/advising/waiver', {
+    ...payload,
+    enrollmentRef: payload.enrollmentRef,
+  })
+  return asData<{ enrollmentId: string; waiverId: string }>(data)
+}
+
+export async function downloadSectionRosterCsv(sectionId: string) {
+  const { data } = await apiClient.get(`/scheduling/sections/${sectionId}/roster/export`, {
+    params: { format: 'csv' },
+    responseType: 'text',
+  })
+  return String(data)
 }
 
 export async function resolveStudentForUser(email: string | null | undefined) {
@@ -3544,6 +3625,9 @@ export async function fetchSectionMeetings(sectionId: string) {
         startMinute: number
         endMinute: number
         roomCode: string | null
+        facultyUserId: string | null
+        facultyName: string | null
+        facultyEmail: string | null
       }>
     }
   ).data
@@ -3551,7 +3635,13 @@ export async function fetchSectionMeetings(sectionId: string) {
 
 export async function addSectionMeeting(
   sectionId: string,
-  payload: { dayOfWeek: number; startMinute: number; endMinute: number; roomCode?: string }
+  payload: {
+    dayOfWeek: number
+    startMinute: number
+    endMinute: number
+    roomCode?: string
+    facultyUserId?: string
+  }
 ) {
   const { data } = await apiClient.post(`/scheduling/sections/${sectionId}/meetings`, payload)
   return (data as { data: { id: string } }).data
@@ -3679,12 +3769,12 @@ export async function searchAlternateSections(payload: {
 }
 
 export async function applyClassCodesLine(
-  enrollmentId: string,
+  enrollmentRef: string,
   line: string,
   mode: 'irregular' | 'block' = 'irregular'
 ) {
   const { data } = await apiClient.post('/scheduling/class-codes/apply', {
-    enrollmentId,
+    enrollmentRef,
     line,
     mode,
   })
@@ -3701,9 +3791,9 @@ export async function applyClassCodesLine(
   ).data
 }
 
-export async function encodeBlockGroup(enrollmentId: string, blockGroupCode: string) {
+export async function encodeBlockGroup(enrollmentRef: string, blockGroupCode: string) {
   const { data } = await apiClient.post('/scheduling/block-groups/encode', {
-    enrollmentId,
+    enrollmentRef,
     blockGroupCode,
   })
   return (
@@ -3860,10 +3950,17 @@ export type UsisSubjectArea = {
   isActive: boolean
 }
 
+export async function fetchPersonnelSearch(search: string, limit = 20) {
+  const { data } = await apiClient.get('/academic/personnel/search', {
+    params: { search: search.trim(), limit },
+  })
+  return asArray<{ id: string; fullName: string; email: string; roles: string[] }>(data)
+}
+
 export type UsisEmployeeAssignment = {
   id: string
-  platformUserId: string
   displayName: string | null
+  personnelEmail: string | null
   collegeId: string | null
   collegeCode: string | null
   academicDepartmentId: string | null
@@ -3934,7 +4031,8 @@ export async function fetchEmployeeAssignments() {
 }
 
 export async function createEmployeeAssignment(payload: {
-  platformUserId: string
+  userId?: string
+  email?: string
   displayName?: string
   collegeId?: string
   academicDepartmentId?: string

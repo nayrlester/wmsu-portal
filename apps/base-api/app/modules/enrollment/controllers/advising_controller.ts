@@ -19,6 +19,7 @@ import { studentCourseSelectionService } from '#modules/enrollment/services/stud
 import vine from '@vinejs/vine'
 import Student from '#modules/enrollment/models/student'
 import Enrollment from '#modules/enrollment/models/enrollment'
+import { resolveEnrollmentId } from '#modules/enrollment/services/enrollment_flow_service'
 
 export default class AdvisingController {
   async assignAdviser({ request, response, auth }: HttpContext) {
@@ -49,6 +50,15 @@ export default class AdvisingController {
     if (request.input('studentId')) q.where('student_id', request.input('studentId'))
     if (request.input('programId')) q.where('program_id', request.input('programId'))
     return response.ok({ data: await q })
+  }
+
+  async listPeriods({ request, response, auth }: HttpContext) {
+    const user = auth.user!
+    const q = AdvisingPeriod.query().where('organization_id', user.organizationId)
+    if (request.input('academicYearId')) q.where('academic_year_id', request.input('academicYearId'))
+    if (request.input('semester')) q.where('semester', Number(request.input('semester')))
+    const rows = await q.orderBy('semester', 'asc')
+    return response.ok({ data: rows })
   }
 
   async upsertPeriod({ request, response, auth }: HttpContext) {
@@ -139,10 +149,15 @@ export default class AdvisingController {
   async waiver({ request, response, auth }: HttpContext) {
     const user = auth.user!
     const payload = await request.validateUsing(advisingWaiverValidator)
+    const ref = payload.enrollmentRef ?? payload.enrollmentId
+    if (!ref) {
+      return response.unprocessableEntity({ error: 'enrollmentRef or enrollmentId is required' })
+    }
+    const enrollmentId = await resolveEnrollmentId(user.organizationId, ref)
     const service = new AdvisingService()
     const result = await service.recordBlockWaiver({
       organizationId: user.organizationId,
-      enrollmentId: payload.enrollmentId,
+      enrollmentId,
       authorizedBy: user.id,
       authorityRole: payload.authorityRole,
       reason: payload.reason,

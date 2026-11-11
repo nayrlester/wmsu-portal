@@ -5,6 +5,11 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios'
 import { emitHttpNotify } from './http-notify-bridge'
+import {
+  isTechnicalUserMessage,
+  toUserFriendlyMessage,
+  type UserFacingAction,
+} from './user-facing-errors'
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -74,10 +79,10 @@ export function parseAxiosErrorMessage(error: AxiosError, fallback = 'Request fa
     }
   }
   if (status === 503) {
-    return 'Identity or gateway upstream unavailable. Start Base API (3500) and Identity (3411).'
+    return 'The service is temporarily unavailable. Try again later.'
   }
   if (status === 502 || status === 504) {
-    return 'The API gateway timed out or could not reach an upstream service.'
+    return 'The server took too long to respond. Try again.'
   }
   if (error.message) {
     if (/network error|failed to fetch|econnrefused/i.test(error.message)) {
@@ -89,6 +94,16 @@ export function parseAxiosErrorMessage(error: AxiosError, fallback = 'Request fa
     return error.message
   }
   return fallback
+}
+
+export function userFacingAxiosError(
+  error: AxiosError,
+  action: UserFacingAction = 'generic'
+): string {
+  return toUserFriendlyMessage(
+    parseAxiosErrorMessage(error, 'Something went wrong. Please try again.'),
+    action
+  )
 }
 
 export function parseAxiosSuccessMessage(response: AxiosResponse): string | null {
@@ -118,15 +133,18 @@ export function attachAxiosHttpNotifications(
       if (!mutationMethods.includes(method)) return response
       const message = parseAxiosSuccessMessage(response)
       if (message) {
-        emitHttpNotify({ title: 'Success', description: message, tone: 'success' })
+        const description = isTechnicalUserMessage(message)
+          ? 'Your changes were saved.'
+          : toUserFriendlyMessage(message, 'generic')
+        emitHttpNotify({ title: 'Saved', description, tone: 'success' })
       }
       return response
     },
     (error) => {
       if (axios.isAxiosError(error) && !shouldSkipErrorToast(error, silentPatterns)) {
         emitHttpNotify({
-          title: 'Request failed',
-          description: parseAxiosErrorMessage(error),
+          title: 'Something went wrong',
+          description: userFacingAxiosError(error, 'generic'),
           tone: 'danger',
         })
       }

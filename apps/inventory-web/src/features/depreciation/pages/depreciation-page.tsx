@@ -27,11 +27,13 @@ import type {
   PropertyLedgerEntry,
 } from '../types'
 import type { Column } from '@/components/ui/data-table'
+import { AssetSearchSelect } from '@/components/asset-search-select'
+import { LabeledSearchField } from '@/components/labeled-search-field'
 
 type Tab = 'profile' | 'schedule' | 'ledger'
 
 const profileSchema = z.object({
-  assetId: z.string().uuid('Valid asset ID required'),
+  assetId: z.string().min(1, 'Select an asset'),
   method: z.literal('straight_line'),
   usefulLifeMonths: z.number().min(1),
   residualRate: z.number().min(0).max(100),
@@ -210,12 +212,9 @@ export function DepreciationPage() {
       {(tab === 'profile' || tab === 'schedule') && (
         <div className="flex flex-wrap items-end gap-2">
           <div className="min-w-[260px] flex-1">
-            <Input
-              label="Asset ID"
-              value={assetId}
-              onChange={(e) => setAssetId(e.target.value)}
-              placeholder="UUID of asset"
-            />
+            <LabeledSearchField label="Asset">
+              <AssetSearchSelect id="depreciation-asset-lookup" value={assetId} onChange={setAssetId} />
+            </LabeledSearchField>
           </div>
           <Button variant="outline" onClick={runLookup} disabled={!assetId.trim()}>
             <Search className="h-4 w-4" /> Look Up
@@ -234,7 +233,7 @@ export function DepreciationPage() {
           emptyDescription={
             lookupId
               ? 'Create a depreciation profile for this asset to begin.'
-              : 'Enter an asset ID to view its depreciation profile.'
+              : 'Search for an asset to view its depreciation profile.'
           }
         />
       )}
@@ -250,7 +249,7 @@ export function DepreciationPage() {
           emptyDescription={
             lookupId
               ? 'Create a profile first, then view the projected schedule.'
-              : 'Enter an asset ID to load its lapsing schedule.'
+              : 'Search for an asset to load its lapsing schedule.'
           }
         />
       )}
@@ -259,12 +258,14 @@ export function DepreciationPage() {
         <>
           <div className="flex flex-wrap items-end gap-2">
             <div className="min-w-[260px] flex-1">
-              <Input
-                label="Filter by Asset ID (optional)"
-                value={assetId}
-                onChange={(e) => setAssetId(e.target.value)}
-                placeholder="Leave blank for all entries"
-              />
+              <LabeledSearchField label="Filter by asset (optional)">
+                <AssetSearchSelect
+                  id="depreciation-ledger-asset"
+                  value={assetId}
+                  onChange={setAssetId}
+                  placeholder="Leave blank for all entries"
+                />
+              </LabeledSearchField>
             </div>
             <Button variant="outline" onClick={runLookup}>
               <BookOpen className="h-4 w-4" /> Refresh
@@ -345,7 +346,15 @@ function CreateProfileModal({
         </div>
       )}
       <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
-        <Input label="Asset ID" error={errors.assetId?.message} {...register('assetId')} />
+        <Controller
+          name="assetId"
+          control={control}
+          render={({ field }) => (
+            <LabeledSearchField label="Asset" error={errors.assetId?.message}>
+              <AssetSearchSelect id="depreciation-profile-asset" value={field.value} onChange={field.onChange} />
+            </LabeledSearchField>
+          )}
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             label="Useful Life (months)"
@@ -455,12 +464,14 @@ function RunModal({ onClose, onDone }: { onClose: () => void; onDone: () => void
             onChange={(e) => setPeriodMonth(Number(e.target.value))}
           />
         </div>
-        <Input
-          label="Asset ID (optional)"
-          value={assetId}
-          onChange={(e) => setAssetId(e.target.value)}
-          placeholder="Leave blank to run all active profiles"
-        />
+        <LabeledSearchField label="Single asset (optional)">
+          <AssetSearchSelect
+            id="depreciation-run-asset"
+            value={assetId}
+            onChange={setAssetId}
+            placeholder="Leave blank to run all active profiles"
+          />
+        </LabeledSearchField>
         <div className="flex justify-end gap-2 border-t border-border pt-4">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>

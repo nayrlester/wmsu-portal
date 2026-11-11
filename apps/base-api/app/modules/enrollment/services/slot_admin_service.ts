@@ -5,6 +5,8 @@ import FacultyClassAssignment from '#modules/enrollment/models/faculty_class_ass
 import Section from '#modules/enrollment/models/section'
 import Subject from '#modules/enrollment/models/subject'
 import UsisSectionMeeting from '#modules/enrollment/models/usis_section_meeting'
+import UsisRoom from '#modules/enrollment/models/usis_room'
+import User from '#modules/enrollment/models/user'
 import UsisSectionWaitlistEntry from '#modules/enrollment/models/usis_section_waitlist_entry'
 import { schedulingService } from '#modules/enrollment/services/scheduling_service'
 import { schedulingNotificationService } from '#modules/enrollment/services/scheduling_notification_service'
@@ -13,6 +15,33 @@ import { auditLogService } from '#modules/enrollment/services/audit_log_service'
 import { AuditAction } from '#modules/enrollment/domain/enums/index'
 
 export class SlotAdminService {
+  async assertValidFacultyUser(organizationId: string, facultyUserId: string | null | undefined) {
+    const id = facultyUserId?.trim()
+    if (!id) return
+    const user = await User.query()
+      .where('organization_id', organizationId)
+      .where('id', id)
+      .whereNull('deleted_at')
+      .where('status', 'active')
+      .first()
+    if (!user) {
+      throw new Error('Selected faculty is not an active personnel account')
+    }
+  }
+
+  async assertValidRoomCode(organizationId: string, roomCode: string | null | undefined) {
+    const code = roomCode?.trim()
+    if (!code) return
+    const room = await UsisRoom.query()
+      .where('organization_id', organizationId)
+      .where('code', code)
+      .where('is_active', true)
+      .first()
+    if (!room) {
+      throw new Error(`Room ${code} is not in the facilities catalog or is inactive`)
+    }
+  }
+
   listMeetings(organizationId: string, sectionId: string) {
     return UsisSectionMeeting.query()
       .where('organization_id', organizationId)
@@ -28,6 +57,31 @@ export class SlotAdminService {
       .whereIn('status', ['planned', 'registered', 'enrolled'])
       .preload('enrollment')
     return [...new Set(lines.map((l) => l.enrollment?.studentId).filter(Boolean) as string[])]
+  }
+
+  async exportSectionRosterCsv(organizationId: string, sectionId: string) {
+    const section = await Section.query()
+      .where('organization_id', organizationId)
+      .where('id', sectionId)
+      .firstOrFail()
+    const roster = await this.listSectionRoster(organizationId, sectionId)
+    const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`
+    const header = 'studentNumber,studentName,enrollmentLineId,status,subjectCode'
+    const body = roster.map((r) =>
+      [
+        esc(r.studentNumber ?? ''),
+        esc(r.studentName ?? ''),
+        esc(r.enrollmentLineId),
+        esc(r.status),
+        esc(r.subjectCode ?? ''),
+      ].join(',')
+    )
+    return {
+      sectionCode: section.code,
+      sectionName: section.name,
+      csv: [header, ...body].join('\n'),
+      rowCount: roster.length,
+    }
   }
 
   async listSectionRoster(organizationId: string, sectionId: string) {
@@ -70,6 +124,9 @@ export class SlotAdminService {
       .where('id', input.sectionId)
       .firstOrFail()
     if (section.status === 'dissolved') throw new Error('Section is dissolved')
+
+    await this.assertValidRoomCode(input.organizationId, input.roomCode)
+    await this.assertValidFacultyUser(input.organizationId, input.facultyUserId)
 
     const slotConflict = await schedulingService.detectMeetingSlotConflicts({
       organizationId: input.organizationId,
@@ -137,6 +194,8 @@ export class SlotAdminService {
     const nextRoom = input.patch.roomCode !== undefined ? input.patch.roomCode : row.roomCode
     const nextFaculty =
       input.patch.facultyUserId !== undefined ? input.patch.facultyUserId : row.facultyUserId
+    await this.assertValidRoomCode(input.organizationId, nextRoom)
+    await this.assertValidFacultyUser(input.organizationId, nextFaculty)
     const slotConflict = await schedulingService.detectMeetingSlotConflicts({
       organizationId: input.organizationId,
       sectionId: row.sectionId,

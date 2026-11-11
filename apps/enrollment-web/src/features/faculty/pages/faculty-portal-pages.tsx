@@ -25,6 +25,7 @@ import { QueryPage } from '@/components/query-page'
 import { StudentSearchSelect } from '@/components/student-search-select'
 import { RequirePermission } from '@/components/auth/require-permission'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { notifyGenericError } from '@/lib/user-messages'
 import { useHasPermission } from '@/lib/permissions'
 import {
   encodeClassGrades,
@@ -449,7 +450,7 @@ function FacultyEncodeInner() {
       qc.invalidateQueries({ queryKey: ['faculty', 'encode-master'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Encode failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -568,7 +569,7 @@ function FacultySubmitInner() {
       void qc.invalidateQueries({ queryKey: ['faculty', 'encode-master'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Enlist failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const classRecordId =
     master.data?.classRecord.id || pickedRecordId || classRecordRows[0]?.id || ''
@@ -597,7 +598,7 @@ function FacultySubmitInner() {
       void qc.invalidateQueries({ queryKey: ['faculty', 'grade-report'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Submit failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const exportMutation = useMutation({
     mutationFn: (format: 'pdf' | 'xlsx' | 'csv') => exportClassGradeReport(classRecordId!, format),
@@ -607,7 +608,7 @@ function FacultySubmitInner() {
       notify({ tone: 'success', title: `Grade sheet ${format.toUpperCase()} downloaded` })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Export failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -840,7 +841,7 @@ function FacultyCorrectionsInner() {
       qc.invalidateQueries({ queryKey: ['faculty', 'corrections'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Request failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -1149,13 +1150,20 @@ function FacultyAdvisingSessionInner() {
       const keptCodes = new Set(
         existing.filter((row) => row.id && keepIds.has(row.id)).map((row) => row.subjectCode)
       )
+      const eligible = session.data?.curriculumEvaluation?.eligibleSubjects ?? []
       for (const subject of input.subjects) {
         if (!input.selectedCodes.includes(subject.subjectCode) || keptCodes.has(subject.subjectCode)) continue
+        const match = eligible.find(
+          (row) => row.subjectCode === subject.subjectCode || row.id === subject.id
+        )
+        const openSections = (match as { openSections?: Array<{ id: string }> } | undefined)?.openSections
+        const sectionId = openSections?.[0]?.id
         await addAdvisingRecommendation(sessionId, {
           subjectCode: subject.subjectCode,
           subjectId: subject.id,
           subjectTitle: subject.title ?? subject.subjectTitle,
           units: Number(subject.units),
+          sectionId,
         })
       }
       return endorseAdvisingSession(sessionId, {

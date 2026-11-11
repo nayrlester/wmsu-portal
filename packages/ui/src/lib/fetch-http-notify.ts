@@ -1,4 +1,5 @@
 import { emitHttpNotify } from './http-notify-bridge'
+import { isTechnicalUserMessage, toUserFriendlyMessage } from './user-facing-errors'
 
 export async function readFetchErrorMessage(response: Response): Promise<string> {
   try {
@@ -8,7 +9,7 @@ export async function readFetchErrorMessage(response: Response): Promise<string>
   } catch {
     /* not JSON */
   }
-  return `HTTP ${response.status}`
+  return 'Something went wrong. Please try again.'
 }
 
 export async function notifyFetchResponseError(
@@ -16,10 +17,10 @@ export async function notifyFetchResponseError(
   fallback?: string
 ): Promise<void> {
   if (response.ok) return
-  const description = fallback ?? (await readFetchErrorMessage(response))
+  const raw = fallback ?? (await readFetchErrorMessage(response))
   emitHttpNotify({
-    title: 'Request failed',
-    description,
+    title: 'Something went wrong',
+    description: toUserFriendlyMessage(raw, 'generic'),
     tone: 'danger',
   })
 }
@@ -34,7 +35,10 @@ export async function notifyFetchJsonSuccess(
   try {
     const body = (await response.clone().json()) as Record<string, unknown>
     if (typeof body.message === 'string' && body.message.trim()) {
-      emitHttpNotify({ title: 'Success', description: body.message, tone: 'success' })
+      const description = isTechnicalUserMessage(body.message)
+        ? 'Your changes were saved.'
+        : toUserFriendlyMessage(body.message, 'generic')
+      emitHttpNotify({ title: 'Success', description, tone: 'success' })
     }
   } catch {
     /* ignore */

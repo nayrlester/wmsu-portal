@@ -92,6 +92,29 @@ export const createSectionValidator = vine.compile(
   })
 )
 
+export const updateSectionValidator = vine.compile(
+  vine.object({
+    code: vine.string().minLength(1).maxLength(32).optional(),
+    name: vine.string().minLength(2).maxLength(255).optional(),
+    yearLevel: vine.number().min(1).optional(),
+    semester: vine.number().min(1).max(3).optional(),
+    capacity: vine.number().min(0).nullable().optional(),
+    waitlistEnabled: vine.boolean().optional(),
+    isBlockSection: vine.boolean().optional(),
+    blockGroupCode: vine.string().trim().maxLength(64).nullable().optional(),
+    subjectId: vine.string().uuid().nullable().optional(),
+    status: vine.enum(['draft', 'open', 'active', 'closed', 'dissolved'] as const).optional(),
+  })
+)
+
+export const replicateSchedulesValidator = vine.compile(
+  vine.object({
+    sourceAcademicYearId: vine.string().uuid(),
+    targetAcademicYearId: vine.string().uuid(),
+    semester: vine.number().min(1).max(3),
+  })
+)
+
 export const createEnrollmentValidator = vine.compile(
   vine.object({
     studentId: vine.string().uuid(),

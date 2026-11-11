@@ -22,6 +22,7 @@ import {
   type AcquisitionStatus,
 } from '@/lib/acquisitions-api'
 import { cn } from '@/lib/utils'
+import { BookSearchSelect } from '@/components/book-search-select'
 
 const STATUS_TABS: Array<{ value: AcquisitionStatus | 'all'; label: string }> = [
   { value: 'all', label: 'All' },
@@ -470,13 +471,14 @@ export function AcquisitionsPage() {
                 openItem.status === 'cataloged') && (
                 <div className="flex items-end gap-2">
                   <div className="min-w-0 flex-1">
-                    <Input
-                      id="acq-catalog-book"
-                      label="Catalog book ID"
-                      placeholder="Book UUID"
-                      value={catalogBookId}
-                      onChange={(e) => setCatalogBookId(e.target.value)}
-                    />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="acq-catalog-book">Catalog record</Label>
+                      <BookSearchSelect
+                        id="acq-catalog-book"
+                        value={catalogBookId}
+                        onChange={setCatalogBookId}
+                      />
+                    </div>
                   </div>
                   <Button
                     size="sm"

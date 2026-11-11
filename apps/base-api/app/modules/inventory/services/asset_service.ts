@@ -7,12 +7,23 @@ import { AssetStatus, AuditAction } from '#modules/inventory/domain/enums/index'
 import { auditLogService } from '#modules/inventory/services/audit_log_service'
 
 export class AssetService {
-  async list(orgId: string, page = 1, limit = 25, status?: string) {
+  async list(orgId: string, page = 1, limit = 25, status?: string, search?: string) {
     const q = Asset.query()
       .where('organizationId', orgId)
       .whereNull('deletedAt')
       .preload('office')
     if (status) q.where('status', status)
+    const term = search?.trim()
+    if (term) {
+      const pattern = `%${term}%`
+      q.where((group) => {
+        group
+          .whereILike('name', pattern)
+          .orWhereILike('assetCode', pattern)
+          .orWhereILike('barcode', pattern)
+          .orWhereILike('serialNumber', pattern)
+      })
+    }
     return q.orderBy('name').paginate(page, limit)
   }
 

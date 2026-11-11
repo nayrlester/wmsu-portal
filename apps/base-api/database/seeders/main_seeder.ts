@@ -21,6 +21,9 @@ export default class extends BaseSeeder {
     await this.seedMdmDev()
     await this.seedIntegrationDev()
     await seedUimsDemoData('UNI')
+
+    const { seedAcademicSetup } = await import('#modules/enrollment/domain/seed_academic_setup')
+    await seedAcademicSetup('UNI')
   }
 
   private async seedIntegrationDev() {

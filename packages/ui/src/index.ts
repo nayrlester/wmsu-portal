@@ -40,6 +40,16 @@ export { Breadcrumb, type BreadcrumbItem, type BreadcrumbProps } from './compone
 export { Pagination, type PaginationProps } from './components/pagination'
 export { DataTable, type DataTableColumn, type DataTableProps } from './components/data-table'
 export { SearchInput, type SearchInputProps } from './components/search-input'
+export {
+  PersonnelSearchSelect,
+  type PersonnelSearchOption,
+  type PersonnelSearchSelectProps,
+} from './components/personnel-search-select'
+export {
+  AsyncSearchSelect,
+  type AsyncSearchOption,
+  type AsyncSearchSelectProps,
+} from './components/async-search-select'
 export { FilterPanel, type FilterPanelProps } from './components/filter-panel'
 export { FileUpload, type FileUploadProps } from './components/file-upload'
 export {
@@ -59,8 +69,17 @@ export {
   attachAxiosHttpNotifications,
   parseAxiosErrorMessage,
   parseAxiosSuccessMessage,
+  userFacingAxiosError,
   type AttachAxiosHttpNotifyOptions,
 } from './lib/axios-http-notify'
+export {
+  friendlyMailNoticeReason,
+  genericErrorToast,
+  genericSuccessToast,
+  isTechnicalUserMessage,
+  toUserFriendlyMessage,
+  type UserFacingAction,
+} from './lib/user-facing-errors'
 export {
   notifyFetchResponseError,
   notifyFetchJsonSuccess,

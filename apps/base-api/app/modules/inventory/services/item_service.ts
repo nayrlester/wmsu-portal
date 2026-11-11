@@ -30,13 +30,20 @@ export class ItemService {
 
   // ── Items ──
 
-  async listItems(orgId: string, page = 1, limit = 25, categoryId?: string) {
+  async listItems(orgId: string, page = 1, limit = 25, categoryId?: string, search?: string) {
     const q = Item.query()
       .where('organizationId', orgId)
       .whereNull('deletedAt')
       .preload('category')
       .preload('stockBalances')
     if (categoryId) q.where('categoryId', categoryId)
+    const term = search?.trim()
+    if (term) {
+      const pattern = `%${term}%`
+      q.where((group) => {
+        group.whereILike('name', pattern).orWhereILike('sku', pattern).orWhereILike('barcode', pattern)
+      })
+    }
     return q.orderBy('name').paginate(page, limit)
   }
 

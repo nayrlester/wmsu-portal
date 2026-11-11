@@ -1,5 +1,7 @@
 import axios from 'axios'
-import { attachAxiosHttpNotifications, parseAxiosErrorMessage } from '@wmsu/ui'
+import { attachAxiosHttpNotifications } from '@wmsu/ui'
+import { friendlyApiError } from '@/lib/user-messages'
+import type { UserFacingAction } from '@wmsu/ui'
 import { useAuthStore } from '@/stores/auth-store'
 import { clearQueryCache } from '@/lib/query-client'
 
@@ -90,16 +92,8 @@ attachAxiosHttpNotifications(apiClient)
 
 export function getApiErrorMessage(
   err: unknown,
-  fallback = 'Something went wrong. Please try again.'
+  _fallback = 'Something went wrong. Please try again.',
+  action: UserFacingAction = 'generic'
 ): string {
-  if (axios.isAxiosError(err)) {
-    return parseAxiosErrorMessage(err, fallback)
-  }
-  if (err instanceof Error && err.message) {
-    if (/network error|failed to fetch|econnrefused/i.test(err.message)) {
-      return 'Cannot reach USiS API. Confirm wmsu-enrollment API is running on port 3340.'
-    }
-    return err.message
-  }
-  return fallback
+  return friendlyApiError(err, action)
 }

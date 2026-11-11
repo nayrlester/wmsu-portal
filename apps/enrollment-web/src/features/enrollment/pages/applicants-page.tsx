@@ -7,7 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
+import { useNotification } from '@wmsu/ui'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { admitSuccessNotification } from '@/lib/admit-notice'
+import { admitErrorNotification, friendlyApiError } from '@/lib/user-messages'
 import { admitApplicant, fetchApplicants, type Applicant } from '../api/enrollment-api'
 
 const columns: Column<Applicant>[] = [
@@ -45,18 +48,25 @@ export function ApplicantsPage() {
   const [admitTarget, setAdmitTarget] = useState<Applicant | null>(null)
   const [studentNumber, setStudentNumber] = useState('')
   const [error, setError] = useState('')
+  const { notify } = useNotification()
 
   const query = useQuery({ queryKey: ['enrollment', 'applicants'], queryFn: fetchApplicants })
 
   const admitMutation = useMutation({
     mutationFn: () => admitApplicant(admitTarget!.id, studentNumber.trim()),
-    onSuccess: () => {
+    onSuccess: (result) => {
+      const toast = admitSuccessNotification(result.accountNotice)
+      notify({ tone: toast.tone, title: toast.title, description: toast.description })
       queryClient.invalidateQueries({ queryKey: ['enrollment'] })
       setAdmitTarget(null)
       setStudentNumber('')
       setError('')
     },
-    onError: (err) => setError(getApiErrorMessage(err)),
+    onError: (err) => {
+      const toast = admitErrorNotification(err)
+      notify(toast)
+      setError(friendlyApiError(err, 'admit'))
+    },
   })
 
   return (

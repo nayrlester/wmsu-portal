@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -28,6 +28,9 @@ import { fetchStockMovements, fetchStockBalances, createStockMovement } from '..
 import type { StockMovement, StockMovementFormData, StockBalance } from '../types'
 import type { Column } from '@/components/ui/data-table'
 import { cn } from '@/lib/utils'
+import { ItemSearchSelect } from '@/components/item-search-select'
+import { WarehouseSearchSelect } from '@/components/warehouse-search-select'
+import { LabeledSearchField } from '@/components/labeled-search-field'
 
 const movementSchema = z.object({
   itemId: z.string().min(1, 'Item is required'),
@@ -281,7 +284,7 @@ function StockMovementFormModal({
   })
 
   const onSubmit = form.handleSubmit((v) => mutation.mutate(v))
-  const { register, formState: { errors } } = form
+  const { register, control, formState: { errors } } = form
 
   return (
     <Modal open onClose={onClose} title="Record Stock Movement">
@@ -291,17 +294,23 @@ function StockMovementFormModal({
         </div>
       )}
       <form onSubmit={onSubmit} className="space-y-4">
-        <Input
-          label="Item ID"
-          placeholder="Enter item ID"
-          error={errors.itemId?.message}
-          {...register('itemId')}
+        <Controller
+          name="itemId"
+          control={control}
+          render={({ field }) => (
+            <LabeledSearchField label="Item" error={errors.itemId?.message}>
+              <ItemSearchSelect id="stock-movement-item" value={field.value} onChange={field.onChange} />
+            </LabeledSearchField>
+          )}
         />
-        <Input
-          label="Warehouse ID"
-          placeholder="Enter warehouse ID"
-          error={errors.warehouseId?.message}
-          {...register('warehouseId')}
+        <Controller
+          name="warehouseId"
+          control={control}
+          render={({ field }) => (
+            <LabeledSearchField label="Warehouse" error={errors.warehouseId?.message}>
+              <WarehouseSearchSelect id="stock-movement-wh" value={field.value} onChange={field.onChange} />
+            </LabeledSearchField>
+          )}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <Select

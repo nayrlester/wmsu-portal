@@ -7,8 +7,12 @@ import {
 } from '#modules/inventory/validators/uims'
 
 export default class WarehousesController {
-  async index({ auth, response }: HttpContext) {
-    const warehouses = await warehouseService.list(auth.user!.organizationId)
+  async index({ auth, request, response }: HttpContext) {
+    const search = request.input('search')
+    const warehouses = await warehouseService.list(
+      auth.user!.organizationId,
+      search ? String(search) : undefined
+    )
     return response.ok({ data: warehouses })
   }
 

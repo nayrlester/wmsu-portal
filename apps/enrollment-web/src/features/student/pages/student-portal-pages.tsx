@@ -24,9 +24,11 @@ import {
   useNotification,
 } from '@wmsu/ui'
 import { QueryPage, useListControls } from '@/components/query-page'
+import { SectionSearchSelect } from '@/components/section-search-select'
 import { EnrollmentWorkflowPanel } from '@/components/enrollment-workflow-panel'
 import { useInfiniteListQuery, usePaginatedQuery } from '@/lib/list-query'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { notifyGenericError } from '@/lib/user-messages'
 import { formatCurrency, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 import {
@@ -100,7 +102,7 @@ function StudentAnnouncementFeed() {
     mutationFn: (id: string) => toggleAnnouncementLike(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['student', 'announcements'] }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Like failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const commentMutation = useMutation({
     mutationFn: ({ id, body }: { id: string; body: string }) => commentOnAnnouncement(id, body),
@@ -110,7 +112,7 @@ function StudentAnnouncementFeed() {
       notify({ tone: 'success', title: 'Comment posted' })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Comment failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const announcements = feedQuery.data?.items ?? []
@@ -866,7 +868,7 @@ export function StudentSchedulePage() {
       void waitlist.refetch()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Waitlist failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const leaveMutation = useMutation({
     mutationFn: (entryId: string) => leaveSectionWaitlist(entryId),
@@ -875,7 +877,7 @@ export function StudentSchedulePage() {
       void waitlist.refetch()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Leave failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const markNotifRead = useMutation({
     mutationFn: (id: string) => markScheduleNotificationRead(id),
@@ -895,7 +897,7 @@ export function StudentSchedulePage() {
       }
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Resolve failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const searchAlternatesMutation = useMutation({
@@ -924,7 +926,7 @@ export function StudentSchedulePage() {
       setResolvedPreview(null)
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Apply failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const encodeBlockMutation = useMutation({
@@ -1150,13 +1152,11 @@ export function StudentSchedulePage() {
             forcing registration.
           </p>
           <div className="flex flex-wrap gap-2">
-            <FormField id="waitlistSectionId" label="Section ID">
-              <input
+            <FormField id="waitlistSectionId" label="Section">
+              <SectionSearchSelect
                 id="waitlistSectionId"
-                className="w-full rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm"
                 value={waitlistSectionId}
-                onChange={(e) => setWaitlistSectionId(e.target.value)}
-                placeholder="Section UUID"
+                onChange={setWaitlistSectionId}
               />
             </FormField>
             <Button
@@ -1752,7 +1752,7 @@ export function StudentCorPage() {
       qc.invalidateQueries({ queryKey: ['student', 'docs'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'COR failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -2003,7 +2003,7 @@ export function StudentSupportPage() {
     },
     onSuccess: () => notify({ tone: 'success', title: 'Support request submitted' }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Request failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const orgApps = useQuery({
     queryKey: ['student', 'org-apps'],
@@ -2027,7 +2027,7 @@ export function StudentSupportPage() {
       void qc.invalidateQueries({ queryKey: ['student', 'id-requests'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'ID request failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const digitalPdf = useMutation({
     mutationFn: async (requestId: string) => {
@@ -2041,7 +2041,7 @@ export function StudentSupportPage() {
     },
     onSuccess: () => notify({ tone: 'success', title: 'Digital ID PDF downloaded' }),
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Digital PDF failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
   const submitOrg = useMutation({
     mutationFn: (values: z.infer<typeof orgApplySchema>) =>
@@ -2063,7 +2063,7 @@ export function StudentSupportPage() {
       orgForm.reset({ proposedName: '', applicationType: 'new' })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Org apply failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -2237,7 +2237,7 @@ export function StudentQueuePage() {
       void display.refetch()
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Queue failed', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   return (
@@ -2355,7 +2355,7 @@ export function StudentFacultyEvalPage() {
       qc.invalidateQueries({ queryKey: ['student', 'task-calendar'] })
     },
     onError: (err) =>
-      notify({ tone: 'danger', title: 'Could not submit', description: getApiErrorMessage(err) }),
+      notify(notifyGenericError(err)),
   })
 
   const items = pending.data?.items ?? []

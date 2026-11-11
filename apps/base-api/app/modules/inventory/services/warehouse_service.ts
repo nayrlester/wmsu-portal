@@ -2,8 +2,16 @@ import Warehouse from '#modules/inventory/models/warehouse'
 import WarehouseBin from '#modules/inventory/models/warehouse_bin'
 
 export class WarehouseService {
-  async list(orgId: string) {
-    return Warehouse.query().where('organizationId', orgId).preload('campus').preload('bins').orderBy('name')
+  async list(orgId: string, search?: string) {
+    const q = Warehouse.query().where('organizationId', orgId).preload('campus').preload('bins').orderBy('name')
+    const term = search?.trim()
+    if (term) {
+      const pattern = `%${term}%`
+      q.where((group) => {
+        group.whereILike('name', pattern).orWhereILike('code', pattern)
+      })
+    }
+    return q
   }
 
   async getById(orgId: string, id: string) {
