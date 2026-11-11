@@ -236,6 +236,7 @@ export class SchedulingService {
 
     const candidateMeetings = bySection.get(input.candidateSectionId) ?? []
     for (const existingId of existingIds) {
+      if (existingId === input.candidateSectionId) continue
       const existingMeetings = bySection.get(existingId) ?? []
       for (const a of candidateMeetings) {
         for (const b of existingMeetings) {

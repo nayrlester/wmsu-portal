@@ -12,6 +12,7 @@ import {
   LoadingState,
 } from '@wmsu/ui'
 import { fetchStudentTaskCalendar, type StudentTaskCalendarItem } from '@/lib/usis-api'
+import { formatDateTime } from '@/lib/utils'
 
 function formatCountdown(targetIso: string, nowMs: number) {
   const target = new Date(targetIso).getTime()
@@ -125,7 +126,7 @@ export function StudentTaskCalendarPanel() {
                     </p>
                   ) : item.occurredAt ? (
                     <p className="text-[var(--color-muted-foreground)]">
-                      {new Date(item.occurredAt).toLocaleString()}
+                      {formatDateTime(item.occurredAt)}
                     </p>
                   ) : (
                     <Badge>Open</Badge>

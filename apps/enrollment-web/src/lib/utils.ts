@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-export { formatCurrency, formatNumber } from '@wmsu/ui'
+export { formatCampusDate, formatCurrency, formatDateTime, formatNumber } from '@wmsu/ui'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

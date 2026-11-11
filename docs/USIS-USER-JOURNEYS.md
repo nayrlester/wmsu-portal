@@ -6,6 +6,8 @@ Regenerate PDF after editing the HTML: `pnpm run docs:playwright-browsers` (once
 
 Local defaults: **USiS web** `http://127.0.0.1:5180` · **Portal** `http://127.0.0.1:5173` · **Base API** `http://127.0.0.1:3500` · **Identity** `http://127.0.0.1:3411`.
 
+**Time:** Campus standard is **Philippine Standard Time (Asia/Manila, UTC+8)**. Set `TZ=Asia/Manila` in `apps/base-api/.env` and restart the API; USiS UI timestamps use `formatDateTime` with that zone.
+
 Demo password: `ChangeMe123!` (or your `DEMO_SEED_PASSWORD` from Identity seed).
 
 ---

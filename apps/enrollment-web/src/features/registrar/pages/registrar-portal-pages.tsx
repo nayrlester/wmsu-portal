@@ -32,7 +32,7 @@ import { useHasPermission } from '@/lib/permissions'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { admitSuccessNotification } from '@/lib/admit-notice'
 import { admitErrorNotification, notifyGenericError } from '@/lib/user-messages'
-import { formatCurrency, formatNumber } from '@/lib/utils'
+import { cn, formatCurrency, formatDateTime, formatNumber } from '@/lib/utils'
 import { SAMPLE_ENTRANCE_EXAM_BANK } from '@/features/admissions/entrance-exam-sample-bank'
 import {
   admitApplicant,
@@ -93,6 +93,7 @@ import {
   fetchEnrollments,
   fetchGrades,
   fetchPrograms,
+  createAcademicYear,
   createProgram,
   createSection,
   updateProgram,
@@ -181,6 +182,7 @@ import {
   type UsisCurriculum,
   assignFacultyToSection,
 } from '@/lib/usis-api'
+import { RegistrarEnrollmentJourneyNav } from '@/features/registrar/components/registrar-enrollment-journey-nav'
 import { RegistrarSchedulingDesk } from '@/features/registrar/components/registrar-scheduling-desk'
 
 export function RegistrarDashboardPage() {
@@ -1029,7 +1031,7 @@ function RegistrarAdmissionEventsPanel() {
             {
               key: 'scheduledAt',
               header: 'When',
-              render: (r) => (r.scheduledAt ? new Date(r.scheduledAt).toLocaleString() : '—'),
+              render: (r) => formatDateTime(r.scheduledAt),
             },
             {
               key: 'deliveryMode',
@@ -1117,7 +1119,7 @@ function RegistrarAdmissionEventsPanel() {
                 {
                   key: 'createdAt',
                   header: 'When',
-                  render: (r) => (r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'),
+                  render: (r) => formatDateTime(r.createdAt),
                 },
               ]}
               data={history.data ?? []}
@@ -2178,6 +2180,7 @@ function RegistrarEnrollmentsInner() {
 
   return (
     <div className="space-y-6">
+      <RegistrarEnrollmentJourneyNav activeStep="enrollments" />
       {financeRead ? (
         <p className="text-sm" data-testid="finance-read-result">
           {financeRead}
@@ -2344,6 +2347,17 @@ export function RegistrarAcademicPage() {
   )
 }
 
+export function RegistrarSchedulingPage() {
+  return (
+    <RequirePermission anyOf={['academic.read', 'academic.write', 'enrollments.write']}>
+      <div className="space-y-6">
+        <RegistrarEnrollmentJourneyNav activeStep="scheduling" />
+        <RegistrarSchedulingDesk />
+      </div>
+    </RequirePermission>
+  )
+}
+
 export function RegistrarSettingsPage() {
   return (
     <RequirePermission anyOf={['academic.read', 'academic.write']}>
@@ -2372,7 +2386,15 @@ type AcademicEditTarget =
   | { kind: 'program'; row: { id: string; code: string; name: string } }
   | {
       kind: 'section'
-      row: { id: string; code: string; name: string; yearLevel: number; semester: number }
+      row: {
+        id: string
+        code: string
+        name: string
+        yearLevel: number
+        semester: number
+        capacity?: number | null
+        blockGroupCode?: string | null
+      }
     }
 
 function AcademicStructureEditor({
@@ -2399,6 +2421,16 @@ function AcademicStructureEditor({
   const [semester, setSemester] = useState(
     target.kind === 'section' ? String(target.row.semester) : '1'
   )
+  const [capacity, setCapacity] = useState(
+    target.kind === 'section'
+      ? target.row.capacity != null
+        ? String(target.row.capacity)
+        : ''
+      : ''
+  )
+  const [blockGroupCode, setBlockGroupCode] = useState(
+    target.kind === 'section' ? target.row.blockGroupCode ?? '' : ''
+  )
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -2416,11 +2448,15 @@ function AcademicStructureEditor({
         await updateProgram(target.row.id, { code: code.trim(), name: name.trim() })
         return
       }
+      const cap = capacity.trim() === '' ? null : Number(capacity)
       await patchSection(target.row.id, {
         code: code.trim(),
         name: name.trim(),
         yearLevel: Number(yearLevel),
         semester: Number(semester),
+        capacity: cap == null || Number.isNaN(cap) ? null : cap,
+        blockGroupCode: blockGroupCode.trim() ? blockGroupCode.trim().toUpperCase() : null,
+        isBlockSection: Boolean(blockGroupCode.trim()),
       })
     },
     onSuccess: () => {
@@ -2517,6 +2553,22 @@ function AcademicStructureEditor({
                 onChange={(e) => setSemester(e.target.value)}
               />
             </FormField>
+            <FormField id="academicEditCapacity" label="Enrollment capacity">
+              <Input
+                id="academicEditCapacity"
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+                placeholder="40"
+              />
+            </FormField>
+            <FormField id="academicEditBlock" label="Block group">
+              <Input
+                id="academicEditBlock"
+                value={blockGroupCode}
+                onChange={(e) => setBlockGroupCode(e.target.value)}
+                placeholder="BSIT-1A"
+              />
+            </FormField>
           </>
         ) : null}
       </div>
@@ -2524,12 +2576,59 @@ function AcademicStructureEditor({
   )
 }
 
+type AcademicCatalogTab = 'catalog' | 'organization' | 'facilities' | 'policies' | 'tools'
+
+const ACADEMIC_TAB_LABELS: Record<AcademicCatalogTab, string> = {
+  catalog: 'Years, courses & sections',
+  organization: 'Colleges & departments',
+  facilities: 'Rooms & buildings',
+  policies: 'Academic policies',
+  tools: 'Section tools',
+}
+
+function AcademicCatalogTabBar({
+  catalogTab,
+  setCatalogTab,
+}: {
+  catalogTab: AcademicCatalogTab
+  setCatalogTab: (tab: AcademicCatalogTab) => void
+}) {
+  return (
+    <div
+      className="flex flex-wrap gap-2"
+      role="tablist"
+      aria-label="Academic catalog views"
+      data-testid="academic-catalog-tabs"
+    >
+      {(Object.keys(ACADEMIC_TAB_LABELS) as AcademicCatalogTab[]).map((tab) => (
+        <Button
+          key={tab}
+          type="button"
+          role="tab"
+          aria-selected={catalogTab === tab}
+          size="sm"
+          variant={catalogTab === tab ? 'default' : 'outline'}
+          className={cn(catalogTab === tab ? '' : 'bg-transparent')}
+          onClick={() => setCatalogTab(tab)}
+        >
+          {ACADEMIC_TAB_LABELS[tab]}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
 function RegistrarAcademicInner() {
   const canWrite = useHasPermission('academic.write')
   const { notify } = useNotification()
   const qc = useQueryClient()
+  const [catalogTab, setCatalogTab] = useState<AcademicCatalogTab>('catalog')
   const [editing, setEditing] = useState<AcademicEditTarget | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AcademicEditTarget | null>(null)
+  const [yearCode, setYearCode] = useState('')
+  const [yearName, setYearName] = useState('')
+  const [yearStart, setYearStart] = useState('2026-06-01')
+  const [yearEnd, setYearEnd] = useState('2027-05-31')
   const [courseCode, setCourseCode] = useState('')
   const [courseName, setCourseName] = useState('')
   const [courseYears, setCourseYears] = useState('4')
@@ -2539,6 +2638,9 @@ function RegistrarAcademicInner() {
   const [sectionName, setSectionName] = useState('')
   const [sectionYearLevel, setSectionYearLevel] = useState('1')
   const [sectionSemester, setSectionSemester] = useState('1')
+  const [sectionCapacity, setSectionCapacity] = useState('40')
+  const [sectionSubjectId, setSectionSubjectId] = useState('')
+  const [sectionBlockGroup, setSectionBlockGroup] = useState('')
   const yearControls = useListControls()
   const programControls = useListControls()
   const sectionControls = useListControls()
@@ -2558,6 +2660,10 @@ function RegistrarAcademicInner() {
     queryKey: ['reg', 'sections', 'options'],
     queryFn: () => fetchSections({ page: 1, limit: 100 }),
   })
+  const subjectCatalog = useQuery({
+    queryKey: ['reg', 'subjects', 'section-create'],
+    queryFn: () => fetchSubjects({ page: 1, limit: 200 }),
+  })
   const deleteMutation = useMutation({
     mutationFn: (target: AcademicEditTarget) => {
       if (target.kind === 'year') return deleteAcademicYear(target.row.id)
@@ -2571,6 +2677,23 @@ function RegistrarAcademicInner() {
       void qc.invalidateQueries({ queryKey: ['reg', 'programs'] })
       void qc.invalidateQueries({ queryKey: ['reg', 'sections'] })
     },
+  })
+
+  const createYearMutation = useMutation({
+    mutationFn: () =>
+      createAcademicYear({
+        code: yearCode.trim(),
+        name: yearName.trim(),
+        startDate: yearStart,
+        endDate: yearEnd,
+      }),
+    onSuccess: () => {
+      notify({ tone: 'success', title: 'Academic year created' })
+      setYearCode('')
+      setYearName('')
+      void qc.invalidateQueries({ queryKey: ['reg', 'years'] })
+    },
+    onError: (err) => notify(notifyGenericError(err)),
   })
 
   const createCourseMutation = useMutation({
@@ -2591,19 +2714,29 @@ function RegistrarAcademicInner() {
   })
 
   const createSectionMutation = useMutation({
-    mutationFn: () =>
-      createSection({
+    mutationFn: () => {
+      const cap = Number(sectionCapacity)
+      const block = sectionBlockGroup.trim().toUpperCase()
+      return createSection({
         academicYearId: sectionYearId,
         programId: sectionProgramId,
         code: sectionCode.trim(),
         name: sectionName.trim(),
         yearLevel: Number(sectionYearLevel) || 1,
         semester: Number(sectionSemester) || 1,
-      }),
+        capacity: Number.isFinite(cap) && cap > 0 ? cap : undefined,
+        ...(sectionSubjectId ? { subjectId: sectionSubjectId } : {}),
+        ...(block
+          ? { blockGroupCode: block, isBlockSection: true }
+          : {}),
+      })
+    },
     onSuccess: () => {
       notify({ tone: 'success', title: 'Section created' })
       setSectionCode('')
       setSectionName('')
+      setSectionBlockGroup('')
+      setSectionSubjectId('')
       void qc.invalidateQueries({ queryKey: ['reg', 'sections'] })
     },
     onError: (err) =>
@@ -2635,6 +2768,8 @@ function RegistrarAcademicInner() {
 
   return (
     <div className="space-y-6">
+      <RegistrarEnrollmentJourneyNav activeStep="catalog" />
+      <AcademicCatalogTabBar catalogTab={catalogTab} setCatalogTab={setCatalogTab} />
       {editing ? (
         <AcademicStructureEditor
           key={`${editing.kind}-${editing.row.id}`}
@@ -2642,6 +2777,8 @@ function RegistrarAcademicInner() {
           onClose={() => setEditing(null)}
         />
       ) : null}
+      {catalogTab === 'catalog' ? (
+        <>
       <QueryPage
         title="Academic years"
         query={years}
@@ -2670,6 +2807,71 @@ function RegistrarAcademicInner() {
           />
         )}
       </QueryPage>
+      {canWrite ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>New academic year</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-4">
+              <FormField id="yearCode" label="Code" required>
+                <Input
+                  id="yearCode"
+                  data-testid="create-year-code"
+                  value={yearCode}
+                  onChange={(e) => setYearCode(e.target.value)}
+                  placeholder="AY2026-27"
+                />
+              </FormField>
+              <FormField id="yearName" label="Name" required className="md:col-span-2">
+                <Input
+                  id="yearName"
+                  data-testid="create-year-name"
+                  value={yearName}
+                  onChange={(e) => setYearName(e.target.value)}
+                  placeholder="Academic Year 2026–2027"
+                />
+              </FormField>
+              <FormField id="yearStart" label="Start date" required>
+                <Input
+                  id="yearStart"
+                  type="date"
+                  value={yearStart}
+                  onChange={(e) => setYearStart(e.target.value)}
+                />
+              </FormField>
+              <FormField id="yearEnd" label="End date" required>
+                <Input
+                  id="yearEnd"
+                  type="date"
+                  value={yearEnd}
+                  onChange={(e) => setYearEnd(e.target.value)}
+                />
+              </FormField>
+              <p className="text-sm text-[var(--color-muted-foreground)] md:col-span-4">
+                New years start inactive. Use Edit on a row and set Active to yes to make it the
+                current year (only one active year at a time).
+              </p>
+              <div className="flex items-end md:col-span-4">
+                <Button
+                  type="button"
+                  data-testid="create-academic-year"
+                  disabled={
+                    !yearCode.trim() ||
+                    yearName.trim().length < 2 ||
+                    !yearStart ||
+                    !yearEnd ||
+                    createYearMutation.isPending
+                  }
+                  onClick={() => createYearMutation.mutate()}
+                >
+                  Create academic year
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
       {canWrite ? (
         <Card>
           <CardHeader>
@@ -2779,6 +2981,42 @@ function RegistrarAcademicInner() {
                   onChange={(event) => setSectionSemester(event.target.value)}
                 />
               </FormField>
+              <FormField id="sectionCapacity" label="Enrollment capacity">
+                <Input
+                  id="sectionCapacity"
+                  data-testid="create-section-capacity"
+                  value={sectionCapacity}
+                  onChange={(event) => setSectionCapacity(event.target.value)}
+                  placeholder="40"
+                />
+              </FormField>
+              <FormField id="sectionSubject" label="Subject (for class sections)">
+                <Select
+                  id="sectionSubject"
+                  value={sectionSubjectId}
+                  onChange={(event) => setSectionSubjectId(event.target.value)}
+                >
+                  <option value="">None (homeroom / block label only)</option>
+                  {(subjectCatalog.data?.data ?? []).map((subj) => (
+                    <option key={subj.id} value={subj.id}>
+                      {subj.subjectCode} — {subj.title}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+              <FormField id="sectionBlockGroup" label="Block group">
+                <Input
+                  id="sectionBlockGroup"
+                  data-testid="create-section-block"
+                  value={sectionBlockGroup}
+                  onChange={(event) => setSectionBlockGroup(event.target.value)}
+                  placeholder="BSIT-1A"
+                />
+              </FormField>
+              <p className="text-sm text-[var(--color-muted-foreground)] md:col-span-3">
+                For scheduling and block encode, link a subject and set capacity. Homeroom rows
+                (e.g. BSIT-1) may omit subject; class sections (IT101-A) need both.
+              </p>
               <div className="flex items-end">
                 <Button
                   type="button"
@@ -2817,6 +3055,16 @@ function RegistrarAcademicInner() {
               { key: 'name', header: 'Name' },
               { key: 'yearLevel', header: 'Year' },
               { key: 'semester', header: 'Sem' },
+              {
+                key: 'capacity',
+                header: 'Capacity',
+                render: (r) => (r.capacity != null ? String(r.capacity) : '—'),
+              },
+              {
+                key: 'blockGroupCode',
+                header: 'Block',
+                render: (r) => r.blockGroupCode ?? '—',
+              },
             ]}
             actions={
               canWrite ? (row) => rowActions({ kind: 'section', row }) : undefined
@@ -2826,12 +3074,17 @@ function RegistrarAcademicInner() {
           />
         )}
       </QueryPage>
-      <RegistrarSchedulingDesk />
-      <RegistrarAcademicStructurePanel />
-      <RegistrarFacilitiesPanel />
-      <RegistrarAcademicPoliciesPanel />
-      <RegistrarSectionSlotTools sections={sectionOptions.data?.data ?? []} />
-      <RegistrarBlockEncodePanel sections={sectionOptions.data?.data ?? []} />
+        </>
+      ) : null}
+      {catalogTab === 'organization' ? <RegistrarAcademicStructurePanel /> : null}
+      {catalogTab === 'facilities' ? <RegistrarFacilitiesPanel /> : null}
+      {catalogTab === 'policies' ? <RegistrarAcademicPoliciesPanel /> : null}
+      {catalogTab === 'tools' ? (
+        <div className="space-y-6">
+          <RegistrarSectionSlotTools sections={sectionOptions.data?.data ?? []} />
+          <RegistrarBlockEncodePanel sections={sectionOptions.data?.data ?? []} />
+        </div>
+      ) : null}
       <ConfirmDialog
         open={deleteTarget != null}
         onOpenChange={(open) => {
@@ -6296,11 +6549,13 @@ function RegistrarRegistrationInner() {
     registerMutation.isPending
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Registration workflow</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-6">
+      <RegistrarEnrollmentJourneyNav activeStep="registration" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Registration workflow</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         {policies.data ? (
           <Alert variant="info">
             Configured approval steps: {steps.join(' → ')}
@@ -6428,6 +6683,7 @@ function RegistrarRegistrationInner() {
         <RegistrarEnrollmentWorkflowSection enrollmentId={enrollmentId} />
       </CardContent>
     </Card>
+    </div>
   )
 }
 
@@ -7008,7 +7264,7 @@ function RegistrarAnnouncementsInner() {
               {
                 key: 'expiresAt',
                 header: 'Expires',
-                render: (r) => (r.expiresAt ? new Date(r.expiresAt).toLocaleString() : '—'),
+                render: (r) => formatDateTime(r.expiresAt),
               },
               {
                 key: 'actions',
@@ -7322,8 +7578,7 @@ function RegistrarFacultyEvalInner() {
                       <div className="font-medium">{r.title}</div>
                       <div className="text-xs text-[var(--color-muted-foreground)]">
                         {r.evalCode?.code ?? '—'} · opens{' '}
-                        {r.opensAt ? new Date(r.opensAt).toLocaleString() : '—'} · closes{' '}
-                        {r.closesAt ? new Date(r.closesAt).toLocaleString() : '—'}
+                        {formatDateTime(r.opensAt)} · closes {formatDateTime(r.closesAt)}
                       </div>
                     </div>
                   ),

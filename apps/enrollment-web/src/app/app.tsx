@@ -213,6 +213,11 @@ const RegistrarAcademicPage = lazy(() =>
     default: m.RegistrarAcademicPage,
   }))
 )
+const RegistrarSchedulingPage = lazy(() =>
+  import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
+    default: m.RegistrarSchedulingPage,
+  }))
+)
 const RegistrarSettingsPage = lazy(() =>
   import('@/features/registrar/pages/registrar-portal-pages').then((m) => ({
     default: m.RegistrarSettingsPage,
@@ -463,6 +468,7 @@ export function App() {
               <Route path="registrar/students" element={<RegistrarStudentsPage />} />
               <Route path="registrar/enrollments" element={<RegistrarEnrollmentsPage />} />
               <Route path="registrar/academic" element={<RegistrarAcademicPage />} />
+              <Route path="registrar/scheduling" element={<RegistrarSchedulingPage />} />
               <Route path="registrar/settings" element={<RegistrarSettingsPage />} />
               <Route path="registrar/curriculum" element={<RegistrarCurriculumPage />} />
               <Route path="registrar/grades" element={<RegistrarGradesPage />} />

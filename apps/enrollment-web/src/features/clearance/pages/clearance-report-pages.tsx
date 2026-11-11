@@ -19,7 +19,7 @@ import {
 } from '@wmsu/ui'
 import { RequirePermission } from '@/components/auth/require-permission'
 import { getApiErrorMessage } from '@/lib/api-client'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDateTime } from '@/lib/utils'
 import {
   advanceOfficeClearanceItem,
   createOfficeReferral,
@@ -117,7 +117,7 @@ function ClearanceReportPrintView({ report }: { report: ClearanceReportIssuePayl
           {report.cleared ? 'Cleared' : 'With holds'}
         </Badge>
         <span className="text-xs text-[var(--color-muted-foreground)]">
-          Issued {new Date(report.issuedAt ?? '').toLocaleString()}
+          Issued {formatDateTime(report.issuedAt)}
         </span>
       </div>
       <p className="mt-3 text-xs font-mono text-[var(--color-muted-foreground)]">
@@ -261,7 +261,7 @@ function StudentClearanceReportInner() {
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--color-border)] px-3 py-2"
               >
                 <span>
-                  {row.issuedAt ? new Date(row.issuedAt).toLocaleString() : '—'} ·{' '}
+                  {formatDateTime(row.issuedAt)} ·{' '}
                   {row.cleared ? 'Cleared' : 'With holds'}
                 </span>
                 <a className="underline" href={row.verifyUrl} target="_blank" rel="noreferrer">
@@ -684,7 +684,7 @@ export function ClearanceVerifyPage() {
               : 'Checksum mismatch — treat as invalid.'}
           </Alert>
           <p className="text-xs text-[var(--color-muted-foreground)]">
-            Issued {data.issuedAt ? new Date(data.issuedAt).toLocaleString() : '—'}
+            Issued {formatDateTime(data.issuedAt)}
           </p>
         </CardContent>
       </Card>

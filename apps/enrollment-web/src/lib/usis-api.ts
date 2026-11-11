@@ -2884,6 +2884,23 @@ export async function fetchAcademicYears(params: PageParams = {}) {
   }>(data)
 }
 
+export async function createAcademicYear(payload: {
+  code: string
+  name: string
+  startDate: string
+  endDate: string
+}) {
+  const { data } = await apiClient.post('/academic/years', payload)
+  return asData<{
+    id: string
+    code: string
+    name: string
+    isActive: boolean
+    startDate?: string | null
+    endDate?: string | null
+  }>(data)
+}
+
 export async function updateAcademicYear(
   id: string,
   payload: {
@@ -2953,6 +2970,9 @@ export async function createSection(payload: {
   yearLevel: number
   semester: number
   capacity?: number
+  subjectId?: string | null
+  isBlockSection?: boolean
+  blockGroupCode?: string | null
 }) {
   const { data } = await apiClient.post('/academic/sections', payload)
   return asData<{ id: string; code: string; name: string }>(data)

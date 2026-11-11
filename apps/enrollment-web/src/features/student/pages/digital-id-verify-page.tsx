@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import { Alert, Badge, Card, CardContent, LoadingState, PageHeader } from '@wmsu/ui'
 import { fetchDigitalStudentIdVerify } from '@/lib/usis-api'
+import { formatDateTime } from '@/lib/utils'
 
 export function StudentDigitalIdVerifyPage() {
   const { token = '' } = useParams()
@@ -49,7 +50,7 @@ export function StudentDigitalIdVerifyPage() {
             <p className="text-xs text-[var(--color-muted-foreground)]">{data.note}</p>
           ) : null}
           <p className="text-xs text-[var(--color-muted-foreground)]">
-            Issued {data.issuedAt ? new Date(data.issuedAt).toLocaleString() : '—'}
+            Issued {formatDateTime(data.issuedAt)}
           </p>
         </CardContent>
       </Card>

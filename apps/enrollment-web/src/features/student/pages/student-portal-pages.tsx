@@ -29,7 +29,7 @@ import { EnrollmentWorkflowPanel } from '@/components/enrollment-workflow-panel'
 import { useInfiniteListQuery, usePaginatedQuery } from '@/lib/list-query'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { notifyGenericError } from '@/lib/user-messages'
-import { formatCurrency, formatNumber } from '@/lib/utils'
+import { formatCurrency, formatDateTime, formatNumber } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 import {
   createCounselingRequest,
@@ -1325,7 +1325,7 @@ function AssessmentFormPrintView({
         </div>
       ) : null}
       <p className="mt-4 text-xs text-[var(--color-muted-foreground)]">
-        Issued {doc.issuedAt ? new Date(doc.issuedAt).toLocaleString() : '—'}
+        Issued {formatDateTime(doc.issuedAt)}
       </p>
     </div>
   )
@@ -1547,7 +1547,7 @@ export function StudentAssessmentsPage() {
                 {
                   key: 'issuedAt',
                   header: 'Issued',
-                  render: (r) => (r.issuedAt ? new Date(r.issuedAt).toLocaleString() : '—'),
+                  render: (r) => formatDateTime(r.issuedAt),
                 },
                 {
                   key: 'actions',

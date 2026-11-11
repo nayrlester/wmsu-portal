@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { DataTable } from '@/components/ui/data-table'
 import type { Column } from '@/components/ui/data-table'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { fetchPayments } from '../api/enrollment-api'
 
 type PaymentRow = Awaited<ReturnType<typeof fetchPayments>>[number]
@@ -23,7 +23,7 @@ const columns: Column<PaymentRow>[] = [
   {
     key: 'paidAt',
     header: 'Paid',
-    render: (p) => new Date(p.paidAt).toLocaleString(),
+    render: (p) => formatDateTime(p.paidAt),
   },
 ]
 

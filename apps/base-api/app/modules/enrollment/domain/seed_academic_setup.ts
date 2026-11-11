@@ -177,8 +177,15 @@ export async function seedAcademicSetup(orgCode = 'UNI'): Promise<SeedAcademicSe
     { code: 'GE101-A', name: 'GE101 Section A', subject: subjects[2]! },
   ]
 
+  const meetingSlots = [
+    { dayOfWeek: 1, startMinute: 8 * 60, endMinute: 9 * 60 + 30 },
+    { dayOfWeek: 2, startMinute: 8 * 60, endMinute: 9 * 60 + 30 },
+    { dayOfWeek: 3, startMinute: 8 * 60, endMinute: 9 * 60 + 30 },
+  ]
+
   const sectionRows: Section[] = []
-  for (const def of sectionDefs) {
+  for (let index = 0; index < sectionDefs.length; index++) {
+    const def = sectionDefs[index]!
     const section = await Section.updateOrCreate(
       {
         organizationId: org.id,
@@ -205,6 +212,7 @@ export async function seedAcademicSetup(orgCode = 'UNI'): Promise<SeedAcademicSe
     )
     sectionRows.push(section)
 
+    const slot = meetingSlots[index % meetingSlots.length]!
     const meetingExists = await UsisSectionMeeting.query()
       .where('organization_id', org.id)
       .where('section_id', section.id)
@@ -213,12 +221,19 @@ export async function seedAcademicSetup(orgCode = 'UNI'): Promise<SeedAcademicSe
       await UsisSectionMeeting.create({
         organizationId: org.id,
         sectionId: section.id,
-        dayOfWeek: 1,
-        startMinute: 8 * 60,
-        endMinute: 9 * 60 + 30,
+        dayOfWeek: slot.dayOfWeek,
+        startMinute: slot.startMinute,
+        endMinute: slot.endMinute,
         roomCode: room.code,
         facultyUserId,
       })
+    } else {
+      meetingExists.dayOfWeek = slot.dayOfWeek
+      meetingExists.startMinute = slot.startMinute
+      meetingExists.endMinute = slot.endMinute
+      if (!meetingExists.roomCode) meetingExists.roomCode = room.code
+      if (!meetingExists.facultyUserId) meetingExists.facultyUserId = facultyUserId
+      await meetingExists.save()
     }
   }
 

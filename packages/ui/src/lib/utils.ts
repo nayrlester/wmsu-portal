@@ -24,3 +24,39 @@ export function formatNumber(value: number | string | null | undefined): string 
   if (!Number.isFinite(amount)) return '—'
   return new Intl.NumberFormat('en-PH', { maximumFractionDigits: 2 }).format(amount)
 }
+
+const MANILA_TZ = 'Asia/Manila'
+
+export function formatDateTime(
+  value: string | number | Date | null | undefined,
+  opts?: Intl.DateTimeFormatOptions
+): string {
+  if (value == null || value === '') return '—'
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString('en-PH', {
+    timeZone: MANILA_TZ,
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: 'numeric',
+    minute: '2-digit',
+    ...opts,
+  })
+}
+
+export function formatCampusDate(
+  value: string | number | Date | null | undefined,
+  opts?: Intl.DateTimeFormatOptions
+): string {
+  if (value == null || value === '') return '—'
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString('en-PH', {
+    timeZone: MANILA_TZ,
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    ...opts,
+  })
+}

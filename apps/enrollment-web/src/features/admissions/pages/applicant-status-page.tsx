@@ -16,6 +16,7 @@ import {
   Select,
 } from '@wmsu/ui'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { formatDateTime } from '@/lib/utils'
 import {
   fetchPublicAdmissionPrograms,
   lookupApplicantPortalStatus,
@@ -180,7 +181,7 @@ export function ApplicantStatusPage() {
                 <Badge>{result.status}</Badge>
                 {result.classification ? <Badge>{result.classification}</Badge> : null}
                 <span className="text-[var(--color-muted-foreground)]">
-                  Applied {result.appliedAt ? new Date(result.appliedAt).toLocaleString() : '—'}
+                  Applied {formatDateTime(result.appliedAt)}
                 </span>
               </div>
 
@@ -299,7 +300,7 @@ export function ApplicantStatusPage() {
                       key: 'scheduledAt',
                       header: 'When',
                       render: (r) =>
-                        r.scheduledAt ? new Date(r.scheduledAt).toLocaleString() : '—',
+                        formatDateTime(r.scheduledAt),
                     },
                     {
                       key: 'deliveryMode',
@@ -567,7 +568,7 @@ export function ApplicantStatusPage() {
                   {
                     key: 'createdAt',
                     header: 'When',
-                    render: (r) => (r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'),
+                    render: (r) => formatDateTime(r.createdAt),
                   },
                 ]}
                 data={result.statusHistory}

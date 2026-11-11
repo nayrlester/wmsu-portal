@@ -261,8 +261,8 @@ export const NAV_GROUPS: UsisNavGroup[] = [
     ],
   },
   {
-    id: 'registrar',
-    label: 'Registrar portal',
+    id: 'registrar-enrollment',
+    label: 'Registrar · Enrollment',
     items: [
       {
         id: 'reg-dash',
@@ -306,12 +306,25 @@ export const NAV_GROUPS: UsisNavGroup[] = [
         icon: ShieldCheck,
         permissions: ['enrollments.write'],
       },
+    ],
+  },
+  {
+    id: 'registrar-scheduling',
+    label: 'Registrar · Scheduling',
+    items: [
       {
         id: 'reg-acad',
-        label: 'Academic structure',
+        label: 'Academic catalog',
         path: '/registrar/academic',
         icon: Building2,
         permissions: ['academic.read', 'academic.write'],
+      },
+      {
+        id: 'reg-scheduling',
+        label: 'Scheduling & seating',
+        path: '/registrar/scheduling',
+        icon: Calendar,
+        permissions: ['academic.read', 'academic.write', 'enrollments.write'],
       },
       {
         id: 'reg-curr',
@@ -320,6 +333,12 @@ export const NAV_GROUPS: UsisNavGroup[] = [
         icon: BookOpen,
         permissions: ['academic.read'],
       },
+    ],
+  },
+  {
+    id: 'registrar-operations',
+    label: 'Registrar · Operations',
+    items: [
       {
         id: 'reg-grades',
         label: 'Grade monitoring',

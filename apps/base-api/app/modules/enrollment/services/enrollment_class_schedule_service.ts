@@ -42,6 +42,9 @@ export class EnrollmentClassScheduleService {
         enrollment,
         sections: resolved.sections,
       })
+      if (!created.length) {
+        throw new Error('No new sections added — you may already be enrolled in each code')
+      }
 
       enrollment.useTransaction(trx)
       if (mode === 'block') {
@@ -119,24 +122,26 @@ export class EnrollmentClassScheduleService {
         })),
       })
 
-      const anchor = blockSections.find((s) => s.isBlockSection) ?? blockSections[0]
-      enrollment.useTransaction(trx)
-      enrollment.isRegularBlock = true
-      enrollment.sectionId = anchor?.id ?? enrollment.sectionId
-      enrollment.requiresReassessment = true
-      if (!enrollment.advisingWaived) {
-        enrollment.requiresReadvising = true
-      }
-      enrollment.paymentVerified = false
-      await enrollment.save()
+      if (created.length) {
+        const anchor = blockSections.find((s) => s.isBlockSection) ?? blockSections[0]
+        enrollment.useTransaction(trx)
+        enrollment.isRegularBlock = true
+        enrollment.sectionId = anchor?.id ?? enrollment.sectionId
+        enrollment.requiresReassessment = true
+        if (!enrollment.advisingWaived) {
+          enrollment.requiresReadvising = true
+        }
+        enrollment.paymentVerified = false
+        await enrollment.save()
 
-      await auditLogService.log({
-        organizationId: input.organizationId,
-        actorUserId: input.actorUserId,
-        action: AuditAction.CREATE,
-        entityType: 'enrollment_block_encode',
-        entityId: enrollment.id,
-      })
+        await auditLogService.log({
+          organizationId: input.organizationId,
+          actorUserId: input.actorUserId,
+          action: AuditAction.CREATE,
+          entityType: 'enrollment_block_encode',
+          entityId: enrollment.id,
+        })
+      }
 
       return {
         enrollment,
@@ -229,6 +234,13 @@ export class EnrollmentClassScheduleService {
         throw new Error(`Section ${section.code} is at capacity`)
       }
 
+      const duplicate = await EnrollmentLine.query({ client: input.trx })
+        .where('enrollment_id', input.enrollment.id)
+        .where('section_id', section.id)
+        .whereIn('status', ['planned', 'registered', 'enrolled'])
+        .first()
+      if (duplicate) continue
+
       const seated = await schedulingService.seatedCount(section.id)
       const capacity = section.capacity ?? 0
       if (capacity > 0 && seated >= capacity) {
@@ -245,13 +257,6 @@ export class EnrollmentClassScheduleService {
           conflict.conflicts[0]?.message ?? `Schedule conflict for section ${section.code}`
         )
       }
-
-      const duplicate = await EnrollmentLine.query({ client: input.trx })
-        .where('enrollment_id', input.enrollment.id)
-        .where('section_id', section.id)
-        .whereIn('status', ['planned', 'registered', 'enrolled'])
-        .first()
-      if (duplicate) continue
 
       let subjectCode = 'TBD'
       let subjectTitle = 'TBD'
@@ -283,9 +288,6 @@ export class EnrollmentClassScheduleService {
       created.push(line)
     }
 
-    if (!created.length) {
-      throw new Error('No new sections added — you may already be enrolled in each code')
-    }
     return created
   }
 }

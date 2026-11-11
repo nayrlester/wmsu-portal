@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { formatDateTime } from '@/lib/utils'
 import { downloadReport, triggerBlobDownload } from '../api/reports-api'
 import type { ReportDefinition, ReportType } from '../types'
 
@@ -73,7 +74,7 @@ async function printReportPdf(type: ReportType, title: string) {
 </style></head><body>
  <button onclick="window.print()" style="margin-bottom:12px">Print / Save as PDF</button>
  <h1>${escapeHtml(title)}</h1>
- <p>Generated ${new Date().toLocaleString()} · Change page size/orientation in the print dialog</p>
+ <p>Generated ${formatDateTime(new Date())} (Philippine Standard Time) · Change page size/orientation in the print dialog</p>
  <table><thead><tr>${tableHead}</tr></thead><tbody>${tableBody}</tbody></table>
 </body></html>`)
   win.document.close()
