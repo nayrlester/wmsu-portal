@@ -18,16 +18,14 @@ export function friendlyApiError(err: unknown, action: UserFacingAction = 'gener
   return toUserFriendlyMessage('', action)
 }
 
-export function admitErrorNotification(err: unknown): {
-  tone: 'danger'
-  title: string
-  description: string
-} {
-  return notifyGenericError(err, 'admit')
-}
-
 export type UserToast = {
   tone: 'success' | 'warning' | 'danger'
+  title: string
+  description: string
+}
+
+export type DangerToast = {
+  tone: 'danger'
   title: string
   description: string
 }
@@ -35,12 +33,16 @@ export type UserToast = {
 export function notifyGenericError(
   err: unknown,
   action: UserFacingAction = 'generic'
-): UserToast {
+): DangerToast {
   return {
     tone: 'danger',
     title: 'Something went wrong',
     description: friendlyApiError(err, action),
   }
+}
+
+export function admitErrorNotification(err: unknown): DangerToast {
+  return notifyGenericError(err, 'admit')
 }
 
 export function notifyGenericSuccess(detail?: string | null): UserToast {
