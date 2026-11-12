@@ -2448,13 +2448,13 @@ function AcademicStructureEditor({
         await updateProgram(target.row.id, { code: code.trim(), name: name.trim() })
         return
       }
-      const cap = capacity.trim() === '' ? null : Number(capacity)
+      const cap = capacity.trim() === '' ? undefined : Number(capacity)
       await patchSection(target.row.id, {
         code: code.trim(),
         name: name.trim(),
         yearLevel: Number(yearLevel),
         semester: Number(semester),
-        capacity: cap == null || Number.isNaN(cap) ? null : cap,
+        capacity: cap == null || Number.isNaN(cap) ? undefined : cap,
         blockGroupCode: blockGroupCode.trim() ? blockGroupCode.trim().toUpperCase() : null,
         isBlockSection: Boolean(blockGroupCode.trim()),
       })

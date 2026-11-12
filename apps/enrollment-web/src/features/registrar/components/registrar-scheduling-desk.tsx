@@ -544,7 +544,7 @@ export function RegistrarSchedulingDesk() {
         </CardHeader>
         {showAdvanced ? (
           <CardContent className="space-y-6">
-            <motionReplica
+            <ScheduleReplicatePanel
               replicateSem={replicateSem}
               setReplicateSem={setReplicateSem}
               sourceYearId={sourceYearId}
@@ -645,7 +645,7 @@ export function RegistrarSchedulingDesk() {
   )
 }
 
-function motionReplica(props: {
+function ScheduleReplicatePanel(props: {
   replicateSem: string
   setReplicateSem: (v: string) => void
   sourceYearId: string
