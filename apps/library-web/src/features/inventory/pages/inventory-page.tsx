@@ -51,15 +51,7 @@ export function InventoryPage() {
   })
 
   const exportDiscrepancy = useMutation({
-    mutationFn: async () => {
-      const blob = await downloadReport('shelf_discrepancy', 'csv')
-      const url = URL.createObjectURL(blob)
-      const anchor = document.createElement('a')
-      anchor.href = url
-      anchor.download = 'shelf-discrepancy.csv'
-      anchor.click()
-      URL.revokeObjectURL(url)
-    },
+    mutationFn: () => downloadReport('shelf_discrepancy', 'csv'),
     onError: (err) => toast.error(getApiErrorMessage(err) || 'Export failed'),
   })
 
