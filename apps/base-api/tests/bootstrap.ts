@@ -42,6 +42,12 @@ export const configureSuite: Config['configureSuite'] = (suite) => {
       if (process.env.LIBRARY_TEST_BOOTSTRAP === '1' || shouldBootstrapUlmisFromArgv(argv)) {
         await bootstrapUlmisTestData()
       }
+      const { shouldBootstrapUfmsFromArgv, bootstrapUfmsTestData } = await import(
+        './helpers/ufms_test_bootstrap.js'
+      )
+      if (process.env.FINANCE_TEST_BOOTSTRAP === '1' || shouldBootstrapUfmsFromArgv(argv)) {
+        await bootstrapUfmsTestData()
+      }
     })
   }
 }

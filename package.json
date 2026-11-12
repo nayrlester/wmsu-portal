@@ -26,6 +26,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r --filter './apps/*' --filter './packages/*' test",
     "test:library": "node scripts/test-library.mjs",
+    "test:finance": "node scripts/test-finance.mjs",
     "db:migrate": "pnpm --filter @wmsu/base-api db:migrate",
     "db:migrate:railway": "node scripts/db-migrate-railway.mjs",
     "db:push:railway": "node scripts/db-push-local-to-railway.mjs",

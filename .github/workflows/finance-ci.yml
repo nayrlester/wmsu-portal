@@ -1,0 +1,63 @@
+name: UFMS finance CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/base-api/app/modules/finance/**'
+      - 'apps/finance-web/**'
+      - 'apps/base-api/tests/functional/ufms_*.spec.ts'
+      - 'apps/base-api/tests/helpers/ufms_test_bootstrap.ts'
+      - 'scripts/test-finance.mjs'
+      - '.github/workflows/finance-ci.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: .
+
+jobs:
+  japa-finance:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: wmsu
+          POSTGRES_PASSWORD: wmsu_ci
+          POSTGRES_DB: wmsu_cis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wmsu"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      APP_KEY: ci_ufms_app_key_change_me_32chars
+      TZ: Asia/Manila
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USER: wmsu
+      DB_PASSWORD: wmsu_ci
+      DB_DATABASE: wmsu_cis
+      AUTH_MODE: local
+      JWT_SECRET: ci_ufms_jwt_secret_at_least_32_characters_long
+      SERVICE_API_KEY: ci-service-api-key-change-me
+      FINANCE_TEST_BOOTSTRAP: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Apply schemas
+        run: psql "postgresql://wmsu:wmsu_ci@127.0.0.1:5432/wmsu_cis" -f infrastructure/database/01_schemas.sql
+        continue-on-error: true
+      - run: pnpm --filter @wmsu/base-api db:migrate
+      - run: node scripts/test-finance.mjs

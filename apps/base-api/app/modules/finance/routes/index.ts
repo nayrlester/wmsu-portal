@@ -1,5 +1,8 @@
 import router from '@adonisjs/core/services/router'
+import env from '#start/env'
 import { mw as middleware } from '#modules/finance/middleware_registry'
+
+const financeLoginRateMax = env.get('NODE_ENV') === 'production' ? 10 : 500
 
 const AuthController = () => import('#modules/finance/controllers/auth_controller')
 const UfmsController = () => import('#modules/finance/controllers/ufms_controller')
@@ -23,7 +26,7 @@ const PaymentPlansController = () => import('#modules/finance/controllers/paymen
 router
   .group(() => {
     router.post('/auth/login', [AuthController, 'login'])
-      .use(middleware.rateLimit({ max: 10, windowMs: 15 * 60_000, prefix: 'login' }))
+      .use(middleware.rateLimit({ max: financeLoginRateMax, windowMs: 15 * 60_000, prefix: 'login' }))
     router.post('/auth/refresh', [AuthController, 'refresh'])
       .use(middleware.rateLimit({ max: 30, windowMs: 60_000, prefix: 'refresh' }))
   })
