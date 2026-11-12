@@ -70,3 +70,33 @@ export interface UpsertKioskPayload {
   idleTimeoutSeconds?: number
   rotateApiKey?: boolean
 }
+
+export interface ShelfCountSummary {
+  id: string
+  shelfCode: string
+  createdAt: string | null
+  seenCount: number
+  missingCount: number
+  elsewhereCount: number
+  unknownCount: number
+}
+
+export interface ShelfCountCopyRow {
+  copyId: string
+  barcode: string
+  bookTitle: string | null
+  copyStatus: string
+}
+
+export interface ShelfCountReport {
+  id: string
+  shelfCode: string
+  seen: ShelfCountCopyRow[]
+  missing: ShelfCountCopyRow[]
+  elsewhere: Array<
+    ShelfCountCopyRow & {
+      shelfLocation: string | null
+    }
+  >
+  unknown: string[]
+}

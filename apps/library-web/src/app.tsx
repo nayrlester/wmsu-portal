@@ -32,6 +32,7 @@ import { RfidPage } from '@/features/rfid/pages/rfid-page'
 import { AttendancePage } from '@/features/attendance/pages/attendance-page'
 import { IntegrationsPage } from '@/features/integrations/pages/integrations-page'
 import { AcquisitionsPage } from '@/features/acquisitions/pages/acquisitions-page'
+import { InventoryPage } from '@/features/inventory/pages/inventory-page'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +74,7 @@ export function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/books" element={<BooksPage />} />
                 <Route path="/books/:id" element={<BookDetailPage />} />
+                <Route path="/inventory" element={<InventoryPage />} />
                 <Route path="/members" element={<MembersPage />} />
                 <Route path="/members/:id" element={<MemberDetailPage />} />
                 <Route path="/circulation" element={<CirculationPage />} />

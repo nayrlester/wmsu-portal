@@ -9,4 +9,9 @@ export function registerIntegrationRoutes() {
   router.post('integrations/hris/sync', [IntegrationsController, 'syncHris'])
   router.post('integrations/ldap/authenticate', [IntegrationsController, 'ldapAuth'])
   router.post('integrations/smart-campus/sso', [IntegrationsController, 'smartCampusSso'])
+  router.get('integrations/protocols/catalog/health', [IntegrationsController, 'catalogProtocolHealth'])
+  router.get('integrations/protocols/circulation/health', [
+    IntegrationsController,
+    'circulationProtocolHealth',
+  ])
 }

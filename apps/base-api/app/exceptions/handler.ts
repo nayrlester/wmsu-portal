@@ -2,6 +2,7 @@ import app from '@adonisjs/core/services/app'
 import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
 import { errors as vineErrors } from '@vinejs/vine'
 import { errorEnvelope, IntegrationError } from '#services/integration_envelope'
+import TenantNotFoundException from '#modules/library/exceptions/tenant_not_found_exception'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   protected debug = !app.inProduction
@@ -9,6 +10,15 @@ export default class HttpExceptionHandler extends ExceptionHandler {
   async handle(error: unknown, ctx: HttpContext) {
     if (error instanceof IntegrationError) {
       return ctx.response.status(error.status).send(errorEnvelope(error.message, error.errors))
+    }
+
+    if (error instanceof TenantNotFoundException) {
+      return ctx.response.status(404).json({
+        success: false,
+        message: error.message,
+        code: TenantNotFoundException.code,
+        requestId: ctx.requestId,
+      })
     }
 
     if (error instanceof vineErrors.E_VALIDATION_ERROR) {

@@ -11,6 +11,7 @@ import {
   fetchNotificationPreferences,
   updateNotificationPreference,
 } from '@/lib/notifications-api'
+import { fetchUlmisSettings, upsertUlmisSetting } from '@/lib/ulmis-settings-api'
 import { useAuthStore } from '@/stores/auth-store'
 import type { NotificationPreference } from '@/types/notifications'
 
@@ -29,6 +30,28 @@ export function SettingsPage() {
     queryKey: ['notification-preferences'],
     queryFn: fetchNotificationPreferences,
   })
+
+  const ulmisSettingsQuery = useQuery({
+    queryKey: ['ulmis-settings'],
+    queryFn: fetchUlmisSettings,
+    enabled: Boolean(canUpdate),
+  })
+
+  const kpiSetting = (ulmisSettingsQuery.data ?? []).find(
+    (row) => row.settingKey === 'dashboard.kpi_indicators'
+  )
+  const [kpiJson, setKpiJson] = useState(
+    '["active_loans","overdue","reservations","search_hits"]'
+  )
+
+  useEffect(() => {
+    if (!kpiSetting?.settingValue) return
+    try {
+      setKpiJson(JSON.stringify(kpiSetting.settingValue.indicators ?? kpiSetting.settingValue))
+    } catch {
+      setKpiJson('["active_loans","overdue","reservations","search_hits"]')
+    }
+  }, [kpiSetting?.settingValue, kpiSetting?.id])
 
   const [form, setForm] = useState({
     name: '',
@@ -212,6 +235,43 @@ export function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {canUpdate ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Dashboard indicators (LIB-016)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-slate-500">
+              JSON array of widget keys shown on the staff dashboard. Changes apply without redeploy.
+            </p>
+            <textarea
+              className="min-h-[120px] w-full rounded-2xl border border-slate-200 p-3 font-mono text-xs"
+              value={kpiJson}
+              onChange={(e) => setKpiJson(e.target.value)}
+            />
+            <Button
+              onClick={async () => {
+                try {
+                  const parsed = JSON.parse(kpiJson) as unknown
+                  if (!Array.isArray(parsed)) throw new Error('Must be a JSON array')
+                  await upsertUlmisSetting({
+                    settingKey: 'dashboard.kpi_indicators',
+                    settingValue: { indicators: parsed },
+                    description: 'Staff dashboard KPI widget catalog',
+                  })
+                  qc.invalidateQueries({ queryKey: ['ulmis-settings'] })
+                  toast.success('Dashboard indicators saved')
+                } catch (err) {
+                  toast.error(getApiErrorMessage(err) || 'Invalid JSON')
+                }
+              }}
+            >
+              Save dashboard indicators
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

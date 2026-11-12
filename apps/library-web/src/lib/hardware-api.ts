@@ -6,6 +6,8 @@ import type {
   LocateResult,
   QueueAnalytics,
   QueueTicket,
+  ShelfCountReport,
+  ShelfCountSummary,
   ShelfLocation,
   UpsertKioskPayload,
 } from '@/types/hardware'
@@ -95,5 +97,35 @@ export async function locateItem(q: string) {
   const { data } = await apiClient.get<ApiResponse<LocateResult[]>>('/hardware/locate', {
     params: { q },
   })
+  return data.data
+}
+
+export async function fetchShelfCounts() {
+  const { data } = await apiClient.get<ApiResponse<ShelfCountSummary[]>>(
+    '/hardware/inventory/counts'
+  )
+  return data.data
+}
+
+export async function fetchShelfCount(id: string) {
+  const { data } = await apiClient.get<ApiResponse<ShelfCountReport>>(
+    `/hardware/inventory/counts/${id}`
+  )
+  return data.data
+}
+
+export async function startShelfCount(shelfCode: string) {
+  const { data } = await apiClient.post<ApiResponse<ShelfCountReport>>(
+    '/hardware/inventory/counts',
+    { shelfCode }
+  )
+  return data.data
+}
+
+export async function addShelfScan(countId: string, value: string) {
+  const { data } = await apiClient.post<ApiResponse<ShelfCountReport>>(
+    `/hardware/inventory/counts/${countId}/scans`,
+    { value }
+  )
   return data.data
 }

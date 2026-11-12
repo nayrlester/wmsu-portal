@@ -9,6 +9,7 @@ import AttendanceEvent from '#modules/library/models/attendance_event'
 import { t } from '#modules/library/helpers/db_schema'
 import { tenantContext } from '#modules/library/services/tenant/tenant_context'
 import CacheService from '#modules/library/services/cache/cache_service'
+import UlmisSettingsService from '#modules/library/services/ulmis/ulmis_settings_service'
 
 export interface AnalyticsDashboardInput {
   days?: number
@@ -20,6 +21,7 @@ function tenantId(): string {
 
 export default class AnalyticsService {
   private cache = new CacheService()
+  private ulmisSettings = new UlmisSettingsService()
 
   async getDashboard(input: AnalyticsDashboardInput = {}) {
     const days = Math.min(Math.max(input.days ?? 30, 7), 90)
@@ -55,6 +57,13 @@ export default class AnalyticsService {
           this.getDigitalUsageSummary(tid),
         ])
 
+        const kpiRow = await this.ulmisSettings.get('dashboard.kpi_indicators')
+        const configuredIndicators = Array.isArray(
+          (kpiRow?.settingValue as { indicators?: unknown })?.indicators
+        )
+          ? ((kpiRow!.settingValue as { indicators: string[] }).indicators ?? [])
+          : ['active_loans', 'overdue', 'reservations', 'search_hits']
+
         return {
           overview,
           circulationTrends,
@@ -66,6 +75,7 @@ export default class AnalyticsService {
           peakUsageHours,
           acquisitionSummary,
           digitalUsageSummary,
+          kpiIndicators: configuredIndicators,
           period: { days, from: since.toISO(), to: DateTime.now().toISO() },
         }
       },

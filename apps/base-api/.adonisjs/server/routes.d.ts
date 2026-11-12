@@ -850,6 +850,8 @@ export type ScannedRoutes = {
     'library.integrations.sync_hris': { paramsTuple?: []; params?: {} }
     'library.integrations.ldap_auth': { paramsTuple?: []; params?: {} }
     'library.integrations.smart_campus_sso': { paramsTuple?: []; params?: {} }
+    'library.integrations.catalog_protocol_health': { paramsTuple?: []; params?: {} }
+    'library.integrations.circulation_protocol_health': { paramsTuple?: []; params?: {} }
     'library.hardware.list_rfid': { paramsTuple?: []; params?: {} }
     'library.hardware.register_rfid': { paramsTuple?: []; params?: {} }
     'library.hardware.rfid_checkout': { paramsTuple?: []; params?: {} }
@@ -1665,6 +1667,8 @@ export type ScannedRoutes = {
     'library.digital.list_electronic': { paramsTuple?: []; params?: {} }
     'library.digital.unified_search': { paramsTuple?: []; params?: {} }
     'library.integrations.status': { paramsTuple?: []; params?: {} }
+    'library.integrations.catalog_protocol_health': { paramsTuple?: []; params?: {} }
+    'library.integrations.circulation_protocol_health': { paramsTuple?: []; params?: {} }
     'library.hardware.list_rfid': { paramsTuple?: []; params?: {} }
     'library.hardware.list_gate_events': { paramsTuple?: []; params?: {} }
     'library.hardware.list_shelf_counts': { paramsTuple?: []; params?: {} }
@@ -2256,6 +2260,8 @@ export type ScannedRoutes = {
     'library.digital.list_electronic': { paramsTuple?: []; params?: {} }
     'library.digital.unified_search': { paramsTuple?: []; params?: {} }
     'library.integrations.status': { paramsTuple?: []; params?: {} }
+    'library.integrations.catalog_protocol_health': { paramsTuple?: []; params?: {} }
+    'library.integrations.circulation_protocol_health': { paramsTuple?: []; params?: {} }
     'library.hardware.list_rfid': { paramsTuple?: []; params?: {} }
     'library.hardware.list_gate_events': { paramsTuple?: []; params?: {} }
     'library.hardware.list_shelf_counts': { paramsTuple?: []; params?: {} }

@@ -17,6 +17,7 @@ import {
   HardDrive,
   MonitorSmartphone,
   ClipboardList,
+  ClipboardCheck,
   LogOut,
   Plug,
   ScanLine,
@@ -54,6 +55,7 @@ const navSections: NavSection[] = [
     label: 'Catalog',
     items: [
       { to: '/books', label: 'Catalog', icon: BookOpen, permission: 'books:read' },
+      { to: '/inventory', label: 'Shelf inventory', icon: ClipboardCheck, permission: 'books:read' },
       { to: '/digital', label: 'Digital library', icon: HardDrive, permission: 'digital:read' },
       { to: '/search', label: 'Advanced search', icon: Search, permission: 'search:query' },
       { to: '/opac', label: 'Staff OPAC', icon: Globe, permission: 'search:query' },

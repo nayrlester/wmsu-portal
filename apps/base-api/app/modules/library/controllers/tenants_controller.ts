@@ -1,8 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import app from '@adonisjs/core/services/app'
 import Tenant from '#modules/library/models/tenant'
 import RbacService from '#modules/library/services/auth/rbac_service'
 import ForbiddenException from '#modules/library/exceptions/forbidden_exception'
-import { resolveTenantSlug } from '#modules/library/services/deployment/deployment_mode'
+import { getDefaultTenantSlug, resolveTenantSlug } from '#modules/library/services/deployment/deployment_mode'
+import { ensureInstitutionTenant } from '#modules/library/services/tenant/ensure_institution_tenant'
 import { updateTenantValidator } from '#modules/library/validators/tenant'
 
 export default class TenantsController {
@@ -35,7 +37,11 @@ export default class TenantsController {
       })
     }
 
-    const tenant = await Tenant.query().where('slug', slug).first()
+    let tenant = await Tenant.query().where('slug', slug).first()
+
+    if ((!tenant || tenant.status !== 'active') && !app.inProduction && slug === getDefaultTenantSlug().toLowerCase()) {
+      tenant = await ensureInstitutionTenant(slug)
+    }
 
     if (!tenant || tenant.status !== 'active') {
       return response.notFound({

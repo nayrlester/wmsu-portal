@@ -1,10 +1,20 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import app from '@adonisjs/core/services/app'
+
+const OPENAPI_PATHS = [
+  () => app.makePath('app/modules/library/docs/openapi.yaml'),
+  () => app.makePath('docs/openapi.yaml'),
+]
 
 export default class DocsController {
   async openapi({ response }: HttpContext) {
-    const spec = readFileSync(app.makePath('docs/openapi.yaml'), 'utf-8')
+    const resolved = OPENAPI_PATHS.map((resolve) => resolve()).find((path) => existsSync(path))
+    if (!resolved) {
+      return response.notFound({ success: false, message: 'OpenAPI specification not found' })
+    }
+    const spec = readFileSync(resolved, 'utf-8')
     response.header('Content-Type', 'application/yaml')
     return response.send(spec)
   }

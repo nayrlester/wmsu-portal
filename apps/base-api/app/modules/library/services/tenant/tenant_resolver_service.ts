@@ -1,6 +1,9 @@
+import app from '@adonisjs/core/services/app'
 import Tenant from '#modules/library/models/tenant'
 import { tenantContext, toTenantContext } from '#modules/library/services/tenant/tenant_context'
 import TenantNotFoundException from '#modules/library/exceptions/tenant_not_found_exception'
+import { getDefaultTenantSlug } from '#modules/library/services/deployment/deployment_mode'
+import { ensureInstitutionTenant } from '#modules/library/services/tenant/ensure_institution_tenant'
 
 export interface TenantResolveInput {
   slug?: string | null
@@ -18,6 +21,13 @@ export default class TenantResolverService {
       tenant = await Tenant.query().where('id', tenantId).first()
     } else if (slug) {
       tenant = await Tenant.query().where('slug', slug).first()
+    }
+
+    if (!tenant || tenant.status !== 'active') {
+      const defaultSlug = getDefaultTenantSlug().toLowerCase()
+      if (!app.inProduction && slug === defaultSlug) {
+        tenant = await ensureInstitutionTenant(defaultSlug)
+      }
     }
 
     if (!tenant || tenant.status !== 'active') {

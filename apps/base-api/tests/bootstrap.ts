@@ -33,6 +33,15 @@ export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
  */
 export const configureSuite: Config['configureSuite'] = (suite) => {
   if (['browser', 'functional', 'e2e'].includes(suite.name)) {
-    return suite.setup(() => testUtils.httpServer().start())
+    return suite.setup(async () => {
+      await testUtils.httpServer().start()
+      const argv = process.argv.join(' ')
+      const { shouldBootstrapUlmisFromArgv, bootstrapUlmisTestData } = await import(
+        './helpers/ulmis_test_bootstrap.js'
+      )
+      if (process.env.LIBRARY_TEST_BOOTSTRAP === '1' || shouldBootstrapUlmisFromArgv(argv)) {
+        await bootstrapUlmisTestData()
+      }
+    })
   }
 }

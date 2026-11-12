@@ -247,6 +247,8 @@ export default class IntegrationService {
   }
 
   status() {
+    const protocolPair = process.env.LIB_PROTOCOL_CATALOG || 'sru'
+    const circulationPair = process.env.LIB_PROTOCOL_CIRCULATION || 'sip2'
     return {
       aris: {
         configured: true,
@@ -268,6 +270,24 @@ export default class IntegrationService {
         configured: Boolean(process.env.SMART_CAMPUS_SSO_URL),
         mode: 'not_enabled',
         note: 'Assertion exchange is disabled until signature verification is implemented.',
+      },
+      protocols: {
+        catalogSearch: {
+          active: protocolPair,
+          options: ['z39.50', 'sru'],
+          endpoint: '/api/v1/library/integrations/protocols/catalog/health',
+          status: 'software_adapter',
+        },
+        harvest: {
+          active: 'oai-pmh',
+          status: 'stub',
+        },
+        circulationDevice: {
+          active: circulationPair,
+          options: ['sip2', 'ncip'],
+          endpoint: '/api/v1/library/integrations/protocols/circulation/health',
+          status: 'software_adapter',
+        },
       },
     }
   }

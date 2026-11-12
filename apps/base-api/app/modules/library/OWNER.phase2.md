@@ -2,12 +2,10 @@
 
 - **SoR:** ULMIS catalog, circulation, patrons  
 - **Schema:** `library`  
-- **Phase 2 status:** **Façade live on Base API**
-  - `/api/v1/library/_status`
-  - `/api/v1/library/_health`
-  - `/api/v1/library/*` → `wmsu-library` `/api/v1/*`
-  - Gateway still: `/api/v1/gateway/library/*`
-- **Engine:** `GATEWAY_LIBRARY_URL` (default `http://127.0.0.1:3341`)
+- **Phase 4 status:** **In-process on Base API** (`phase4-in-process`)
+  - `/api/v1/library/_status` and `_health` via `ModuleStatusController`
+  - `/api/v1/library/*` served from `app/modules/library`
+- **Legacy façade:** `LibraryFacadeController` / `GATEWAY_LIBRARY_URL` — do not use for new work
 - **Client shell:** `apps/library-web` (`:5183`)
 - **Rule:** Other modules reference patron/item ids; they do not mutate catalog or circulation masters.
 - **Phase 3b:** `wmsu_cis.library` restored (55 tables from `librastack.public`). Engine still SoR until search_path cutover.

@@ -96,4 +96,32 @@ export default class IntegrationsController {
         'Smart Campus SSO exchange is not enabled. Signature-verified assertion handling is required first.',
     })
   }
+
+  async catalogProtocolHealth(ctx: HttpContext) {
+    this.ensureAdmin(ctx)
+    const active = process.env.LIB_PROTOCOL_CATALOG || 'sru'
+    return ctx.response.ok({
+      success: true,
+      data: {
+        protocol: active,
+        mode: 'software_adapter',
+        healthy: true,
+        note: 'Configure LIB_PROTOCOL_CATALOG to z39.50 or sru when a campus peer is available.',
+      },
+    })
+  }
+
+  async circulationProtocolHealth(ctx: HttpContext) {
+    this.ensureAdmin(ctx)
+    const active = process.env.LIB_PROTOCOL_CIRCULATION || 'sip2'
+    return ctx.response.ok({
+      success: true,
+      data: {
+        protocol: active,
+        mode: 'software_adapter',
+        healthy: true,
+        note: 'Configure LIB_PROTOCOL_CIRCULATION to sip2 or ncip for self-check hardware.',
+      },
+    })
+  }
 }

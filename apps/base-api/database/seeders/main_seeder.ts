@@ -20,6 +20,10 @@ export default class extends BaseSeeder {
 
     await this.seedMdmDev()
     await this.seedIntegrationDev()
+    const { ensureInstitutionTenant } = await import(
+      '#modules/library/services/tenant/ensure_institution_tenant'
+    )
+    await ensureInstitutionTenant()
     await seedUimsDemoData('UNI')
 
     const { seedAcademicSetup } = await import('#modules/enrollment/domain/seed_academic_setup')

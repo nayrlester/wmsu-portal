@@ -15,6 +15,7 @@ import { borrowingTenantId } from '#modules/library/services/borrowing/borrowing
 import { enqueueNotification } from '#modules/library/services/queue/queue_service'
 import { NOTIFICATION_EVENTS } from '#modules/library/services/notifications/notification_types'
 import { formatMoneyFromCents } from '#modules/library/helpers/currency'
+import { scheduleIntegrationSideEffects } from '#modules/library/services/ulmis/integration_outbox_hooks'
 
 export interface FineListFilters {
   memberId?: string
@@ -147,6 +148,8 @@ export default class FineService {
       payload: { fineId: fine.id, amountCents },
     })
 
+    scheduleIntegrationSideEffects(fine)
+
     return fine
   }
 
@@ -190,6 +193,8 @@ export default class FineService {
       payload: { fineId: fine.id, amountCents },
     })
 
+    scheduleIntegrationSideEffects(fine)
+
     return fine
   }
 
@@ -210,6 +215,8 @@ export default class FineService {
       assessedAt: DateTime.now(),
       notes: input.notes ?? 'Manual fine adjustment',
     })
+
+    scheduleIntegrationSideEffects(fine)
 
     await this.auditService.log(
       'create',
@@ -319,6 +326,8 @@ export default class FineService {
       { paidCents: fine.paidCents, paymentMethod: input.paymentMethod ?? 'cash' },
       auditCtx
     )
+
+    scheduleIntegrationSideEffects(fine, input.reference ?? null)
 
     return this.findById(fine.id)
   }
