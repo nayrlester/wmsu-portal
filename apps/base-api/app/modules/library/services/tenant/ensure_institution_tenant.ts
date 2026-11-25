@@ -6,7 +6,9 @@ import Tenant from '#modules/library/models/tenant'
 import User from '#modules/library/models/user'
 import Role from '#modules/library/models/role'
 import RbacService from '#modules/library/services/auth/rbac_service'
-import { provisionIdentityLibraryStaff } from '#modules/library/services/platform/identity_library_staff_client'
+import {
+  provisionIdentityLibraryStaffWithRetry,
+} from '#modules/library/services/platform/identity_library_staff_client'
 import { getDefaultTenantSlug } from '#modules/library/services/deployment/deployment_mode'
 
 export async function ensureInstitutionTenant(slugInput?: string): Promise<Tenant> {
@@ -82,7 +84,7 @@ export async function ensureInstitutionTenant(slugInput?: string): Promise<Tenan
   }
 
   if (!admin.platformUserId) {
-    const identity = await provisionIdentityLibraryStaff({
+    const identity = await provisionIdentityLibraryStaffWithRetry({
       externalId: `library-user:${admin.id}`,
       email: adminEmail,
       fullName: admin.fullName,
@@ -95,4 +97,34 @@ export async function ensureInstitutionTenant(slugInput?: string): Promise<Tenan
   }
 
   return tenant
+}
+
+export async function reconcileInstitutionTenantIdentityLink(slugInput?: string): Promise<void> {
+  const slug = (slugInput ?? getDefaultTenantSlug()).trim().toLowerCase()
+  const adminEmail = 'admin@university.library'
+  const adminPassword = 'ChangeMe123!'
+
+  const tenant = await Tenant.findBy('slug', slug)
+  if (!tenant) return
+
+  const admin = await User.query()
+    .where('tenant_id', tenant.id)
+    .where('email', adminEmail)
+    .whereNull('deleted_at')
+    .first()
+  if (!admin || admin.platformUserId) return
+
+  const identity = await provisionIdentityLibraryStaffWithRetry(
+    {
+      externalId: `library-user:${admin.id}`,
+      email: adminEmail,
+      fullName: admin.fullName,
+      password: adminPassword,
+    },
+    { attempts: 10, delayMs: 1000 }
+  )
+  if (identity?.id) {
+    admin.platformUserId = identity.id
+    await admin.save()
+  }
 }

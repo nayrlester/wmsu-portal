@@ -1,7 +1,60 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const LOCAL_ENV_OVERRIDE_KEYS = new Set([
+  'DB_HOST',
+  'DB_PORT',
+  'DB_USER',
+  'DB_PASSWORD',
+  'DB_DATABASE',
+  'DB_SCHEMA',
+  'DB_SSL',
+  'DATABASE_URL',
+  'REDIS_HOST',
+  'REDIS_PORT',
+  'REDIS_PASSWORD',
+  'REDIS_URL',
+  'POSTGRES_HOST_PORT',
+  'REDIS_HOST_PORT',
+])
+
+function stripEnvQuotes(value: string): string {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1)
+  }
+  return value
+}
+
+/** Load `apps/base-api/.env` so mappings and ace commands see Docker ports (5433) before Railway URL merging. */
+export function preloadLocalAppEnv(appRoot: URL): void {
+  const path = join(fileURLToPath(appRoot), '.env')
+  if (!existsSync(path)) return
+
+  const text = readFileSync(path, 'utf8')
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eq = trimmed.indexOf('=')
+    if (eq <= 0) continue
+    const key = trimmed.slice(0, eq).trim()
+    const value = stripEnvQuotes(trimmed.slice(eq + 1).trim())
+    if (LOCAL_ENV_OVERRIDE_KEYS.has(key) || process.env[key] === undefined) {
+      process.env[key] = value
+    }
+  }
+}
+
 /**
  * Maps PaaS env vars (Railway, etc.) into Adonis DB_* keys before `start/env.ts` validation.
  */
-export function applyPlatformEnvMappings(): void {
+export function applyPlatformEnvMappings(appRoot?: URL): void {
+  if (appRoot) {
+    preloadLocalAppEnv(appRoot)
+  }
   mapDatabaseUrl()
   mapRedisUrl()
   mapRailwayPublicDomains()
@@ -26,13 +79,20 @@ function mapDatabaseUrl(): void {
   const urlIsReachable =
     !url.hostname.includes('.railway.internal') || Boolean(process.env.RAILWAY_ENVIRONMENT)
 
-  if (process.env.DB_HOST && !(hostIsInternal && urlIsReachable)) return
+  if (process.env.DB_HOST && process.env.DB_PORT && process.env.DB_DATABASE) {
+    if (!(hostIsInternal && urlIsReachable)) return
+  }
 
-  process.env.DB_HOST = url.hostname
-  process.env.DB_PORT = url.port || '5432'
-  process.env.DB_USER = decodeURIComponent(url.username)
-  process.env.DB_PASSWORD = decodeURIComponent(url.password)
-  process.env.DB_DATABASE = url.pathname.replace(/^\//, '').split('?')[0]
+  const resolvedPort =
+    url.port || process.env.POSTGRES_HOST_PORT || process.env.DB_PORT || '5432'
+
+  if (!process.env.DB_HOST) process.env.DB_HOST = url.hostname
+  if (!process.env.DB_PORT) process.env.DB_PORT = resolvedPort
+  if (!process.env.DB_USER) process.env.DB_USER = decodeURIComponent(url.username)
+  if (!process.env.DB_PASSWORD) process.env.DB_PASSWORD = decodeURIComponent(url.password)
+  if (!process.env.DB_DATABASE) {
+    process.env.DB_DATABASE = url.pathname.replace(/^\//, '').split('?')[0]
+  }
 
   const sslMode = url.searchParams.get('sslmode')
   if (sslMode && sslMode !== 'disable' && process.env.DB_SSL === undefined) {

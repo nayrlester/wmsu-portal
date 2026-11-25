@@ -21,7 +21,7 @@ function applyPlatformUser(
   claims: PlatformAccessClaims,
   permissions: string[]
 ): void {
-  const guard = ctx.auth.use('api')
+  const guard = ctx.auth.use('documentsApi')
   guard.authenticationAttempted = true
   guard.isAuthenticated = true
   ;(guard as { user: User | null }).user = user
@@ -78,7 +78,7 @@ export default class AuthMiddleware {
       }
     }
 
-    await ctx.auth.authenticateUsing(options.guards)
+    await ctx.auth.authenticateUsing(options.guards ?? ['documentsApi'])
     return next()
   }
 

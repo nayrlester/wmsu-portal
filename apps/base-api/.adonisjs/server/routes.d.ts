@@ -155,6 +155,7 @@ export type ScannedRoutes = {
     'enrollment.academic_setup.delete_section': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'enrollment.academic_setup.replicate_schedules': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.bulk_update_section_status': { paramsTuple?: []; params?: {} }
+    'enrollment.audit_logs.index': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_categories': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.create_category': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_buildings': { paramsTuple?: []; params?: {} }
@@ -1350,6 +1351,7 @@ export type ScannedRoutes = {
     'enrollment.academic_setup.list_academic_years': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_programs': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_sections': { paramsTuple?: []; params?: {} }
+    'enrollment.audit_logs.index': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_categories': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_buildings': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_rooms': { paramsTuple?: []; params?: {} }
@@ -1943,6 +1945,7 @@ export type ScannedRoutes = {
     'enrollment.academic_setup.list_academic_years': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_programs': { paramsTuple?: []; params?: {} }
     'enrollment.academic_setup.list_sections': { paramsTuple?: []; params?: {} }
+    'enrollment.audit_logs.index': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_categories': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_buildings': { paramsTuple?: []; params?: {} }
     'enrollment.academic_facilities.list_rooms': { paramsTuple?: []; params?: {} }

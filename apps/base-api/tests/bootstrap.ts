@@ -48,6 +48,12 @@ export const configureSuite: Config['configureSuite'] = (suite) => {
       if (process.env.FINANCE_TEST_BOOTSTRAP === '1' || shouldBootstrapUfmsFromArgv(argv)) {
         await bootstrapUfmsTestData()
       }
+      const { shouldBootstrapUdmsFromArgv, bootstrapUdmsTestData } = await import(
+        './helpers/udms_test_bootstrap.js'
+      )
+      if (process.env.DOCUMENTS_TEST_BOOTSTRAP === '1' || shouldBootstrapUdmsFromArgv(argv)) {
+        await bootstrapUdmsTestData()
+      }
     })
   }
 }

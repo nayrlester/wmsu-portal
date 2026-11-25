@@ -1,7 +1,8 @@
 import { Env } from '@adonisjs/core/env'
 import { applyPlatformEnvMappings } from '#config/platform_env'
 
-applyPlatformEnvMappings()
+const documentsAppRoot = new URL('../../../../', import.meta.url)
+applyPlatformEnvMappings(documentsAppRoot)
 
 export default await Env.create(new URL('../', import.meta.url), {
   NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),

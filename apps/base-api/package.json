@@ -39,7 +39,8 @@
     "#presentation/*": "./app/modules/documents/presentation/*.js",
     "#domain/*": "./app/modules/enrollment/domain/*.js",
     "#helpers/*": "./app/modules/enrollment/helpers/*.js",
-    "#commands/*": "./app/modules/enrollment/commands/*.js"
+    "#commands/*": "./app/modules/enrollment/commands/*.js",
+    "#jobs/*": "./app/modules/documents/jobs/*.js"
   },
   "devDependencies": {
     "@adonisjs/assembler": "^8.4.0",

@@ -15,7 +15,11 @@ function identityBaseUrl(): string | null {
 }
 
 function serviceApiKey(): string | null {
-  return (env.get('SERVICE_API_KEY') ?? '').trim() || null
+  const key =
+    env.get('ENROLLMENT_SERVICE_API_KEY') ??
+    env.get('SERVICE_API_KEY') ??
+    env.get('IDENTITY_SERVICE_API_KEY')
+  return key?.trim() || null
 }
 
 export function isIdentityDocstrackStaffSyncConfigured(): boolean {

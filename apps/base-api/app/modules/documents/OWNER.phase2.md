@@ -1,14 +1,11 @@
 # documents
 
-- **SoR:** UDMS document metadata / workflows  
-- **Schema:** `documents`  
-- **Phase 2 status:** **Façade live on Base API**
+- **SoR:** UDMS document metadata / workflows (in-process)
+- **Schema:** `documents`
+- **Phase 4 status:** **In-process on Base API**
   - `/api/v1/documents/_status`
   - `/api/v1/documents/_health`
-  - `/api/v1/documents/*` → `wmsu-document` `/api/v1/*`
-  - Gateway still: `/api/v1/gateway/documents/*`
-- **Engine:** `GATEWAY_DOCUMENTS_URL` (default `http://127.0.0.1:3343`)
+  - `/api/v1/documents/*` including `/api/v1/documents/udms/*`
 - **Client shell:** `apps/document-web` (`:5185`)
 - **Rule:** Blobs in object storage; Postgres holds metadata and object keys. Other modules must not mutate document masters.
-- **Phase 3b:** `wmsu_cis.documents` restored (66 tables metadata from `cdts.public`; blobs in object storage). Engine still SoR until search_path cutover.
-- **Not yet:** search_path cutover; retiring `wmsu-document` folder.
+- **Legacy:** `wmsu-document/` satellite — historical tests only; platform acceptance cites `pnpm test:documents` and `e2e/tests/udms/*`.

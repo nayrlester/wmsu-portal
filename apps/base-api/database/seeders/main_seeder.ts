@@ -24,7 +24,16 @@ export default class extends BaseSeeder {
       '#modules/library/services/tenant/ensure_institution_tenant'
     )
     await ensureInstitutionTenant()
+    const { reconcileInstitutionTenantIdentityLink } = await import(
+      '#modules/library/services/tenant/ensure_institution_tenant'
+    )
+    await reconcileInstitutionTenantIdentityLink()
     await seedUimsDemoData('UNI')
+
+    const { seedUimsDemoData: seedEnrollmentDemo } = await import(
+      '#modules/enrollment/domain/seed_demo_data'
+    )
+    await seedEnrollmentDemo('UNI')
 
     const { seedAcademicSetup } = await import('#modules/enrollment/domain/seed_academic_setup')
     await seedAcademicSetup('UNI')

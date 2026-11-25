@@ -8,7 +8,7 @@ export class QrCodeService {
    */
   resolvePublicBaseUrl(): string {
     const configured =
-      env.get('PUBLIC_TRACK_BASE_URL')?.trim() || env.get('FRONTEND_URL').trim()
+      env.get('PUBLIC_TRACK_BASE_URL')?.trim() || env.get('FRONTEND_URL')?.trim() || 'http://127.0.0.1:5185'
     return configured.replace(/\/$/, '')
   }
 

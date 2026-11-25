@@ -89,6 +89,7 @@ export default class User extends compose(BaseModel, withAuthFinder(() => hash))
 
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     tokenableProperty: 'id',
+    table: t('auth_access_tokens'),
   })
 
   declare currentAccessToken?: AccessToken
