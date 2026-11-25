@@ -652,8 +652,7 @@ export function StudentEnrollmentPage() {
               {
                 key: 'academicYear',
                 header: 'Term',
-                render: (r) =>
-                  (r as { academicYear?: { code?: string } }).academicYear?.code ?? '—',
+                render: (r) => r.academicYear?.code ?? '—',
               },
               { key: 'yearLevel', header: 'Year' },
               { key: 'semester', header: 'Sem' },

@@ -945,9 +945,11 @@ export async function fetchEnrollments(params: PageParams = {}) {
     yearLevel: number
     semester: number
     studentId: string
+    academicYearId?: string
     classification?: string | null
     advisingWaived?: boolean
     student?: { id: string; studentNumber: string; firstName: string; lastName: string }
+    academicYear?: { id: string; code: string; name?: string | null } | null
     assessments?: Array<{
       id: string
       assessmentNumber: string
