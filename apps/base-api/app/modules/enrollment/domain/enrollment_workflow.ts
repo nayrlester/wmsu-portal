@@ -27,6 +27,19 @@ export const STUDENT_CLASSIFICATIONS = [
 
 export type StudentClassification = (typeof STUDENT_CLASSIFICATIONS)[number]
 
+/** Advising is required only for 1st year / 1st semester and transferees. */
+export function isAcademicAdvisingRequired(input: {
+  yearLevel: number | null | undefined
+  semester: number | null | undefined
+  classification?: string | null
+}): boolean {
+  const classification = (input.classification ?? '').trim().toLowerCase()
+  if (classification === 'transferee') return true
+  const yearLevel = Number(input.yearLevel ?? 0)
+  const semester = Number(input.semester ?? 0)
+  return yearLevel === 1 && semester === 1
+}
+
 export const ENROLLMENT_STATUSES = [
   'draft',
   'advising',

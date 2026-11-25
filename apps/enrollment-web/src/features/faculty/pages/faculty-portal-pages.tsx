@@ -27,6 +27,7 @@ import { RequirePermission } from '@/components/auth/require-permission'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { notifyGenericError } from '@/lib/user-messages'
 import { useHasPermission } from '@/lib/permissions'
+import { formatPersonName } from '@/lib/utils'
 import {
   encodeClassGrades,
   exportClassGradeReport,
@@ -373,10 +374,7 @@ function FacultyMasterInner() {
               {
                 key: 'name',
                 header: 'Name',
-                render: (r) =>
-                  r.lastName || r.firstName
-                    ? `${r.lastName ?? ''}, ${r.firstName ?? ''}`.replace(/^,\s*|,\s*$/g, '')
-                    : '—',
+                render: (r) => formatPersonName(r),
               },
               {
                 key: 'mark',
@@ -478,7 +476,7 @@ function FacultyEncodeInner() {
               emptyText="No students in this class match"
               options={(master.data?.roster ?? []).map((r) => ({
                 value: r.studentId,
-                label: `${r.studentNumber} · ${r.lastName}, ${r.firstName}`,
+                label: `${r.studentNumber} · ${formatPersonName(r)}`,
               }))}
             />
           ) : (
@@ -760,7 +758,7 @@ function FacultySubmitInner() {
                   {
                     key: 'name',
                     header: 'Name',
-                    render: (r) => `${String(r.lastName ?? '')}, ${String(r.firstName ?? '')}`,
+                    render: (r) => formatPersonName(r),
                   },
                   {
                     key: 'rawScore',
@@ -1210,7 +1208,7 @@ function FacultyAdvisingSessionInner() {
     >
       {(row) => {
         const student = row.enrollment?.student
-        const name = [student?.lastName, student?.firstName].filter(Boolean).join(', ')
+        const name = formatPersonName(student, '')
         const yearLevel = row.enrollment?.yearLevel ?? null
         const semester = row.enrollment?.semester ?? null
         const courseOptions = row.curriculumEvaluation?.advisingCourses ?? []

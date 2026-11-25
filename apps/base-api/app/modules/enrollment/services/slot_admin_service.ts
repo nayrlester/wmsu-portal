@@ -13,6 +13,7 @@ import { schedulingNotificationService } from '#modules/enrollment/services/sche
 import { waitlistService } from '#modules/enrollment/services/waitlist_service'
 import { auditLogService } from '#modules/enrollment/services/audit_log_service'
 import { AuditAction } from '#modules/enrollment/domain/enums/index'
+import { formatPersonDisplayName } from '#modules/enrollment/helpers/person_display'
 
 export class SlotAdminService {
   async assertValidFacultyUser(organizationId: string, facultyUserId: string | null | undefined) {
@@ -100,7 +101,7 @@ export class SlotAdminService {
         status: line.status,
         studentId: student?.id ?? line.enrollment?.studentId ?? null,
         studentNumber: student?.studentNumber ?? null,
-        studentName: student ? `${student.lastName}, ${student.firstName}` : null,
+        studentName: student ? formatPersonDisplayName(student) || null : null,
         subjectCode: line.subjectCode,
       }
     })

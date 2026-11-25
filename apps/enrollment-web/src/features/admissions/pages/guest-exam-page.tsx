@@ -13,6 +13,7 @@ import {
   Input,
 } from '@wmsu/ui'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { formatPersonName } from '@/lib/utils'
 import {
   openGuestEntranceExam,
   submitGuestEntranceExam,
@@ -222,7 +223,7 @@ export function GuestExamPage() {
               <div>
                 <CardTitle>{session.title}</CardTitle>
                 <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-                  {session.applicant.lastName}, {session.applicant.firstName} ·{' '}
+                  {formatPersonName(session.applicant)} ·{' '}
                   {session.applicant.applicationNumber}
                 </p>
               </div>

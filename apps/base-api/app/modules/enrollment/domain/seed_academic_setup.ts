@@ -273,6 +273,15 @@ export async function seedAcademicSetup(orgCode = 'UNI'): Promise<SeedAcademicSe
     }
   )
 
+  const { seedFacultyDemo } = await import('#modules/enrollment/domain/seed_faculty_demo')
+  await seedFacultyDemo({
+    organizationId: org.id,
+    academicYearId: year.id,
+    semester: 1,
+    sectionIds: sectionRows.map((s) => s.id),
+    actorUserId,
+  })
+
   const enrollment = await Enrollment.updateOrCreate(
     {
       organizationId: org.id,

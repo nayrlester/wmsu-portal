@@ -7,6 +7,7 @@ import EnrollmentOverride from '#modules/enrollment/models/enrollment_override'
 import EnrollmentChangeRequest from '#modules/enrollment/models/enrollment_change_request'
 import UnitLoadPolicy from '#modules/enrollment/models/unit_load_policy'
 import { EnrollmentFlowService, resolveEnrollmentId } from '#modules/enrollment/services/enrollment_flow_service'
+import { EnrollmentWorkflowError } from '#modules/enrollment/domain/enrollment_workflow'
 import {
   createEnrollmentValidator,
   advisingApproveValidator,
@@ -69,28 +70,39 @@ export default class EnrollmentsController {
     const hasClassification = request.input('classification')
     const service = new EnrollmentFlowService()
 
-    if (hasClassification) {
-      const payload = await request.validateUsing(createEnrollmentWorkflowValidator)
+    try {
+      if (hasClassification) {
+        const payload = await request.validateUsing(createEnrollmentWorkflowValidator)
+        const enrollment = await service.createEnrollment({
+          organizationId: user.organizationId,
+          ...payload,
+          actorUserId: user.id,
+        })
+        return response.created({ data: enrollment })
+      }
+
+      const payload = await request.validateUsing(createEnrollmentValidator)
       const enrollment = await service.createEnrollment({
         organizationId: user.organizationId,
-        ...payload,
+        studentId: payload.studentId,
+        academicYearId: payload.academicYearId,
+        sectionId: payload.sectionId,
+        yearLevel: payload.yearLevel,
+        semester: payload.semester,
+        classification: 'continuing',
         actorUserId: user.id,
       })
       return response.created({ data: enrollment })
+    } catch (error) {
+      if (error instanceof EnrollmentWorkflowError) {
+        return response.status(error.status).send({
+          success: false,
+          error: error.message,
+          code: error.code,
+        })
+      }
+      throw error
     }
-
-    const payload = await request.validateUsing(createEnrollmentValidator)
-    const enrollment = await service.createEnrollment({
-      organizationId: user.organizationId,
-      studentId: payload.studentId,
-      academicYearId: payload.academicYearId,
-      sectionId: payload.sectionId,
-      yearLevel: payload.yearLevel,
-      semester: payload.semester,
-      classification: 'continuing',
-      actorUserId: user.id,
-    })
-    return response.created({ data: enrollment })
   }
 
   async show(ctx: HttpContext) {

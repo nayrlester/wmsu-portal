@@ -17,6 +17,9 @@ import {
   replicateSchedulesValidator,
 } from '#modules/enrollment/validators/enrollment'
 import { academicScheduleReplicationService } from '#modules/enrollment/services/academic_schedule_replication_service'
+import { schedulingService } from '#modules/enrollment/services/scheduling_service'
+import { auditLogService } from '#modules/enrollment/services/audit_log_service'
+import { AuditAction } from '#modules/enrollment/domain/enums/index'
 
 export default class AcademicSetupController {
   async listAcademicYears({ request, response, auth }: HttpContext) {
@@ -205,17 +208,43 @@ export default class AcademicSetupController {
       .where('organization_id', user.organizationId)
       .where('id', ctx.params.id)
       .firstOrFail()
+
+    const before = {
+      code: section.code,
+      name: section.name,
+      yearLevel: section.yearLevel,
+      semester: section.semester,
+      capacity: section.capacity,
+      status: section.status,
+      subjectId: section.subjectId,
+      isBlockSection: section.isBlockSection,
+      blockGroupCode: section.blockGroupCode,
+      waitlistEnabled: section.waitlistEnabled,
+    }
+
     if (payload.code !== undefined) section.code = payload.code.trim()
     if (payload.name !== undefined) section.name = payload.name.trim()
     if (payload.yearLevel !== undefined) section.yearLevel = payload.yearLevel
     if (payload.semester !== undefined) section.semester = payload.semester
     if (payload.waitlistEnabled !== undefined) section.waitlistEnabled = payload.waitlistEnabled
-    if (payload.capacity !== undefined) section.capacity = payload.capacity
     if (payload.isBlockSection !== undefined) section.isBlockSection = payload.isBlockSection
     if (payload.blockGroupCode !== undefined) {
       section.blockGroupCode = payload.blockGroupCode?.trim().toUpperCase() || null
     }
     if (payload.subjectId !== undefined) section.subjectId = payload.subjectId
+
+    const seated = await schedulingService.seatedCount(section.id)
+    if (payload.capacity !== undefined) {
+      const nextCapacity = payload.capacity
+      if (nextCapacity != null && nextCapacity >= 0 && nextCapacity < seated) {
+        throw new Exception(
+          `Cannot set capacity to ${nextCapacity}: ${seated} student(s) are already seated. Transfer or drop seats first.`,
+          { status: 422, code: 'E_SECTION_CAPACITY_BELOW_ENROLLED' }
+        )
+      }
+      section.capacity = nextCapacity
+    }
+
     if (payload.status !== undefined) {
       if (payload.status === 'dissolved' && section.status !== 'dissolved') {
         throw new Exception('Use scheduling dissolve to mark a section dissolved', {
@@ -223,9 +252,45 @@ export default class AcademicSetupController {
           code: 'E_SECTION_STATUS',
         })
       }
+      const closing =
+        ['inactive', 'closed', 'cancelled'].includes(String(payload.status).toLowerCase()) &&
+        !['inactive', 'closed', 'cancelled', 'dissolved'].includes(String(section.status).toLowerCase())
+      if (closing && seated > 0) {
+        throw new Exception(
+          `Cannot set status to ${payload.status}: ${seated} student(s) are seated. Transfer or dissolve the section first.`,
+          { status: 422, code: 'E_SECTION_HAS_ENROLLED' }
+        )
+      }
       section.status = payload.status
     }
     await section.save()
+
+    const after = {
+      code: section.code,
+      name: section.name,
+      yearLevel: section.yearLevel,
+      semester: section.semester,
+      capacity: section.capacity,
+      status: section.status,
+      subjectId: section.subjectId,
+      isBlockSection: section.isBlockSection,
+      blockGroupCode: section.blockGroupCode,
+      waitlistEnabled: section.waitlistEnabled,
+    }
+    const changed = Object.keys(before).filter(
+      (key) => before[key as keyof typeof before] !== after[key as keyof typeof after]
+    )
+    if (changed.length) {
+      await auditLogService.log({
+        organizationId: user.organizationId,
+        actorUserId: user.id,
+        action: AuditAction.UPDATE,
+        entityType: 'section',
+        entityId: section.id,
+        metadata: { before, after, changed },
+      })
+    }
+
     return ctx.response.ok({ data: section })
   }
 
@@ -239,7 +304,11 @@ export default class AcademicSetupController {
         targetAcademicYearId: payload.targetAcademicYearId,
         semester: payload.semester,
         actorUserId: user.id,
+        dryRun: payload.dryRun === true,
       })
+      if (payload.dryRun) {
+        return ctx.response.ok({ data })
+      }
       return ctx.response.created({ data })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Replication failed'

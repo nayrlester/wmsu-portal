@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Card, CardContent, CardHeader, CardTitle, FormField, Input, Select, useNotification } from '@wmsu/ui'
 import { StudentSearchSelect } from '@/components/student-search-select'
@@ -64,6 +64,7 @@ export function RegistrarSchedulingDesk() {
   })
 
   const [studentRef, setStudentRef] = useState('')
+  const [enrollmentRef, setEnrollmentRef] = useState('')
   const [blockCode, setBlockCode] = useState('BSIT-1A')
   const [classCodesLine, setClassCodesLine] = useState('')
   const [waiverRef, setWaiverRef] = useState('')
@@ -75,24 +76,60 @@ export function RegistrarSchedulingDesk() {
     Awaited<ReturnType<typeof searchAlternateSections>>['alternatives'] | null
   >(null)
 
-  const replicateMutation = useMutation({
-    mutationFn: () =>
-      replicateAcademicSchedules({
+  const [replicateBusy, setReplicateBusy] = useState(false)
+
+  async function runReplicateWithPreview() {
+    if (!sourceYearId || !targetYearId || replicateBusy) return
+    setReplicateBusy(true)
+    try {
+      const preview = await replicateAcademicSchedules({
         sourceAcademicYearId: sourceYearId,
         targetAcademicYearId: targetYearId,
         semester: Number(replicateSem) || 1,
-      }),
-    onSuccess: (data) => {
+        dryRun: true,
+      })
+      const needsConfirm = preview.wouldSkip > 0 || preview.conflictHints.length > 0
+      if (needsConfirm) {
+        const skipSample = preview.skippedCodes.slice(0, 8).join(', ')
+        const conflictSample = preview.conflictHints
+          .slice(0, 3)
+          .map((h) => h.message)
+          .join('; ')
+        const lines = [
+          `Preview: ${preview.wouldCreate} would create, ${preview.wouldSkip} would skip (existing codes).`,
+          preview.conflictHints.length
+            ? `Conflict hints vs target year: ${preview.conflictHints.length}${conflictSample ? ` — ${conflictSample}` : ''}.`
+            : null,
+          skipSample ? `Skipped codes sample: ${skipSample}${preview.skippedCodes.length > 8 ? '…' : ''}.` : null,
+          'Existing target sections stay unchanged (skip-only). Proceed?',
+        ].filter(Boolean)
+        const ok = window.confirm(lines.join('\n\n'))
+        if (!ok) {
+          notify({
+            tone: 'info',
+            title: 'Replication cancelled',
+            description: 'No sections were created.',
+          })
+          return
+        }
+      }
+      const data = await replicateAcademicSchedules({
+        sourceAcademicYearId: sourceYearId,
+        targetAcademicYearId: targetYearId,
+        semester: Number(replicateSem) || 1,
+      })
       notify({
         tone: 'success',
         title: 'Schedules replicated',
-        description: `${data.created} created, ${data.skipped} skipped, ${data.meetingsCopied} meetings`,
+        description: `${data.created} created, ${data.skipped} skipped, ${data.meetingsCopied} meetings, ${data.conflictHints.length} conflict hint(s)`,
       })
       void qc.invalidateQueries({ queryKey: ['reg', 'sections'] })
-    },
-    onError: (err) =>
-      notify({ tone: 'danger', title: 'Replication failed', description: getApiErrorMessage(err) }),
-  })
+    } catch (err) {
+      notify({ tone: 'danger', title: 'Replication failed', description: getApiErrorMessage(err) })
+    } finally {
+      setReplicateBusy(false)
+    }
+  }
 
   const bulkMutation = useMutation({
     mutationFn: (status: 'open' | 'active' | 'closed') => bulkUpdateSectionStatus(selectedIds, status),
@@ -123,15 +160,19 @@ export function RegistrarSchedulingDesk() {
   })
 
   const blockMutation = useMutation({
-    mutationFn: () => encodeBlockGroup(studentRef.trim(), blockCode.trim()),
+    mutationFn: () =>
+      encodeBlockGroup(enrollmentRef.trim() || studentRef.trim(), blockCode.trim().toUpperCase()),
     onSuccess: (data) => {
       notify({
-        tone: 'success',
-        title: `Block ${data.blockGroupCode} encoded`,
+        tone: data.addedCount > 0 ? 'success' : 'info',
+        title:
+          data.addedCount > 0
+            ? `Block ${data.blockGroupCode} encoded`
+            : `Block ${data.blockGroupCode} — no new lines`,
         description:
           data.addedCount > 0
             ? `${data.addedCount} line(s): ${data.sectionCodes?.join(' ') ?? ''}`
-            : 'Student is already seated in every section for this block.',
+            : `Student already has every section in this block (${data.sectionCodes?.join(' ') ?? ''}). Check Registration → enrollment lines.`,
       })
     },
     onError: (err) =>
@@ -143,7 +184,8 @@ export function RegistrarSchedulingDesk() {
   })
 
   const codesMutation = useMutation({
-    mutationFn: () => applyClassCodesLine(studentRef.trim(), classCodesLine.trim(), 'irregular'),
+    mutationFn: () =>
+      applyClassCodesLine(enrollmentRef.trim() || studentRef.trim(), classCodesLine.trim(), 'irregular'),
     onSuccess: (data) => {
       notify({
         tone: 'success',
@@ -239,6 +281,13 @@ export function RegistrarSchedulingDesk() {
 
   const yearOptions = years.data?.data ?? []
   const sectionRows = sections.data?.data ?? []
+
+  useEffect(() => {
+    if (filterYearId || !yearOptions.length) return
+    const active = yearOptions.find((y) => y.isActive)
+    if (active) setFilterYearId(active.id)
+    else setFilterYearId(yearOptions[0]!.id)
+  }, [filterYearId, yearOptions])
 
   const blockGroupHints = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -404,12 +453,20 @@ export function RegistrarSchedulingDesk() {
             overlap on the same day.
           </p>
           <FormField id="seatStudent" label="Student">
-            <StudentSearchSelect value={studentRef} onChange={setStudentRef} />
+            <StudentSearchSelect
+              id="seatStudent"
+              value={studentRef}
+              onChange={(id) => {
+                setStudentRef(id)
+                if (!id) setEnrollmentRef('')
+              }}
+              onSelect={(s) => setEnrollmentRef(s.studentNumber)}
+            />
           </FormField>
           {!filterYearId ? (
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              Select an academic year in step 2 first so block groups match the student&apos;s
-              enrollment term.
+              Pick an academic year in step 2 to list block groups for that term. You can still encode
+              a block below — seating uses the student&apos;s enrollment year.
             </p>
           ) : null}
           {filterYearId && blockGroupHints.length ? (
@@ -463,9 +520,8 @@ export function RegistrarSchedulingDesk() {
                 type="button"
                 data-testid="encode-block-group"
                 disabled={
-                  !studentRef.trim() ||
+                  !(enrollmentRef.trim() || studentRef.trim()) ||
                   !blockCode.trim() ||
-                  !filterYearId ||
                   blockMutation.isPending
                 }
                 onClick={() => blockMutation.mutate()}
@@ -552,7 +608,8 @@ export function RegistrarSchedulingDesk() {
               targetYearId={targetYearId}
               setTargetYearId={setTargetYearId}
               yearOptions={yearOptions}
-              replicateMutation={replicateMutation}
+              replicateBusy={replicateBusy}
+              onReplicate={() => void runReplicateWithPreview()}
             />
             <Card className="shadow-none border-dashed">
               <CardHeader>
@@ -653,21 +710,23 @@ function ScheduleReplicatePanel(props: {
   targetYearId: string
   setTargetYearId: (v: string) => void
   yearOptions: Array<{ id: string; code: string }>
-  replicateMutation: { isPending: boolean; mutate: () => void }
+  replicateBusy: boolean
+  onReplicate: () => void
 }) {
   return (
-    <Card className="shadow-none border-dashed">
+    <Card className="shadow-none border-dashed" data-testid="desk-replicate-schedules">
       <CardHeader>
         <CardTitle className="text-base">Replicate schedules across terms</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-4">
         <p className="text-sm text-[var(--color-muted-foreground)] md:col-span-4">
-          Copies section meeting patterns between academic years. This does not enroll or seat
-          students.
+          Copies section meeting patterns between academic years. Existing target codes are skipped
+          (no overwrite). Preview runs first when skips or conflicts would occur.
         </p>
         <FormField id="srcYear" label="Source year">
           <Select
             id="srcYear"
+            data-testid="replicate-source-year"
             value={props.sourceYearId}
             onChange={(e) => props.setSourceYearId(e.target.value)}
           >
@@ -682,6 +741,7 @@ function ScheduleReplicatePanel(props: {
         <FormField id="tgtYear" label="Target year">
           <Select
             id="tgtYear"
+            data-testid="replicate-target-year"
             value={props.targetYearId}
             onChange={(e) => props.setTargetYearId(e.target.value)}
           >
@@ -696,6 +756,7 @@ function ScheduleReplicatePanel(props: {
         <FormField id="replSem" label="Semester">
           <Input
             id="replSem"
+            data-testid="replicate-semester"
             value={props.replicateSem}
             onChange={(e) => props.setReplicateSem(e.target.value)}
           />
@@ -703,12 +764,11 @@ function ScheduleReplicatePanel(props: {
         <div className="flex items-end">
           <Button
             type="button"
-            disabled={
-              !props.sourceYearId || !props.targetYearId || props.replicateMutation.isPending
-            }
-            onClick={() => props.replicateMutation.mutate()}
+            data-testid="replicate-schedules-btn"
+            disabled={!props.sourceYearId || !props.targetYearId || props.replicateBusy}
+            onClick={props.onReplicate}
           >
-            Replicate
+            {props.replicateBusy ? 'Working…' : 'Replicate'}
           </Button>
         </div>
       </CardContent>

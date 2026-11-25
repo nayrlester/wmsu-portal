@@ -1,6 +1,4 @@
 import db from '@adonisjs/lucid/services/db'
-import { randomUUID } from 'node:crypto'
-import { DateTime } from 'luxon'
 import { t } from '#modules/enrollment/helpers/db_schema'
 import Enrollment from '#modules/enrollment/models/enrollment'
 import EnrollmentLine from '#modules/enrollment/models/enrollment_line'
@@ -55,6 +53,16 @@ export class StudentCourseSelectionService {
   }
 
   async skipAdvisingWhenPreviouslyEnrolled(enrollment: Enrollment) {
+    const { applyAcademicAdvisingExemption, advisingRequiredForEnrollment } = await import(
+      '#modules/enrollment/services/academic_advising_policy_service'
+    )
+
+    if (!advisingRequiredForEnrollment(enrollment)) {
+      return applyAcademicAdvisingExemption(enrollment, {
+        note: 'Academic advising skipped — required only for 1st year 1st semester and transferees',
+      })
+    }
+
     if (!CONTINUING_STATUSES.includes(enrollment.status)) return false
     if (enrollment.advisingWaived && enrollment.status === 'advised') return false
     if (!enrollment.curriculumId) return false
@@ -68,31 +76,9 @@ export class StudentCourseSelectionService {
       .orderBy('created_at', 'desc')
       .first()
     if (!prior) return false
-    const fromStatus = enrollment.status
-    await db.transaction(async (trx) => {
-      enrollment.useTransaction(trx)
-      await AdvisingSession.query({ client: trx })
-        .where('enrollment_id', enrollment.id)
-        .where('status', 'in_progress')
-        .update({ status: 'cancelled' })
-      enrollment.advisingWaived = true
-      enrollment.advisedAt = enrollment.advisedAt ?? DateTime.now()
-      enrollment.status = 'advised'
-      await enrollment.save()
-      if (fromStatus !== 'advised') {
-        await db.table(t('enrollment_status_history')).useTransaction(trx).insert({
-          id: randomUUID(),
-          organization_id: enrollment.organizationId,
-          enrollment_id: enrollment.id,
-          from_status: fromStatus,
-          to_status: 'advised',
-          actor_user_id: null,
-          notes: 'Advising skipped because the student already has a registered course',
-          created_at: new Date(),
-        })
-      }
+    return applyAcademicAdvisingExemption(enrollment, {
+      note: 'Advising skipped because the student already has a registered course',
     })
-    return true
   }
 
   private async coursesFor(enrollment: Enrollment) {

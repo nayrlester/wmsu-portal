@@ -10,17 +10,14 @@ import { Modal } from '@/components/ui/modal'
 import { useNotification } from '@wmsu/ui'
 import { admitSuccessNotification } from '@/lib/admit-notice'
 import { admitErrorNotification, friendlyApiError } from '@/lib/user-messages'
+import { formatPersonName } from '@/lib/utils'
 import { admitApplicant, fetchApplicants, type Applicant } from '../api/enrollment-api'
 
 const columns: Column<Applicant>[] = [
   {
     key: 'name',
     header: 'Applicant',
-    render: (a) => (
-      <span className="font-medium">
-        {a.lastName}, {a.firstName}
-      </span>
-    ),
+    render: (a) => <span className="font-medium">{formatPersonName(a)}</span>,
   },
   {
     key: 'status',

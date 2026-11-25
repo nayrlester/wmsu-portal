@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { cn } from '@/lib/utils'
+import { cn, formatPersonName } from '@/lib/utils'
 import { fetchStudents } from '@/lib/usis-api'
 import { useDebouncedValue } from '@/lib/list-query'
 
@@ -12,13 +12,14 @@ export type StudentSearchOption = {
 }
 
 function formatStudentLabel(s: StudentSearchOption) {
-  return `${s.studentNumber} — ${s.lastName}, ${s.firstName}`
+  return `${s.studentNumber} — ${formatPersonName(s)}`
 }
 
 type Props = {
   id?: string
   value: string
   onChange: (studentId: string) => void
+  onSelect?: (student: StudentSearchOption) => void
   placeholder?: string
   disabled?: boolean
   className?: string
@@ -28,6 +29,7 @@ export function StudentSearchSelect({
   id,
   value,
   onChange,
+  onSelect,
   placeholder = 'Search by name or student number…',
   disabled,
   className,
@@ -122,6 +124,7 @@ export function StudentSearchSelect({
                   setSelectedLabel(label)
                   setText(label)
                   onChange(s.id)
+                  onSelect?.(s)
                   setOpen(false)
                 }}
               >

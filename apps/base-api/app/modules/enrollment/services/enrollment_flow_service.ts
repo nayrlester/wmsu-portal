@@ -293,16 +293,55 @@ export class EnrollmentFlowService {
     }
 
     return db.transaction(async (trx) => {
-      const existing = await Enrollment.query({ client: trx })
-        .where({
-          student_id: input.studentId,
-          academic_year_id: input.academicYearId,
-          semester: input.semester,
-        })
+      const existingExact = await Enrollment.query({ client: trx })
+        .where('student_id', input.studentId)
+        .where('academic_year_id', input.academicYearId)
+        .where('semester', input.semester)
         .first()
-      if (existing) {
-        throw new EnrollmentWorkflowError('Enrollment already exists for this term', 409, 'DUPLICATE_ENROLLMENT')
+      if (existingExact) {
+        throw new EnrollmentWorkflowError(
+          'Enrollment already exists for this academic year and semester',
+          409,
+          'DUPLICATE_ENROLLMENT'
+        )
       }
+
+      const openSameSemester = await Enrollment.query({ client: trx })
+        .where('student_id', input.studentId)
+        .where('semester', input.semester)
+        .whereNotIn('status', ['registered', 'rejected'])
+        .orderBy('created_at', 'desc')
+        .first()
+      if (openSameSemester) {
+        throw new EnrollmentWorkflowError(
+          'You already have an open enrollment for this semester. Continue that record instead of starting again.',
+          409,
+          'DUPLICATE_ENROLLMENT'
+        )
+      }
+
+      const inProgressOther = await Enrollment.query({ client: trx })
+        .where('student_id', input.studentId)
+        .whereNotIn('status', ['registered', 'rejected'])
+        .orderBy('created_at', 'desc')
+        .first()
+      if (inProgressOther) {
+        throw new EnrollmentWorkflowError(
+          'You already have an enrollment in progress. Finish advising, assessment, payment, or registration before starting another term.',
+          409,
+          'ENROLLMENT_IN_PROGRESS'
+        )
+      }
+
+      const { isAcademicAdvisingRequired } = await import(
+        '#modules/enrollment/domain/enrollment_workflow'
+      )
+      const advisingRequired = isAcademicAdvisingRequired({
+        yearLevel: input.yearLevel,
+        semester: input.semester,
+        classification: input.classification,
+      })
+      const initialStatus = advisingRequired ? 'draft' : 'advised'
 
       const enrollment = await Enrollment.create(
         {
@@ -314,7 +353,9 @@ export class EnrollmentFlowService {
           semester: input.semester,
           classification: input.classification,
           isRegularBlock: input.isRegularBlock ?? false,
-          status: 'draft',
+          status: initialStatus,
+          advisingWaived: !advisingRequired,
+          advisedAt: advisingRequired ? null : DateTime.now(),
         },
         { client: trx }
       )
@@ -327,9 +368,11 @@ export class EnrollmentFlowService {
           organization_id: input.organizationId,
           enrollment_id: enrollment.id,
           from_status: null,
-          to_status: 'draft',
+          to_status: initialStatus,
           actor_user_id: input.actorUserId,
-          notes: 'Enrollment created',
+          notes: advisingRequired
+            ? 'Enrollment created'
+            : 'Enrollment created — academic advising skipped (not 1st year 1st semester or transferee)',
           created_at: new Date(),
         })
 
@@ -340,7 +383,13 @@ export class EnrollmentFlowService {
   /** @deprecated Prefer AdvisingService.endorseSession — kept for API compatibility */
   async advisingApprove(enrollmentId: string, adviserId: string): Promise<Enrollment> {
     const enrollment = await Enrollment.findOrFail(enrollmentId)
-    if (!(enrollment.advisingWaived || enrollment.status === 'advised')) {
+    const { advisingRequiredForEnrollment } = await import(
+      '#modules/enrollment/services/academic_advising_policy_service'
+    )
+    if (
+      advisingRequiredForEnrollment(enrollment) &&
+      !(enrollment.advisingWaived || enrollment.status === 'advised')
+    ) {
       const session = await AdvisingSession.query()
         .where('enrollment_id', enrollmentId)
         .where('status', 'endorsed')
@@ -348,7 +397,7 @@ export class EnrollmentFlowService {
         .first()
       if (!session) {
         throw new EnrollmentWorkflowError(
-          'Academic advising endorsement is required before assessment (ENR-017)',
+          'Academic advising endorsement is required for 1st year 1st semester and transferees (ENR-017)',
           422,
           'ADVISING_REQUIRED'
         )

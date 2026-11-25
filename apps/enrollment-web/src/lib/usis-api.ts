@@ -945,6 +945,8 @@ export async function fetchEnrollments(params: PageParams = {}) {
     yearLevel: number
     semester: number
     studentId: string
+    classification?: string | null
+    advisingWaived?: boolean
     student?: { id: string; studentNumber: string; firstName: string; lastName: string }
     assessments?: Array<{
       id: string
@@ -981,6 +983,7 @@ export async function fetchEnrollment(id: string, options?: { includeSchedule?: 
     advisingWaived?: boolean
     advisingWaiverId?: string | null
     curriculumId?: string | null
+    advisedCurriculumIds?: string[] | null
     registrarApprovedAt?: string | null
     lines?: Array<{
       id: string
@@ -3003,13 +3006,37 @@ export async function deleteSection(sectionId: string) {
   return asData<{ id: string; deleted: boolean }>(data)
 }
 
+export type ScheduleReplicationConflictHint = {
+  kind: 'room' | 'faculty'
+  sourceSectionCode: string
+  message: string
+  dayOfWeek: number
+  startMinute: number
+  endMinute: number
+  roomCode?: string | null
+  facultyUserId?: string | null
+}
+
+export type ScheduleReplicationResult = {
+  dryRun: boolean
+  wouldCreate: number
+  wouldSkip: number
+  sourceCount: number
+  skippedCodes: string[]
+  conflictHints: ScheduleReplicationConflictHint[]
+  created: number
+  skipped: number
+  meetingsCopied: number
+}
+
 export async function replicateAcademicSchedules(payload: {
   sourceAcademicYearId: string
   targetAcademicYearId: string
   semester: number
+  dryRun?: boolean
 }) {
   const { data } = await apiClient.post('/academic/schedules/replicate', payload)
-  return asData<{ created: number; skipped: number; meetingsCopied: number; sourceCount: number }>(data)
+  return asData<ScheduleReplicationResult>(data)
 }
 
 export async function bulkUpdateSectionStatus(sectionIds: string[], status: 'draft' | 'open' | 'active' | 'closed') {

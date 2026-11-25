@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { DataTable } from '@/components/ui/data-table'
 import type { Column } from '@/components/ui/data-table'
 import { Badge } from '@/components/ui/badge'
+import { formatPersonName } from '@/lib/utils'
 import { fetchStudents, type Student } from '../api/enrollment-api'
 
 const columns: Column<Student>[] = [
@@ -9,11 +10,7 @@ const columns: Column<Student>[] = [
   {
     key: 'name',
     header: 'Name',
-    render: (s) => (
-      <span className="font-medium">
-        {s.lastName}, {s.firstName}
-      </span>
-    ),
+    render: (s) => <span className="font-medium">{formatPersonName(s)}</span>,
   },
   { key: 'email', header: 'Email' },
   {

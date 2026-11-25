@@ -31,8 +31,19 @@ import { RequirePermission } from '@/components/auth/require-permission'
 import { useHasPermission } from '@/lib/permissions'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { admitSuccessNotification } from '@/lib/admit-notice'
-import { admitErrorNotification, notifyGenericError } from '@/lib/user-messages'
-import { cn, formatCurrency, formatDateTime, formatNumber } from '@/lib/utils'
+import {
+  admitErrorNotification,
+  notifyGenericError,
+  sectionGuardErrorNotification,
+} from '@/lib/user-messages'
+import {
+  cn,
+  formatCurrency,
+  formatDateTime,
+  formatNumber,
+  formatPersonName,
+  displayOrFallback,
+} from '@/lib/utils'
 import { SAMPLE_ENTRANCE_EXAM_BANK } from '@/features/admissions/entrance-exam-sample-bank'
 import {
   admitApplicant,
@@ -305,7 +316,7 @@ function RegistrarApplicantsInner() {
           <DataTable
             label="Applicants"
             columns={[
-              { key: 'name', header: 'Name', render: (r) => `${r.lastName}, ${r.firstName}` },
+              { key: 'name', header: 'Name', render: (r) => formatPersonName(r) },
               {
                 key: 'classification',
                 header: 'Classification',
@@ -1220,7 +1231,7 @@ function RegistrarStudentsInner() {
             label="Students"
             columns={[
               { key: 'studentNumber', header: 'Student #' },
-              { key: 'name', header: 'Name', render: (r) => `${r.lastName}, ${r.firstName}` },
+              { key: 'name', header: 'Name', render: (r) => formatPersonName(r) },
               { key: 'email', header: 'Email' },
               {
                 key: 'classification',
@@ -1365,7 +1376,7 @@ function RegistrarStudentProfilePanel() {
               <DashboardCard title="Violations" value={profile.data.violations.academic.length} />
             </div>
             <p className="text-sm">
-              {profile.data.student.lastName}, {profile.data.student.firstName} ·{' '}
+              {formatPersonName(profile.data.student)} ·{' '}
               <span className="font-mono">{profile.data.student.studentNumber}</span> ·{' '}
               {profile.data.student.programCode ?? 'No program'} · GWA{' '}
               {profile.data.performance.gwa?.cumulativeGwa?.toFixed?.(4) ?? '—'}
@@ -2215,12 +2226,13 @@ function RegistrarEnrollmentsInner() {
                 header: 'Name',
                 className: 'min-w-[10rem] whitespace-nowrap',
                 render: (r) =>
-                  r.student?.lastName || r.student?.firstName
-                    ? `${r.student.lastName ?? ''}, ${r.student.firstName ?? ''}`.replace(
-                        /^,\s*|,\s*$/g,
-                        ''
-                      )
-                    : '—',
+                  formatPersonName(r.student),
+              },
+              {
+                key: 'academicYear',
+                header: 'Term',
+                className: 'whitespace-nowrap',
+                render: (r) => r.academicYear?.code ?? '—',
               },
               { key: 'yearLevel', header: 'Year', className: 'whitespace-nowrap' },
               { key: 'semester', header: 'Sem', className: 'whitespace-nowrap' },
@@ -2467,7 +2479,9 @@ function AcademicStructureEditor({
       onClose()
     },
     onError: (err) =>
-      notify(notifyGenericError(err)),
+      notify(
+        target.kind === 'section' ? sectionGuardErrorNotification(err) : notifyGenericError(err)
+      ),
   })
 
   const title =
@@ -4263,8 +4277,7 @@ function RegistrarSectionSlotTools(props: {
       notify({ tone: 'success', title: 'Capacity / waitlist saved' })
       refresh()
     },
-    onError: (err) =>
-      notify(notifyGenericError(err)),
+    onError: (err) => notify(sectionGuardErrorNotification(err)),
   })
 
   const promoteMutation = useMutation({
@@ -4634,10 +4647,11 @@ function RegistrarSectionSlotTools(props: {
                   {
                     key: 'facultyName',
                     header: 'Faculty',
-                    render: (r) =>
-                      r.facultyName
-                        ? `${r.facultyName}${r.facultyEmail ? ` · ${r.facultyEmail}` : ''}`
-                        : '—',
+                    render: (r) => {
+                      const name = displayOrFallback(r.facultyName, '')
+                      if (!name) return 'No assigned faculty yet'
+                      return r.facultyEmail ? `${name} · ${r.facultyEmail}` : name
+                    },
                   },
                   {
                     key: 'id',
@@ -6040,13 +6054,7 @@ function RegistrarGradesInner() {
               key: 'name',
               header: 'Name',
               className: 'min-w-[10rem] whitespace-nowrap',
-              render: (r) =>
-                r.student?.lastName || r.student?.firstName
-                  ? `${r.student.lastName ?? ''}, ${r.student.firstName ?? ''}`.replace(
-                      /^,\s*|,\s*$/g,
-                      ''
-                    )
-                  : '—',
+              render: (r) => formatPersonName(r.student),
             },
             { key: 'courseCode', header: 'Code', className: 'whitespace-nowrap' },
             { key: 'courseTitle', header: 'Course' },
@@ -6539,8 +6547,18 @@ function RegistrarRegistrationInner() {
   const enrollment = enrollmentQuery.data
   const steps = policies.data?.enrollmentApprovalSteps ?? []
   const registrarStepEnabled = steps.includes('registrar')
-  const waitingForStudentCourse = Boolean(enrollment && enrollment.status === 'advised' && !enrollment.curriculumId)
-  const canAssess = (enrollment?.status === 'advised' || enrollment?.status === 'incomplete') && !waitingForStudentCourse
+  const offeredCourses = Array.isArray(enrollment?.advisedCurriculumIds)
+    ? enrollment.advisedCurriculumIds
+    : []
+  const waitingForStudentCourse = Boolean(
+    enrollment &&
+      enrollment.status === 'advised' &&
+      !enrollment.curriculumId &&
+      !enrollment.advisingWaived &&
+      offeredCourses.length > 0
+  )
+  const canAssess =
+    (enrollment?.status === 'advised' || enrollment?.status === 'incomplete') && !waitingForStudentCourse
   const continuingWithoutAdvising = Boolean(enrollment?.advisingWaived && !enrollment?.advisingWaiverId)
   const busy =
     assessMutation.isPending ||
@@ -6638,7 +6656,9 @@ function RegistrarRegistrationInner() {
               Advising is endorsed. The student selects one of the advised courses before this enrollment can be assessed.
             </p>
           ) : null}
-          {enrollment && ['draft', 'advising'].includes(String(enrollment.status)) ? (
+          {enrollment &&
+          ['draft', 'advising'].includes(String(enrollment.status)) &&
+          !enrollment.advisingWaived ? (
             <p className="text-sm" data-testid="registration-gate">
               Academic advising is still current. The adviser endorses this draft, then registrar staff
               prepare the assessment. Payment cannot be verified before that assessment exists.

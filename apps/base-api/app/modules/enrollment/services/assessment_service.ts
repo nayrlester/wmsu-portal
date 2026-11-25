@@ -245,11 +245,18 @@ export class AssessmentService {
         .forUpdate()
         .firstOrFail()
 
+      const { applyAcademicAdvisingExemption } = await import(
+        '#modules/enrollment/services/academic_advising_policy_service'
+      )
+      await applyAcademicAdvisingExemption(enrollment, {
+        actorUserId: input.actorUserId,
+        trx,
+      })
       if (!enrollment.advisingWaived) {
         await assertAdvisingGate(enrollment, trx)
       }
       const offered = Array.isArray(enrollment.advisedCurriculumIds) ? enrollment.advisedCurriculumIds : []
-      if (offered.length > 0 && !enrollment.curriculumId) {
+      if (!enrollment.advisingWaived && offered.length > 0 && !enrollment.curriculumId) {
         throw new EnrollmentWorkflowError(
           'The student selects one advised course before assessment',
           422,

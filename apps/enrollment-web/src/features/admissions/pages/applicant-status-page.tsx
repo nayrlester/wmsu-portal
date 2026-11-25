@@ -16,7 +16,7 @@ import {
   Select,
 } from '@wmsu/ui'
 import { getApiErrorMessage } from '@/lib/api-client'
-import { formatDateTime } from '@/lib/utils'
+import { formatDateTime, formatPersonName } from '@/lib/utils'
 import {
   fetchPublicAdmissionPrograms,
   lookupApplicantPortalStatus,
@@ -172,7 +172,7 @@ export function ApplicantStatusPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {result.lastName}, {result.firstName}
+                {formatPersonName(result)}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">

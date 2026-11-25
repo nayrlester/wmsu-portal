@@ -7,7 +7,7 @@ import { auditLogService } from '#modules/enrollment/services/audit_log_service'
 import { AuditAction } from '#modules/enrollment/domain/enums/index'
 
 const DEFAULT_STEPS = ['adviser', 'assessment', 'registrar']
-const ACTIVE_ENROLLMENT_STATUSES = [
+const IN_PROGRESS_ENROLLMENT_STATUSES = [
   'draft',
   'advising',
   'advised',
@@ -15,12 +15,11 @@ const ACTIVE_ENROLLMENT_STATUSES = [
   'assessed',
   'payment_verified',
   'registrar_approved',
-  'registered',
 ]
 const NEXT_TERM_HOLD =
   'You are enrolled for the current semester. The registrar opens enrollment for the next term after this semester ends.'
 const IN_PROGRESS_HOLD =
-  'You already have an enrollment in progress for this term. Continue with advising, assessment, and registration.'
+  'You already have an enrollment in progress. Continue with advising, assessment, payment, or registration instead of starting again.'
 
 export class AcademicPoliciesService {
   async getOrCreate(organizationId: string) {
@@ -39,22 +38,33 @@ export class AcademicPoliciesService {
 
   async studentEnrollmentWindow(organizationId: string, studentId: string) {
     const policy = await this.getOrCreate(organizationId)
-    const current = await Enrollment.query()
+    const nextTermEnrollmentOpen = Boolean(policy.nextTermEnrollmentOpen)
+
+    const inProgress = await Enrollment.query()
       .where('organization_id', organizationId)
       .where('student_id', studentId)
-      .whereIn('status', ACTIVE_ENROLLMENT_STATUSES)
+      .whereIn('status', IN_PROGRESS_ENROLLMENT_STATUSES)
+      .orderBy('created_at', 'desc')
       .first()
-    const nextTermEnrollmentOpen = Boolean(policy.nextTermEnrollmentOpen)
-    const blocked = Boolean(current) && !nextTermEnrollmentOpen
-    const holdReason = !blocked
-      ? null
-      : current?.status === 'registered'
-        ? NEXT_TERM_HOLD
-        : IN_PROGRESS_HOLD
+    if (inProgress) {
+      return {
+        nextTermEnrollmentOpen,
+        canStartEnrollment: false,
+        enrollmentHoldReason: IN_PROGRESS_HOLD,
+      }
+    }
+
+    const registered = await Enrollment.query()
+      .where('organization_id', organizationId)
+      .where('student_id', studentId)
+      .where('status', 'registered')
+      .orderBy('created_at', 'desc')
+      .first()
+    const blocked = Boolean(registered) && !nextTermEnrollmentOpen
     return {
       nextTermEnrollmentOpen,
       canStartEnrollment: !blocked,
-      enrollmentHoldReason: holdReason,
+      enrollmentHoldReason: blocked ? NEXT_TERM_HOLD : null,
     }
   }
 

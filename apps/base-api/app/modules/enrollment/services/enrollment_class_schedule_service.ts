@@ -106,7 +106,11 @@ export class EnrollmentClassScheduleService {
         .orderBy('code', 'asc')
 
       if (!blockSections.length) {
-        throw new Error(`No active subject sections found for block group ${code}`)
+        const { default: AcademicYear } = await import('#modules/enrollment/models/academic_year')
+        const year = await AcademicYear.find(enrollment.academicYearId, { client: trx })
+        throw new Error(
+          `No sections tagged "${code}" for ${year?.code ?? 'this enrollment\'s academic year'} (semester ${enrollment.semester}). Assign block group codes under Academic catalog → Section tools for that year, or open the correct enrollment term.`
+        )
       }
 
       const created = await this.addResolvedSections({

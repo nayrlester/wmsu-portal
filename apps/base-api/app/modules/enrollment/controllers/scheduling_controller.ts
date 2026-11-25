@@ -10,6 +10,7 @@ import { resolveEnrollmentId } from '#modules/enrollment/services/enrollment_flo
 import { personnelService } from '#modules/enrollment/services/personnel_service'
 import { resolveSelfStudent, effectivePermissions, hasStaffEnrollmentAccess } from '#modules/enrollment/services/enrollment_access_service'
 import { facultyEvalService } from '#modules/enrollment/services/faculty_eval_service'
+import { formatPersonDisplayName } from '#modules/enrollment/helpers/person_display'
 
 const conflictValidator = vine.compile(
   vine.object({
@@ -216,7 +217,7 @@ export default class SchedulingController {
         position: r.position,
         studentId: r.studentId,
         studentNumber: r.student?.studentNumber ?? '',
-        studentName: r.student ? `${r.student.lastName}, ${r.student.firstName}` : '',
+        studentName: r.student ? formatPersonDisplayName(r.student) : '',
       })),
     })
   }

@@ -29,3 +29,49 @@ export function formatLabelList(
   }
   return labels.join(', ')
 }
+
+type PersonNameParts = {
+  fullName?: string | null
+  name?: string | null
+  lastName?: string | null
+  firstName?: string | null
+  email?: string | null
+}
+
+function scrubDisplayText(value: unknown): string {
+  const text = String(value ?? '').trim()
+  if (!text) return ''
+  if (/^undefined(\s*,\s*undefined)?$/i.test(text)) return ''
+  if (/^null(\s*,\s*null)?$/i.test(text)) return ''
+  return text
+}
+
+export function formatPersonName(
+  person: PersonNameParts | null | undefined,
+  empty = '—'
+): string {
+  if (!person) return empty
+  const full = scrubDisplayText(person.fullName ?? person.name)
+  if (full) return full
+  const last = scrubDisplayText(person.lastName)
+  const first = scrubDisplayText(person.firstName)
+  if (last && first) return `${last}, ${first}`
+  if (last) return last
+  if (first) return first
+  const email = scrubDisplayText(person.email)
+  if (email) return email
+  return empty
+}
+
+export function formatFacultyNames(
+  names: Array<string | null | undefined> | null | undefined,
+  empty = 'No assigned faculty yet'
+): string {
+  const cleaned = [...new Set((names ?? []).map(scrubDisplayText).filter(Boolean))]
+  return cleaned.length ? cleaned.join('; ') : empty
+}
+
+export function displayOrFallback(value: unknown, empty = '—'): string {
+  const text = scrubDisplayText(value)
+  return text || empty
+}

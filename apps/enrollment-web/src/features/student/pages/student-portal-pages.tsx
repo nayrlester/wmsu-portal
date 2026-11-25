@@ -29,7 +29,7 @@ import { EnrollmentWorkflowPanel } from '@/components/enrollment-workflow-panel'
 import { useInfiniteListQuery, usePaginatedQuery } from '@/lib/list-query'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { notifyGenericError } from '@/lib/user-messages'
-import { formatCurrency, formatDateTime, formatNumber } from '@/lib/utils'
+import { formatCurrency, formatDateTime, formatNumber, formatPersonName } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 import {
   createCounselingRequest,
@@ -364,9 +364,7 @@ export function StudentProfilePage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Name</p>
-                <p>
-                  {profile.data.student.lastName}, {profile.data.student.firstName}
-                </p>
+                <p>{formatPersonName(profile.data.student)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Program</p>
@@ -559,7 +557,9 @@ export function StudentEnrollmentPage() {
           <p className="text-sm text-[var(--color-muted-foreground)]">
             {mustChoose && offered.length > 0
               ? `Your adviser listed ${offered.map((course) => course.code).join(', ')}. Select one course before this enrollment continues.`
-              : 'Start your enrollment draft for this term. After this, complete advising, assessment, cashier payment, and registrar registration.'}
+              : Number(semester) === 1 && (student.data?.yearLevel ?? 1) === 1
+                ? 'Start your enrollment draft for this term. First-year first-semester and transferee students complete academic advising, then assessment, payment, and registrar registration.'
+                : 'Start your enrollment draft for this term. Continuing students skip academic advising — complete assessment, cashier payment, and registrar registration.'}
           </p>
           {offered.length > 0 ? (
             <FormField id="student-enrollment-course" label="Course">
@@ -649,6 +649,12 @@ export function StudentEnrollmentPage() {
                 header: 'ID',
                 render: (r) => <span className="font-mono text-xs">{r.id.slice(0, 8)}</span>,
               },
+              {
+                key: 'academicYear',
+                header: 'Term',
+                render: (r) =>
+                  (r as { academicYear?: { code?: string } }).academicYear?.code ?? '—',
+              },
               { key: 'yearLevel', header: 'Year' },
               { key: 'semester', header: 'Sem' },
               { key: 'status', header: 'Status', render: (r) => <Badge>{r.status}</Badge> },
@@ -676,7 +682,7 @@ export function StudentAdvisingPage() {
   return (
     <QueryPage
       title="Academic advising"
-      description="Enrollment advising status from USiS"
+      description="Required for 1st year 1st semester and transferees. Continuing terms skip advising."
       query={enrollments}
       isEmpty={(d) => d.data.length === 0}
     >
@@ -691,6 +697,21 @@ export function StudentAdvisingPage() {
             },
             { key: 'yearLevel', header: 'Year' },
             { key: 'semester', header: 'Semester' },
+            {
+              key: 'advisingWaived',
+              header: 'Advising',
+              render: (r) => (
+                <Badge>
+                  {r.advisingWaived
+                    ? 'Skipped'
+                    : r.yearLevel === 1 && r.semester === 1
+                      ? 'Required'
+                      : r.classification === 'transferee'
+                        ? 'Required'
+                        : 'Not required'}
+                </Badge>
+              ),
+            },
           ]}
           data={page.data}
           keyExtractor={(r) => r.id}

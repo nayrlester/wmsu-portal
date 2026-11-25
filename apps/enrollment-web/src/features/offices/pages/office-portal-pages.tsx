@@ -27,6 +27,7 @@ import { RequirePermission } from '@/components/auth/require-permission'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { admitSuccessNotification } from '@/lib/admit-notice'
 import { admitErrorNotification, notifyGenericError } from '@/lib/user-messages'
+import { formatPersonName } from '@/lib/utils'
 import {
   admitApplicant,
   addHealthCondition,
@@ -160,7 +161,7 @@ function AdmissionsInner() {
                 className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-white px-4 py-3"
               >
                 <span>
-                  {a.lastName}, {a.firstName} ·{' '}
+                  {formatPersonName(a)} ·{' '}
                   <span className="text-xs uppercase">{a.status}</span>
                 </span>
                 {a.status === 'pending' ? (

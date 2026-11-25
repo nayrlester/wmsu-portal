@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { cn } from '@/lib/utils'
+import { cn, formatPersonName } from '@/lib/utils'
 import { fetchApplicants } from '@/lib/usis-api'
 import { useDebouncedValue } from '@/lib/list-query'
 
@@ -15,7 +15,7 @@ type ApplicantOption = {
 
 function formatApplicantLabel(applicant: ApplicantOption) {
   const number = applicant.applicationNumber ? `${applicant.applicationNumber} — ` : ''
-  return `${number}${applicant.lastName}, ${applicant.firstName} (${applicant.status})`
+  return `${number}${formatPersonName(applicant)} (${applicant.status})`
 }
 
 type Props = {

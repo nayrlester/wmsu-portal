@@ -2,13 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 import { DataTable } from '@/components/ui/data-table'
 import type { Column } from '@/components/ui/data-table'
 import { Badge } from '@/components/ui/badge'
+import { formatPersonName } from '@/lib/utils'
 import { fetchEnrollments, type EnrollmentRow } from '../api/enrollment-api'
 
 const columns: Column<EnrollmentRow>[] = [
   {
     key: 'student',
     header: 'Student',
-    render: (e) => (e.student ? `${e.student.lastName}, ${e.student.firstName}` : '—'),
+    render: (e) => formatPersonName(e.student),
   },
   { key: 'yearLevel', header: 'Year', className: 'text-center' },
   { key: 'semester', header: 'Sem', className: 'text-center' },

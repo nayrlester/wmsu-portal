@@ -3,6 +3,7 @@ import type Enrollment from '#modules/enrollment/models/enrollment'
 import { EnrollmentWorkflowError } from '#modules/enrollment/domain/enrollment_workflow'
 import AdvisingSession from '#modules/enrollment/models/advising_session'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
+import { advisingRequiredForEnrollment } from '#modules/enrollment/services/academic_advising_policy_service'
 
 export type EnrollmentApprovalStep = 'adviser' | 'assessment' | 'registrar'
 
@@ -16,6 +17,7 @@ export async function enrollmentStepEnabled(
 
 export async function assertAdvisingGate(enrollment: Enrollment, trx?: TransactionClientContract) {
   if (enrollment.advisingWaived) return
+  if (!advisingRequiredForEnrollment(enrollment)) return
   if (!(await enrollmentStepEnabled(enrollment.organizationId, 'adviser'))) return
 
   const query = AdvisingSession.query()
@@ -26,7 +28,7 @@ export async function assertAdvisingGate(enrollment: Enrollment, trx?: Transacti
     .first()
   if (!endorsed) {
     throw new EnrollmentWorkflowError(
-      'Academic advising is required by institutional policy (ENR-008)',
+      'Academic advising is required for 1st year 1st semester and transferees (ENR-008)',
       422,
       'ADVISING_REQUIRED'
     )

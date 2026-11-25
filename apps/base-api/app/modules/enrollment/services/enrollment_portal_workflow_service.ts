@@ -8,6 +8,7 @@ import { SchedulingService } from '#modules/enrollment/services/scheduling_servi
 import { resolveEnrollmentApprovalSteps } from '#modules/enrollment/services/academic_policy_runtime_service'
 import { AssessmentService } from '#modules/enrollment/services/assessment_service'
 import { studentCourseSelectionService } from '#modules/enrollment/services/student_course_selection_service'
+import { formatPersonDisplayName } from '#modules/enrollment/helpers/person_display'
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -43,12 +44,13 @@ export class EnrollmentPortalWorkflowService {
       .orderBy('created_at', 'desc')
       .limit(10)
     const rank = (s: string) => {
-      if (s === 'registered') return 0
-      if (s === 'registrar_approved') return 1
-      if (s === 'payment_verified') return 2
-      if (s === 'assessed') return 3
-      if (s === 'advised') return 4
-      return 5
+      if (s === 'draft' || s === 'advising') return 0
+      if (s === 'advised') return 1
+      if (s === 'assessed') return 2
+      if (s === 'payment_verified') return 3
+      if (s === 'registrar_approved') return 4
+      if (s === 'registered') return 5
+      return 6
     }
     rows.sort((a, b) => rank(a.status) - rank(b.status) || b.createdAt.toMillis() - a.createdAt.toMillis())
     return rows[0] ?? null
@@ -102,7 +104,7 @@ export class EnrollmentPortalWorkflowService {
         detail: enrollment.advisingWaiverId
           ? 'Advising waived per policy'
           : advisingSkipped
-            ? 'Previously enrolled. The existing course continues without advising.'
+            ? 'Not required for this term (advising applies to 1st year 1st semester and transferees only).'
             : enrollment.advisedAt
               ? `Endorsed ${enrollment.advisedAt.toISO()}`
               : null,
@@ -225,12 +227,21 @@ export class EnrollmentPortalWorkflowService {
       .where('organization_id', organizationId)
       .whereIn('section_id', sectionIds)
       .where('is_active', true)
-    const facultyIds = [...new Set(assignments.map((a) => a.facultyUserId))]
+    const meetingFacultyIds = meetings
+      .map((m) => m.facultyUserId)
+      .filter((id): id is string => Boolean(id))
+    const facultyIds = [
+      ...new Set([...assignments.map((a) => a.facultyUserId), ...meetingFacultyIds]),
+    ]
     const facultyUsers =
       facultyIds.length > 0
         ? await User.query().where('organization_id', organizationId).whereIn('id', facultyIds)
         : []
-    const facultyById = new Map(facultyUsers.map((u) => [u.id, `${u.lastName}, ${u.firstName}`.trim()]))
+    const facultyById = new Map<string, string>()
+    for (const user of facultyUsers) {
+      const name = formatPersonDisplayName(user)
+      if (name) facultyById.set(user.id, name)
+    }
 
     const facultyBySection = new Map<string, string[]>()
     for (const a of assignments) {

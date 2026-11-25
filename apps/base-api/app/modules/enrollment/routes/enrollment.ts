@@ -4,6 +4,7 @@ import { mw as middleware } from '#modules/enrollment/middleware_registry'
 const ApplicantsController = () => import('#modules/enrollment/controllers/applicants_controller')
 const StudentsController = () => import('#modules/enrollment/controllers/students_controller')
 const AcademicSetupController = () => import('#modules/enrollment/controllers/academic_setup_controller')
+const AuditLogsController = () => import('#modules/enrollment/controllers/audit_logs_controller')
 const EnrollmentsController = () => import('#modules/enrollment/controllers/enrollments_controller')
 const AdvisingController = () => import('#modules/enrollment/controllers/advising_controller')
 const GradesController = () => import('#modules/enrollment/controllers/grades_controller')
@@ -326,6 +327,9 @@ router
     router
       .post('/academic/sections/bulk-status', [AcademicSetupController, 'bulkUpdateSectionStatus'])
       .use(middleware.permission(['academic.write']))
+    router
+      .get('/audit-logs', [AuditLogsController, 'index'])
+      .use(middleware.permission(['academic.read']))
 
     router.get('/academic/room-categories', [AcademicFacilitiesController, 'listCategories']).use(
       middleware.permission(['academic.read'])

@@ -112,6 +112,7 @@ export const replicateSchedulesValidator = vine.compile(
     sourceAcademicYearId: vine.string().uuid(),
     targetAcademicYearId: vine.string().uuid(),
     semester: vine.number().min(1).max(3),
+    dryRun: vine.boolean().optional(),
   })
 )
 

@@ -2,7 +2,7 @@ import { Badge, Button } from '@wmsu/ui'
 import { Link } from 'react-router-dom'
 
 import type { EnrollmentWorkflowView } from '@/lib/usis-api'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatFacultyNames } from '@/lib/utils'
 
 export type { EnrollmentWorkflowView }
 
@@ -131,7 +131,7 @@ export function EnrollmentWorkflowPanel({
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    {row.facultyNames.length ? row.facultyNames.join('; ') : '—'}
+                    {formatFacultyNames(row.facultyNames, 'No assigned faculty yet')}
                   </td>
                   <td className="px-3 py-2 text-right">{row.units}</td>
                 </tr>
